@@ -275,14 +275,104 @@
       <div class="sec-lbl">تفاصيل الإيصال</div>
       <div class="fg">
         <div class="fi">
-          <label>طريقة الدفع</label>
-          <div class="pills" id="r-pills">
-            <span class="pill on" onclick="setPill('r','نقد',this)"><i class="ti ti-cash"></i>نقد</span>
-            <span class="pill" onclick="setPill('r','شيك',this)"><i class="ti ti-file-dollar"></i>شيك</span>
-            <span class="pill" onclick="setPill('r','تحويل بنكي',this)"><i class="ti ti-building-bank"></i>تحويل</span>
-            <span class="pill" onclick="setPill('r','أونلاين',this)"><i class="ti ti-device-mobile"></i>أونلاين</span>
-          </div>
-          <input type="hidden" id="r-mth" value="نقد">
+  <label>طريقة الدفع</label>
+
+  <div class="pills" id="r-pills">
+
+    <span class="pill on"
+          onclick="setPill('r','نقد',this)">
+      <i class="ti ti-cash"></i>نقد
+    </span>
+
+    <span class="pill"
+          onclick="setPill('r','شيك',this)">
+      <i class="ti ti-file-dollar"></i>شيك
+    </span>
+
+    <span class="pill"
+          onclick="setPill('r','تحويل بنكي',this)">
+      <i class="ti ti-building-bank"></i>تحويل
+    </span>
+
+    <span class="pill"
+          onclick="setPill('r','أونلاين',this)">
+      <i class="ti ti-device-mobile"></i>أونلاين
+    </span>
+
+  </div>
+
+  <input type="hidden" id="r-mth" value="نقد">
+
+</div>
+
+<div class="fi">
+
+  <label>نوع الإيصال</label>
+
+  <select id="r-type">
+
+    <option value="contribution">
+      مساهمة عضو
+    </option>
+
+    <option value="donation">
+      تبرع
+    </option>
+
+    <option value="lunch">
+      صندوق الغداء
+    </option>
+
+    <option value="diwan">
+      صندوق الديوان
+    </option>
+
+    <option value="hall">
+      إيجار قاعة
+    </option>
+
+  </select>
+
+</div>
+
+<div class="fi">
+
+  <label>العملة</label>
+
+  <select id="r-cur">
+
+    <option value="ILS">
+      شيكل ₪
+    </option>
+
+    <option value="USD">
+      دولار $
+    </option>
+
+  </select>
+
+</div>
+
+<div class="fi">
+
+  <label>سعر الصرف</label>
+
+  <input type="number"
+         id="r-rate"
+         value="3.65"
+         step="0.01">
+
+</div>
+
+<div class="fi">
+
+  <label>القيمة بالشيكل ₪</label>
+
+  <input type="number"
+         id="r-ils"
+         readonly>
+
+</div>
           <div class="fi">
 
   <label>نوع الإيصال</label>
