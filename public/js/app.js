@@ -760,10 +760,11 @@ function startClock() {
    INIT
 ═══════════════════════════════════════════ */
 async function init() {
-  // جلب إعدادات Supabase من السيرفر
-  const cfg = await fetch('/api/config').then(r=>r.json());
   const { createClient } = supabase;
-  SB = createClient(cfg.url, cfg.key);
+  SB = createClient(
+    'https://ralifvemgapmsgrjgazh.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4'
+  );
 
   // إخفاء التطبيق حتى تسجيل الدخول
   document.getElementById('app').style.display = 'none';
