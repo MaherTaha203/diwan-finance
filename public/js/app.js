@@ -114,90 +114,13 @@ function toggleTheme() {
 window.toggleTheme = toggleTheme;
 
 /* ═══════════════════════════════════════════
-   LANGUAGE
+   LANGUAGE — يستخدم i18n.js
 ═══════════════════════════════════════════ */
-const TRANS = {
-  ar: {
-    dash:'لوحة التحكم', rec:'إيصالات القبض', pay:'سندات الصرف',
-    fam:'أعضاء العائلة', stmt:'كشف الحساب', rep:'التقارير',
-    users:'المستخدمون', audit:'سجل العمليات', bk:'النسخ الاحتياطي',
-    totalIn:'إجمالي الإيصالات', totalOut:'إجمالي المدفوعات',
-    net:'صافي الرصيد', members:'أعضاء العائلة',
-    newRec:'إيصال جديد', newPay:'سند جديد', newFam:'عضو جديد',
-    refresh:'تحديث', backup:'نسخ احتياطي', logout:'خروج',
-    search:'بحث...', allMethods:'كل طرق الدفع',
-    cash:'نقد', check:'شيك', transfer:'تحويل بنكي', online:'أونلاين',
-    saveAndPrint:'حفظ وطباعة', saveOnly:'حفظ فقط', cancel:'إلغاء',
-    dir:'rtl', lang:'AR'
-  },
-  en: {
-    dash:'Dashboard', rec:'Receipts', pay:'Payments',
-    fam:'Family Members', stmt:'Statement', rep:'Reports',
-    users:'Users', audit:'Audit Log', bk:'Backup',
-    totalIn:'Total Receipts', totalOut:'Total Payments',
-    net:'Net Balance', members:'Family Members',
-    newRec:'New Receipt', newPay:'New Payment', newFam:'New Member',
-    refresh:'Refresh', backup:'Backup', logout:'Logout',
-    search:'Search...', allMethods:'All Methods',
-    cash:'Cash', check:'Cheque', transfer:'Bank Transfer', online:'Online',
-    saveAndPrint:'Save & Print', saveOnly:'Save Only', cancel:'Cancel',
-    dir:'ltr', lang:'EN'
-  }
-};
-
-let LANG = 'ar';
-
 function toggleLang() {
-  LANG = LANG === 'ar' ? 'en' : 'ar';
-  const t = TRANS[LANG];
+  window.LANG = window.LANG === 'ar' ? 'en' : 'ar';
   const btn = document.getElementById('lang-btn');
-  btn.innerHTML = `<i class="ti ti-language"></i>${t.lang}`;
-
-  // اتجاه الصفحة
-  document.documentElement.dir = t.dir;
-  document.documentElement.lang = LANG;
-
-  // Sidebar
-  const nbLabels = document.querySelectorAll('.nb');
-  const keys = ['dash','rec','pay','fam','stmt','rep','users','audit','bk'];
-  // map nav items by data-p
-  document.querySelector('.nb[data-p="dash"]').innerHTML = `<i class="ti ti-layout-dashboard"></i>${t.dash}`;
-  document.querySelector('.nb[data-p="rec"]').innerHTML  = `<i class="ti ti-receipt"></i>${t.rec}`;
-  document.querySelector('.nb[data-p="pay"]').innerHTML  = `<i class="ti ti-cash"></i>${t.pay}`;
-  document.querySelector('.nb[data-p="fam"]').innerHTML  = `<i class="ti ti-users"></i>${t.fam}`;
-  document.querySelector('.nb[data-p="stmt"]').innerHTML = `<i class="ti ti-file-description"></i>${t.stmt}`;
-  document.querySelector('.nb[data-p="rep"]').innerHTML  = `<i class="ti ti-chart-bar"></i>${t.rep}`;
-  const nu = document.querySelector('.nb[data-p="users"]');
-  if (nu) nu.innerHTML = `<i class="ti ti-shield-lock"></i>${t.users}`;
-  document.querySelector('.nb[data-p="audit"]').innerHTML = `<i class="ti ti-list-check"></i>${t.audit}`;
-  document.querySelector('.nb[data-p="bk"]').innerHTML   = `<i class="ti ti-database"></i>${t.bk}`;
-
-  // Topbar buttons
-  document.getElementById('theme-btn').innerHTML = document.body.classList.contains('light')
-    ? `<i class="ti ti-moon"></i>${LANG==='ar'?'داكن':'Dark'}`
-    : `<i class="ti ti-sun"></i>${LANG==='ar'?'فاتح':'Light'}`;
-
-  // Buttons in pages
-  const btnQrec = document.getElementById('btn-qrec');
-  if (btnQrec) btnQrec.innerHTML = `<i class="ti ti-plus"></i>${t.newRec}`;
-  const btnQpay = document.getElementById('btn-qpay');
-  if (btnQpay) btnQpay.innerHTML = `<i class="ti ti-cash"></i>${t.pay}`;
-  const btnAddRec = document.getElementById('btn-add-rec');
-  if (btnAddRec) btnAddRec.innerHTML = `<i class="ti ti-plus"></i>${t.newRec}`;
-  const btnAddPay = document.getElementById('btn-add-pay');
-  if (btnAddPay) btnAddPay.innerHTML = `<i class="ti ti-plus"></i>${t.newPay}`;
-  const btnAddFam = document.getElementById('btn-add-fam');
-  if (btnAddFam) btnAddFam.innerHTML = `<i class="ti ti-user-plus"></i>${t.newFam}`;
-
-  // Search placeholders
-  const qrec = document.getElementById('q-rec');
-  if (qrec) qrec.placeholder = LANG==='ar'?'بحث برقم الإيصال أو اسم العضو...':'Search by receipt no or member...';
-  const qpay = document.getElementById('q-pay');
-  if (qpay) qpay.placeholder = LANG==='ar'?'بحث برقم السند أو المستفيد...':'Search by payment no or beneficiary...';
-  const qfam = document.getElementById('q-fam');
-  if (qfam) qfam.placeholder = LANG==='ar'?'بحث بالاسم أو الهاتف...':'Search by name or phone...';
-
-  // Re-render to update text
+  btn.innerHTML = `<i class="ti ti-language"></i>${window.LANG==='ar'?'EN':'AR'}`;
+  window.applyLang();
   renderAll();
 }
 window.toggleLang = toggleLang;
@@ -210,13 +133,13 @@ async function login() {
   const pass  = document.getElementById('l-pass').value;
   const btn   = document.getElementById('login-btn');
   const err   = document.getElementById('login-err');
-  if (!email||!pass) { showErr('يرجى إدخال البريد وكلمة المرور'); return; }
+  if (!email||!pass) { showErr(t('loginFill')); return; }
   btn.disabled = true;
-  btn.innerHTML = '<div class="spin"></div> جاري الدخول...';
+  btn.innerHTML = `<div class="spin"></div> ${t('loginLoading')}`;
   err.classList.remove('show');
   const { data, error } = await SB.auth.signInWithPassword({ email, password: pass });
   if (error) {
-    showErr('بريد إلكتروني أو كلمة مرور غير صحيحة');
+    showErr(t('loginErr'));
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-login"></i> تسجيل الدخول';
     return;
@@ -255,7 +178,7 @@ async function logout() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('l-pass').value = '';
-  toast('تم تسجيل الخروج','inf');
+  toast(t('loggedOut'),'inf');
 }
 window.logout = logout;
 
@@ -292,7 +215,7 @@ async function loadAll() {
     DB.audit = r5.data||[];
     renderAll();
   } catch(e) {
-    toast('خطأ في تحميل البيانات','err');
+    toast(t('loadErr'),'err');
     console.error(e);
   }
 }
@@ -323,7 +246,7 @@ const D = {
       mkPag('rec',d.length);
       const page = d.slice((PS.rec-1)*PSZ, PS.rec*PSZ);
       const body = document.getElementById('rec-body');
-      if (!page.length){ body.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-inbox"></i><p>لا توجد إيصالات</p></div></td></tr>'; return; }
+      if (!page.length){ body.innerHTML=`<tr><td colspan="8"><div class="empty"><i class="ti ti-inbox"></i><p>${t('noRec')}</p></div></td></tr>`; return; }
       body.innerHTML = page.map(r=>`<tr>
         <td><b>${esc(r.no)}</b></td>
         <td>${esc(r.mname)}</td>
@@ -348,7 +271,7 @@ const D = {
       mkPag('pay',d.length);
       const page = d.slice((PS.pay-1)*PSZ, PS.pay*PSZ);
       const body = document.getElementById('pay-body');
-      if (!page.length){ body.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-inbox"></i><p>لا توجد سندات</p></div></td></tr>'; return; }
+      if (!page.length){ body.innerHTML=`<tr><td colspan="8"><div class="empty"><i class="ti ti-inbox"></i><p>${t('noPay')}</p></div></td></tr>`; return; }
       body.innerHTML = page.map(p=>`<tr>
         <td><b>${esc(p.no)}</b></td>
         <td>${esc(p.beneficiary)}</td>
@@ -374,9 +297,9 @@ const D = {
       mkPag('fam',d.length);
       const page = d.slice((PS.fam-1)*PSZ, PS.fam*PSZ);
       const body = document.getElementById('fam-body');
-      if (!page.length){ body.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-users"></i><p>لا يوجد أعضاء</p></div></td></tr>'; return; }
+      if (!page.length){ body.innerHTML=`<tr><td colspan="7"><div class="empty"><i class="ti ti-users"></i><p>${t('noFam')}</p></div></td></tr>`; return; }
       body.innerHTML = page.map((m,i)=>{
-        const b=m.bal, cls=b>0?'ok':b<0?'err':'neu', lbl=b>0?'دائن':b<0?'مدين':'متوازن';
+        const b=m.bal, cls=b>0?'ok':b<0?'err':'neu', lbl=b>0?t('creditor'):b<0?t('debtor'):t('balanced');
         return `<tr>
           <td style="color:var(--tx3)">${(PS.fam-1)*PSZ+i+1}</td>
           <td><b>${esc(m.name)}</b></td>
@@ -403,10 +326,10 @@ function renderDash() {
   if (dd) dd.textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
   document.getElementById('kpis').innerHTML=`
-    <div class="kpi g"><i class="ti ti-trending-up kpi-ico"></i><div class="kpi-lbl">إجمالي الإيصالات</div><div class="kpi-val">₪ ${fmt(ti)}</div><div class="kpi-sub">${DB.rec.length} إيصال</div></div>
-    <div class="kpi r"><i class="ti ti-trending-down kpi-ico"></i><div class="kpi-lbl">إجمالي المدفوعات</div><div class="kpi-val">₪ ${fmt(to)}</div><div class="kpi-sub">${DB.pay.length} سند</div></div>
-    <div class="kpi ${net>=0?'g':'r'}"><i class="ti ti-scale kpi-ico"></i><div class="kpi-lbl">صافي الرصيد</div><div class="kpi-val">₪ ${fmt(net)}</div><div class="kpi-sub">${net>=0?'فائض':'عجز'}</div></div>
-    <div class="kpi b"><i class="ti ti-users kpi-ico"></i><div class="kpi-lbl">أعضاء العائلة</div><div class="kpi-val">${DB.fam.length}</div><div class="kpi-sub">أرصدة: ₪ ${fmt(tb)}</div></div>
+    <div class="kpi g"><i class="ti ti-trending-up kpi-ico"></i><div class="kpi-lbl">${t('kpiIn')}</div><div class="kpi-val">₪ ${fmt(ti)}</div><div class="kpi-sub">${DB.rec.length} ${t('kpiRecCount')}</div></div>
+    <div class="kpi r"><i class="ti ti-trending-down kpi-ico"></i><div class="kpi-lbl">${t('kpiOut')}</div><div class="kpi-val">₪ ${fmt(to)}</div><div class="kpi-sub">${DB.pay.length} ${t('kpiPayCount')}</div></div>
+    <div class="kpi ${net>=0?'g':'r'}"><i class="ti ti-scale kpi-ico"></i><div class="kpi-lbl">${t('kpiNet')}</div><div class="kpi-val">₪ ${fmt(net)}</div><div class="kpi-sub">${net>=0?t('surplus'):t('deficit')}</div></div>
+    <div class="kpi b"><i class="ti ti-users kpi-ico"></i><div class="kpi-lbl">${t('kpiMembers')}</div><div class="kpi-val">${DB.fam.length}</div><div class="kpi-sub">${t('kpiBalances')}: ₪ ${fmt(tb)}</div></div>
   `;
 
   // Monthly bar chart
@@ -436,7 +359,7 @@ function renderDash() {
         <div class="h-track"><div class="h-fill" style="width:${Math.round(v/mT*100)}%;background:${COLS[i%5]}">${Math.round(v/mT*100)}%</div></div>
         <span class="h-val">₪ ${fmt(v)}</span>
       </div>`).join('')
-    :'<div class="empty" style="padding:12px"><p>لا توجد بيانات</p></div>';
+    :`<div class="empty" style="padding:12px"><p>${t('noData')}</p></div>`;
 
   // Last receipts
   document.getElementById('dash-rec').innerHTML=DB.rec.slice(0,5).length
@@ -445,7 +368,7 @@ function renderDash() {
         <span class="sr-l">${esc(gmn(r.member_id))}<br><small style="color:var(--tx3)">${fdate(r.date)}</small></span>
         <span class="sr-v" style="color:var(--ok)">₪ ${fmt(r.amount)}</span>
       </div>`).join('')
-    :'<div class="empty" style="padding:12px"><p>لا توجد إيصالات بعد</p></div>';
+    :`<div class="empty" style="padding:12px"><p>${t('noRec')}</p></div>`;
 
   // Top balances
   const top=[...DB.fam].map(m=>({...m,b:L.bal(m.id)})).sort((a,b)=>b.b-a.b).slice(0,5);
@@ -457,15 +380,15 @@ function renderDash() {
         <div class="h-track"><div class="h-fill" style="width:${Math.round(Math.abs(m.b)/maxB*100)}%;background:${m.b>=0?'#00C896':'#E53E3E'}">₪${fmt(m.b)}</div></div>
         <span class="h-val" style="color:${m.b>=0?'var(--ok)':'var(--err)'}">₪ ${fmt(m.b)}</span>
       </div>`).join('')
-    :'<div class="empty" style="padding:12px"><p>لا يوجد أعضاء</p></div>';
+    :`<div class="empty" style="padding:12px"><p>${t('noFam')}</p></div>`;
 
   // Quick actions
   const qa=document.getElementById('dash-qa');
   if (qa) qa.innerHTML=`
-    ${can.write()?`<button class="qa-btn g" onclick="openM('rec')"><i class="ti ti-receipt"></i><span>إيصال قبض جديد</span></button>`:''}
-    ${can.write()?`<button class="qa-btn r" onclick="openM('pay')"><i class="ti ti-cash"></i><span>سند صرف جديد</span></button>`:''}
-    <button class="qa-btn b" onclick="nav('stmt')"><i class="ti ti-file-description"></i><span>كشف حساب عضو</span></button>
-    <button class="qa-btn b" onclick="nav('rep')"><i class="ti ti-chart-bar"></i><span>عرض التقارير</span></button>
+    ${can.write()?`<button class="qa-btn g" onclick="openM('rec')"><i class="ti ti-receipt"></i><span>${t('qaRec')}</span></button>`:''}
+    ${can.write()?`<button class="qa-btn r" onclick="openM('pay')"><i class="ti ti-cash"></i><span>${t('qaPay')}</span></button>`:''}
+    <button class="qa-btn b" onclick="nav('stmt')"><i class="ti ti-file-description"></i><span>${t('qaStmt')}</span></button>
+    <button class="qa-btn b" onclick="nav('rep')"><i class="ti ti-chart-bar"></i><span>${t('qaRep')}</span></button>
   `;
 }
 
@@ -505,15 +428,15 @@ window.renderStmt = function() {
       <div style="font-size:18px;font-weight:600;margin-top:4px">${esc(m.name)}</div>
     </div>
     <div class="kgrid" style="margin-bottom:16px">
-      <div class="kpi ${bal>=0?'g':'r'}"><div class="kpi-lbl">الرصيد الحالي</div><div class="kpi-val">₪ ${fmt(bal)}</div></div>
-      <div class="kpi g"><div class="kpi-lbl">إجمالي الدفعات</div><div class="kpi-val">₪ ${fmt(paid)}</div></div>
-      <div class="kpi b"><div class="kpi-lbl">عدد الحركات</div><div class="kpi-val">${txs.length}</div></div>
+      <div class="kpi ${bal>=0?'g':'r'}"><div class="kpi-lbl">${t('currentBal')}</div><div class="kpi-val">₪ ${fmt(bal)}</div></div>
+      <div class="kpi g"><div class="kpi-lbl">${t('totalPaid')}</div><div class="kpi-val">₪ ${fmt(paid)}</div></div>
+      <div class="kpi b"><div class="kpi-lbl">${t('movements')}</div><div class="kpi-val">${txs.length}</div></div>
     </div>
     <div style="display:flex;gap:6px;font-size:11px;font-weight:600;color:var(--tx3);padding:6px 0;border-bottom:1px solid var(--bd);margin-bottom:4px">
-      <span style="min-width:88px">التاريخ</span><span style="flex:1">البيان</span>
-      <span style="min-width:75px">دائن</span><span style="min-width:75px">مدين</span><span style="min-width:75px">الرصيد</span>
+      <span style="min-width:88px">${t('stmtDate')}</span><span style="flex:1">${t('stmtDesc')}</span>
+      <span style="min-width:75px">${t('credit')}</span><span style="min-width:75px">${t('debit')}</span><span style="min-width:75px">${t('stmtBal')}</span>
     </div>
-    <div class="scroll">${rows||'<div class="empty" style="padding:16px"><p>لا توجد حركات</p></div>'}</div>
+    <div class="scroll">${rows||`<div class="empty" style="padding:16px"><p>${t('noMovements')}</p></div>`}</div>
   </div>`;
 };
 window.goStmt = id => { nav('stmt'); setTimeout(()=>{ document.getElementById('stmt-sel').value=id; window.renderStmt(); },80); };
@@ -525,10 +448,10 @@ function renderRep() {
   const ti=L.in(), to=L.out(), net=ti-to;
   const tb=DB.fam.reduce((s,m)=>s+L.bal(m.id),0);
   document.getElementById('rep-kpis').innerHTML=`
-    <div class="kpi g"><div class="kpi-lbl">إجمالي الإيصالات</div><div class="kpi-val">₪ ${fmt(ti)}</div></div>
-    <div class="kpi r"><div class="kpi-lbl">إجمالي المدفوعات</div><div class="kpi-val">₪ ${fmt(to)}</div></div>
-    <div class="kpi ${net>=0?'g':'r'}"><div class="kpi-lbl">الصافي</div><div class="kpi-val">₪ ${fmt(net)}</div></div>
-    <div class="kpi b"><div class="kpi-lbl">أرصدة الأعضاء</div><div class="kpi-val">₪ ${fmt(tb)}</div></div>
+    <div class="kpi g"><div class="kpi-lbl">${t('kpiIn')}</div><div class="kpi-val">₪ ${fmt(ti)}</div></div>
+    <div class="kpi r"><div class="kpi-lbl">${t('kpiOut')}</div><div class="kpi-val">₪ ${fmt(to)}</div></div>
+    <div class="kpi ${net>=0?'g':'r'}"><div class="kpi-lbl">${t('kpiNet')}</div><div class="kpi-val">₪ ${fmt(net)}</div></div>
+    <div class="kpi b"><div class="kpi-lbl">${t('kpiMembers')}</div><div class="kpi-val">₪ ${fmt(tb)}</div></div>
   `;
   const mth={}, COLS=['#00C896','#1B6CA8','#DD6B20','#E53E3E','#6D28D9'];
   DB.rec.forEach(r=>{mth[r.method]=(mth[r.method]||0)+Number(r.amount);});
@@ -551,7 +474,7 @@ function renderRep() {
 ═══════════════════════════════════════════ */
 function renderAudit() {
   const list=document.getElementById('audit-list');
-  if (!DB.audit.length){ list.innerHTML='<div class="empty"><i class="ti ti-clipboard-list"></i><p>السجل فارغ</p></div>'; return; }
+  if (!DB.audit.length){ list.innerHTML=`<div class="empty"><i class="ti ti-clipboard-list"></i><p>${t('emptyAudit')}</p></div>`; return; }
   list.innerHTML=DB.audit.map(a=>`
     <div class="ae">
       <div class="ai ${a.action==='add'?'add':a.action==='delete'?'del':'sys'}">
@@ -566,11 +489,11 @@ function renderAudit() {
 
 function renderSysInfo() {
   document.getElementById('sys-info').innerHTML=`
-    <div class="sr"><span class="sr-l">عدد الإيصالات</span><span class="sr-v">${DB.rec.length}</span></div>
-    <div class="sr"><span class="sr-l">عدد سندات الصرف</span><span class="sr-v">${DB.pay.length}</span></div>
-    <div class="sr"><span class="sr-l">عدد الأعضاء</span><span class="sr-v">${DB.fam.length}</span></div>
-    <div class="sr"><span class="sr-l">المستخدم الحالي</span><span class="sr-v">${esc(CUR?.full_name||CU?.email||'—')}</span></div>
-    <div class="sr"><span class="sr-l">الصلاحية</span><span class="sr-v"><span class="role-tag ${CUR?.role||'viewer'}">${ROLES[CUR?.role]||'—'}</span></span></div>
+    <div class="sr"><span class="sr-l">${t('sysRec')}</span><span class="sr-v">${DB.rec.length}</span></div>
+    <div class="sr"><span class="sr-l">${t('sysPay')}</span><span class="sr-v">${DB.pay.length}</span></div>
+    <div class="sr"><span class="sr-l">${t('sysFam')}</span><span class="sr-v">${DB.fam.length}</span></div>
+    <div class="sr"><span class="sr-l">${t('sysCurUser')}</span><span class="sr-v">${esc(CUR?.full_name||CU?.email||'—')}</span></div>
+    <div class="sr"><span class="sr-l">${t('sysRole')}</span><span class="sr-v"><span class="role-tag ${CUR?.role||'viewer'}">${ROLES[CUR?.role]||'—'}</span></span></div>
   `;
 }
 
@@ -600,7 +523,7 @@ async function loadUsers() {
 window.changeRole = async (uid, role) => {
   await SB.from('user_roles').update({role}).eq('user_id',uid);
   await log('edit',`تغيير دور المستخدم إلى ${ROLES[role]}`);
-  toast(`تم تغيير الدور إلى ${ROLES[role]}`,'ok');
+  toast(`${t('rolChanged')} ${ROLES[role]}`,'ok');
   loadUsers();
 };
 window.inviteUser = async () => {
@@ -610,11 +533,11 @@ window.inviteUser = async () => {
   const name =document.getElementById('inv-name').value.trim();
   if (!email||!pass){ toast('البريد وكلمة المرور مطلوبان','warn'); return; }
   const {data,error}=await SB.auth.signUp({email,password:pass});
-  if (error){ toast('خطأ: '+error.message,'err'); return; }
+  if (error){ toast(t('saveErr')+': '+error.message,'err'); return; }
   await SB.from('user_roles').upsert({user_id:data.user.id,role,full_name:name||email});
   await log('add',`إضافة مستخدم: ${name||email} (${ROLES[role]})`);
   closeM();
-  toast(`تم إنشاء حساب ${email}`,'ok');
+  toast(`${t('invDone')} ${email}`,'ok');
   loadUsers();
 };
 
@@ -664,7 +587,7 @@ async function log(action, desc) {
    SAVE
 ═══════════════════════════════════════════ */
 window.saveRec = async (prt=false) => {
-  if (!can.write()){ toast('ليس لديك صلاحية','err'); return; }
+  if (!can.write()){ toast(t('noPermWrite'),'err'); return; }
   const mid=document.getElementById('r-mem').value;
   const amt=document.getElementById('r-amt').value;
   const dat=document.getElementById('r-dat').value;
@@ -680,7 +603,7 @@ window.saveRec = async (prt=false) => {
     description:document.getElementById('r-dsc').value,
     created_by_name: CUR?.full_name||CU?.email,
   }).select().single();
-  if (error){ toast('خطأ في الحفظ: '+error.message,'err'); return; }
+  if (error){ toast(t('saveErr')+': '+error.message,'err'); return; }
   await SB.from('transactions').insert({
     member_id:mid, amount:+amt, type:'cr',
     ref_id:data.id,
@@ -723,7 +646,7 @@ window.saveFam = async () => {
   if (!can.manage()){ toast('ليس لديك صلاحية','err'); return; }
   const nm=document.getElementById('f-nm').value;
   if (!vf('f-nm',v=>v.trim().length>=2,'e-f-nm')) return;
-  if (DB.fam.find(m=>m.name.trim()===nm.trim())){ toast('يوجد عضو بنفس الاسم','warn'); return; }
+  if (DB.fam.find(m=>m.name.trim()===nm.trim())){ toast(t('dupMember'),'warn'); return; }
   const bal=+document.getElementById('f-bal').value||0;
   const {data,error}=await SB.from('family').insert({
     name:nm.trim(),
@@ -736,7 +659,7 @@ window.saveFam = async () => {
   if (bal!==0) await SB.from('transactions').insert({
     member_id:data.id, amount:Math.abs(bal),
     type:bal>0?'cr':'dr',
-    description:'رصيد افتتاحي', date:today(),
+    description:t('currentBal'), date:today(),
   });
   await log('add',`إضافة عضو: ${nm}`);
   closeM();
@@ -748,35 +671,35 @@ window.saveFam = async () => {
    DELETE
 ═══════════════════════════════════════════ */
 window.delRec = async id => {
-  if (!can.delete()){ toast('ليس لديك صلاحية الحذف','err'); return; }
+  if (!can.delete()){ toast(t('noPermDel'),'err'); return; }
   const r=DB.rec.find(x=>x.id===id);
-  if (!r||!confirm(`حذف إيصال ${r.no}؟`)) return;
+  if (!r||!confirm(`${t('delConfRec')} ${r.no}?`)) return;
   await SB.from('transactions').delete().eq('ref_id',id);
   await SB.from('receipts').delete().eq('id',id);
   await log('delete',`حذف إيصال ${r.no} — ${gmn(r.member_id)}`);
   await loadAll();
-  toast(`حُذف ${r.no}`,'warn');
+  toast(`${t('deleted')} ${r.no}`,'warn');
 };
 
 window.delPay = async id => {
   if (!can.delete()){ toast('ليس لديك صلاحية الحذف','err'); return; }
   const p=DB.pay.find(x=>x.id===id);
-  if (!p||!confirm(`حذف سند ${p.no}؟`)) return;
+  if (!p||!confirm(`${t('delConfPay')} ${p.no}?`)) return;
   await SB.from('payments').delete().eq('id',id);
   await log('delete',`حذف سند ${p.no}`);
   await loadAll();
-  toast(`حُذف ${p.no}`,'warn');
+  toast(`${t('deleted')} ${p.no}`,'warn');
 };
 
 window.delFam = async id => {
   if (!can.delete()){ toast('ليس لديك صلاحية الحذف','err'); return; }
   const m=gm(id);
-  if (!m||!confirm(`حذف العضو ${m.name}؟`)) return;
+  if (!m||!confirm(`${t('delConfFam')} ${m.name}?`)) return;
   await SB.from('transactions').delete().eq('member_id',id);
   await SB.from('family').delete().eq('id',id);
   await log('delete',`حذف عضو: ${m.name}`);
   await loadAll();
-  toast(`حُذف ${m.name}`,'warn');
+  toast(`${t('deleted')} ${m.name}`,'warn');
 };
 
 /* ═══════════════════════════════════════════
@@ -785,15 +708,15 @@ window.delFam = async id => {
 window.prtRec = id => {
   const r=DB.rec.find(x=>x.id===id); if(!r) return;
   const html=`<div class="rdoc">
-    <div class="rt">ديوان آل طه<br><span style="font-size:11px;font-weight:400">سند قبض</span></div>
-    <div class="rr"><span>رقم الإيصال</span><b>${esc(r.no)}</b></div>
-    <div class="rr"><span>التاريخ</span><span>${fdate(r.date)}</span></div>
-    <div class="rr"><span>اسم العضو</span><span>${esc(gmn(r.member_id))}</span></div>
-    <div class="rr"><span>طريقة الدفع</span><span>${esc(r.method)}</span></div>
-    <div class="rr"><span>البيان</span><span>${esc(r.description||'—')}</span></div>
+    <div class="rt">${t('prtTitle')}<br><span style="font-size:11px;font-weight:400">${t('prtSub')}</span></div>
+    <div class="rr"><span>${t('prtNo')}</span><b>${esc(r.no)}</b></div>
+    <div class="rr"><span>${t('prtDate')}</span><span>${fdate(r.date)}</span></div>
+    <div class="rr"><span>${t('prtMember')}</span><span>${esc(gmn(r.member_id))}</span></div>
+    <div class="rr"><span>${t('prtMethod')}</span><span>${esc(r.method)}</span></div>
+    <div class="rr"><span>${t('prtDesc')}</span><span>${esc(r.description||'—')}</span></div>
     <div class="rv">₪ ${fmt(r.amount)}</div>
-    <div class="rs"><div>توقيع المستلم: __________</div><div>توقيع المدفوع: __________</div></div>
-    <div style="text-align:center;font-size:10px;margin-top:14px;color:#777">ديوان آل طه · ${new Date().toLocaleDateString('ar-SA')}</div>
+    <div class="rs"><div>${t('prtSig1')}</div><div>${t('prtSig2')}</div></div>
+    <div style="text-align:center;font-size:10px;margin-top:14px;color:#777">${t('prtTitle')} · ${new Date().toLocaleDateString('ar-SA')}</div>
   </div>`;
   document.getElementById('prt-prev').innerHTML=html;
   document.getElementById('pra').innerHTML=html;
@@ -809,7 +732,7 @@ window.doBackup = () => {
   a.href=URL.createObjectURL(blob);
   a.download=`diwan_backup_${today()}.json`;
   a.click();
-  toast('تم تصدير النسخة الاحتياطية','ok');
+  toast(t('backupDone'),'ok');
 };
 
 window.exportCSV = type => {
@@ -832,7 +755,7 @@ window.exportCSV = type => {
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=type+'_'+today()+'.csv';
   a.click();
-  toast('تم التصدير','ok');
+  toast(t('exported'),'ok');
 };
 
 /* ═══════════════════════════════════════════
