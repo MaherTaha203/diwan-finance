@@ -965,7 +965,7 @@ window.prtPay=id=>{
 </div>
 <script>window.onload=()=>{window.print();}</script>
 </body>
-</html>\`;
+</html>`;
   const win=window.open('','_blank','width=480,height=700,scrollbars=yes');
   if(win){win.document.write(html);win.document.close();}
   else{toast('يرجى السماح بالنوافذ المنبثقة في المتصفح','warn');}
