@@ -108,10 +108,10 @@ body.light .card{background:#fff}
 .nb-badge{margin-right:auto;font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(220,38,38,.2);color:#FCA5A5}
 
 /* MAIN */
-.main{flex:1;overflow-y:auto;background:var(--bg-page);scrollbar-width:thin;scrollbar-color:var(--border-default) transparent}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg-page);scrollbar-width:thin;scrollbar-color:var(--border-default) transparent;scroll-behavior:smooth}
 .main::-webkit-scrollbar{width:5px}
 .main::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:3px}
-.pg{display:none;padding:24px;animation:fadeIn .2s ease;min-height:100%}
+.pg{display:none;padding:24px;animation:fadeIn .2s ease;min-height:100%;width:100%}
 .pg.on{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
