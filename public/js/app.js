@@ -63,7 +63,7 @@ const fdate=d=>{try{return new Date(d).toLocaleDateString('ar-SA',{year:'numeric
 const gm=id=>DB.fam.find(m=>m.id==id);
 const gmn=id=>gm(id)?.name||'—';
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function debounce(fn,ms=300){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+function debounce(fn,ms=350){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 
 /* ═══ TOAST ═══ */
 const ICONS={ok:'ti-circle-check',err:'ti-circle-x',warn:'ti-alert-triangle',inf:'ti-info-circle'};
@@ -190,13 +190,13 @@ async function checkSession(){
 async function loadAll(){
   try{
     const[r1,r2,r3,r4,r5,r6,r7]=await Promise.all([
-      SB.from('receipts').select('*').order('created_at',{ascending:false}),
-      SB.from('payments').select('*').order('created_at',{ascending:false}),
-      SB.from('family').select('*').order('name'),
+      SB.from('receipts').select('id,no,member_id,member_name,amount,currency,amount_usd,exchange_rate,fund,receipt_type,method,date,description,created_by_name,created_at').order('created_at',{ascending:false}),
+      SB.from('payments').select('id,no,beneficiary,amount,currency,amount_usd,category,method,reason,date,approved_by,created_by_name,created_at').order('created_at',{ascending:false}),
+      SB.from('family').select('id,name,phone,apartment,membership_fee,fee_period,subscription_type,subscription_status,annual_fee,notes,created_at').order('name'),
       SB.from('transactions').select('*'),
-      SB.from('audit_log').select('*').order('created_at',{ascending:false}).limit(100),
-      SB.from('donations').select('*').order('created_at',{ascending:false}),
-      SB.from('rentals').select('*').order('created_at',{ascending:false}),
+      SB.from('audit_log').select('id,action,description,user_name,created_at').order('created_at',{ascending:false}).limit(50),
+      SB.from('donations').select('id,member_id,member_name,amount,currency,amount_ils,exchange_rate,date,notes,created_by_name,created_at').order('created_at',{ascending:false}),
+      SB.from('rentals').select('id,tenant_name,tenant_type,member_id,event_date,start_time,end_time,amount,currency,amount_usd,paid_amount,status,notes,created_at').order('created_at',{ascending:false}),
     ]);
     DB.rec=r1.data||[];DB.pay=r2.data||[];DB.fam=r3.data||[];
     DB.tx=r4.data||[];DB.audit=r5.data||[];DB.donations=r6.data||[];DB.rentals=r7.data||[];
@@ -205,8 +205,17 @@ async function loadAll(){
 }
 window.loadAll=loadAll;
 function renderAll(){
-  renderDash();D.rec.render();D.pay.render();D.fam.render();
-  D.don.render();D.rent.render();fillStmtSel();fillMemDrop();
+  renderDash();
+  // فقط الصفحة الحالية
+  const activePage = document.querySelector('.pg.on')?.id?.replace('pg-','');
+  if(activePage==='rec')  D.rec.render();
+  else if(activePage==='pay')  D.pay.render();
+  else if(activePage==='fam')  D.fam.render();
+  else if(activePage==='don')  D.don.render();
+  else if(activePage==='rent') D.rent.render();
+  else if(activePage==='rep')  renderRep();
+  else if(activePage==='audit')renderAudit();
+  fillStmtSel();fillMemDrop();
 }
 
 /* ═══ PAGE RENDERERS ═══ */
