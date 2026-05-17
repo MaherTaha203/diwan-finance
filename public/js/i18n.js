@@ -663,7 +663,6 @@ window.applyLang = function() {
   setLabel('r-dat', tr.mRecDate);
   setPlaceholder('r-rcv', tr.mRecRcvPh);
   setPlaceholder('r-dsc', tr.mRecDescPh);
-  const rRcvLabel = doc.querySelector('label[for="r-rcv"]') || getLabelBefore('r-rcv');
   setLabel('r-rcv', tr.mRecRcv);
   setLabel('r-dsc', tr.mRecDesc);
   const mRecBtns = doc.querySelectorAll('#m-rec .mf .btn');
