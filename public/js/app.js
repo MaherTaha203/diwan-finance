@@ -1,876 +1,409 @@
-'use strict';
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap');
 
-/* ═══ STATE ═══ */
-let SB=null,CU=null,CUR=null;
-const DB={rec:[],pay:[],fam:[],tx:[],audit:[],donations:[],rentals:[]};
-const ROLES={admin:'مدير',accountant:'محاسب',viewer:'عارض'};
-const PSZ=15,PS={rec:1,pay:1,fam:1,don:1,rent:1};
-let USD_RATE=null,RATE_DATE=null;
-
-/* ═══ PERMISSIONS ═══ */
-const can={
-  write:()=>['admin','accountant'].includes(CUR?.role),
-  delete:()=>CUR?.role==='admin',
-  manage:()=>CUR?.role==='admin',
-};
-
-/* ═══ LEDGER ═══ */
-const L={
-  bal:mid=>DB.tx.filter(t=>t.member_id==mid).reduce((s,t)=>t.type==='cr'?s+Number(t.amount):s-Number(t.amount),0),
-  txFor:mid=>DB.tx.filter(t=>t.member_id==mid).sort((a,b)=>new Date(a.date)-new Date(b.date)),
-  in:()=>DB.rec.reduce((s,r)=>s+Number(r.amount),0),
-  out:()=>DB.pay.reduce((s,p)=>s+Number(p.amount),0),
-  fundIn:fund=>DB.rec.filter(r=>r.fund===fund).reduce((s,r)=>s+Number(r.amount),0),
-  donTotal:()=>DB.donations.reduce((s,d)=>s+Number(d.amount_ils||d.amount),0),
-};
-
-/* ═══ EXCHANGE RATE ═══ */
-async function fetchRate(){
-  try{
-    const res=await fetch('https://data.gov.il/api/3/action/datastore_search?resource_id=88adaee8-624c-4b3b-b0d7-07c39034fa0a&limit=1&sort=_id desc');
-    const json=await res.json();
-    const rec=json?.result?.records?.[0];
-    if(rec){USD_RATE=parseFloat(rec.EXCHANGERATE);RATE_DATE=rec.DATE;updateRateDisplay();return USD_RATE;}
-  }catch(e){}
-  try{
-    const r2=await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    const j2=await r2.json();
-    USD_RATE=j2?.rates?.ILS;RATE_DATE=today();updateRateDisplay();return USD_RATE;
-  }catch(e2){USD_RATE=3.7;updateRateDisplay();}
-  return USD_RATE;
-}
-function updateRateDisplay(){
-  document.querySelectorAll('.rate-display').forEach(el=>{
-    if(USD_RATE) el.textContent=`1$ = ₪${USD_RATE.toFixed(2)} (${RATE_DATE||'اليوم'})`;
-  });
-  calcILS('r');calcILS('p');calcILS('don');calcILS('rent');
-}
-function calcILS(prefix){
-  const usdEl=document.getElementById(prefix+'-amt-usd');
-  const ilsEl=document.getElementById(prefix+'-amt-ils');
-  const curEl=document.getElementById(prefix+'-currency');
-  if(!usdEl||!ilsEl||!curEl)return;
-  if(curEl.value==='USD'&&USD_RATE&&usdEl.value){
-    ilsEl.value=(parseFloat(usdEl.value)*USD_RATE).toFixed(2);
-  }
+/* DESIGN TOKENS */
+:root {
+  --navy-950:#020B18;--navy-900:#0A1628;--navy-800:#0D2137;--navy-700:#112840;
+  --navy-600:#1A3A5C;--navy-500:#1B6CA8;--navy-400:#2E86C1;
+  --emerald-700:#047857;--emerald-600:#059669;--emerald-500:#10B981;
+  --emerald-400:#00C896;--emerald-300:#34D399;
+  --color-success:#059669;--color-success-bg:#ECFDF5;--color-success-bd:#A7F3D0;
+  --color-danger:#DC2626;--color-danger-bg:#FEF2F2;--color-danger-bd:#FECACA;
+  --color-warning:#D97706;--color-warning-bg:#FFFBEB;--color-warning-bd:#FDE68A;
+  --color-info:#1B6CA8;--color-info-bg:#EFF6FF;--color-info-bd:#BFDBFE;
+  --font-primary:'Cairo','IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+  --font-mono:'Courier New',monospace;
+  --radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.1);--shadow-md:0 4px 16px rgba(0,0,0,.12);--shadow-lg:0 8px 32px rgba(0,0,0,.16);
+  --tr-fast:all .15s ease;--tr-base:all .2s ease;--tr-slow:all .3s ease;
 }
 
-/* ═══ UTILS ═══ */
-const today=()=>new Date().toISOString().slice(0,10);
-const fmt=n=>Math.round(Number(n||0)).toLocaleString('ar-SA');
-const fmtD=n=>Number(n||0).toFixed(2);
-const fdate=d=>{try{return new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});}catch{return d||'—';}};
-const gm=id=>DB.fam.find(m=>m.id==id);
-const gmn=id=>gm(id)?.name||'—';
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function debounce(fn,ms=300){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
-
-/* ═══ TOAST ═══ */
-const ICONS={ok:'ti-circle-check',err:'ti-circle-x',warn:'ti-alert-triangle',inf:'ti-info-circle'};
-function toast(msg,type='ok'){
-  const c=document.getElementById('tc');
-  const el=document.createElement('div');
-  el.className='toast '+type;
-  el.innerHTML=`<i class="ti ${ICONS[type]}"></i><span>${esc(msg)}</span>`;
-  c.appendChild(el);
-  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300);},3500);
+/* DARK MODE */
+body {
+  --bg-page:#060F1C;--bg-surface:#0A1628;--bg-elevated:#0D2137;
+  --bg-overlay:#112240;--bg-hover:#152845;--bg-active:#1A3050;
+  --text-primary:#E8F0F8;--text-secondary:#8BA5C0;--text-tertiary:#4A6480;--text-disabled:#2A3D52;
+  --border-subtle:rgba(255,255,255,.06);--border-default:rgba(255,255,255,.1);--border-strong:rgba(255,255,255,.18);
+  --card-bg:#0A1628;--card-border:rgba(255,255,255,.07);--sidebar-bg:#060F1C;--topbar-bg:#0A1628;
 }
 
-/* ═══ VALIDATION ═══ */
-function vf(id,test,eid){
-  const el=document.getElementById(id);
-  const ok=el&&test(el.value);
-  el?.classList.toggle('er',!ok);
-  document.getElementById(eid)?.classList.toggle('on',!ok);
-  return ok;
+/* LIGHT MODE */
+body.light {
+  --bg-page:#F0F4FA;--bg-surface:#FFFFFF;--bg-elevated:#F7F9FC;
+  --bg-overlay:#EEF2F8;--bg-hover:#E8EFF8;--bg-active:#DDE8F5;
+  --text-primary:#0A1628;--text-secondary:#3D5A7A;--text-tertiary:#7A9AB8;--text-disabled:#B0C4D8;
+  --border-subtle:rgba(0,0,0,.05);--border-default:rgba(0,0,0,.1);--border-strong:rgba(0,0,0,.18);
+  --card-bg:#FFFFFF;--card-border:rgba(0,0,0,.08);--sidebar-bg:#FFFFFF;--topbar-bg:#0A1628;
 }
 
-/* ═══ PAGINATION ═══ */
-function mkPag(tbl,total){
-  const pages=Math.max(1,Math.ceil(total/PSZ));
-  PS[tbl]=Math.min(PS[tbl],pages);
-  const cur=PS[tbl];
-  const el=document.getElementById(tbl+'-pag');if(!el)return;
-  const shown=Math.min(PSZ,total-(cur-1)*PSZ);
-  let h=`<span class="pi">عرض ${shown} من ${total}</span>`;
-  h+=`<button class="pb" onclick="gp('${tbl}',${cur-1})" ${cur<=1?'disabled':''}><i class="ti ti-chevron-right"></i></button>`;
-  for(let i=Math.max(1,cur-2);i<=Math.min(pages,cur+2);i++)
-    h+=`<button class="pb${i===cur?' on':''}" onclick="gp('${tbl}',${i})">${i}</button>`;
-  h+=`<button class="pb" onclick="gp('${tbl}',${cur+1})" ${cur>=pages?'disabled':''}><i class="ti ti-chevron-left"></i></button>`;
-  el.innerHTML=h;
-}
-window.gp=(t,p)=>{PS[t]=p;renderPage(t);};
-function renderPage(t){
-  if(t==='rec')D.rec.render();
-  else if(t==='pay')D.pay.render();
-  else if(t==='fam')D.fam.render();
-  else if(t==='don')D.don.render();
-  else if(t==='rent')D.rent.render();
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:var(--font-primary);direction:rtl;background:var(--bg-page);color:var(--text-primary);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased;transition:background var(--tr-slow),color var(--tr-slow)}
+::selection{background:rgba(0,200,150,.25)}
 
-/* ═══ NAVIGATION ═══ */
-function nav(p){
-  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
-  document.getElementById('pg-'+p)?.classList.add('on');
-  document.querySelector(`.nb[data-p="${p}"]`)?.classList.add('on');
-  if(p==='rep')renderRep();
-  if(p==='stmt')fillStmtSel();
-  if(p==='audit')renderAudit();
-  if(p==='users')loadUsers();
-  if(p==='bk')renderSysInfo();
-}
-document.querySelectorAll('.nb[data-p]').forEach(el=>el.addEventListener('click',()=>nav(el.dataset.p)));
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--navy-900);position:fixed;inset:0;z-index:1000;overflow:hidden}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 20% 30%,rgba(27,108,168,.15) 0%,transparent 70%),radial-gradient(ellipse 400px 300px at 80% 70%,rgba(0,200,150,.08) 0%,transparent 60%)}
+#login-screen::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(255,255,255,.015) 80px,rgba(255,255,255,.015) 81px),repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(255,255,255,.015) 80px,rgba(255,255,255,.015) 81px)}
+.login-box{background:rgba(13,33,55,.92);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-xl);padding:44px 40px;width:94%;max-width:420px;position:relative;z-index:1;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px rgba(0,200,150,.05)}
+.login-box::before{content:'';position:absolute;top:0;right:40px;left:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,150,.6),rgba(27,108,168,.4),transparent)}
+.login-logo{text-align:center;margin-bottom:36px}
+.login-logo-icon{width:64px;height:64px;border-radius:var(--radius-lg);background:linear-gradient(135deg,rgba(27,108,168,.3),rgba(0,200,150,.2));border:1px solid rgba(0,200,150,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;color:#00C896}
+.login-logo h1{font-size:22px;font-weight:700;color:#E8F0F8;margin-bottom:4px;letter-spacing:-.3px}
+.login-logo p{font-size:13px;color:#4A6480;letter-spacing:.02em}
+.lfi{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.lfi label{font-size:12px;font-weight:500;color:#8BA5C0;letter-spacing:.04em;text-transform:uppercase}
+.lfi input{padding:12px 14px;border-radius:var(--radius-md);border:1px solid rgba(255,255,255,.1);background:rgba(6,15,28,.6);color:#E8F0F8;font-size:14px;font-family:var(--font-primary);transition:var(--tr-base);outline:none}
+.lfi input:focus{border-color:rgba(0,200,150,.5);box-shadow:0 0 0 3px rgba(0,200,150,.08);background:rgba(6,15,28,.8)}
+.lfi input::placeholder{color:#2A3D52}
+.login-btn{width:100%;padding:13px;border-radius:var(--radius-md);border:none;background:linear-gradient(135deg,#00C896,#059669);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-primary);transition:var(--tr-base);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(0,200,150,.3)}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,200,150,.4)}
+.login-btn:active{transform:translateY(0)}
+.login-btn:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none}
+.login-err{background:rgba(220,38,38,.15);color:#FCA5A5;border:1px solid rgba(220,38,38,.3);border-radius:var(--radius-md);padding:10px 14px;font-size:13px;margin-top:12px;display:none;text-align:center}
+.login-err.show{display:block}
+.login-footer{text-align:center;margin-top:28px;font-size:11px;color:#2A3D52;letter-spacing:.04em}
 
-/* ═══ THEME ═══ */
-function toggleTheme(){
-  document.body.classList.toggle('light');
-  const isLight=document.body.classList.contains('light');
-  document.getElementById('theme-btn').innerHTML=isLight?'<i class="ti ti-moon"></i>داكن':'<i class="ti ti-sun"></i>فاتح';
-}
-window.toggleTheme=toggleTheme;
+/* APP SHELL */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 
-/* ═══ LANGUAGE ═══ */
-function toggleLang(){
-  window.LANG=window.LANG==='ar'?'en':'ar';
-  document.getElementById('lang-btn').innerHTML=`<i class="ti ti-language"></i>${window.LANG==='ar'?'EN':'AR'}`;
-  window.applyLang();renderAll();
-}
-window.toggleLang=toggleLang;
+/* TOPBAR */
+.top{height:56px;background:var(--navy-900);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);position:relative;z-index:100}
+.top::after{content:'';position:absolute;bottom:0;right:0;left:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(0,200,150,.3) 30%,rgba(27,108,168,.2) 70%,transparent 100%)}
+.top-logo{display:flex;align-items:center;gap:10px;color:#E8F0F8}
+.top-logo-icon{width:32px;height:32px;border-radius:var(--radius-sm);background:linear-gradient(135deg,rgba(0,200,150,.25),rgba(27,108,168,.2));border:1px solid rgba(0,200,150,.25);display:flex;align-items:center;justify-content:center;font-size:16px;color:#00C896}
+.top-logo-text{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.top-logo-sub{font-size:11px;color:#4A6480;margin-top:-2px}
+.top-actions{display:flex;align-items:center;gap:8px}
+.top-btn{height:32px;padding:0 12px;border-radius:var(--radius-sm);background:rgba(255,255,255,.06);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.08);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;font-family:var(--font-primary);transition:var(--tr-fast);white-space:nowrap}
+.top-btn:hover{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.15)}
+.top-btn i{font-size:15px}
+.top-btn.danger{background:rgba(220,38,38,.15);border-color:rgba(220,38,38,.25);color:#FCA5A5}
+.top-btn.danger:hover{background:rgba(220,38,38,.25);color:#fff}
+.rate-badge{display:flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:var(--radius-sm);background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);font-size:11px;color:#00C896;font-weight:500}
+.user-chip{display:flex;align-items:center;gap:8px;height:36px;padding:0 10px 0 6px;border-radius:20px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);cursor:default;transition:var(--tr-fast)}
+.user-chip:hover{background:rgba(255,255,255,.1)}
+.uav{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.uav.admin{background:linear-gradient(135deg,#6D28D9,#4F46E5)}
+.uav.accountant{background:linear-gradient(135deg,#059669,#0D9488)}
+.uav.viewer{background:linear-gradient(135deg,#1B6CA8,#0284C7)}
+.uname{font-size:12px;color:#E8F0F8;font-weight:500;display:block;line-height:1.2}
+.urole{font-size:10px;color:#4A6480;display:block}
+#clock{font-size:12px;color:#4A6480;font-variant-numeric:tabular-nums;min-width:40px}
 
-/* ═══ AUTH ═══ */
-async function login(){
-  const email=document.getElementById('l-email').value.trim();
-  const pass=document.getElementById('l-pass').value;
-  const btn=document.getElementById('login-btn');
-  if(!email||!pass){showErr('يرجى إدخال البريد وكلمة المرور');return;}
-  btn.disabled=true;btn.innerHTML='<div class="spin"></div> جاري الدخول...';
-  document.getElementById('login-err').classList.remove('show');
-  const{data,error}=await SB.auth.signInWithPassword({email,password:pass});
-  if(error){
-    showErr('بريد إلكتروني أو كلمة مرور غير صحيحة');
-    btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> تسجيل الدخول';
-    return;
-  }
-  CU=data.user;await afterLogin();
-}
-window.login=login;
-function showErr(msg){const el=document.getElementById('login-err');el.textContent=msg;el.classList.add('show');}
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden}
 
-async function afterLogin(){
-  const{data:role}=await SB.from('user_roles').select('*').eq('user_id',CU.id).single();
-  CUR=role||{role:'viewer',full_name:CU.email};
-  const r=CUR.role,ini=(CUR.full_name||CU.email).charAt(0).toUpperCase();
-  document.getElementById('uav').textContent=ini;
-  document.getElementById('uav').className='uav '+r;
-  document.getElementById('uname').textContent=CUR.full_name||CU.email;
-  document.getElementById('urole').textContent=ROLES[r]||r;
-  applyPerms();window.applyLang();
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  await fetchRate();await loadAll();startClock();
-}
-async function logout(){
-  await SB.auth.signOut();CU=null;CUR=null;
-  Object.keys(DB).forEach(k=>DB[k]=[]);
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('l-pass').value='';
-  toast('تم تسجيل الخروج','inf');
-}
-window.logout=logout;
-function applyPerms(){
-  ['btn-qrec','btn-qpay','btn-add-rec','btn-add-pay','btn-add-fam','btn-add-don','btn-add-rent'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.style.display=can.write()?'':'none';
-  });
-  const nu=document.getElementById('nb-users');if(nu)nu.style.display=can.manage()?'':'none';
-}
-async function checkSession(){
-  const{data:{session}}=await SB.auth.getSession();
-  if(session){CU=session.user;await afterLogin();}
-}
+/* SIDEBAR */
+.sb{width:210px;background:var(--sidebar-bg);border-left:1px solid var(--border-subtle);flex-shrink:0;overflow-y:auto;padding:8px 0 24px;display:flex;flex-direction:column;scrollbar-width:thin;scrollbar-color:var(--border-default) transparent}
+.sb::-webkit-scrollbar{width:4px}
+.sb::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:2px}
+.sb-section{padding:20px 14px 6px;font-size:10px;font-weight:600;color:var(--text-tertiary);letter-spacing:.1em;text-transform:uppercase}
+.nb{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 8px;border-radius:var(--radius-md);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:var(--tr-fast);border:1px solid transparent}
+.nb:hover{background:var(--bg-hover);color:var(--text-primary)}
+.nb.on{background:rgba(0,200,150,.1);color:#00C896;font-weight:500;border-color:rgba(0,200,150,.15)}
+body.light .nb.on{background:rgba(0,200,150,.08);color:#059669}
+body.light .card{background:rgba(255,255,255,.95);backdrop-filter:blur(8px)}
 
-/* ═══ DATA ═══ */
-async function loadAll(){
-  try{
-    const[r1,r2,r3,r4,r5,r6,r7]=await Promise.all([
-      SB.from('receipts').select('*').order('created_at',{ascending:false}),
-      SB.from('payments').select('*').order('created_at',{ascending:false}),
-      SB.from('family').select('*').order('name'),
-      SB.from('transactions').select('*'),
-      SB.from('audit_log').select('*').order('created_at',{ascending:false}).limit(100),
-      SB.from('donations').select('*').order('created_at',{ascending:false}),
-      SB.from('rentals').select('*').order('created_at',{ascending:false}),
-    ]);
-    DB.rec=r1.data||[];DB.pay=r2.data||[];DB.fam=r3.data||[];
-    DB.tx=r4.data||[];DB.audit=r5.data||[];DB.donations=r6.data||[];DB.rentals=r7.data||[];
-    renderAll();
-  }catch(e){toast('خطأ في تحميل البيانات','err');console.error(e);}
-}
-window.loadAll=loadAll;
-function renderAll(){
-  renderDash();D.rec.render();D.pay.render();D.fam.render();
-  D.don.render();D.rent.render();fillStmtSel();fillMemDrop();
-}
+.nb i{font-size:16px;width:18px;text-align:center;flex-shrink:0}
+.nb-badge{margin-right:auto;font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(220,38,38,.2);color:#FCA5A5}
 
-/* ═══ PAGE RENDERERS ═══ */
-const D={
-  rec:{render(){
-    const q=(document.getElementById('q-rec')?.value||'').toLowerCase().trim();
-    const fund=document.getElementById('f-rec-fund')?.value||'';
-    const rtype=document.getElementById('f-rec-type')?.value||'';
-    let d=DB.rec.map(r=>({...r,mname:gmn(r.member_id)}));
-    if(q)d=d.filter(r=>(r.no+r.mname+(r.description||'')).toLowerCase().includes(q));
-    if(fund)d=d.filter(r=>r.fund===fund);
-    if(rtype)d=d.filter(r=>r.receipt_type===rtype);
-    const sub=document.getElementById('rec-sub');
-    if(sub){
-      const totILS=d.reduce((s,r)=>s+Number(r.amount),0);
-      const totUSD=d.filter(r=>r.currency==='USD').reduce((s,r)=>s+Number(r.amount_usd||0),0);
-      sub.textContent=`${d.length} إيصال — ₪ ${fmt(totILS)}${totUSD?` | $${fmtD(totUSD)}`:''}`;
-    }
-    mkPag('rec',d.length);
-    const page=d.slice((PS.rec-1)*PSZ,PS.rec*PSZ);
-    const body=document.getElementById('rec-body');
-    if(!page.length){body.innerHTML='<tr><td colspan="9"><div class="empty"><i class="ti ti-inbox"></i><p>لا توجد إيصالات</p></div></td></tr>';return;}
-    body.innerHTML=page.map(r=>`<tr>
-      <td><b>${esc(r.no)}</b></td>
-      <td>${esc(r.mname)}</td>
-      <td style="color:var(--ok);font-weight:600;text-align:left">₪ ${fmt(r.amount)}${r.currency==='USD'&&r.amount_usd?`<br><small style="color:var(--tx3)">$${fmtD(r.amount_usd)}</small>`:''}
-      </td>
-      <td><span class="badge ${r.fund==='food'?'warn':'inf'}">${r.fund==='food'?'صندوق الغداء':'صندوق الديوان'}</span></td>
-      <td><span class="badge neu">${r.receipt_type==='donation'?'تبرع':r.receipt_type==='membership'?'مساهمة':'أخرى'}</span></td>
-      <td style="color:var(--tx2)">${fdate(r.date)}</td>
-      <td style="color:var(--tx3);font-size:11px">${esc(r.created_by_name||'—')}</td>
-      <td class="tda">
-        <button class="btn ghost sm" style="color:var(--inf)" onclick="prtRec('${r.id}')"><i class="ti ti-printer"></i></button>
-        ${can.delete()?`<button class="btn ghost sm" style="color:var(--err)" onclick="delRec('${r.id}')"><i class="ti ti-trash"></i></button>`:''}
-      </td></tr>`).join('');
-  }},
-  pay:{render(){
-    const q=(document.getElementById('q-pay')?.value||'').toLowerCase().trim();
-    const cat=document.getElementById('f-pay-cat')?.value||'';
-    let d=[...DB.pay];
-    if(q)d=d.filter(p=>(p.no+p.beneficiary+(p.reason||'')).toLowerCase().includes(q));
-    if(cat)d=d.filter(p=>p.category===cat);
-    const sub=document.getElementById('pay-sub');
-    if(sub){
-      const totILS=d.reduce((s,p)=>s+Number(p.amount),0);
-      const totUSD=d.filter(p=>p.currency==='USD').reduce((s,p)=>s+Number(p.amount_usd||0),0);
-      sub.textContent=`${d.length} سند — ₪ ${fmt(totILS)}${totUSD?` | $${fmtD(totUSD)}`:''}`;
-    }
-    mkPag('pay',d.length);
-    const page=d.slice((PS.pay-1)*PSZ,PS.pay*PSZ);
-    const body=document.getElementById('pay-body');
-    if(!page.length){body.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-inbox"></i><p>لا توجد سندات</p></div></td></tr>';return;}
-    const cats={general:'عام',maintenance:'صيانة',salaries:'رواتب',utilities:'فواتير',food:'غداء',other:'أخرى'};
-    body.innerHTML=page.map(p=>`<tr>
-      <td><b>${esc(p.no)}</b></td>
-      <td>${esc(p.beneficiary)}</td>
-      <td style="color:var(--err);font-weight:600;text-align:left">₪ ${fmt(p.amount)}${p.currency==='USD'&&p.amount_usd?`<br><small style="color:var(--tx3)">$${fmtD(p.amount_usd)}</small>`:''}
-      </td>
-      <td><span class="badge neu">${cats[p.category]||'عام'}</span></td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)">${esc(p.reason||'—')}</td>
-      <td style="color:var(--tx2)">${fdate(p.date)}</td>
-      <td style="color:var(--tx3);font-size:11px">${esc(p.created_by_name||'—')}</td>
-      <td class="tda">${can.delete()?`<button class="btn ghost sm" style="color:var(--err)" onclick="delPay('${p.id}')"><i class="ti ti-trash"></i></button>`:''}</td>
-    </tr>`).join('');
-  }},
-  fam:{render(){
-    const q=(document.getElementById('q-fam')?.value||'').toLowerCase().trim();
-    const st=document.getElementById('f-fam-s')?.value||'';
-    let d=DB.fam.map(m=>({...m,bal:L.bal(m.id)}));
-    if(q)d=d.filter(m=>m.name.includes(q)||(m.phone||'').includes(q));
-    if(st==='cr')d=d.filter(m=>m.bal>0);
-    else if(st==='dr')d=d.filter(m=>m.bal<0);
-    const sub=document.getElementById('fam-sub');
-    if(sub)sub.textContent=`${d.length} عضو — إجمالي المساهمات: ₪ ${fmt(d.reduce((s,m)=>s+m.bal,0))}`;
-    mkPag('fam',d.length);
-    const page=d.slice((PS.fam-1)*PSZ,PS.fam*PSZ);
-    const body=document.getElementById('fam-body');
-    if(!page.length){body.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-users"></i><p>لا يوجد أعضاء</p></div></td></tr>';return;}
-    const periods={yearly:'سنوي',biennial:'كل سنتين',once:'مرة واحدة'};
-    body.innerHTML=page.map((m,i)=>{
-      const b=m.bal,cls=b>0?'ok':b<0?'err':'neu',lbl=b>0?'مسدَّد':b<0?'متأخر':'صفر';
-      return`<tr>
-        <td style="color:var(--tx3)">${(PS.fam-1)*PSZ+i+1}</td>
-        <td><b>${esc(m.name)}</b></td>
-        <td style="color:var(--tx2)">${esc(m.phone||'—')}</td>
-        <td style="font-weight:600;color:${b>=0?'var(--ok)':'var(--err)'};text-align:left">₪ ${fmt(b)}</td>
-        <td style="color:var(--tx2)">${m.membership_fee?'₪ '+fmt(m.membership_fee):'-'}</td>
-        <td style="color:var(--tx2);font-size:12px">${periods[m.fee_period]||'-'}</td>
-        <td><span class="badge ${cls}">${lbl}</span></td>
-        <td class="tda">
-          <button class="btn ghost sm" style="color:var(--inf)" onclick="goStmt('${m.id}')"><i class="ti ti-file-description"></i></button>
-          ${can.delete()?`<button class="btn ghost sm" style="color:var(--err)" onclick="delFam('${m.id}')"><i class="ti ti-trash"></i></button>`:''}
-        </td></tr>`;
-    }).join('');
-  }},
-  don:{render(){
-    const q=(document.getElementById('q-don')?.value||'').toLowerCase().trim();
-    let d=DB.donations.map(r=>({...r,mname:gmn(r.member_id)||r.member_name||'متبرع'}));
-    if(q)d=d.filter(r=>(r.mname+(r.notes||'')).toLowerCase().includes(q));
-    const sub=document.getElementById('don-sub');
-    if(sub){
-      const totILS=d.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-      const totUSD=d.filter(r=>r.currency==='USD').reduce((s,r)=>s+Number(r.amount),0);
-      sub.textContent=`${d.length} تبرع — ₪ ${fmt(totILS)}${totUSD?` | $${fmtD(totUSD)}`:''}`;
-    }
-    mkPag('don',d.length);
-    const page=d.slice((PS.don-1)*PSZ,PS.don*PSZ);
-    const body=document.getElementById('don-body');
-    if(!page.length){body.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-heart-off"></i><p>لا توجد تبرعات</p></div></td></tr>';return;}
-    body.innerHTML=page.map(r=>`<tr>
-      <td>${esc(r.mname)}</td>
-      <td style="color:var(--ok);font-weight:600;text-align:left">₪ ${fmt(r.amount_ils||r.amount)}${r.currency==='USD'?`<br><small style="color:var(--tx3)">$${fmtD(r.amount)}</small>`:''}
-      </td>
-      <td style="color:var(--tx2);font-size:11px">${r.exchange_rate?`1$=₪${r.exchange_rate}`:'-'}</td>
-      <td style="color:var(--tx2)">${fdate(r.date)}</td>
-      <td style="color:var(--tx2)">${esc(r.notes||'—')}</td>
-      <td style="color:var(--tx3);font-size:11px">${esc(r.created_by_name||'—')}</td>
-      <td class="tda">${can.delete()?`<button class="btn ghost sm" style="color:var(--err)" onclick="delDon('${r.id}')"><i class="ti ti-trash"></i></button>`:''}</td>
-    </tr>`).join('');
-  }},
-  rent:{render(){
-    let d=[...DB.rentals];
-    const sub=document.getElementById('rent-sub');
-    if(sub)sub.textContent=`${d.length} عقد`;
-    mkPag('rent',d.length);
-    const page=d.slice((PS.rent-1)*PSZ,PS.rent*PSZ);
-    const body=document.getElementById('rent-body');
-    if(!page.length){body.innerHTML='<tr><td colspan="9"><div class="empty"><i class="ti ti-home-off"></i><p>لا توجد عقود</p></div></td></tr>';return;}
-    const sm={pending:'warn',paid:'ok',partial:'inf',cancelled:'err'};
-    const sl={pending:'معلق',paid:'مدفوع',partial:'جزئي',cancelled:'ملغى'};
-    body.innerHTML=page.map(r=>`<tr>
-      <td><b>${esc(r.tenant_name)}</b><br><small style="color:var(--tx3)">${r.tenant_type==='member'?'عضو':'خارجي'}</small></td>
-      <td style="color:var(--tx2)">قاعة الديوان</td>
-      <td style="color:var(--tx2)">${fdate(r.event_date)}</td>
-      <td style="color:var(--tx2)">${r.start_time||'—'} - ${r.end_time||'—'}</td>
-      <td style="color:var(--ok);font-weight:600;text-align:left">₪ ${fmt(r.amount)}${r.currency==='USD'&&r.amount_usd?`<br><small style="color:var(--tx3)">$${fmtD(r.amount_usd)}</small>`:''}
-      </td>
-      <td style="color:var(--ok)">₪ ${fmt(r.paid_amount)}</td>
-      <td style="color:var(--err)">₪ ${fmt(r.amount-r.paid_amount)}</td>
-      <td><span class="badge ${sm[r.status]||'neu'}">${sl[r.status]||r.status}</span></td>
-      <td class="tda">
-        ${can.write()?`<button class="btn ghost sm" style="color:var(--ok)" onclick="payRent('${r.id}')"><i class="ti ti-cash"></i></button>`:''}
-        ${can.delete()?`<button class="btn ghost sm" style="color:var(--err)" onclick="delRent('${r.id}')"><i class="ti ti-trash"></i></button>`:''}
-      </td></tr>`).join('');
-  }}
-};
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--bg-page);scrollbar-width:thin;scrollbar-color:var(--border-default) transparent}
+.main::-webkit-scrollbar{width:5px}
+.main::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:3px}
+.pg{display:none;padding:24px;animation:fadeIn .2s ease;min-height:100%}
+.pg.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* ═══ DASHBOARD ═══ */
-function renderDash(){
-  const ti=L.in(),to=L.out(),net=ti-to;
-  const tb=DB.fam.reduce((s,m)=>s+L.bal(m.id),0);
-  const foodIn=L.fundIn('food'),diwanIn=L.fundIn('diwan'),totDon=L.donTotal();
-  const dd=document.getElementById('dash-date');
-  if(dd)dd.textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('kpis').innerHTML=`
-    <div class="kpi g"><i class="ti ti-trending-up kpi-ico"></i><div class="kpi-lbl">إجمالي الإيصالات</div><div class="kpi-val">₪ ${fmt(ti)}</div><div class="kpi-sub">${DB.rec.length} إيصال</div></div>
-    <div class="kpi r"><i class="ti ti-trending-down kpi-ico"></i><div class="kpi-lbl">إجمالي المدفوعات</div><div class="kpi-val">₪ ${fmt(to)}</div><div class="kpi-sub">${DB.pay.length} سند</div></div>
-    <div class="kpi ${net>=0?'g':'r'}"><i class="ti ti-scale kpi-ico"></i><div class="kpi-lbl">صافي الرصيد</div><div class="kpi-val">₪ ${fmt(net)}</div></div>
-    <div class="kpi b"><i class="ti ti-building kpi-ico"></i><div class="kpi-lbl">صندوق الديوان</div><div class="kpi-val">₪ ${fmt(diwanIn)}</div></div>
-    <div class="kpi o"><i class="ti ti-tools-kitchen-2 kpi-ico"></i><div class="kpi-lbl">صندوق الغداء</div><div class="kpi-val">₪ ${fmt(foodIn)}</div></div>
-    <div class="kpi g"><i class="ti ti-heart kpi-ico"></i><div class="kpi-lbl">إجمالي التبرعات</div><div class="kpi-val">₪ ${fmt(totDon)}</div><div class="kpi-sub">${DB.donations.length} تبرع</div></div>
-  `;
-  const now=new Date();const months=[];
-  for(let i=5;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const v=DB.rec.filter(r=>r.date?.startsWith(k)).reduce((s,r)=>s+Number(r.amount),0);
-    months.push({lbl:d.toLocaleDateString('ar-SA',{month:'short'}),v});
-  }
-  const maxV=Math.max(...months.map(m=>m.v),1);
-  document.getElementById('month-chart').innerHTML=months.map(m=>`
-    <div class="bc-wrap"><div class="bc-val">${m.v?'₪'+fmt(m.v):''}</div>
-    <div class="bc-bar" style="height:${Math.max(4,Math.round(m.v/maxV*100))}px;background:${m.v?'var(--acc)':'var(--bg3)'}"></div>
-    <div class="bc-lbl">${m.lbl}</div></div>`).join('');
-  const fundData=[{lbl:'صندوق الديوان',v:diwanIn,c:'#1B6CA8'},{lbl:'صندوق الغداء',v:foodIn,c:'#DD6B20'},{lbl:'التبرعات',v:totDon,c:'#00C896'}];
-  const maxF=Math.max(...fundData.map(f=>f.v),1);
-  document.getElementById('dash-methods').innerHTML=fundData.map(f=>`
-    <div class="h-bar"><span class="h-lbl">${f.lbl}</span>
-    <div class="h-track"><div class="h-fill" style="width:${Math.round(f.v/maxF*100)}%;background:${f.c}">₪${fmt(f.v)}</div></div>
-    <span class="h-val">₪ ${fmt(f.v)}</span></div>`).join('');
-  const last5=DB.rec.slice(0,5);
-  document.getElementById('dash-rec').innerHTML=last5.length
-    ?last5.map(r=>`<div class="sr"><span class="sr-l">${esc(gmn(r.member_id))}<br><small style="color:var(--tx3)">${fdate(r.date)} · ${r.fund==='food'?'غداء':'ديوان'}</small></span><span class="sr-v" style="color:var(--ok)">₪ ${fmt(r.amount)}</span></div>`).join('')
-    :'<div class="empty" style="padding:12px"><p>لا توجد إيصالات</p></div>';
-  const debtors=[...DB.fam].map(m=>({...m,b:L.bal(m.id)})).filter(m=>m.b<0).sort((a,b)=>a.b-b.b).slice(0,5);
-  document.getElementById('dash-balances').innerHTML=debtors.length
-    ?debtors.map(m=>`<div class="sr"><span class="sr-l">${esc(m.name)}</span><span class="sr-v" style="color:var(--err)">₪ ${fmt(m.b)}</span></div>`).join('')
-    :'<div class="empty" style="padding:12px"><p>كل الأعضاء ملتزمون ✅</p></div>';
-  const qa=document.getElementById('dash-qa');
-  if(qa)qa.innerHTML=`
-    ${can.write()?`<button class="qa-btn g" onclick="openM('rec')"><i class="ti ti-receipt"></i><span>إيصال قبض جديد</span></button>`:''}
-    ${can.write()?`<button class="qa-btn r" onclick="openM('pay')"><i class="ti ti-cash"></i><span>سند صرف جديد</span></button>`:''}
-    ${can.write()?`<button class="qa-btn g" onclick="openM('don')"><i class="ti ti-heart"></i><span>تسجيل تبرع</span></button>`:''}
-    <button class="qa-btn b" onclick="nav('stmt')"><i class="ti ti-file-description"></i><span>كشف حساب عضو</span></button>
-    <button class="qa-btn b" onclick="nav('rep')"><i class="ti ti-chart-bar"></i><span>عرض التقارير</span></button>
-  `;
-}
+/* PAGE HEADER */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px}
+.ph-title{font-size:20px;font-weight:700;color:var(--text-primary);letter-spacing:-.3px}
+.ph-sub{font-size:13px;color:var(--text-tertiary);margin-top:3px}
+.ph-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
-/* ═══ STATEMENT ═══ */
-function fillStmtSel(){
-  const s=document.getElementById('stmt-sel');if(!s)return;
-  s.innerHTML='<option value="">-- اختر --</option>'+DB.fam.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
-}
-function fillMemDrop(){
-  ['r-mem','don-mem','rent-mem'].forEach(id=>{
-    const s=document.getElementById(id);if(!s)return;
-    s.innerHTML='<option value="">-- اختر عضواً --</option>'+DB.fam.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
-  });
-}
-window.renderStmt=function(){
-  const id=document.getElementById('stmt-sel').value;
-  const out=document.getElementById('stmt-out');
-  if(!id){out.innerHTML='';return;}
-  const m=gm(id);if(!m){out.innerHTML='';return;}
-  const txs=L.txFor(id),bal=L.bal(id);
-  const paid=txs.filter(t=>t.type==='cr').reduce((s,t)=>s+Number(t.amount),0);
-  const memberDons=DB.donations.filter(d=>d.member_id===id);
-  const totDon=memberDons.reduce((s,d)=>s+Number(d.amount_ils||d.amount),0);
-  let run=0;
-  const rows=txs.map(t=>{
-    run+=t.type==='cr'?Number(t.amount):-Number(t.amount);
-    return`<div class="lr"><span class="lr-d">${fdate(t.date)}</span><span class="lr-t">${esc(t.description||'—')}</span><span class="lr-c">${t.type==='cr'?'₪ '+fmt(t.amount):'—'}</span><span class="lr-dr2">${t.type==='dr'?'₪ '+fmt(t.amount):'—'}</span><span class="lr-b">₪ ${fmt(run)}</span></div>`;
-  }).join('');
-  const periods={yearly:'سنوي',biennial:'كل سنتين',once:'مرة واحدة'};
-  out.innerHTML=`<div class="card">
-    <div style="background:var(--pri);color:#fff;padding:14px;border-radius:var(--r);margin-bottom:16px">
-      <div style="font-size:11px;opacity:.6">كشف حساب مساهمات</div>
-      <div style="font-size:18px;font-weight:600;margin-top:4px">${esc(m.name)}</div>
-    </div>
-    <div class="kgrid" style="margin-bottom:16px">
-      <div class="kpi ${bal>=0?'g':'r'}"><div class="kpi-lbl">رصيد المساهمات</div><div class="kpi-val">₪ ${fmt(bal)}</div></div>
-      <div class="kpi g"><div class="kpi-lbl">إجمالي الدفعات</div><div class="kpi-val">₪ ${fmt(paid)}</div></div>
-      <div class="kpi b"><div class="kpi-lbl">إجمالي التبرعات</div><div class="kpi-val">₪ ${fmt(totDon)}</div></div>
-      <div class="kpi o"><div class="kpi-lbl">رسوم العضوية</div><div class="kpi-val">₪ ${fmt(m.membership_fee||0)}</div><div class="kpi-sub">${periods[m.fee_period]||''}</div></div>
-    </div>
-    <div style="display:flex;gap:6px;font-size:11px;font-weight:600;color:var(--tx3);padding:6px 0;border-bottom:1px solid var(--bd);margin-bottom:4px">
-      <span style="min-width:88px">التاريخ</span><span style="flex:1">البيان</span>
-      <span style="min-width:75px">دائن</span><span style="min-width:75px">مدين</span><span style="min-width:75px">الرصيد</span>
-    </div>
-    <div class="scroll">${rows||'<div class="empty" style="padding:16px"><p>لا توجد حركات</p></div>'}</div>
-    ${memberDons.length?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-      <div style="font-size:12px;font-weight:600;color:var(--tx3);margin-bottom:8px">التبرعات (منفصلة عن المساهمات)</div>
-      ${memberDons.map(d=>`<div class="sr"><span class="sr-l">${fdate(d.date)} — ${esc(d.notes||'تبرع')}</span><span class="sr-v" style="color:var(--ok)">₪ ${fmt(d.amount_ils||d.amount)}</span></div>`).join('')}
-    </div>`:''}
-  </div>`;
-};
-window.goStmt=id=>{nav('stmt');setTimeout(()=>{document.getElementById('stmt-sel').value=id;window.renderStmt();},80);};
+/* CARDS */
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:22px;margin-bottom:18px;transition:var(--tr-fast)}
+.card:hover{border-color:var(--border-default);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+.card-title i{font-size:16px;color:#00C896}
 
-/* ═══ REPORTS ═══ */
-function renderRep(){
-  const ti=L.in(),to=L.out(),net=ti-to;
-  const foodIn=L.fundIn('food'),diwanIn=L.fundIn('diwan'),totDon=L.donTotal();
-  document.getElementById('rep-kpis').innerHTML=`
-    <div class="kpi g"><div class="kpi-lbl">إجمالي الإيصالات</div><div class="kpi-val">₪ ${fmt(ti)}</div></div>
-    <div class="kpi r"><div class="kpi-lbl">إجمالي المدفوعات</div><div class="kpi-val">₪ ${fmt(to)}</div></div>
-    <div class="kpi ${net>=0?'g':'r'}"><div class="kpi-lbl">الصافي</div><div class="kpi-val">₪ ${fmt(net)}</div></div>
-    <div class="kpi b"><div class="kpi-lbl">صندوق الديوان</div><div class="kpi-val">₪ ${fmt(diwanIn)}</div></div>
-    <div class="kpi o"><div class="kpi-lbl">صندوق الغداء</div><div class="kpi-val">₪ ${fmt(foodIn)}</div></div>
-    <div class="kpi g"><div class="kpi-lbl">التبرعات</div><div class="kpi-val">₪ ${fmt(totDon)}</div></div>
-  `;
-  const cats={general:'عام',maintenance:'صيانة',salaries:'رواتب',utilities:'فواتير',food:'غداء',other:'أخرى'};
-  const catTotals={};
-  DB.pay.forEach(p=>{const c=p.category||'general';catTotals[c]=(catTotals[c]||0)+Number(p.amount);});
-  const COLS=['#E53E3E','#DD6B20','#1B6CA8','#00C896','#6D28D9','#0284C7'];
-  const maxC=Math.max(...Object.values(catTotals),1);
-  document.getElementById('rep-methods').innerHTML=Object.entries(catTotals).map(([c,v],i)=>`
-    <div class="h-bar"><span class="h-lbl">${cats[c]||c}</span>
-    <div class="h-track"><div class="h-fill" style="width:${Math.round(v/maxC*100)}%;background:${COLS[i%6]}">${Math.round(v/maxC*100)}%</div></div>
-    <span class="h-val">₪ ${fmt(v)}</span></div>`).join('')||'<div class="empty"><p>لا توجد بيانات</p></div>';
-  const sorted=[...DB.fam].map(m=>({...m,b:L.bal(m.id)})).sort((a,b)=>a.b-b.b);
-  document.getElementById('rep-fam-body').innerHTML=sorted.map(m=>{
-    const cls=m.b>0?'ok':m.b<0?'err':'neu',lbl=m.b>0?'مسدَّد':m.b<0?'متأخر':'صفر';
-    return`<tr><td>${esc(m.name)}</td><td style="text-align:left;color:${m.b>=0?'var(--ok)':'var(--err)'}">₪ ${fmt(m.b)}</td><td>${m.membership_fee?'₪ '+fmt(m.membership_fee):'-'}</td><td><span class="badge ${cls}">${lbl}</span></td></tr>`;
-  }).join('');
-}
+/* KPI */
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:22px}
+.kpi{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:20px;position:relative;overflow:hidden;transition:var(--tr-base);cursor:default;backdrop-filter:blur(10px)}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--kpi-accent,#1B6CA8)}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border-default)}
+.kpi-icon{position:absolute;left:14px;top:14px;font-size:28px;opacity:.07;color:var(--kpi-accent,#1B6CA8)}
+.kpi-label{font-size:11px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--kpi-accent,#E8F0F8);letter-spacing:-1px;font-variant-numeric:tabular-nums;text-shadow:0 2px 12px rgba(0,0,0,.08)}
+.kpi-sub{font-size:11px;color:var(--text-tertiary);margin-top:5px;display:flex;align-items:center;gap:4px}
+.kpi.emerald{--kpi-accent:#00C896}.kpi.emerald .kpi-value{color:#00C896}
+.kpi.red{--kpi-accent:#DC2626}.kpi.red .kpi-value{color:#DC2626}
+.kpi.blue{--kpi-accent:#1B6CA8}.kpi.blue .kpi-value{color:#3B82F6}
+.kpi.amber{--kpi-accent:#D97706}.kpi.amber .kpi-value{color:#D97706}
+.kpi.purple{--kpi-accent:#7C3AED}.kpi.purple .kpi-value{color:#7C3AED}
+.kpi.teal{--kpi-accent:#0D9488}.kpi.teal .kpi-value{color:#0D9488}
 
-/* ═══ AUDIT ═══ */
-function renderAudit(){
-  const list=document.getElementById('audit-list');
-  if(!DB.audit.length){list.innerHTML='<div class="empty"><i class="ti ti-clipboard-list"></i><p>السجل فارغ</p></div>';return;}
-  list.innerHTML=DB.audit.map(a=>`<div class="ae">
-    <div class="ai ${a.action==='add'?'add':a.action==='delete'?'del':'sys'}"><i class="ti ${a.action==='add'?'ti-plus':a.action==='delete'?'ti-trash':'ti-settings'}"></i></div>
-    <div style="flex:1"><div style="font-size:13px;font-weight:500">${esc(a.description)}</div>
-    <div style="font-size:11px;color:var(--tx3);margin-top:2px">${esc(a.user_name||'—')} · ${fdate(a.created_at)}</div></div>
-  </div>`).join('');
-}
-function renderSysInfo(){
-  const totUSD=DB.rec.filter(r=>r.currency==='USD').reduce((s,r)=>s+Number(r.amount_usd||0),0);
-  const payUSD=DB.pay.filter(p=>p.currency==='USD').reduce((s,p)=>s+Number(p.amount_usd||0),0);
-  document.getElementById('sys-info').innerHTML=`
-    <div class="sr"><span class="sr-l">عدد الإيصالات</span><span class="sr-v">${DB.rec.length}</span></div>
-    <div class="sr"><span class="sr-l">عدد سندات الصرف</span><span class="sr-v">${DB.pay.length}</span></div>
-    <div class="sr"><span class="sr-l">عدد الأعضاء</span><span class="sr-v">${DB.fam.length}</span></div>
-    <div class="sr"><span class="sr-l">عدد التبرعات</span><span class="sr-v">${DB.donations.length}</span></div>
-    <div class="sr"><span class="sr-l">عدد عقود الإيجار</span><span class="sr-v">${DB.rentals.length}</span></div>
-    <div class="sr"><span class="sr-l">إجمالي دولار مُستلم</span><span class="sr-v">$${fmtD(totUSD)}</span></div>
-    <div class="sr"><span class="sr-l">إجمالي دولار مصروف</span><span class="sr-v">$${fmtD(payUSD)}</span></div>
-    <div class="sr"><span class="sr-l">سعر الصرف اليوم</span><span class="sr-v">${USD_RATE?`1$ = ₪${USD_RATE.toFixed(2)}`:'—'}</span></div>
-    <div class="sr"><span class="sr-l">المستخدم الحالي</span><span class="sr-v">${esc(CUR?.full_name||CU?.email||'—')}</span></div>
-  `;
-}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--radius-md);border:1px solid var(--border-default);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-weight:500;font-family:var(--font-primary);cursor:pointer;transition:var(--tr-fast);white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.btn i{font-size:15px}
+.btn.sm{padding:5px 10px;font-size:12px}.btn.sm i{font-size:13px}
+.btn.lg{padding:11px 20px;font-size:14px}
+.btn.primary{background:#00C896;color:#fff;border-color:#00C896;box-shadow:0 2px 8px rgba(0,200,150,.25)}
+.btn.primary:hover{background:#00B085;box-shadow:0 4px 12px rgba(0,200,150,.35)}
+.btn.secondary{background:rgba(27,108,168,.15);color:#60A5FA;border-color:rgba(27,108,168,.3)}
+.btn.secondary:hover{background:rgba(27,108,168,.25)}
+.btn.danger{background:rgba(220,38,38,.1);color:#FCA5A5;border-color:rgba(220,38,38,.25)}
+.btn.danger:hover{background:rgba(220,38,38,.2)}
+.btn.success{background:rgba(5,150,105,.1);color:#34D399;border-color:rgba(5,150,105,.25)}
+.btn.success:hover{background:rgba(5,150,105,.2)}
+.btn.warning{background:rgba(217,119,6,.1);color:#FCD34D;border-color:rgba(217,119,6,.25)}
+.btn.warning:hover{background:rgba(217,119,6,.2)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text-secondary);padding:5px 8px}
+.btn.ghost:hover{background:var(--bg-hover);color:var(--text-primary)}
 
-/* ═══ USERS ═══ */
-async function loadUsers(){
-  if(!can.manage())return;
-  const{data}=await SB.from('user_roles').select('*').order('created_at');
-  const list=document.getElementById('users-list');
-  if(!data?.length){list.innerHTML='<div class="empty"><p>لا يوجد مستخدمون</p></div>';return;}
-  const BG={admin:'linear-gradient(135deg,#6D28D9,#4F46E5)',accountant:'linear-gradient(135deg,#059669,#0D9488)',viewer:'linear-gradient(135deg,#1B6CA8,#0284C7)'};
-  list.innerHTML=data.map(u=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;background:var(--bg2)">
-      <div style="width:38px;height:38px;border-radius:50%;background:${BG[u.role]||'#475569'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;flex-shrink:0">${(u.full_name||'م').charAt(0).toUpperCase()}</div>
-      <div style="flex:1"><div style="font-weight:500">${esc(u.full_name||'—')}</div><div style="font-size:11px;color:var(--tx3)">${u.user_id}</div></div>
-      <span class="role-tag ${u.role}">${ROLES[u.role]}</span>
-      ${u.user_id!==CU?.id
-        ?`<select onchange="changeRole('${u.user_id}',this.value)" style="padding:5px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12px;font-family:var(--fn)"><option value="viewer" ${u.role==='viewer'?'selected':''}>عارض</option><option value="accountant" ${u.role==='accountant'?'selected':''}>محاسب</option><option value="admin" ${u.role==='admin'?'selected':''}>مدير</option></select>`
-        :'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
-    </div>`).join('');
-}
-window.changeRole=async(uid,role)=>{
-  await SB.from('user_roles').update({role}).eq('user_id',uid);
-  await log('edit',`تغيير دور المستخدم إلى ${ROLES[role]}`);
-  toast(`تم تغيير الدور إلى ${ROLES[role]}`,'ok');loadUsers();
-};
-window.inviteUser=async()=>{
-  const email=document.getElementById('inv-email').value.trim();
-  const pass=document.getElementById('inv-pass').value;
-  const role=document.getElementById('inv-role').value;
-  const name=document.getElementById('inv-name').value.trim();
-  if(!email||!pass){toast('البريد وكلمة المرور مطلوبان','warn');return;}
-  const{data,error}=await SB.auth.signUp({email,password:pass});
-  if(error){toast('خطأ: '+error.message,'err');return;}
-  await SB.from('user_roles').upsert({user_id:data.user.id,role,full_name:name||email});
-  await log('add',`إضافة مستخدم: ${name||email} (${ROLES[role]})`);
-  closeM();toast(`تم إنشاء حساب ${email}`,'ok');loadUsers();
-};
+/* TABLES */
+.table-wrap{border:1px solid var(--card-border);border-radius:var(--radius-lg);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
+thead th{background:var(--navy-800);color:rgba(255,255,255,.75);padding:11px 14px;text-align:right;font-weight:500;font-size:12px;letter-spacing:.04em;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:1}
+body.light thead th{background:var(--navy-700);color:rgba(255,255,255,.85)}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-primary);transition:background var(--tr-fast)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
+tbody tr:hover td{background:var(--bg-hover)}
+body.light tbody tr:nth-child(even){background:rgba(0,0,0,.02)}
+body.light tbody tr:hover td{background:var(--bg-hover)}
+.col-number{font-variant-numeric:tabular-nums;text-align:left !important;font-weight:500}
+.tda{display:flex;align-items:center;gap:4px}
 
-/* ═══ MODAL ═══ */
-window.openM=type=>{
-  document.getElementById('ov').classList.add('on');
-  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
-  document.getElementById('m-'+type).style.display='block';
-  fillMemDrop();
-  ['r-dat','p-dat','don-dat','rent-dat'].forEach(id=>{const e=document.getElementById(id);if(e&&!e.value)e.value=today();});
-  if(!USD_RATE)fetchRate();else updateRateDisplay();
-  toggleCurrency('r');toggleCurrency('p');toggleCurrency('don');toggleCurrency('rent');
-};
-window.closeM=()=>{
-  document.getElementById('ov').classList.remove('on');
-  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
-  document.querySelectorAll('.fi input,.fi select,.fi textarea').forEach(el=>{
-    el.classList.remove('er');
-    if(el.type!=='date'&&el.tagName!=='SELECT')el.value='';
-    if(el.type==='number')el.value=el.defaultValue||'';
-  });
-  document.querySelectorAll('.fe').forEach(e=>e.classList.remove('on'));
-  document.querySelectorAll('.pills .pill').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.pills .pill:first-child').forEach(p=>p.classList.add('on'));
-  ['r-mth','p-mth'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='نقد';});
-};
-window.setPill=(prefix,val,el)=>{
-  document.getElementById(prefix+'-pills')?.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');document.getElementById(prefix+'-mth').value=val;
-};
-window.toggleCurrency=prefix=>{
-  const curEl=document.getElementById(prefix+'-currency');if(!curEl)return;
-  const isUSD=curEl.value==='USD';
-  ['usd-row','ils-row','rate-row'].forEach(s=>{
-    const el=document.getElementById(prefix+'-'+s);if(el)el.style.display=isUSD?'':'none';
-  });
-  if(isUSD)calcILS(prefix);
-};
-window.onAmtUSD=prefix=>calcILS(prefix);
-window.toggleTenantType=()=>{
-  const t=document.getElementById('rent-ttype')?.value;
-  const memRow=document.getElementById('rent-mem-row');
-  const nameRow=document.getElementById('rent-name-row');
-  if(memRow)memRow.style.display=t==='member'?'':'none';
-  if(nameRow)nameRow.style.display=t==='other'?'':'none';
-};
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.02em;white-space:nowrap}
+.badge.emerald{background:rgba(0,200,150,.12);color:#00C896;border:1px solid rgba(0,200,150,.2)}
+.badge.red{background:rgba(220,38,38,.12);color:#FCA5A5;border:1px solid rgba(220,38,38,.2)}
+.badge.blue{background:rgba(27,108,168,.15);color:#60A5FA;border:1px solid rgba(27,108,168,.25)}
+.badge.amber{background:rgba(217,119,6,.12);color:#FCD34D;border:1px solid rgba(217,119,6,.2)}
+.badge.purple{background:rgba(124,58,237,.12);color:#A78BFA;border:1px solid rgba(124,58,237,.2)}
+.badge.teal{background:rgba(13,148,136,.12);color:#2DD4BF;border:1px solid rgba(13,148,136,.2)}
+.badge.gray{background:rgba(255,255,255,.07);color:var(--text-secondary);border:1px solid var(--border-default)}
+body.light .badge.emerald{background:#ECFDF5;color:#059669}
+body.light .badge.red{background:#FEF2F2;color:#DC2626}
+body.light .badge.blue{background:#EFF6FF;color:#1D4ED8}
+body.light .badge.amber{background:#FFFBEB;color:#D97706}
+body.light .badge.purple{background:#F5F3FF;color:#7C3AED}
+body.light .badge.gray{background:#F9FAFB;color:#6B7280}
 
-/* ═══ LOG ═══ */
-async function log(action,desc){
-  await SB.from('audit_log').insert({user_name:CUR?.full_name||CU?.email,action,description:desc});
-}
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:320px}
+.search-wrap i{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:15px;pointer-events:none}
+.search-input{width:100%;padding:8px 34px 8px 12px;border-radius:var(--radius-md);border:1px solid var(--border-default);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-family:var(--font-primary);transition:var(--tr-fast);outline:none}
+.search-input:focus{border-color:rgba(0,200,150,.4);box-shadow:0 0 0 3px rgba(0,200,150,.06)}
+.search-input::placeholder{color:var(--text-tertiary)}
+select.filter-select{padding:8px 12px;border-radius:var(--radius-md);border:1px solid var(--border-default);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-family:var(--font-primary);outline:none;cursor:pointer;transition:var(--tr-fast)}
+select.filter-select:focus{border-color:rgba(0,200,150,.4)}
 
-/* ═══ SAVE — RECEIPT ═══ */
-window.saveRec=async(prt=false)=>{
-  if(!can.write()){toast('ليس لديك صلاحية','err');return;}
-  const mid=document.getElementById('r-mem').value;
-  const cur=document.getElementById('r-currency').value;
-  const isUSD=cur==='USD';
-  const amtUSD=parseFloat(document.getElementById('r-amt-usd')?.value)||0;
-  const amtILS=parseFloat(isUSD?document.getElementById('r-amt-ils')?.value:document.getElementById('r-amt')?.value)||0;
-  const dat=document.getElementById('r-dat').value;
-  const fund=document.getElementById('r-fund').value;
-  const rtype=document.getElementById('r-type').value;
-  const v1=vf('r-mem',v=>!!v,'e-r-mem');
-  const v2=isUSD?vf('r-amt-usd',v=>+v>0,'e-r-amt'):vf('r-amt',v=>+v>=1,'e-r-amt');
-  const v3=vf('r-dat',v=>!!v,'e-r-dat');
-  if(!v1||!v2||!v3)return;
-  const finalAmt=amtILS||amtUSD;
-  const no='REC-'+String(DB.rec.length+1).padStart(5,'0');
-  const{data,error}=await SB.from('receipts').insert({
-    no,member_id:mid||null,member_name:mid?gmn(mid):'',
-    amount:finalAmt,currency:cur,
-    amount_usd:isUSD?amtUSD:null,exchange_rate:isUSD?USD_RATE:null,
-    method:document.getElementById('r-mth').value||'نقد',
-    date:dat,fund,receipt_type:rtype,
-    receiver:document.getElementById('r-rcv').value,
-    description:document.getElementById('r-dsc').value,
-    created_by_name:CUR?.full_name||CU?.email,
-  }).select().single();
-  if(error){toast('خطأ: '+error.message,'err');return;}
-  if(rtype==='membership'&&mid){
-    await SB.from('transactions').insert({
-      member_id:mid,amount:finalAmt,type:'cr',ref_id:data.id,
-      description:`${fund==='food'?'صندوق الغداء':'صندوق الديوان'} — ${data.description||'مساهمة'}`,date:dat,
-    });
-  }
-  await log('add',`إضافة إيصال ${no} — ${mid?gmn(mid):''} — ₪${fmt(finalAmt)}${isUSD?` ($${fmtD(amtUSD)})`:''}`);
-  closeM();await loadAll();toast(`✓ تم حفظ ${no}`,'ok');
-  if(prt)setTimeout(()=>prtRec(data.id),300);
-};
+/* PAGINATION */
+.pag{display:flex;align-items:center;gap:4px;margin-top:14px;flex-wrap:wrap}
+.pag-info{font-size:12px;color:var(--text-tertiary);margin-right:auto}
+.pb{min-width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;font-family:var(--font-primary);transition:var(--tr-fast)}
+.pb:hover{background:var(--bg-hover);color:var(--text-primary)}
+.pb.on{background:#00C896;color:#fff;border-color:#00C896}
+.pb:disabled{opacity:.35;cursor:default}
 
-/* ═══ SAVE — PAYMENT ═══ */
-window.savePay=async()=>{
-  if(!can.write()){toast('ليس لديك صلاحية','err');return;}
-  const ben=document.getElementById('p-ben').value;
-  const cur=document.getElementById('p-currency').value;
-  const isUSD=cur==='USD';
-  const amtUSD=parseFloat(document.getElementById('p-amt-usd')?.value)||0;
-  const amtILS=parseFloat(isUSD?document.getElementById('p-amt-ils')?.value:document.getElementById('p-amt')?.value)||0;
-  const rsn=document.getElementById('p-rsn').value;
-  const v1=vf('p-ben',v=>v.trim().length>=2,'e-p-ben');
-  const v2=isUSD?vf('p-amt-usd',v=>+v>0,'e-p-amt'):vf('p-amt',v=>+v>=1,'e-p-amt');
-  const v3=vf('p-rsn',v=>v.trim().length>=2,'e-p-rsn');
-  if(!v1||!v2||!v3)return;
-  const finalAmt=amtILS||amtUSD;
-  const no='PAY-'+String(DB.pay.length+1).padStart(5,'0');
-  const{error}=await SB.from('payments').insert({
-    no,beneficiary:ben,amount:finalAmt,currency:cur,
-    amount_usd:isUSD?amtUSD:null,exchange_rate:isUSD?USD_RATE:null,
-    method:document.getElementById('p-mth').value||'نقد',
-    date:document.getElementById('p-dat').value,
-    approved_by:document.getElementById('p-apv').value,
-    reason:rsn,category:document.getElementById('p-cat').value||'general',
-    created_by_name:CUR?.full_name||CU?.email,
-  });
-  if(error){toast('خطأ: '+error.message,'err');return;}
-  await log('add',`إضافة سند ${no} — ${ben} — ₪${fmt(finalAmt)}${isUSD?` ($${fmtD(amtUSD)})`:''}`);
-  closeM();await loadAll();toast(`✓ تم حفظ ${no}`,'ok');
-};
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:12px;font-weight:500;color:var(--text-secondary);letter-spacing:.02em}
+.form-label .req{color:#EF4444;margin-right:2px}
+.form-input,.form-select,.form-textarea{padding:11px 14px;border-radius:var(--radius-md);border:1px solid var(--border-default);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-family:var(--font-primary);transition:var(--tr-fast);outline:none;width:100%}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(0,200,150,.5);box-shadow:0 0 0 3px rgba(0,200,150,.06);background:var(--bg-surface);transform:translateY(-1px)}
+.form-input.error{border-color:rgba(220,38,38,.5)}
+.form-textarea{resize:vertical;min-height:70px}
+.form-error{font-size:11px;color:#FCA5A5;display:none;align-items:center;gap:4px}
+.form-error.show{display:flex}
+.form-hint{font-size:11px;color:var(--text-tertiary)}
+.input-prefix-wrap{position:relative}
+.input-prefix-wrap input{padding-right:36px !important}
+.input-prefix-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:700;color:#00C896;pointer-events:none;font-family:var(--font-mono)}
+.section-divider{font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 12px;display:flex;align-items:center;gap:10px}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--border-subtle)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid var(--border-default);background:var(--bg-elevated);font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:var(--tr-fast);font-family:var(--font-primary)}
+.pill:hover{border-color:rgba(0,200,150,.3);color:var(--text-primary)}
+.pill.on{background:rgba(0,200,150,.12);border-color:rgba(0,200,150,.4);color:#00C896}
+.pill i{font-size:13px}
 
-/* ═══ SAVE — DONATION ═══ */
-window.saveDon=async()=>{
-  if(!can.write()){toast('ليس لديك صلاحية','err');return;}
-  const mid=document.getElementById('don-mem').value;
-  const donName=document.getElementById('don-name')?.value||'متبرع';
-  const cur=document.getElementById('don-currency').value;
-  const isUSD=cur==='USD';
-  const amtUSD=parseFloat(document.getElementById('don-amt-usd')?.value)||0;
-  const amtILS=parseFloat(isUSD?document.getElementById('don-amt-ils')?.value:document.getElementById('don-amt')?.value)||0;
-  const dat=document.getElementById('don-dat').value;
-  if(!dat){toast('التاريخ مطلوب','warn');return;}
-  if(amtILS<1&&amtUSD<0.01){toast('أدخل مبلغاً صحيحاً','warn');return;}
-  const{error}=await SB.from('donations').insert({
-    member_id:mid||null,
-    member_name:mid?gmn(mid):donName,
-    amount:isUSD?amtUSD:amtILS,
-    currency:cur,amount_ils:amtILS,
-    exchange_rate:isUSD?USD_RATE:null,
-    date:dat,notes:document.getElementById('don-notes').value,
-    created_by_name:CUR?.full_name||CU?.email,
-  });
-  if(error){toast('خطأ: '+error.message,'err');return;}
-  await log('add',`تسجيل تبرع — ${mid?gmn(mid):donName} — ₪${fmt(amtILS)}${isUSD?` ($${fmtD(amtUSD)})`:''}`);
-  closeM();await loadAll();toast('✓ تم تسجيل التبرع','ok');
-};
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius-xl);width:100%;max-width:540px;max-height:92vh;overflow-y:auto;animation:modalIn .2s ease;scrollbar-width:thin}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--border-subtle);position:sticky;top:0;background:var(--bg-elevated);z-index:1}
+.modal-title{font-size:15px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:10px}
+.modal-icon{width:34px;height:34px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.modal-body{padding:20px 22px}
+.modal-footer{padding:16px 22px 20px;border-top:1px solid var(--border-subtle);display:flex;gap:10px;flex-wrap:wrap}
 
-/* ═══ SAVE — FAMILY ═══ */
-window.saveFam=async()=>{
-  if(!can.manage()){toast('ليس لديك صلاحية','err');return;}
-  const nm=document.getElementById('f-nm').value;
-  if(!vf('f-nm',v=>v.trim().length>=2,'e-f-nm'))return;
-  if(DB.fam.find(m=>m.name.trim()===nm.trim())){toast('يوجد عضو بنفس الاسم','warn');return;}
-  const bal=+document.getElementById('f-bal').value||0;
-  const fee=+document.getElementById('f-fee').value||0;
-  const period=document.getElementById('f-period').value||'yearly';
-  const{data,error}=await SB.from('family').insert({
-    name:nm.trim(),phone:document.getElementById('f-ph').value,
-    apartment:document.getElementById('f-ap').value,
-    membership_fee:fee,fee_period:period,
-    notes:document.getElementById('f-nt').value,
-  }).select().single();
-  if(error){toast('خطأ: '+error.message,'err');return;}
-  if(bal!==0)await SB.from('transactions').insert({
-    member_id:data.id,amount:Math.abs(bal),type:bal>0?'cr':'dr',
-    description:'رصيد افتتاحي',date:today(),
-  });
-  await log('add',`إضافة عضو: ${nm} — رسوم: ₪${fmt(fee)} (${period})`);
-  closeM();await loadAll();toast(`✓ تمت إضافة ${nm}`,'ok');
-};
+/* TOAST */
+.toast-container{position:fixed;bottom:24px;left:24px;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-lg);animation:toastIn .3s ease;min-width:260px;max-width:360px;pointer-events:auto}
+.toast.out{animation:toastOut .3s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-20px)}}
+.toast i{font-size:18px;flex-shrink:0}
+.toast.success i{color:#00C896}.toast.error i{color:#EF4444}.toast.warning i{color:#F59E0B}.toast.info i{color:#60A5FA}
+.toast-msg{flex:1;color:var(--text-primary)}
 
-/* ═══ SAVE — RENTAL ═══ */
-window.saveRent=async()=>{
-  if(!can.write()){toast('ليس لديك صلاحية','err');return;}
-  const ttype=document.getElementById('rent-ttype').value;
-  const mid=document.getElementById('rent-mem').value;
-  const tname=ttype==='member'?gmn(mid):document.getElementById('rent-tname')?.value;
-  if(!tname||tname==='—'){toast('أدخل اسم المستأجر','warn');return;}
-  const cur=document.getElementById('rent-currency').value;
-  const isUSD=cur==='USD';
-  const amtUSD=parseFloat(document.getElementById('rent-amt-usd')?.value)||0;
-  const amtILS=parseFloat(isUSD?document.getElementById('rent-amt-ils')?.value:document.getElementById('rent-amt')?.value)||0;
-  if(amtILS<1&&amtUSD<0.01){toast('أدخل مبلغاً صحيحاً','warn');return;}
-  const{error}=await SB.from('rentals').insert({
-    tenant_name:tname,tenant_type:ttype,
-    member_id:ttype==='member'?mid:null,
-    hall:'قاعة الديوان',
-    event_date:document.getElementById('rent-dat').value,
-    start_time:document.getElementById('rent-start').value,
-    end_time:document.getElementById('rent-end').value,
-    amount:amtILS,currency:cur,
-    amount_usd:isUSD?amtUSD:null,exchange_rate:isUSD?USD_RATE:null,
-    paid_amount:+document.getElementById('rent-paid').value||0,
-    status:document.getElementById('rent-status').value||'pending',
-    notes:document.getElementById('rent-notes').value,
-    created_by_name:CUR?.full_name||CU?.email,
-  });
-  if(error){toast('خطأ: '+error.message,'err');return;}
-  await log('add',`عقد إيجار قاعة الديوان: ${tname} — ₪${fmt(amtILS)}`);
-  closeM();await loadAll();toast(`✓ تم حفظ عقد ${tname}`,'ok');
-};
+/* CHARTS */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:140px;padding-top:12px}
+.bc-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.bc-val{font-size:9px;font-weight:600;color:var(--text-tertiary);white-space:nowrap}
+.bc-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .5s cubic-bezier(.4,0,.2,1)}
+.bc-lbl{font-size:10px;color:var(--text-tertiary);white-space:nowrap}
+.h-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.h-bar-label{width:100px;font-size:12px;color:var(--text-secondary);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h-bar-track{flex:1;background:var(--bg-hover);border-radius:4px;height:24px;overflow:hidden}
+.h-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-right:8px;font-size:11px;color:#fff;font-weight:600;white-space:nowrap;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.h-bar-val{font-size:12px;color:var(--text-secondary);min-width:80px;text-align:left}
 
-window.payRent=async id=>{
-  if(!can.write()){toast('ليس لديك صلاحية','err');return;}
-  const r=DB.rentals.find(x=>x.id===id);if(!r)return;
-  const remaining=r.amount-r.paid_amount;
-  const amt=prompt(`المبلغ المتبقي: ₪${fmt(remaining)}\nأدخل مبلغ الدفعة:`);
-  if(!amt||isNaN(+amt))return;
-  const newPaid=Math.min(r.paid_amount+Number(amt),r.amount);
-  await SB.from('rentals').update({paid_amount:newPaid,status:newPaid>=r.amount?'paid':'partial'}).eq('id',id);
-  await log('edit',`دفعة إيجار: ${r.tenant_name} — ₪${fmt(amt)}`);
-  await loadAll();toast('✓ تم تسجيل الدفعة','ok');
-};
+/* QUICK ACTIONS */
+.qa{display:flex;flex-direction:column;gap:8px}
+.qa-btn{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-md);background:var(--bg-page);border:1px solid var(--border-subtle);cursor:pointer;transition:var(--tr-fast);font-family:var(--font-primary);color:var(--text-primary);font-size:13px;font-weight:500;text-align:right;width:100%}
+.qa-btn:hover{background:var(--bg-hover);border-color:var(--border-default);transform:translateX(-2px)}
+.qa-icon{width:34px;height:34px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.qa-icon.emerald{background:rgba(0,200,150,.12);color:#00C896}
+.qa-icon.red{background:rgba(220,38,38,.12);color:#FCA5A5}
+.qa-icon.blue{background:rgba(27,108,168,.15);color:#60A5FA}
+.qa-icon.amber{background:rgba(217,119,6,.12);color:#FCD34D}
+.qa-icon.purple{background:rgba(124,58,237,.12);color:#A78BFA}
+.qa-label{flex:1}
+.qa-sub{font-size:11px;color:var(--text-tertiary);font-weight:400}
 
-/* ═══ DELETE ═══ */
-window.delRec=async id=>{
-  if(!can.delete()){toast('ليس لديك صلاحية الحذف','err');return;}
-  const r=DB.rec.find(x=>x.id===id);
-  if(!r||!confirm(`حذف إيصال ${r.no}؟`))return;
-  await SB.from('transactions').delete().eq('ref_id',id);
-  await SB.from('receipts').delete().eq('id',id);
-  await log('delete',`حذف إيصال ${r.no}`);
-  await loadAll();toast(`حُذف ${r.no}`,'warn');
-};
-window.delPay=async id=>{
-  if(!can.delete()){toast('ليس لديك صلاحية الحذف','err');return;}
-  const p=DB.pay.find(x=>x.id===id);
-  if(!p||!confirm(`حذف سند ${p.no}؟`))return;
-  await SB.from('payments').delete().eq('id',id);
-  await log('delete',`حذف سند ${p.no}`);
-  await loadAll();toast(`حُذف ${p.no}`,'warn');
-};
-window.delFam=async id=>{
-  if(!can.delete()){toast('ليس لديك صلاحية الحذف','err');return;}
-  const m=gm(id);
-  if(!m||!confirm(`حذف العضو ${m.name}؟`))return;
-  await SB.from('transactions').delete().eq('member_id',id);
-  await SB.from('family').delete().eq('id',id);
-  await log('delete',`حذف عضو: ${m.name}`);
-  await loadAll();toast(`حُذف ${m.name}`,'warn');
-};
-window.delDon=async id=>{
-  if(!can.delete()){toast('ليس لديك صلاحية الحذف','err');return;}
-  if(!confirm('حذف هذا التبرع؟'))return;
-  await SB.from('donations').delete().eq('id',id);
-  await log('delete','حذف تبرع');
-  await loadAll();toast('تم حذف التبرع','warn');
-};
-window.delRent=async id=>{
-  if(!can.delete()){toast('ليس لديك صلاحية الحذف','err');return;}
-  if(!confirm('حذف هذا العقد؟'))return;
-  await SB.from('rentals').delete().eq('id',id);
-  await log('delete','حذف عقد إيجار');
-  await loadAll();toast('تم حذف العقد','warn');
-};
+/* DASHBOARD */
+.dash-grid{display:grid;grid-template-columns:1fr 300px;gap:16px}
+.dash-col{display:flex;flex-direction:column;gap:16px}
 
-/* ═══ PRINT ═══ */
-window.prtRec=id=>{
-  const r=DB.rec.find(x=>x.id===id);if(!r)return;
-  const fundLabel=r.fund==='food'?'صندوق الغداء':'صندوق الديوان';
-  const typeLabel=r.receipt_type==='donation'?'تبرع':r.receipt_type==='membership'?'مساهمة':'أخرى';
-  const html=`<div class="rdoc">
-    <div class="rt">ديوان آل طه<br><span style="font-size:11px;font-weight:400">سند قبض</span></div>
-    <div class="rr"><span>رقم الإيصال</span><b>${esc(r.no)}</b></div>
-    <div class="rr"><span>التاريخ</span><span>${fdate(r.date)}</span></div>
-    <div class="rr"><span>اسم العضو</span><span>${esc(gmn(r.member_id))}</span></div>
-    <div class="rr"><span>الصندوق</span><span>${fundLabel}</span></div>
-    <div class="rr"><span>النوع</span><span>${typeLabel}</span></div>
-    <div class="rr"><span>طريقة الدفع</span><span>${esc(r.method)}</span></div>
-    ${r.currency==='USD'?`<div class="rr"><span>المبلغ بالدولار</span><span>$${fmtD(r.amount_usd)}</span></div><div class="rr"><span>سعر الصرف</span><span>1$ = ₪${r.exchange_rate?.toFixed(2)}</span></div>`:''}
-    <div class="rr"><span>البيان</span><span>${esc(r.description||'—')}</span></div>
-    <div class="rv">₪ ${fmt(r.amount)}</div>
-    <div class="rs"><div>توقيع المستلم: __________</div><div>توقيع المدفوع: __________</div></div>
-    <div style="text-align:center;font-size:10px;margin-top:14px;color:#777">ديوان آل طه · ${new Date().toLocaleDateString('ar-SA')}</div>
-    <div style="text-align:center;font-size:9px;margin-top:8px;color:#999;border-top:1px dotted #ddd;padding-top:6px">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
-  </div>`;
-  document.getElementById('prt-prev').innerHTML=html;
-  document.getElementById('pra').innerHTML=html;
-  openM('prt');
-};
+/* LEDGER */
+.ledger-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle);font-size:13px}
+.ledger-row:last-child{border-bottom:none}
+.ledger-date{color:var(--text-tertiary);min-width:90px;font-size:11px;padding-top:2px}
+.ledger-desc{flex:1;color:var(--text-primary)}
+.ledger-cr{color:#00C896;font-weight:600;min-width:80px;text-align:left}
+.ledger-dr{color:#EF4444;font-weight:600;min-width:80px;text-align:left}
+.ledger-bal{color:var(--text-primary);font-weight:500;min-width:80px;text-align:left}
 
-/* ═══ BACKUP ═══ */
-window.doBackup=()=>{
-  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=`diwan_backup_${today()}.json`;a.click();
-  toast('تم تصدير النسخة الاحتياطية','ok');
-};
-window.exportCSV=type=>{
-  let h,r;
-  if(type==='rec'){
-    h=['رقم','العضو','₪','العملة','$','سعر الصرف','الصندوق','النوع','التاريخ'];
-    r=DB.rec.map(x=>[x.no,gmn(x.member_id),x.amount,x.currency,x.amount_usd||'',x.exchange_rate||'',x.fund==='food'?'غداء':'ديوان',x.receipt_type,x.date]);
-  }else if(type==='pay'){
-    h=['رقم','المستفيد','₪','العملة','$','الفئة','السبب','التاريخ'];
-    r=DB.pay.map(x=>[x.no,x.beneficiary,x.amount,x.currency,x.amount_usd||'',x.category,x.reason,x.date]);
-  }else if(type==='fam'){
-    h=['الاسم','الهاتف','رصيد المساهمات','رسوم العضوية','فترة الدفع'];
-    r=DB.fam.map(m=>[m.name,m.phone,L.bal(m.id),m.membership_fee,m.fee_period]);
-  }else if(type==='don'){
-    h=['العضو/المتبرع','₪','العملة','$','سعر الصرف','التاريخ','ملاحظات'];
-    r=DB.donations.map(x=>[gmn(x.member_id)||x.member_name,x.amount_ils||x.amount,x.currency,x.amount||'',x.exchange_rate||'',x.date,x.notes]);
-  }else{
-    h=['المستأجر','النوع','التاريخ','₪','المدفوع','الحالة'];
-    r=DB.rentals.map(x=>[x.tenant_name,x.tenant_type==='member'?'عضو':'خارجي',x.event_date,x.amount,x.paid_amount,x.status]);
-  }
-  const csv='\uFEFF'+[h,...r].map(row=>row.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download=type+'_'+today()+'.csv';a.click();
-  toast('تم التصدير','ok');
-};
+/* STAT ROW */
+.stat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{flex:1;font-size:13px;color:var(--text-secondary)}
+.stat-value{font-size:13px;font-weight:500;color:var(--text-primary)}
 
-/* ═══ CLOCK ═══ */
-function startClock(){
-  const el=document.getElementById('clock');
-  if(el)setInterval(()=>{el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});},1000);
-}
+/* AUDIT */
+.audit-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-subtle)}
+.audit-row:last-child{border-bottom:none}
+.audit-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.audit-dot.add{background:rgba(0,200,150,.12);color:#00C896}
+.audit-dot.delete{background:rgba(220,38,38,.12);color:#EF4444}
+.audit-dot.edit{background:rgba(27,108,168,.15);color:#60A5FA}
+.audit-dot.system{background:rgba(124,58,237,.12);color:#A78BFA}
 
-/* ═══ INIT ═══ */
-async function init(){
-  const{createClient}=supabase;
-  SB=createClient(
-    'https://ralifvemgapmsgrjgazh.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4'
-  );
-  document.getElementById('app').style.display='none';
-  await checkSession();
-}
-init();
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 24px}
+.empty-icon{font-size:48px;color:var(--text-tertiary);opacity:.3;display:block;margin-bottom:12px}
+.empty-title{font-size:15px;font-weight:500;color:var(--text-secondary);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--text-tertiary)}
+
+/* ROLES */
+.role-tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:500}
+.role-tag.admin{background:rgba(109,40,217,.15);color:#A78BFA;border:1px solid rgba(109,40,217,.25)}
+.role-tag.accountant{background:rgba(5,150,105,.15);color:#34D399;border:1px solid rgba(5,150,105,.25)}
+.role-tag.viewer{background:rgba(27,108,168,.15);color:#60A5FA;border:1px solid rgba(27,108,168,.25)}
+
+/* MISC */
+.scroll-y{max-height:340px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-default) transparent}
+.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* INFO BOX */
+.info-box{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:var(--radius-md);font-size:13px;margin-bottom:14px}
+.info-box.info{background:rgba(27,108,168,.1);color:#60A5FA;border:1px solid rgba(27,108,168,.2)}
+.info-box.success{background:rgba(0,200,150,.1);color:#00C896;border:1px solid rgba(0,200,150,.2)}
+.info-box.warning{background:rgba(217,119,6,.1);color:#FCD34D;border:1px solid rgba(217,119,6,.2)}
+.info-box.danger{background:rgba(220,38,38,.1);color:#FCA5A5;border:1px solid rgba(220,38,38,.2)}
+.info-box i{font-size:17px;flex-shrink:0;margin-top:1px}
+
+/* COPYRIGHT */
+#copyright-bar{background:var(--navy-950);color:var(--text-tertiary);text-align:center;font-size:11px;padding:7px 16px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.04);letter-spacing:.04em}
+
+/* PRINT */
+@media print{body>*:not(#print-area){display:none !important}#print-area{display:block !important;position:fixed;inset:0;background:#fff;padding:0;z-index:9999}}
+#print-area{display:none}
+.print-doc{font-family:'Cairo',Arial,sans-serif;direction:rtl;max-width:210mm;margin:auto;padding:20mm;background:#fff;color:#000;position:relative;overflow:hidden}.print-doc::before{content:'DIWAN';position:absolute;top:40%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:120px;color:rgba(0,0,0,.03);font-weight:700;pointer-events:none;z-index:0;letter-spacing:8px}
+.print-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid #0A1628;margin-bottom:20px}
+.print-title{font-size:22px;font-weight:700;color:#0A1628}
+.print-sub{font-size:12px;color:#666;margin-top:4px}
+.print-badge{font-size:20px;font-weight:700;color:#0A1628;border:2px solid #0A1628;padding:4px 16px;border-radius:6px}
+.print-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:13px}
+.print-row span:first-child{color:#666}
+.print-row span:last-child{font-weight:500}
+.print-amount{font-size:28px;font-weight:700;text-align:center;color:#0A1628;padding:16px;border-top:2px solid #0A1628;border-bottom:2px solid #0A1628;margin:16px 0}
+.print-sigs{display:flex;justify-content:space-between;margin-top:32px;font-size:12px;color:#666}
+.print-footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #eee;padding-top:10px}
+
+
+/* RECEIPT / PAYMENT IDENTITY */
+.receipt-strip{border-right:5px solid #00C896;padding-right:14px;margin-bottom:16px}
+.payment-strip{border-right:5px solid #DC2626;padding-right:14px;margin-bottom:16px}
+.hall-strip{border-right:5px solid #1B6CA8;padding-right:14px;margin-bottom:16px}
+.receipt-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(0,200,150,.1);color:#00C896;border:1px solid rgba(0,200,150,.25)}
+.payment-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(220,38,38,.1);color:#FCA5A5;border:1px solid rgba(220,38,38,.25)}
+.hall-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(27,108,168,.15);color:#60A5FA;border:1px solid rgba(27,108,168,.25)}
+
+/* EMPTY STATES */
+.empty-state{text-align:center;padding:56px 24px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.empty-icon-wrap{width:72px;height:72px;border-radius:var(--radius-xl);background:var(--bg-hover);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.empty-icon-wrap i{font-size:32px;color:var(--text-tertiary);opacity:.5}
+.empty-title{font-size:16px;font-weight:600;color:var(--text-secondary)}
+.empty-sub{font-size:13px;color:var(--text-tertiary);max-width:280px}
+.empty-action{margin-top:8px}
+
+/* FINANCIAL WIDGETS */
+.cash-flow-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:10px 0;gap:2px}
+.cf-income{background:linear-gradient(90deg,#00C896,#059669);border-radius:4px 0 0 4px}
+.cf-expense{background:linear-gradient(90deg,#DC2626,#B91C1C);border-radius:0 4px 4px 0}
+.fund-card{background:var(--bg-page);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;gap:12px;transition:var(--tr-fast)}
+.fund-card:hover{border-color:var(--border-default);background:var(--bg-hover)}
+.fund-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.fund-name{font-size:12px;color:var(--text-secondary);flex:1}
+.fund-amount{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.activity-text{flex:1;font-size:13px;color:var(--text-primary);line-height:1.4}
+.activity-time{font-size:11px;color:var(--text-tertiary);white-space:nowrap}
+.activity-amt{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.member-late-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle)}
+.member-late-item:last-child{border-bottom:none}
+.member-avatar{width:32px;height:32px;border-radius:50%;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#FCA5A5;flex-shrink:0}
+.member-late-name{flex:1;font-size:13px;color:var(--text-primary);font-weight:500}
+.member-late-amt{font-size:13px;font-weight:600;color:#EF4444}
+
+/* UNIFIED ANIMATIONS */
+.hover-lift{transition:var(--tr-base)}
+.hover-lift:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.hover-scale{transition:var(--tr-fast)}
+.hover-scale:hover{transform:scale(1.02)}
+.fade-in{animation:fadeIn .25s ease}
+.slide-up{animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 2s ease infinite}
+.number-highlight{transition:color .3s ease}
+
+/* RESPONSIVE */
+@media(max-width:768px){.dash-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.form-group.full{grid-column:1}.kgrid{grid-template-columns:repeat(2,1fr)}.sb{width:180px}.pg{padding:16px}}
+@media(max-width:480px){.kgrid{grid-template-columns:1fr}.sb{display:none}.pg{padding:12px}}
