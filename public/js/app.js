@@ -790,29 +790,3 @@ async function init() {
 init();
 
 
-    function calculateILS() {
-
-        const amountField = document.getElementById("r-amt");
-        const rateField = document.getElementById("r-rate");
-        const currencyField = document.getElementById("r-cur");
-        const resultField = document.getElementById("r-ils");
-
-        if (!amountField || !rateField || !currencyField || !resultField) {
-            return;
-        }
-
-        let amount = parseFloat(amountField.value) || 0;
-        let rate = parseFloat(rateField.value) || 0;
-        let currency = currencyField.value;
-
-        if (currency === "USD") {
-            resultField.value = (amount * rate).toFixed(2);
-        } else {
-            resultField.value = amount.toFixed(2);
-        }
-    }
-
-    document.addEventListener("input", calculateILS);
-    document.addEventListener("change", calculateILS);
-
-});
