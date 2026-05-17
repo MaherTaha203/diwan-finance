@@ -463,3 +463,30 @@ body {
 .card {
     border-radius: 14px;
 }
+body {
+    font-family: 'Cairo', sans-serif;
+    background: #f8fafc;
+}
+
+.sidebar {
+    background: #0f172a;
+}
+
+.sidebar .nav-link {
+    color: #cbd5e1;
+}
+
+.sidebar .nav-link:hover {
+    background: #1e293b;
+    color: white;
+}
+
+.card {
+    border-radius: 14px;
+    border: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.table thead {
+    background: #f1f5f9;
+}
