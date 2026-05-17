@@ -278,7 +278,10 @@ const D={
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)">${esc(p.reason||'—')}</td>
       <td style="color:var(--tx2)">${fdate(p.date)}</td>
       <td style="color:var(--tx3);font-size:11px">${esc(p.created_by_name||'—')}</td>
-      <td class="tda">${can.delete()?`<button class="btn ghost sm" style="color:var(--err)" onclick="delPay('${p.id}')"><i class="ti ti-trash"></i></button>`:''}</td>
+      <td class="tda">
+        <button class="btn ghost sm" style="color:var(--inf)" onclick="prtPay('${p.id}')" title="طباعة"><i class="ti ti-printer"></i></button>
+        ${can.delete()?`<button class="btn ghost sm" style="color:var(--err)" onclick="delPay('${p.id}')"><i class="ti ti-trash"></i></button>`:''}
+      </td>
     </tr>`).join('');
   }},
   fam:{render(){
@@ -810,27 +813,160 @@ window.prtRec=id=>{
   const r=DB.rec.find(x=>x.id===id);if(!r)return;
   const fundLabel=r.fund==='food'?'صندوق الغداء':'صندوق الديوان';
   const typeLabel=r.receipt_type==='donation'?'تبرع':r.receipt_type==='membership'?'مساهمة':'أخرى';
-  const html=`<div class="rdoc">
-    <div class="rt">ديوان آل طه<br><span style="font-size:11px;font-weight:400">سند قبض</span></div>
-    <div class="rr"><span>رقم الإيصال</span><b>${esc(r.no)}</b></div>
-    <div class="rr"><span>التاريخ</span><span>${fdate(r.date)}</span></div>
-    <div class="rr"><span>اسم العضو</span><span>${esc(gmn(r.member_id))}</span></div>
-    <div class="rr"><span>الصندوق</span><span>${fundLabel}</span></div>
-    <div class="rr"><span>النوع</span><span>${typeLabel}</span></div>
-    <div class="rr"><span>طريقة الدفع</span><span>${esc(r.method)}</span></div>
-    ${r.currency==='USD'?`<div class="rr"><span>المبلغ بالدولار</span><span>$${fmtD(r.amount_usd)}</span></div><div class="rr"><span>سعر الصرف</span><span>1$ = ₪${r.exchange_rate?.toFixed(2)}</span></div>`:''}
-    <div class="rr"><span>البيان</span><span>${esc(r.description||'—')}</span></div>
-    <div class="rv">₪ ${fmt(r.amount)}</div>
-    <div class="rs"><div>توقيع المستلم: __________</div><div>توقيع المدفوع: __________</div></div>
-    <div style="text-align:center;font-size:10px;margin-top:14px;color:#777">ديوان آل طه · ${new Date().toLocaleDateString('ar-SA')}</div>
-    <div style="text-align:center;font-size:9px;margin-top:8px;color:#999;border-top:1px dotted #ddd;padding-top:6px">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
-  </div>`;
-  document.getElementById('prt-prev').innerHTML=html;
-  document.getElementById('pra').innerHTML=html;
-  openM('prt');
+  const html=`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>إيصال ${esc(r.no)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Cairo',Arial,sans-serif;direction:rtl;background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .doc{background:#fff;max-width:380px;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.12)}
+  .doc-header{background:#0A1628;padding:20px 24px;text-align:center;position:relative}
+  .doc-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#00C896,#059669)}
+  .doc-org{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+  .doc-sub{font-size:12px;color:rgba(255,255,255,.6)}
+  .doc-badge{display:inline-block;margin-top:10px;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(0,200,150,.2);color:#00C896;border:1px solid rgba(0,200,150,.3)}
+  .doc-no{font-size:22px;font-weight:700;color:#fff;margin-top:8px;letter-spacing:1px}
+  .doc-body{padding:20px 24px}
+  .doc-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+  .doc-row:last-of-type{border-bottom:none}
+  .doc-row-label{color:#666;font-weight:400}
+  .doc-row-value{font-weight:600;color:#0A1628;text-align:left}
+  .doc-amount{background:linear-gradient(135deg,#0A1628,#1B6CA8);margin:16px 24px;border-radius:10px;padding:16px;text-align:center}
+  .doc-amount-label{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+  .doc-amount-value{font-size:32px;font-weight:700;color:#00C896;letter-spacing:-1px}
+  ${r.currency==='USD'?`.doc-amount-usd{font-size:14px;color:rgba(255,255,255,.7);margin-top:4px}`:''}
+  .doc-sigs{display:flex;justify-content:space-between;padding:16px 24px 8px;gap:16px}
+  .doc-sig{flex:1;text-align:center;padding-top:32px;border-top:1px dashed #ccc;font-size:11px;color:#999}
+  .doc-footer{background:#f9f9f9;padding:12px 24px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee}
+  .fund-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .fund-diwan{background:#EFF6FF;color:#1B6CA8}
+  .fund-food{background:#FFFBEB;color:#D97706}
+  .type-badge{display:inline-flex;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .type-membership{background:#ECFDF5;color:#059669}
+  .type-donation{background:#FEF3C7;color:#D97706}
+  .type-other{background:#F3F4F6;color:#6B7280}
+  @media print{body{background:#fff;padding:0}.doc{box-shadow:none;border-radius:0;max-width:100%}}
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="doc-header">
+    <div class="doc-org">ديوان آل طه</div>
+    <div class="doc-sub">نظام الإدارة المالية</div>
+    <div class="doc-badge">سند قبض</div>
+    <div class="doc-no">${esc(r.no)}</div>
+  </div>
+  <div class="doc-amount">
+    <div class="doc-amount-label">المبلغ المستلم</div>
+    <div class="doc-amount-value">₪ ${fmt(r.amount)}</div>
+    ${r.currency==='USD'?`<div class="doc-amount-usd">$${fmtD(r.amount_usd)} × ₪${r.exchange_rate?.toFixed(2)}</div>`:''}
+  </div>
+  <div class="doc-body">
+    <div class="doc-row"><span class="doc-row-label">التاريخ</span><span class="doc-row-value">${fdate(r.date)}</span></div>
+    <div class="doc-row"><span class="doc-row-label">اسم العضو</span><span class="doc-row-value">${esc(gmn(r.member_id))}</span></div>
+    <div class="doc-row"><span class="doc-row-label">الصندوق</span><span class="doc-row-value"><span class="fund-badge ${r.fund==='food'?'fund-food':'fund-diwan'}">${fundLabel}</span></span></div>
+    <div class="doc-row"><span class="doc-row-label">نوع الإيصال</span><span class="doc-row-value"><span class="type-badge type-${r.receipt_type||'other'}">${typeLabel}</span></span></div>
+    <div class="doc-row"><span class="doc-row-label">طريقة الدفع</span><span class="doc-row-value">${esc(r.method||'—')}</span></div>
+    ${r.description?`<div class="doc-row"><span class="doc-row-label">البيان</span><span class="doc-row-value" style="max-width:180px;text-align:left">${esc(r.description)}</span></div>`:''}
+  </div>
+  <div class="doc-sigs">
+    <div class="doc-sig">توقيع المستلم</div>
+    <div class="doc-sig">توقيع الدافع</div>
+  </div>
+  <div class="doc-footer">
+    All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System<br>
+    طُبع بتاريخ ${new Date().toLocaleDateString('ar-SA')} — ${new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}
+  </div>
+</div>
+<script>window.onload=()=>{window.print();}</script>
+</body>
+</html>`;
+  const win=window.open('','_blank','width=480,height=700,scrollbars=yes');
+  if(win){win.document.write(html);win.document.close();}
+  else{toast('يرجى السماح بالنوافذ المنبثقة في المتصفح','warn');}
 };
 
 /* ═══ BACKUP ═══ */
+
+window.prtPay=id=>{
+  const p=DB.pay.find(x=>x.id===id);if(!p)return;
+  const cats={general:'عام',maintenance:'صيانة',salaries:'رواتب',utilities:'فواتير',food:'غداء',other:'أخرى'};
+  const catLabel=cats[p.category]||p.category||'عام';
+  const html=`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>سند صرف ${esc(p.no)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Cairo',Arial,sans-serif;direction:rtl;background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .doc{background:#fff;max-width:380px;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.12)}
+  .doc-header{background:#1A0A0A;padding:20px 24px;text-align:center;position:relative}
+  .doc-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#DC2626,#B91C1C)}
+  .doc-org{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+  .doc-sub{font-size:12px;color:rgba(255,255,255,.6)}
+  .doc-badge{display:inline-block;margin-top:10px;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(220,38,38,.25);color:#FCA5A5;border:1px solid rgba(220,38,38,.4)}
+  .doc-no{font-size:22px;font-weight:700;color:#fff;margin-top:8px;letter-spacing:1px}
+  .doc-body{padding:20px 24px}
+  .doc-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+  .doc-row:last-of-type{border-bottom:none}
+  .doc-row-label{color:#666;font-weight:400}
+  .doc-row-value{font-weight:600;color:#0A1628;text-align:left}
+  .doc-amount{background:linear-gradient(135deg,#1A0A0A,#7F1D1D);margin:16px 24px;border-radius:10px;padding:16px;text-align:center}
+  .doc-amount-label{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+  .doc-amount-value{font-size:32px;font-weight:700;color:#FCA5A5;letter-spacing:-1px}
+  .doc-amount-usd{font-size:14px;color:rgba(255,255,255,.7);margin-top:4px}
+  .doc-sigs{display:flex;justify-content:space-between;padding:16px 24px 8px;gap:16px}
+  .doc-sig{flex:1;text-align:center;padding-top:32px;border-top:1px dashed #ccc;font-size:11px;color:#999}
+  .doc-footer{background:#f9f9f9;padding:12px 24px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee}
+  .cat-badge{display:inline-flex;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#FEF2F2;color:#DC2626}
+  @media print{body{background:#fff;padding:0}.doc{box-shadow:none;border-radius:0;max-width:100%}}
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="doc-header">
+    <div class="doc-org">ديوان آل طه</div>
+    <div class="doc-sub">نظام الإدارة المالية</div>
+    <div class="doc-badge">سند صرف</div>
+    <div class="doc-no">${esc(p.no)}</div>
+  </div>
+  <div class="doc-amount">
+    <div class="doc-amount-label">المبلغ المصروف</div>
+    <div class="doc-amount-value">₪ ${fmt(p.amount)}</div>
+    ${p.currency==='USD'&&p.amount_usd?`<div class="doc-amount-usd">$${fmtD(p.amount_usd)} × ₪${p.exchange_rate?.toFixed(2)}</div>`:''}
+  </div>
+  <div class="doc-body">
+    <div class="doc-row"><span class="doc-row-label">التاريخ</span><span class="doc-row-value">${fdate(p.date)}</span></div>
+    <div class="doc-row"><span class="doc-row-label">المستفيد</span><span class="doc-row-value">${esc(p.beneficiary)}</span></div>
+    <div class="doc-row"><span class="doc-row-label">فئة المصروف</span><span class="doc-row-value"><span class="cat-badge">${catLabel}</span></span></div>
+    <div class="doc-row"><span class="doc-row-label">طريقة الصرف</span><span class="doc-row-value">${esc(p.method||'—')}</span></div>
+    ${p.approved_by?`<div class="doc-row"><span class="doc-row-label">معتمد من</span><span class="doc-row-value">${esc(p.approved_by)}</span></div>`:''}
+    ${p.reason?`<div class="doc-row"><span class="doc-row-label">السبب</span><span class="doc-row-value" style="max-width:180px;text-align:left">${esc(p.reason)}</span></div>`:''}
+    <div class="doc-row"><span class="doc-row-label">بواسطة</span><span class="doc-row-value">${esc(p.created_by_name||'—')}</span></div>
+  </div>
+  <div class="doc-sigs">
+    <div class="doc-sig">المستلم</div>
+    <div class="doc-sig">المعتمد</div>
+    <div class="doc-sig">المحاسب</div>
+  </div>
+  <div class="doc-footer">
+    All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System<br>
+    طُبع بتاريخ ${new Date().toLocaleDateString('ar-SA')} — ${new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}
+  </div>
+</div>
+<script>window.onload=()=>{window.print();}</script>
+</body>
+</html>\`;
+  const win=window.open('','_blank','width=480,height=700,scrollbars=yes');
+  if(win){win.document.write(html);win.document.close();}
+  else{toast('يرجى السماح بالنوافذ المنبثقة في المتصفح','warn');}
+};
+
 window.doBackup=()=>{
   const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
   const a=document.createElement('a');
