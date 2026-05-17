@@ -452,3 +452,14 @@ body.light .modal .fi textarea { background: #fff; color: #0D1F3C; border-color:
 .rdoc .rr { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; border-bottom: 1px dotted #ccc; }
 .rdoc .rv { font-size: 20px; font-weight: 700; text-align: center; padding: 10px 0; border-top: 2px solid #0D1F3C; border-bottom: 2px solid #0D1F3C; margin: 10px 0; color: #0D1F3C; }
 .rdoc .rs { display: flex; justify-content: space-between; margin-top: 16px; font-size: 11px; color: #444; }
+body {
+    font-family: 'Cairo', sans-serif;
+}
+
+.sidebar {
+    background: #0f172a;
+}
+
+.card {
+    border-radius: 14px;
+}
