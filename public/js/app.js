@@ -114,6 +114,95 @@ function toggleTheme() {
 window.toggleTheme = toggleTheme;
 
 /* ═══════════════════════════════════════════
+   LANGUAGE
+═══════════════════════════════════════════ */
+const TRANS = {
+  ar: {
+    dash:'لوحة التحكم', rec:'إيصالات القبض', pay:'سندات الصرف',
+    fam:'أعضاء العائلة', stmt:'كشف الحساب', rep:'التقارير',
+    users:'المستخدمون', audit:'سجل العمليات', bk:'النسخ الاحتياطي',
+    totalIn:'إجمالي الإيصالات', totalOut:'إجمالي المدفوعات',
+    net:'صافي الرصيد', members:'أعضاء العائلة',
+    newRec:'إيصال جديد', newPay:'سند جديد', newFam:'عضو جديد',
+    refresh:'تحديث', backup:'نسخ احتياطي', logout:'خروج',
+    search:'بحث...', allMethods:'كل طرق الدفع',
+    cash:'نقد', check:'شيك', transfer:'تحويل بنكي', online:'أونلاين',
+    saveAndPrint:'حفظ وطباعة', saveOnly:'حفظ فقط', cancel:'إلغاء',
+    dir:'rtl', lang:'AR'
+  },
+  en: {
+    dash:'Dashboard', rec:'Receipts', pay:'Payments',
+    fam:'Family Members', stmt:'Statement', rep:'Reports',
+    users:'Users', audit:'Audit Log', bk:'Backup',
+    totalIn:'Total Receipts', totalOut:'Total Payments',
+    net:'Net Balance', members:'Family Members',
+    newRec:'New Receipt', newPay:'New Payment', newFam:'New Member',
+    refresh:'Refresh', backup:'Backup', logout:'Logout',
+    search:'Search...', allMethods:'All Methods',
+    cash:'Cash', check:'Cheque', transfer:'Bank Transfer', online:'Online',
+    saveAndPrint:'Save & Print', saveOnly:'Save Only', cancel:'Cancel',
+    dir:'ltr', lang:'EN'
+  }
+};
+
+let LANG = 'ar';
+
+function toggleLang() {
+  LANG = LANG === 'ar' ? 'en' : 'ar';
+  const t = TRANS[LANG];
+  const btn = document.getElementById('lang-btn');
+  btn.innerHTML = `<i class="ti ti-language"></i>${t.lang}`;
+
+  // اتجاه الصفحة
+  document.documentElement.dir = t.dir;
+  document.documentElement.lang = LANG;
+
+  // Sidebar
+  const nbLabels = document.querySelectorAll('.nb');
+  const keys = ['dash','rec','pay','fam','stmt','rep','users','audit','bk'];
+  // map nav items by data-p
+  document.querySelector('.nb[data-p="dash"]').innerHTML = `<i class="ti ti-layout-dashboard"></i>${t.dash}`;
+  document.querySelector('.nb[data-p="rec"]').innerHTML  = `<i class="ti ti-receipt"></i>${t.rec}`;
+  document.querySelector('.nb[data-p="pay"]').innerHTML  = `<i class="ti ti-cash"></i>${t.pay}`;
+  document.querySelector('.nb[data-p="fam"]').innerHTML  = `<i class="ti ti-users"></i>${t.fam}`;
+  document.querySelector('.nb[data-p="stmt"]').innerHTML = `<i class="ti ti-file-description"></i>${t.stmt}`;
+  document.querySelector('.nb[data-p="rep"]').innerHTML  = `<i class="ti ti-chart-bar"></i>${t.rep}`;
+  const nu = document.querySelector('.nb[data-p="users"]');
+  if (nu) nu.innerHTML = `<i class="ti ti-shield-lock"></i>${t.users}`;
+  document.querySelector('.nb[data-p="audit"]').innerHTML = `<i class="ti ti-list-check"></i>${t.audit}`;
+  document.querySelector('.nb[data-p="bk"]').innerHTML   = `<i class="ti ti-database"></i>${t.bk}`;
+
+  // Topbar buttons
+  document.getElementById('theme-btn').innerHTML = document.body.classList.contains('light')
+    ? `<i class="ti ti-moon"></i>${LANG==='ar'?'داكن':'Dark'}`
+    : `<i class="ti ti-sun"></i>${LANG==='ar'?'فاتح':'Light'}`;
+
+  // Buttons in pages
+  const btnQrec = document.getElementById('btn-qrec');
+  if (btnQrec) btnQrec.innerHTML = `<i class="ti ti-plus"></i>${t.newRec}`;
+  const btnQpay = document.getElementById('btn-qpay');
+  if (btnQpay) btnQpay.innerHTML = `<i class="ti ti-cash"></i>${t.pay}`;
+  const btnAddRec = document.getElementById('btn-add-rec');
+  if (btnAddRec) btnAddRec.innerHTML = `<i class="ti ti-plus"></i>${t.newRec}`;
+  const btnAddPay = document.getElementById('btn-add-pay');
+  if (btnAddPay) btnAddPay.innerHTML = `<i class="ti ti-plus"></i>${t.newPay}`;
+  const btnAddFam = document.getElementById('btn-add-fam');
+  if (btnAddFam) btnAddFam.innerHTML = `<i class="ti ti-user-plus"></i>${t.newFam}`;
+
+  // Search placeholders
+  const qrec = document.getElementById('q-rec');
+  if (qrec) qrec.placeholder = LANG==='ar'?'بحث برقم الإيصال أو اسم العضو...':'Search by receipt no or member...';
+  const qpay = document.getElementById('q-pay');
+  if (qpay) qpay.placeholder = LANG==='ar'?'بحث برقم السند أو المستفيد...':'Search by payment no or beneficiary...';
+  const qfam = document.getElementById('q-fam');
+  if (qfam) qfam.placeholder = LANG==='ar'?'بحث بالاسم أو الهاتف...':'Search by name or phone...';
+
+  // Re-render to update text
+  renderAll();
+}
+window.toggleLang = toggleLang;
+
+/* ═══════════════════════════════════════════
    AUTH
 ═══════════════════════════════════════════ */
 async function login() {
