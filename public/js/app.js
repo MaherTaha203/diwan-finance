@@ -165,6 +165,7 @@ async function afterLogin() {
   document.getElementById('uname').textContent = CUR.full_name||CU.email;
   document.getElementById('urole').textContent = ROLES[r]||r;
   applyPerms();
+  window.applyLang();
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   await loadAll();
@@ -717,6 +718,7 @@ window.prtRec = id => {
     <div class="rv">₪ ${fmt(r.amount)}</div>
     <div class="rs"><div>${t('prtSig1')}</div><div>${t('prtSig2')}</div></div>
     <div style="text-align:center;font-size:10px;margin-top:14px;color:#777">${t('prtTitle')} · ${new Date().toLocaleDateString('ar-SA')}</div>
+    <div style="text-align:center;font-size:9px;margin-top:8px;color:#999;border-top:1px dotted #ddd;padding-top:6px">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
   </div>`;
   document.getElementById('prt-prev').innerHTML=html;
   document.getElementById('pra').innerHTML=html;
