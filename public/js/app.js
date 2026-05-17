@@ -110,10 +110,12 @@ function renderPage(t){
 
 /* ═══ NAVIGATION ═══ */
 window.nav = function nav(p){
-  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('show'));
-  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('show'));
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p)?.classList.add('on');
   document.querySelector(`.nb[data-p="${p}"]`)?.classList.add('on');
+  // scroll to top
+  document.querySelector('.main')?.scrollTo(0,0);
   if(p==='rep')renderRep();
   if(p==='stmt')fillStmtSel();
   if(p==='audit')renderAudit();
