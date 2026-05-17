@@ -558,7 +558,10 @@ window.inviteUser=async()=>{
 
 /* ═══ MODAL ═══ */
 window.openM=type=>{
-  document.getElementById('modal-overlay').classList.add('open');
+  const ov=document.getElementById('modal-overlay');
+  if(!ov){console.error('modal-overlay not found');return;}
+  ov.classList.add('open');
+  ov.scrollTop=0;
   document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
   document.getElementById('m-'+type).style.display='block';
   fillMemDrop();
@@ -567,15 +570,16 @@ window.openM=type=>{
   toggleCurrency('r');toggleCurrency('p');toggleCurrency('don');toggleCurrency('rent');
 };
 window.closeM=()=>{
-  document.getElementById('modal-overlay').classList.remove('open');
+  const ov=document.getElementById('modal-overlay');
+  if(ov) ov.classList.remove('open');
   document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
-  document.querySelectorAll('.fi input,.fi select,.fi textarea').forEach(el=>{
-    el.classList.remove('er');
-    if(el.type!=='date'&&el.tagName!=='SELECT')el.value='';
-    if(el.type==='number')el.value=el.defaultValue||'';
+  document.querySelectorAll('.form-group input,.form-group select,.form-group textarea,.fi input,.fi select,.fi textarea').forEach(el=>{
+    el.classList.remove('er','error');
+    if(el.type!=='date'&&el.tagName!=='SELECT') el.value='';
+    if(el.type==='number') el.value=el.defaultValue||'';
   });
-  document.querySelectorAll('.fe').forEach(e=>e.classList.remove('open'));
-  document.querySelectorAll('.pills .pill').forEach(p=>p.classList.remove('show'));
+  document.querySelectorAll('.form-error,.fe').forEach(e=>{e.classList.remove('show','on');});
+  document.querySelectorAll('.pills .pill').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.pills .pill:first-child').forEach(p=>p.classList.add('on'));
   ['r-mth','p-mth'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='نقد';});
 };
