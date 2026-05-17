@@ -788,7 +788,7 @@ async function init() {
 }
 
 init();
-document.addEventListener("DOMContentLoaded", function () {
+
 
     function calculateILS() {
 
