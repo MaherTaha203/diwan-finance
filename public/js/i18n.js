@@ -260,6 +260,7 @@ window.T = {
     deleted:     'حُذف',
 
     // ── تواريخ
+    copyright: 'All rights reserved © 2026-2027  |  Diwan Al-Taha Financial Management System',
     months: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
     dir: 'rtl',
   },
@@ -498,6 +499,7 @@ window.T = {
     delConfRent: 'Delete this contract?',
     deleted:     'Deleted',
 
+    copyright: 'All rights reserved © 2026-2027  |  Diwan Al-Taha Financial Management System',
     months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
     dir: 'ltr',
   }
@@ -716,6 +718,10 @@ window.applyLang = function() {
 
   // ── pills طرق الدفع
   updatePills();
+
+  // ── حقوق الطبع
+  const cpBar = document.getElementById('copyright-bar');
+  if (cpBar) cpBar.textContent = tr.copyright;
 };
 
 // دوال مساعدة
