@@ -16,8 +16,8 @@
   --danger:  #DC2626;
   --warn:    #F59E0B;
   --fn: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
-  --r:  11px;
-  --rl: 13px;
+  --r:  7px;
+  --rl: 12px;
 }
 
 body {
@@ -532,3 +532,155 @@ select.fs {
   #pra { display:block !important; position:fixed; inset:0; background:#fff; z-index:9999; }
 }
 #pra { display:none; }
+
+/* ═══════════════════════════════════════
+   MOBILE RESPONSIVE
+═══════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* TOPBAR */
+  .top { padding: 0 10px; height: 50px; }
+  .top-logo-sub { display: none; }
+  .top-logo-text { font-size: 13px; }
+  .rate-chip { display: none; }
+  #clock { display: none; }
+  .tbtn { padding: 0 7px; font-size: 11px; }
+  .uchip { padding: 0 7px 0 4px; }
+  .uname { font-size: 11px; }
+  .urole { display: none; }
+
+  /* SIDEBAR — شريط تنقل سفلي */
+  .sb { display: none; }
+
+  /* MAIN */
+  .layout { flex-direction: column; }
+  .main { padding-bottom: 72px; }
+  .pg { padding: 12px 10px; }
+
+  /* شريط التنقل السفلي */
+  #mobile-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 62px;
+    background: var(--navy);
+    border-top: 1px solid rgba(255,255,255,.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 200;
+    padding: 0 4px;
+  }
+
+  .mnb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    color: rgba(255,255,255,.45);
+    cursor: pointer;
+    transition: all .15s;
+    flex: 1;
+    max-width: 70px;
+  }
+
+  .mnb.on { color: #00C896; }
+  .mnb i { font-size: 20px; }
+  .mnb span { font-size: 9px; font-weight: 500; white-space: nowrap; }
+
+  /* PAGE HEADER */
+  .ph { flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .ph-t { font-size: 16px; }
+  .ph-s { font-size: 11px; }
+  .ph-a { gap: 6px; }
+  .ph-a .btn { padding: 6px 10px; font-size: 12px; }
+
+  /* KPI GRID */
+  .kgrid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .kpi { padding: 12px; }
+  .kpi-val { font-size: 18px; }
+  .kpi-label { font-size: 9px; }
+
+  /* FUND CARDS */
+  .fund-grid { grid-template-columns: 1fr; gap: 8px; }
+  .fund-balance { font-size: 18px; }
+
+  /* DASHBOARD GRID */
+  .dash-grid { grid-template-columns: 1fr !important; }
+  #month-chart { height: 100px !important; }
+
+  /* TABLES */
+  .tw { border-radius: 8px; }
+  table { min-width: 100%; }
+  thead th { padding: 8px 10px; font-size: 10px; }
+  tbody td { padding: 8px 10px; font-size: 12px; }
+
+  /* FORMS */
+  .fg { grid-template-columns: 1fr !important; }
+  .fi.full { grid-column: 1 !important; }
+  .fi input, .fi select, .fi textarea { font-size: 14px; padding: 10px 11px; }
+
+  /* MODAL */
+  .ov { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100% !important;
+    max-height: 92vh;
+    border-radius: var(--rl) var(--rl) 0 0;
+    animation: modalUp .2s ease !important;
+  }
+  @keyframes modalUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .mhd { padding: 14px 16px; }
+  .mbd { padding: 14px 16px; }
+  .mft { padding: 12px 16px 16px; flex-direction: column; }
+  .mft .btn { width: 100%; justify-content: center; }
+
+  /* PILLS */
+  .pills { gap: 4px; }
+  .pill { padding: 5px 9px; font-size: 11px; }
+
+  /* CARDS */
+  .card { padding: 14px; }
+
+  /* TOOLBAR */
+  .tb { gap: 6px; }
+  .sw { max-width: 100% !important; }
+  .si { font-size: 14px; }
+
+  /* PAGINATION */
+  .pag { gap: 3px; margin-top: 10px; }
+  .pb { min-width: 28px; height: 28px; font-size: 11px; }
+
+  /* LEDGER */
+  .lr { flex-wrap: wrap; gap: 4px; }
+  .lr-date { flex: 0 0 70px; }
+  .lr-name { flex: 0 0 100px; }
+  .lr-desc { flex: 0 0 100%; font-size: 11px; }
+  .lr-cr, .lr-dr, .lr-bal { flex: 0 0 70px; }
+  .lr-note { display: none; }
+
+  /* TOAST */
+  .tc { bottom: 72px; left: 10px; right: 10px; }
+  .toast { min-width: 0; width: 100%; }
+
+  /* STATEMENT FILTERS */
+  #food-stmt-out .kpi, #diwan-stmt-out .kpi { padding: 10px; }
+
+  /* ANNUAL PAGE */
+  #pg-annual .fg { max-width: 100% !important; }
+
+  /* USERS */
+  #users-list > div { flex-wrap: wrap; }
+
+  /* BACKUP */
+  #pg-bk > div { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 380px) {
+  .kgrid { grid-template-columns: 1fr; }
+  .top-logo { gap: 6px; }
+  .top-logo-text { font-size: 12px; }
+}
