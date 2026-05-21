@@ -46,6 +46,7 @@
       <div class="uav" id="uav">م</div>
       <div><span class="uname" id="uname">...</span><span class="urole" id="urole">...</span></div>
     </div>
+    <button class="tbtn" onclick="window.openM('change-pass')"><i class="ti ti-lock"></i>كلمة المرور</button>
     <button class="tbtn red" onclick="window.logout()"><i class="ti ti-logout"></i>خروج</button>
   </div>
 </div>
@@ -76,6 +77,7 @@
   <div class="sb-sec">النظام</div>
   <div class="nb" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i>المستخدمون</div>
   <div class="nb" data-p="audit"><i class="ti ti-list-check"></i>سجل العمليات</div>
+  <div class="nb" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i>الإعدادات</div>
   <div class="nb" data-p="bk"><i class="ti ti-database"></i>النسخ الاحتياطي</div>
 </div>
 
@@ -87,8 +89,8 @@
     <div><div class="ph-t">لوحة التحكم</div><div class="ph-s" id="dash-date"></div></div>
     <div class="ph-a">
       <button class="btn sm" onclick="window.loadAll()"><i class="ti ti-refresh"></i>تحديث</button>
-      <button class="btn primary sm" onclick="window.openRec()"><i class="ti ti-plus"></i>سند قبض</button>
-      <button class="btn danger sm" onclick="window.openPay()"><i class="ti ti-minus"></i>سند صرف</button>
+      <button class="btn primary sm" id="dash-btn-rec" onclick="window.openRec()"><i class="ti ti-plus"></i>سند قبض</button>
+      <button class="btn danger sm" id="dash-btn-pay" onclick="window.openPay()"><i class="ti ti-minus"></i>سند صرف</button>
     </div>
   </div>
   <div class="fund-grid" id="fund-cards"></div>
@@ -280,13 +282,64 @@
   </div>
 </div>
 
+
+<!-- SETTINGS PAGE -->
+<div class="pg" id="pg-settings">
+  <div class="ph">
+    <div><div class="ph-t">الإعدادات</div><div class="ph-s">الرصيد الافتتاحي وإعدادات النظام</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span class="ct"><i class="ti ti-wallet"></i>الرصيد الافتتاحي للصناديق</span></div>
+    <div class="ibox warn"><i class="ti ti-alert-triangle"></i>الرصيد الافتتاحي يُحسب أولاً قبل أي عملية — يُدخَل مرة واحدة فقط ولا يتغير إلا بموافقة المدير</div>
+    <div class="fg" style="max-width:500px">
+      <div class="fi">
+        <label>الرصيد الافتتاحي لصندوق الغداء ₪</label>
+        <div class="iw"><span class="ipx" style="color:var(--food)">₪</span><input type="number" id="set-food-opening" placeholder="0.00" step="0.01"></div>
+        <span style="font-size:11px;color:var(--tx3)">المبلغ الموجود في الصندوق قبل بدء النظام</span>
+      </div>
+      <div class="fi">
+        <label>الرصيد الافتتاحي لصندوق الديوان ₪</label>
+        <div class="iw"><span class="ipx" style="color:var(--diwan)">₪</span><input type="number" id="set-diwan-opening" placeholder="0.00" step="0.01"></div>
+        <span style="font-size:11px;color:var(--tx3)">المبلغ الموجود في الصندوق قبل بدء النظام</span>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ الإعدادات</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i>أسعار الصرف الاحتياطية</span></div>
+    <div class="ibox info" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>تُستخدم فقط إذا تعذّر جلب السعر التلقائي من الإنترنت</div>
+    <div class="fg" style="max-width:500px">
+      <div class="fi">
+        <label>سعر الدولار الأمريكي USD ₪</label>
+        <div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" placeholder="3.70" step="0.01" min="0.01"></div>
+      </div>
+      <div class="fi">
+        <label>سعر الدينار الأردني JOD ₪</label>
+        <div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" placeholder="5.00" step="0.01" min="0.01"></div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ</button>
+    </div>
+  </div>
+
+  <div class="card" id="settings-summary" style="display:none">
+    <div class="ch"><span class="ct"><i class="ti ti-chart-pie"></i>ملخص الأرصدة مع الافتتاحي</span></div>
+    <div id="settings-bal-summary"></div>
+  </div>
+</div>
+
 </div><!-- /main -->
 </div><!-- /layout -->
 
 <div id="copyright-bar">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
 
 <!-- MODALS -->
-<div class="ov" id="ov" onclick="if(event.target===this)window.closeM()">
+<div class="ov" id="ov">
 
 <!-- RECEIPT MODAL -->
 <div class="modal" id="m-rec" style="display:none;max-width:580px">
@@ -592,9 +645,106 @@
   </div>
 </div>
 
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal" id="m-change-pass" style="display:none;max-width:400px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div>
+    <div class="fg">
+      <div class="fi full">
+        <label>كلمة المرور الجديدة <span class="req">*</span></label>
+        <input type="password" id="new-pass" placeholder="••••••••" minlength="6">
+        <span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span>
+      </div>
+      <div class="fi full">
+        <label>تأكيد كلمة المرور <span class="req">*</span></label>
+        <input type="password" id="confirm-pass" placeholder="••••••••">
+        <span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span>
+      </div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.changePassword()"><i class="ti ti-lock-check"></i>حفظ كلمة المرور</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
 </div><!-- /overlay -->
+
+<!-- MOBILE BOTTOM NAV -->
+<div id="mobile-nav" style="display:none">
+  <div class="mnb on" onclick="window.nav('dash');setMobileNav(this)">
+    <i class="ti ti-layout-dashboard"></i>
+    <span>الرئيسية</span>
+  </div>
+  <div class="mnb" onclick="window.nav('food-stmt');setMobileNav(this)">
+    <i class="ti ti-tools-kitchen-2"></i>
+    <span>الغداء</span>
+  </div>
+  <div class="mnb" onclick="window.nav('diwan-stmt');setMobileNav(this)">
+    <i class="ti ti-building"></i>
+    <span>الديوان</span>
+  </div>
+  <div class="mnb" onclick="window.nav('members');setMobileNav(this)">
+    <i class="ti ti-users"></i>
+    <span>الأعضاء</span>
+  </div>
+  <div class="mnb" id="mnb-more" onclick="toggleMobileMenu()">
+    <i class="ti ti-menu-2"></i>
+    <span>المزيد</span>
+  </div>
+</div>
+
+<!-- MOBILE MENU (المزيد) -->
+<div id="mobile-menu" style="display:none;position:fixed;bottom:62px;left:0;right:0;background:var(--navy2);border-top:1px solid rgba(255,255,255,.08);z-index:199;padding:8px;display:none">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-rec');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-receipt" style="color:var(--food)"></i>
+      <span>إيصالات الغداء</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-rec');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-receipt" style="color:var(--diwan)"></i>
+      <span>إيصالات الديوان</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('don');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-heart" style="color:var(--don)"></i>
+      <span>التبرعات</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-pay');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-cash" style="color:var(--food)"></i>
+      <span>مصاريف الغداء</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-pay');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-cash" style="color:var(--diwan)"></i>
+      <span>مصاريف الديوان</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('member-stmt');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-user"></i>
+      <span>كشف عضو</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('audit');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-list-check"></i>
+      <span>سجل العمليات</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-annual" onclick="window.nav('annual');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-calendar"></i>
+      <span>الاشتراكات</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-settings" onclick="window.nav('settings');closeMobileMenu();setMobileNav(null)"><i class="ti ti-settings"></i><span>الإعدادات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-users-mob" onclick="window.nav('users');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-shield-lock"></i>
+      <span>المستخدمون</span>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 
+<script src="/js/i18n.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>
