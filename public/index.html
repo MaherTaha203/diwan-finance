@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="html-root">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -53,28 +53,28 @@
 
 <div class="layout">
 <div class="sb">
-  <div class="sb-sec">الرئيسية</div>
+  <div class="sb-sec" data-i18n="nav.home">الرئيسية</div>
   <div class="nb on" data-p="dash"><i class="ti ti-layout-dashboard"></i>لوحة التحكم</div>
 
-  <div class="sb-sec">صندوق الغداء</div>
+  <div class="sb-sec" data-i18n="nav.food_fund">صندوق الغداء</div>
   <div class="nb" data-p="food-rec"><i class="ti ti-receipt"></i>إيصالات الغداء</div>
   <div class="nb" data-p="food-pay"><i class="ti ti-cash"></i>مصاريف الغداء</div>
   <div class="nb" data-p="food-stmt"><i class="ti ti-file-description"></i>كشف الغداء</div>
 
-  <div class="sb-sec">صندوق الديوان</div>
+  <div class="sb-sec" data-i18n="nav.diwan_fund">صندوق الديوان</div>
   <div class="nb" data-p="diwan-rec"><i class="ti ti-receipt"></i>إيصالات الديوان</div>
   <div class="nb" data-p="diwan-pay"><i class="ti ti-cash"></i>مصاريف الديوان</div>
   <div class="nb" data-p="diwan-stmt"><i class="ti ti-file-description"></i>كشف الديوان</div>
 
-  <div class="sb-sec">التبرعات</div>
+  <div class="sb-sec" data-i18n="nav.donations_sec">التبرعات</div>
   <div class="nb" data-p="don"><i class="ti ti-heart"></i>سجل التبرعات</div>
 
-  <div class="sb-sec">الأعضاء</div>
+  <div class="sb-sec" data-i18n="nav.members_sec">الأعضاء</div>
   <div class="nb" data-p="members"><i class="ti ti-users"></i>أعضاء العائلة</div>
   <div class="nb" data-p="member-stmt"><i class="ti ti-user"></i>كشف حساب عضو</div>
   <div class="nb" data-p="annual"><i class="ti ti-calendar"></i>الاشتراكات السنوية</div>
 
-  <div class="sb-sec">النظام</div>
+  <div class="sb-sec" data-i18n="nav.system_sec">النظام</div>
   <div class="nb" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i>المستخدمون</div>
   <div class="nb" data-p="audit"><i class="ti ti-list-check"></i>سجل العمليات</div>
   <div class="nb" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i>الإعدادات</div>
@@ -207,7 +207,7 @@
 <!-- DONATIONS -->
 <div class="pg" id="pg-don">
   <div class="ph"><div><div class="ph-t">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>تبرع جديد</button></div></div>
-  <div class="ibox don"><i class="ti ti-info-circle"></i>التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة</div>
+  <div class="ibox don"><i class="ti ti-info-circle"></i><span data-i18n="donations.info">التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة</span></div>
   <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-don" placeholder="بحث..." oninput="D['don'].render()"></div></div>
   <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المتبرع</th><th>المبلغ ₪</th><th>العملة</th><th>يُظهر في</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="don-body"></tbody></table></div>
   <div class="pag" id="don-pag"></div>
@@ -247,7 +247,7 @@
 <div class="pg" id="pg-annual">
   <div class="ph"><div><div class="ph-t">الاشتراكات السنوية</div><div class="ph-s">200 ₪ على كل عضو بداية كل سنة</div></div></div>
   <div class="card">
-    <div class="ibox warn"><i class="ti ti-alert-triangle"></i>عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.</div>
+    <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span data-i18n="annual.warning">عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.</span></div>
     <div class="fg" style="max-width:400px;margin-bottom:16px">
       <div class="fi"><label>السنة</label><input type="number" id="due-year" min="2020" max="2040" value="2026"></div>
       <div class="fi"><label>المبلغ ₪</label><input type="number" id="due-amount" value="200" min="1"></div>
@@ -294,12 +294,12 @@
     <div class="ibox warn"><i class="ti ti-alert-triangle"></i>الرصيد الافتتاحي يُحسب أولاً قبل أي عملية — يُدخَل مرة واحدة فقط ولا يتغير إلا بموافقة المدير</div>
     <div class="fg" style="max-width:500px">
       <div class="fi">
-        <label>الرصيد الافتتاحي لصندوق الغداء ₪</label>
+        <label for="set-food-opening" data-i18n="settings.food_opening">الرصيد الافتتاحي لصندوق الغداء ₪</label>
         <div class="iw"><span class="ipx" style="color:var(--food)">₪</span><input type="number" id="set-food-opening" placeholder="0.00" step="0.01"></div>
         <span style="font-size:11px;color:var(--tx3)">المبلغ الموجود في الصندوق قبل بدء النظام</span>
       </div>
       <div class="fi">
-        <label>الرصيد الافتتاحي لصندوق الديوان ₪</label>
+        <label for="set-diwan-opening" data-i18n="settings.diwan_opening">الرصيد الافتتاحي لصندوق الديوان ₪</label>
         <div class="iw"><span class="ipx" style="color:var(--diwan)">₪</span><input type="number" id="set-diwan-opening" placeholder="0.00" step="0.01"></div>
         <span style="font-size:11px;color:var(--tx3)">المبلغ الموجود في الصندوق قبل بدء النظام</span>
       </div>
@@ -545,7 +545,7 @@
     <div class="fg">
       <div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="mem-name" placeholder="الاسم الرباعي"><span class="ferr" id="e-mem-name"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
       <div class="fi"><label>الهاتف</label><input type="tel" id="mem-phone" placeholder="05x-xxx-xxxx"></div>
-      <div class="fi"><label>الرصيد الافتتاحي لصندوق الغداء ₪</label><input type="number" id="mem-balance" value="0" step="0.01"><span style="font-size:10.5px;color:var(--tx3)">سالب = دين على العضو</span></div>
+      <div class="fi"><label for="set-food-opening" data-i18n="settings.food_opening">الرصيد الافتتاحي لصندوق الغداء ₪</label><input type="number" id="mem-balance" value="0" step="0.01"><span style="font-size:10.5px;color:var(--tx3)">سالب = دين على العضو</span></div>
       <div class="fi full"><label>ملاحظات</label><textarea id="mem-notes" placeholder="ملاحظات..."></textarea></div>
     </div>
   </div>
@@ -585,7 +585,7 @@
   </div>
   <div class="mbd">
     <input type="hidden" id="edit-rec-id">
-    <div class="ibox warn"><i class="ti ti-lock"></i>يمكن تعديل المبلغ بالشيكل والملاحظات فقط</div>
+    <div class="ibox warn"><i class="ti ti-lock"></i><span data-i18n="edit.warning">يمكن تعديل المبلغ بالشيكل والملاحظات فقط</span></div>
     <div class="fg">
       <div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-rec-amount" min="0.01" step="0.01"></div></div>
       <div class="fi full"><label>ملاحظات</label><textarea id="edit-rec-notes"></textarea></div>
@@ -606,7 +606,7 @@
   </div>
   <div class="mbd">
     <input type="hidden" id="edit-pay-id">
-    <div class="ibox warn"><i class="ti ti-lock"></i>يمكن تعديل المبلغ بالشيكل والملاحظات فقط</div>
+    <div class="ibox warn"><i class="ti ti-lock"></i><span data-i18n="edit.warning">يمكن تعديل المبلغ بالشيكل والملاحظات فقط</span></div>
     <div class="fg">
       <div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-pay-amount" min="0.01" step="0.01"></div></div>
       <div class="fi full"><label>ملاحظات</label><textarea id="edit-pay-notes"></textarea></div>
@@ -653,17 +653,17 @@
     <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
-    <div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div>
+    <div class="ibox warn"><i class="ti ti-info-circle"></i><span data-i18n="password.hint">كلمة المرور الجديدة يجب أن تكون <span data-i18n="password.min_length">6 أحرف على الأقل</span></span></div>
     <div class="fg">
       <div class="fi full">
         <label>كلمة المرور الجديدة <span class="req">*</span></label>
         <input type="password" id="new-pass" placeholder="••••••••" minlength="6">
-        <span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span>
+        <span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i><span data-i18n="password.min_length">6 أحرف على الأقل</span></span>
       </div>
       <div class="fi full">
         <label>تأكيد كلمة المرور <span class="req">*</span></label>
         <input type="password" id="confirm-pass" placeholder="••••••••">
-        <span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span>
+        <span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i><span data-i18n="password.mismatch">كلمات المرور غير متطابقة</span></span>
       </div>
     </div>
   </div>
