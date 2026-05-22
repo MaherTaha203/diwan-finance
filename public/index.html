@@ -25,8 +25,10 @@
     <div class="lfi"><label>البريد الإلكتروني</label><input type="email" id="l-email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')window.login()"></div>
     <div class="lfi"><label>كلمة المرور</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')window.login()"></div>
     <button class="login-btn" id="login-btn" onclick="window.login()"><i class="ti ti-login"></i>تسجيل الدخول</button>
+    <div id="forgot-msg" style="display:none;background:#FFF8E8;border:1px solid #E8C84A;border-radius:8px;padding:10px 13px;font-size:12px;color:#8B6A00;margin-top:10px;text-align:center"><i class="ti ti-info-circle"></i> يرجى التواصل مع المدير لإعادة تعيين كلمة المرور</div>
+    <button onclick="window.forgotPassword()" style="width:100%;background:none;border:none;color:#8BA5C0;font-size:11.5px;margin-top:8px;cursor:pointer;font-family:inherit;padding:4px">نسيت كلمة المرور؟</button>
     <div class="login-err" id="login-err"></div>
-    <div class="login-footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
+    <div class="login-footer"><strong>All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</strong><br><small style="font-size:10px;color:#B0C4D8">by Maher Mohamad Fayez Taha</small></div>
   </div>
 </div>
 
@@ -131,7 +133,7 @@
 
 <!-- FOOD STATEMENT -->
 <div class="pg" id="pg-food-stmt">
-  <div class="ph"><div><div class="ph-t">كشف حساب صندوق الغداء</div></div><div class="ph-a"><button class="btn sm food" onclick="window.prtStmt('food')"><i class="ti ti-printer"></i>طباعة</button></div></div>
+  <div class="ph"><div><div class="ph-t">كشف حساب صندوق الغداء</div></div><div class="ph-a"><button class="btn sm food" onclick="window.prtStmt('food')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="window.exportCSV('food-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button></div></div>
   <div class="card" style="margin-bottom:14px">
     <div class="fg">
       <div class="fi"><label>من تاريخ</label><input type="date" id="food-stmt-from"></div>
@@ -183,7 +185,7 @@
 
 <!-- DIWAN STATEMENT -->
 <div class="pg" id="pg-diwan-stmt">
-  <div class="ph"><div><div class="ph-t">كشف حساب صندوق الديوان</div></div><div class="ph-a"><button class="btn sm diwan" onclick="window.prtStmt('diwan')"><i class="ti ti-printer"></i>طباعة</button></div></div>
+  <div class="ph"><div><div class="ph-t">كشف حساب صندوق الديوان</div></div><div class="ph-a"><button class="btn sm diwan" onclick="window.prtStmt('diwan')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="window.exportCSV('diwan-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button></div></div>
   <div class="card" style="margin-bottom:14px">
     <div class="fg">
       <div class="fi"><label>من تاريخ</label><input type="date" id="diwan-stmt-from"></div>
@@ -206,7 +208,7 @@
 
 <!-- DONATIONS -->
 <div class="pg" id="pg-don">
-  <div class="ph"><div><div class="ph-t">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>تبرع جديد</button></div></div>
+  <div class="ph"><div><div class="ph-t">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>تبرع جديد</button><button class="btn sm" onclick="window.prtDonStmt()"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="window.exportCSV('don')"><i class="ti ti-file-spreadsheet"></i>Excel</button></div></div>
   <div class="ibox don"><i class="ti ti-info-circle"></i><span data-i18n="donations.info">التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة</span></div>
   <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-don" placeholder="بحث..." oninput="D['don'].render()"></div></div>
   <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المتبرع</th><th>المبلغ ₪</th><th>العملة</th><th>يُظهر في</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="don-body"></tbody></table></div>
@@ -235,9 +237,10 @@
       <div class="fi"><label>من تاريخ</label><input type="date" id="ms-from"></div>
       <div class="fi"><label>إلى تاريخ</label><input type="date" id="ms-to"></div>
     </div>
-    <div style="margin-top:12px;display:flex;gap:8px">
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض الكشف</button>
       <button class="btn" onclick="window.prtMemberStmt()"><i class="ti ti-printer"></i>طباعة</button>
+      <button class="btn" onclick="window.exportCSV('member-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button>
     </div>
   </div>
   <div id="ms-out"></div>
@@ -345,7 +348,7 @@
 <div class="modal" id="m-rec" style="display:none;max-width:580px">
   <div class="mhd">
     <span class="mtt"><span class="mico green" id="rec-mico"><i class="ti ti-receipt"></i></span><span id="rec-mtitle">سند قبض جديد</span></span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <!-- نوع السند -->
@@ -429,12 +432,23 @@
       <div class="fi">
         <label>طريقة الدفع</label>
         <div class="pills" id="rec-pills">
-          <span class="pill on" data-val="cash" onclick="window.setPill('rec',this)"><i class="ti ti-cash"></i>نقد</span>
+          <span class="pill on" data-val="cash" onclick="window.setPill('rec',this)" data-val="cash"><i class="ti ti-cash"></i>نقد</span>
           <span class="pill" data-val="check" onclick="window.setPill('rec',this)"><i class="ti ti-file-dollar"></i>شيك</span>
           <span class="pill" data-val="transfer" onclick="window.setPill('rec',this)"><i class="ti ti-building-bank"></i>تحويل</span>
           <span class="pill" data-val="online" onclick="window.setPill('rec',this)"><i class="ti ti-device-mobile"></i>أونلاين</span>
         </div>
         <input type="hidden" id="rec-method" value="cash">
+      </div>
+      <!-- حقول الشيك -->
+      <div class="fi full" id="rec-cheque-wrap" style="display:none">
+        <div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px">
+          <div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> معلومات الشيك</div>
+          <div class="fg">
+            <div class="fi"><label>رقم الشيك</label><input type="text" id="rec-cheque-no" placeholder="مثال: 123456"></div>
+            <div class="fi"><label>تاريخ الشيك</label><input type="date" id="rec-cheque-date"></div>
+            <div class="fi full"><label>البنك المسحوب عليه</label><input type="text" id="rec-cheque-bank" placeholder="اسم البنك"></div>
+          </div>
+        </div>
       </div>
       <div class="fi full">
         <label>ملاحظات</label>
@@ -453,7 +467,7 @@
 <div class="modal" id="m-pay" style="display:none;max-width:580px">
   <div class="mhd">
     <span class="mtt"><span class="mico red"><i class="ti ti-cash"></i></span><span id="pay-mtitle">سند صرف جديد</span></span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <div class="fi full" style="margin-bottom:14px">
@@ -524,6 +538,17 @@
         </div>
         <input type="hidden" id="pay-method" value="cash">
       </div>
+      <!-- حقول الشيك -->
+      <div class="fi full" id="pay-cheque-wrap" style="display:none">
+        <div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px">
+          <div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> معلومات الشيك</div>
+          <div class="fg">
+            <div class="fi"><label>رقم الشيك</label><input type="text" id="pay-cheque-no" placeholder="مثال: 123456"></div>
+            <div class="fi"><label>تاريخ الشيك</label><input type="date" id="pay-cheque-date"></div>
+            <div class="fi full"><label>البنك المسحوب عليه</label><input type="text" id="pay-cheque-bank" placeholder="اسم البنك"></div>
+          </div>
+        </div>
+      </div>
       <div class="fi"><label>معتمد من</label><input type="text" id="pay-approved" placeholder="اسم المعتمد"></div>
       <div class="fi full"><label>ملاحظات</label><textarea id="pay-notes" placeholder="وصف تفصيلي..."></textarea></div>
     </div>
@@ -539,7 +564,7 @@
 <div class="modal" id="m-member" style="display:none;max-width:480px">
   <div class="mhd">
     <span class="mtt"><span class="mico diwan"><i class="ti ti-user-plus"></i></span>إضافة عضو جديد</span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <div class="fg">
@@ -559,7 +584,7 @@
 <div class="modal" id="m-edit-member" style="display:none;max-width:480px">
   <div class="mhd">
     <span class="mtt"><span class="mico diwan"><i class="ti ti-edit"></i></span>تعديل بيانات العضو</span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <input type="hidden" id="edit-mem-id">
@@ -581,7 +606,7 @@
 <div class="modal" id="m-edit-rec" style="display:none;max-width:420px">
   <div class="mhd">
     <span class="mtt"><span class="mico green"><i class="ti ti-edit"></i></span>تعديل الإيصال</span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <input type="hidden" id="edit-rec-id">
@@ -602,7 +627,7 @@
 <div class="modal" id="m-edit-pay" style="display:none;max-width:420px">
   <div class="mhd">
     <span class="mtt"><span class="mico red"><i class="ti ti-edit"></i></span>تعديل سند الصرف</span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <input type="hidden" id="edit-pay-id">
@@ -623,7 +648,7 @@
 <div class="modal" id="m-invite" style="display:none;max-width:420px">
   <div class="mhd">
     <span class="mtt"><span class="mico don"><i class="ti ti-send"></i></span>دعوة مستخدم جديد</span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <div class="fg">
@@ -650,7 +675,7 @@
 <div class="modal" id="m-change-pass" style="display:none;max-width:400px">
   <div class="mhd">
     <span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span>
-    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+    <button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mbd">
     <div class="ibox warn"><i class="ti ti-info-circle"></i><span data-i18n="password.hint">كلمة المرور الجديدة يجب أن تكون <span data-i18n="password.min_length">6 أحرف على الأقل</span></span></div>
