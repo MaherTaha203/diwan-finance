@@ -84,11 +84,11 @@ const FIN={
 
 /* ═══ UTILS ═══ */
 const today=()=>new Date().toISOString().slice(0,10);
-const fmt=n=>(window.formatNumber?window.formatNumber(n):Math.round(Number(n||0)).toLocaleString('en-US'));
+const fmt=n=>Math.round(Number(n||0)).toLocaleString('en-US');
 const fmtEN=n=>Math.round(Number(n||0)).toLocaleString('en-US');
 const fmtDEN=n=>Number(n||0).toFixed(2);
 const fmtD=n=>Number(n||0).toFixed(2);
-const fdate=d=>(window.formatDate?window.formatDate(d):(()=>{if(!d)return'—';try{const dt=new Date(d);return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();}catch{return d;}})());
+const fdate=d=>{if(!d)return'—';try{const dt=new Date(d);return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();}catch(e){return d;}};
 const gm=id=>DB.members.find(m=>m.id===id);
 const gmn=id=>gm(id)?.name||'—';
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -302,8 +302,7 @@ function renderAll(){
   if(active&&D[active]) D[active].render();
   if(active==='settings'){loadSettings().then(renderSettingsSummary);}
   fillMemberSelect();fillMemberDropdowns();fillContactDropdown();
-  // إعادة تطبيق اللغة بعد رسم البيانات
-  if(window.applyLang) setTimeout(window.applyLang,50);
+
 }
 
 /* ═══ TABLE RENDERERS ═══ */
@@ -469,7 +468,7 @@ function emptyRow(cols,msg){return`<tr><td colspan="${cols}"><div class="empty">
 function renderDash(){
   const fb=FIN.foodBalance(),db=FIN.diwanBalance(),donb=FIN.donBalance();
   const dd=document.getElementById('dash-date');
-  if(dd)dd.textContent=window.formatDateFull?window.formatDateFull(new Date()):new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if(dd)dd.textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
   document.getElementById('fund-cards').innerHTML=`
     <div class="fund-card food"><div class="fund-label">صندوق الغداء</div><div class="fund-balance">₪ ${fmt(fb)}</div><div class="fund-sub">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').length} إيصال</div></div>
