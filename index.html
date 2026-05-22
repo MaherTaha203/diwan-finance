@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ديوان آل طه · الإدارة المالية</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="pra"></div>
+<div class="tc" id="tc"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-blob1"></div>
+  <div class="login-blob2"></div>
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-ico"><i class="ti ti-building-bank"></i></div>
+      <h1>ديوان آل طه</h1>
+      <p>نظام الإدارة المالية</p>
+    </div>
+    <div class="lfi"><label>البريد الإلكتروني</label><input type="email" id="l-email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')window.login()"></div>
+    <div class="lfi"><label>كلمة المرور</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')window.login()"></div>
+    <button class="login-btn" id="login-btn" onclick="window.login()"><i class="ti ti-login"></i>تسجيل الدخول</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+<div class="top">
+  <div class="top-logo">
+    <div class="top-logo-ico"><i class="ti ti-building-bank"></i></div>
+    <div><div class="top-logo-text">ديوان آل طه</div><div class="top-logo-sub">نظام الإدارة المالية</div></div>
+  </div>
+  <div class="top-actions">
+    <span id="clock"></span>
+    <div class="rate-chip" id="rate-chip"><i class="ti ti-currency-dollar"></i><span id="rate-txt">جاري التحديث...</span></div>
+    <button class="tbtn" id="theme-btn" onclick="window.toggleTheme()"><i class="ti ti-sun"></i>فاتح</button>
+    <button class="tbtn" id="lang-btn" onclick="window.toggleLang()"><i class="ti ti-language"></i>EN</button>
+    <div class="uchip">
+      <div class="uav" id="uav">م</div>
+      <div><span class="uname" id="uname">...</span><span class="urole" id="urole">...</span></div>
+    </div>
+    <button class="tbtn" onclick="window.openM('change-pass')"><i class="ti ti-lock"></i>كلمة المرور</button>
+    <button class="tbtn red" onclick="window.logout()"><i class="ti ti-logout"></i>خروج</button>
+  </div>
+</div>
+
+<div class="layout">
+<div class="sb">
+  <div class="sb-sec" data-i18n="nav.home">الرئيسية</div>
+  <div class="nb on" data-p="dash"><i class="ti ti-layout-dashboard"></i>لوحة التحكم</div>
+
+  <div class="sb-sec" data-i18n="nav.food_fund">صندوق الغداء</div>
+  <div class="nb" data-p="food-rec"><i class="ti ti-receipt"></i>إيصالات الغداء</div>
+  <div class="nb" data-p="food-pay"><i class="ti ti-cash"></i>مصاريف الغداء</div>
+  <div class="nb" data-p="food-stmt"><i class="ti ti-file-description"></i>كشف الغداء</div>
+
+  <div class="sb-sec" data-i18n="nav.diwan_fund">صندوق الديوان</div>
+  <div class="nb" data-p="diwan-rec"><i class="ti ti-receipt"></i>إيصالات الديوان</div>
+  <div class="nb" data-p="diwan-pay"><i class="ti ti-cash"></i>مصاريف الديوان</div>
+  <div class="nb" data-p="diwan-stmt"><i class="ti ti-file-description"></i>كشف الديوان</div>
+
+  <div class="sb-sec" data-i18n="nav.donations_sec">التبرعات</div>
+  <div class="nb" data-p="don"><i class="ti ti-heart"></i>سجل التبرعات</div>
+
+  <div class="sb-sec" data-i18n="nav.members_sec">الأعضاء</div>
+  <div class="nb" data-p="members"><i class="ti ti-users"></i>أعضاء العائلة</div>
+  <div class="nb" data-p="member-stmt"><i class="ti ti-user"></i>كشف حساب عضو</div>
+  <div class="nb" data-p="annual"><i class="ti ti-calendar"></i>الاشتراكات السنوية</div>
+
+  <div class="sb-sec" data-i18n="nav.system_sec">النظام</div>
+  <div class="nb" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i>المستخدمون</div>
+  <div class="nb" data-p="audit"><i class="ti ti-list-check"></i>سجل العمليات</div>
+  <div class="nb" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i>الإعدادات</div>
+  <div class="nb" data-p="bk"><i class="ti ti-database"></i>النسخ الاحتياطي</div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="pg on" id="pg-dash">
+  <div class="ph">
+    <div><div class="ph-t">لوحة التحكم</div><div class="ph-s" id="dash-date"></div></div>
+    <div class="ph-a">
+      <button class="btn sm" onclick="window.loadAll()"><i class="ti ti-refresh"></i>تحديث</button>
+      <button class="btn primary sm" id="dash-btn-rec" onclick="window.openRec()"><i class="ti ti-plus"></i>سند قبض</button>
+      <button class="btn danger sm" id="dash-btn-pay" onclick="window.openPay()"><i class="ti ti-minus"></i>سند صرف</button>
+    </div>
+  </div>
+  <div class="fund-grid" id="fund-cards"></div>
+  <div class="kgrid" id="kpis"></div>
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:14px">
+    <div>
+      <div class="card"><div class="ch"><span class="ct"><i class="ti ti-chart-histogram"></i>الحركات الشهرية</span></div><div id="month-chart" style="height:130px;display:flex;align-items:flex-end;gap:6px;padding-top:10px"></div></div>
+      <div class="card"><div class="ch"><span class="ct"><i class="ti ti-clock"></i>آخر الحركات</span></div><div id="recent-ops"></div></div>
+    </div>
+    <div>
+      <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-bolt"></i>إجراءات سريعة</div><div id="quick-actions"></div></div>
+      <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i>أعضاء متأخرون</div><div id="late-members" class="scroll"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOD RECEIPTS -->
+<div class="pg" id="pg-food-rec">
+  <div class="ph"><div><div class="ph-t">إيصالات صندوق الغداء</div><div class="ph-s" id="food-rec-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-food-rec" onclick="window.openRec('food')"><i class="ti ti-plus"></i>إيصال جديد</button><button class="btn sm" onclick="window.exportCSV('food-rec')"><i class="ti ti-download"></i>تصدير</button></div></div>
+  <div class="ibox food"><i class="ti ti-info-circle"></i>مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء</div>
+  <div class="tb">
+    <div class="sw"><i class="ti ti-search"></i><input class="si" id="q-food-rec" placeholder="بحث..." oninput="D['food-rec'].render()"></div>
+  </div>
+  <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>الدافع</th><th>المبلغ ₪</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="food-rec-body"></tbody></table></div>
+  <div class="pag" id="food-rec-pag"></div>
+</div>
+
+<!-- FOOD PAYMENTS -->
+<div class="pg" id="pg-food-pay">
+  <div class="ph"><div><div class="ph-t">مصاريف صندوق الغداء</div><div class="ph-s" id="food-pay-sub"></div></div><div class="ph-a"><button class="btn sm food" id="btn-food-pay" onclick="window.openPay('food')"><i class="ti ti-plus"></i>مصروف جديد</button><button class="btn sm" onclick="window.exportCSV('food-pay')"><i class="ti ti-download"></i>تصدير</button></div></div>
+  <div class="ibox food"><i class="ti ti-info-circle"></i>مصاريف إطعام أهل المتوفى في حالات العزاء — تُدفع من صندوق الغداء</div>
+  <div class="tb">
+    <div class="sw"><i class="ti ti-search"></i><input class="si" id="q-food-pay" placeholder="بحث..." oninput="D['food-pay'].render()"></div>
+  </div>
+  <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المستفيد</th><th>المبلغ ₪</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="food-pay-body"></tbody></table></div>
+  <div class="pag" id="food-pay-pag"></div>
+</div>
+
+<!-- FOOD STATEMENT -->
+<div class="pg" id="pg-food-stmt">
+  <div class="ph"><div><div class="ph-t">كشف حساب صندوق الغداء</div></div><div class="ph-a"><button class="btn sm food" onclick="window.prtStmt('food')"><i class="ti ti-printer"></i>طباعة</button></div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="fg">
+      <div class="fi"><label>من تاريخ</label><input type="date" id="food-stmt-from"></div>
+      <div class="fi"><label>إلى تاريخ</label><input type="date" id="food-stmt-to"></div>
+      <div class="fi"><label>نوع الحركة</label>
+        <select id="food-stmt-type">
+          <option value="">الكل</option>
+          <option value="cr">إيصالات فقط</option>
+          <option value="dr">مصاريف فقط</option>
+          <option value="don">تبرعات فقط</option>
+        </select>
+      </div>
+      <div class="fi" style="justify-content:flex-end">
+        <button class="btn primary" onclick="window.renderStmt('food')" style="margin-top:18px"><i class="ti ti-search"></i>عرض</button>
+      </div>
+    </div>
+  </div>
+  <div id="food-stmt-out"></div>
+</div>
+
+<!-- DIWAN RECEIPTS -->
+<div class="pg" id="pg-diwan-rec">
+  <div class="ph"><div><div class="ph-t">إيصالات صندوق الديوان</div><div class="ph-s" id="diwan-rec-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-diwan-rec" onclick="window.openRec('diwan')"><i class="ti ti-plus"></i>إيصال جديد</button><button class="btn sm" onclick="window.exportCSV('diwan-rec')"><i class="ti ti-download"></i>تصدير</button></div></div>
+  <div class="ibox diwan"><i class="ti ti-info-circle"></i>مدفوعات للديوان من الأعضاء أو من خارج العائلة</div>
+  <div class="tb">
+    <div class="sw"><i class="ti ti-search"></i><input class="si" id="q-diwan-rec" placeholder="بحث..." oninput="D['diwan-rec'].render()"></div>
+  </div>
+  <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>الدافع</th><th>المبلغ ₪</th><th>العملة</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="diwan-rec-body"></tbody></table></div>
+  <div class="pag" id="diwan-rec-pag"></div>
+</div>
+
+<!-- DIWAN PAYMENTS -->
+<div class="pg" id="pg-diwan-pay">
+  <div class="ph"><div><div class="ph-t">مصاريف صندوق الديوان</div><div class="ph-s" id="diwan-pay-sub"></div></div><div class="ph-a"><button class="btn sm diwan" id="btn-diwan-pay" onclick="window.openPay('diwan')"><i class="ti ti-plus"></i>مصروف جديد</button><button class="btn sm" onclick="window.exportCSV('diwan-pay')"><i class="ti ti-download"></i>تصدير</button></div></div>
+  <div class="tb">
+    <div class="sw"><i class="ti ti-search"></i><input class="si" id="q-diwan-pay" placeholder="بحث..." oninput="D['diwan-pay'].render()"></div>
+    <select class="fs" id="f-diwan-pay-type" onchange="D['diwan-pay'].render()">
+      <option value="">كل الفئات</option>
+      <option value="electricity">كهرباء</option>
+      <option value="water">ماء</option>
+      <option value="cleaning">تنظيف</option>
+      <option value="maintenance">صيانة</option>
+      <option value="other">أخرى</option>
+    </select>
+  </div>
+  <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المستفيد</th><th>المبلغ ₪</th><th>الفئة</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="diwan-pay-body"></tbody></table></div>
+  <div class="pag" id="diwan-pay-pag"></div>
+</div>
+
+<!-- DIWAN STATEMENT -->
+<div class="pg" id="pg-diwan-stmt">
+  <div class="ph"><div><div class="ph-t">كشف حساب صندوق الديوان</div></div><div class="ph-a"><button class="btn sm diwan" onclick="window.prtStmt('diwan')"><i class="ti ti-printer"></i>طباعة</button></div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="fg">
+      <div class="fi"><label>من تاريخ</label><input type="date" id="diwan-stmt-from"></div>
+      <div class="fi"><label>إلى تاريخ</label><input type="date" id="diwan-stmt-to"></div>
+      <div class="fi"><label>نوع الحركة</label>
+        <select id="diwan-stmt-type">
+          <option value="">الكل</option>
+          <option value="cr">إيصالات فقط</option>
+          <option value="dr">مصاريف فقط</option>
+          <option value="don">تبرعات فقط</option>
+        </select>
+      </div>
+      <div class="fi" style="justify-content:flex-end">
+        <button class="btn primary" onclick="window.renderStmt('diwan')" style="margin-top:18px"><i class="ti ti-search"></i>عرض</button>
+      </div>
+    </div>
+  </div>
+  <div id="diwan-stmt-out"></div>
+</div>
+
+<!-- DONATIONS -->
+<div class="pg" id="pg-don">
+  <div class="ph"><div><div class="ph-t">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>تبرع جديد</button></div></div>
+  <div class="ibox don"><i class="ti ti-info-circle"></i><span data-i18n="donations.info">التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة</span></div>
+  <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-don" placeholder="بحث..." oninput="D['don'].render()"></div></div>
+  <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المتبرع</th><th>المبلغ ₪</th><th>العملة</th><th>يُظهر في</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="don-body"></tbody></table></div>
+  <div class="pag" id="don-pag"></div>
+</div>
+
+<!-- MEMBERS -->
+<div class="pg" id="pg-members">
+  <div class="ph"><div><div class="ph-t">أعضاء العائلة</div><div class="ph-s" id="members-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-add-member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i>عضو جديد</button></div></div>
+  <div class="tb">
+    <div class="sw"><i class="ti ti-search"></i><input class="si" id="q-members" placeholder="بحث بالاسم..." oninput="D['members'].render()"></div>
+    <select class="fs" id="f-member-status" onchange="D['members'].render()">
+      <option value="">الكل</option><option value="paid">مسدَّد</option><option value="due">عليه رصيد</option>
+    </select>
+  </div>
+  <div class="tw"><table><thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>رصيد الغداء ₪</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="members-body"></tbody></table></div>
+  <div class="pag" id="members-pag"></div>
+</div>
+
+<!-- MEMBER STATEMENT -->
+<div class="pg" id="pg-member-stmt">
+  <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="fg">
+      <div class="fi full"><label>اختر العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div>
+      <div class="fi"><label>من تاريخ</label><input type="date" id="ms-from"></div>
+      <div class="fi"><label>إلى تاريخ</label><input type="date" id="ms-to"></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض الكشف</button>
+      <button class="btn" onclick="window.prtMemberStmt()"><i class="ti ti-printer"></i>طباعة</button>
+    </div>
+  </div>
+  <div id="ms-out"></div>
+</div>
+
+<!-- ANNUAL DUES -->
+<div class="pg" id="pg-annual">
+  <div class="ph"><div><div class="ph-t">الاشتراكات السنوية</div><div class="ph-s">200 ₪ على كل عضو بداية كل سنة</div></div></div>
+  <div class="card">
+    <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span data-i18n="annual.warning">عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.</span></div>
+    <div class="fg" style="max-width:400px;margin-bottom:16px">
+      <div class="fi"><label>السنة</label><input type="number" id="due-year" min="2020" max="2040" value="2026"></div>
+      <div class="fi"><label>المبلغ ₪</label><input type="number" id="due-amount" value="200" min="1"></div>
+    </div>
+    <button class="btn primary" id="btn-apply-due" onclick="window.applyAnnualDue()"><i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي</button>
+  </div>
+  <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-history"></i>سجل الاشتراكات المطبقة</div><div id="annual-list"></div></div>
+</div>
+
+<!-- USERS -->
+<div class="pg" id="pg-users">
+  <div class="ph"><div><div class="ph-t">إدارة المستخدمين</div></div><div class="ph-a"><button class="btn sm primary" onclick="window.openM('invite')"><i class="ti ti-user-plus"></i>دعوة مستخدم</button></div></div>
+  <div class="card"><div id="users-list"></div></div>
+</div>
+
+<!-- AUDIT -->
+<div class="pg" id="pg-audit">
+  <div class="ph"><div><div class="ph-t">سجل العمليات</div></div><div class="ph-a"><button class="btn sm" onclick="window.exportCSV('audit')"><i class="ti ti-download"></i>تصدير</button></div></div>
+  <div class="card"><div id="audit-list"></div></div>
+</div>
+
+<!-- BACKUP -->
+<div class="pg" id="pg-bk">
+  <div class="ph"><div><div class="ph-t">النسخ الاحتياطي</div></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card" style="text-align:center;padding:28px">
+      <i class="ti ti-database-export" style="font-size:40px;color:var(--diwan);display:block;margin-bottom:12px"></i>
+      <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">تصدير كامل بصيغة JSON</p>
+      <button class="btn primary" onclick="window.doBackup()"><i class="ti ti-download"></i>تحميل النسخة</button>
+    </div>
+    <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>معلومات النظام</div><div id="sys-info"></div></div>
+  </div>
+</div>
+
+
+<!-- SETTINGS PAGE -->
+<div class="pg" id="pg-settings">
+  <div class="ph">
+    <div><div class="ph-t">الإعدادات</div><div class="ph-s">الرصيد الافتتاحي وإعدادات النظام</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span class="ct"><i class="ti ti-wallet"></i>الرصيد الافتتاحي للصناديق</span></div>
+    <div class="ibox warn"><i class="ti ti-alert-triangle"></i>الرصيد الافتتاحي يُحسب أولاً قبل أي عملية — يُدخَل مرة واحدة فقط ولا يتغير إلا بموافقة المدير</div>
+    <div class="fg" style="max-width:500px">
+      <div class="fi">
+        <label for="set-food-opening" data-i18n="settings.food_opening">الرصيد الافتتاحي لصندوق الغداء ₪</label>
+        <div class="iw"><span class="ipx" style="color:var(--food)">₪</span><input type="number" id="set-food-opening" placeholder="0.00" step="0.01"></div>
+        <span style="font-size:11px;color:var(--tx3)">المبلغ الموجود في الصندوق قبل بدء النظام</span>
+      </div>
+      <div class="fi">
+        <label for="set-diwan-opening" data-i18n="settings.diwan_opening">الرصيد الافتتاحي لصندوق الديوان ₪</label>
+        <div class="iw"><span class="ipx" style="color:var(--diwan)">₪</span><input type="number" id="set-diwan-opening" placeholder="0.00" step="0.01"></div>
+        <span style="font-size:11px;color:var(--tx3)">المبلغ الموجود في الصندوق قبل بدء النظام</span>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ الإعدادات</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i>أسعار الصرف الاحتياطية</span></div>
+    <div class="ibox info" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>تُستخدم فقط إذا تعذّر جلب السعر التلقائي من الإنترنت</div>
+    <div class="fg" style="max-width:500px">
+      <div class="fi">
+        <label>سعر الدولار الأمريكي USD ₪</label>
+        <div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" placeholder="3.70" step="0.01" min="0.01"></div>
+      </div>
+      <div class="fi">
+        <label>سعر الدينار الأردني JOD ₪</label>
+        <div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" placeholder="5.00" step="0.01" min="0.01"></div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ</button>
+    </div>
+  </div>
+
+  <div class="card" id="settings-summary" style="display:none">
+    <div class="ch"><span class="ct"><i class="ti ti-chart-pie"></i>ملخص الأرصدة مع الافتتاحي</span></div>
+    <div id="settings-bal-summary"></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<div id="copyright-bar">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
+
+<!-- MODALS -->
+<div class="ov" id="ov">
+
+<!-- RECEIPT MODAL -->
+<div class="modal" id="m-rec" style="display:none;max-width:580px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico green" id="rec-mico"><i class="ti ti-receipt"></i></span><span id="rec-mtitle">سند قبض جديد</span></span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <!-- نوع السند -->
+    <div class="fi full" style="margin-bottom:14px">
+      <label>نوع الإيصال <span class="req">*</span></label>
+      <select id="rec-fund" onchange="window.onRecFundChange()">
+        <option value="food">صندوق الغداء — مساهمة عضو</option>
+        <option value="diwan">صندوق الديوان — دفعة للديوان</option>
+        <option value="donation">تبرع — يُسجَّل في صندوق التبرعات</option>
+      </select>
+    </div>
+
+    <!-- معلومات الدافع -->
+    <div class="sdiv">بيانات الدافع</div>
+    <div class="fg">
+      <div class="fi" id="rec-payer-type-wrap">
+        <label>نوع الدافع</label>
+        <select id="rec-payer-type" onchange="window.onPayerTypeChange()">
+          <option value="member">عضو من العائلة</option>
+          <option value="contact" id="opt-contact" style="display:none">جهة اتصال مسجلة</option>
+          <option value="manual" id="opt-manual" style="display:none">إدخال يدوي</option>
+        </select>
+      </div>
+      <div class="fi" id="rec-member-wrap">
+        <label>اسم العضو <span class="req">*</span></label>
+        <select id="rec-member"><option value="">-- اختر عضواً --</option></select>
+        <span class="ferr" id="e-rec-member"><i class="ti ti-alert-circle"></i>مطلوب</span>
+      </div>
+      <div class="fi" id="rec-contact-wrap" style="display:none">
+        <label>جهة الاتصال</label>
+        <select id="rec-contact"><option value="">-- اختر --</option></select>
+      </div>
+      <div class="fi" id="rec-manual-wrap" style="display:none">
+        <label>اسم الدافع <span class="req">*</span></label>
+        <input type="text" id="rec-payer-name" placeholder="اكتب الاسم">
+        <div style="margin-top:4px"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="rec-save-contact" style="width:auto;padding:0">حفظ كجهة اتصال</label></div>
+      </div>
+    </div>
+
+    <!-- التبرع — توجيه الصندوق -->
+    <div id="rec-don-fund-wrap" style="display:none">
+      <div class="sdiv">توجيه التبرع</div>
+      <div class="fi full">
+        <label>يُظهر في كشف أي صندوق؟</label>
+        <select id="rec-don-display">
+          <option value="food">كشف صندوق الغداء</option>
+          <option value="diwan">كشف صندوق الديوان</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- المبلغ -->
+    <div class="sdiv">المبلغ والتاريخ</div>
+    <div class="fg">
+      <div class="fi">
+        <label>العملة</label>
+        <select id="rec-currency" onchange="window.onCurrencyChange('rec')">
+          <option value="ILS">₪ شيكل إسرائيلي</option>
+          <option value="USD">$ دولار أمريكي</option>
+          <option value="JOD">د.أ دينار أردني</option>
+        </select>
+      </div>
+      <div class="fi">
+        <label>المبلغ <span class="req">*</span></label>
+        <div class="iw"><span class="ipx" id="rec-currency-sym">₪</span><input type="number" id="rec-amount" min="0.01" step="0.01" placeholder="0.00" oninput="window.calcILS('rec')"></div>
+        <span class="ferr" id="e-rec-amount"><i class="ti ti-alert-circle"></i>أدخل مبلغاً</span>
+      </div>
+      <div class="fi full" id="rec-ils-row" style="display:none">
+        <div class="ils-row show">
+          <i class="ti ti-calculator"></i>
+          <span>المبلغ بالشيكل: </span>
+          <span class="ils-val" id="rec-ils-val">—</span>
+          <span style="color:var(--tx3);font-size:11px;margin-right:auto" id="rec-rate-label"></span>
+        </div>
+      </div>
+      <div class="fi">
+        <label>التاريخ <span class="req">*</span></label>
+        <input type="date" id="rec-date">
+        <span class="ferr" id="e-rec-date"><i class="ti ti-alert-circle"></i>مطلوب</span>
+      </div>
+      <div class="fi">
+        <label>طريقة الدفع</label>
+        <div class="pills" id="rec-pills">
+          <span class="pill on" data-val="cash" onclick="window.setPill('rec',this)"><i class="ti ti-cash"></i>نقد</span>
+          <span class="pill" data-val="check" onclick="window.setPill('rec',this)"><i class="ti ti-file-dollar"></i>شيك</span>
+          <span class="pill" data-val="transfer" onclick="window.setPill('rec',this)"><i class="ti ti-building-bank"></i>تحويل</span>
+          <span class="pill" data-val="online" onclick="window.setPill('rec',this)"><i class="ti ti-device-mobile"></i>أونلاين</span>
+        </div>
+        <input type="hidden" id="rec-method" value="cash">
+      </div>
+      <div class="fi full">
+        <label>ملاحظات</label>
+        <textarea id="rec-notes" placeholder="ملاحظات اختيارية..."></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.saveRec(true)"><i class="ti ti-printer"></i>حفظ وطباعة</button>
+    <button class="btn green" onclick="window.saveRec(false)"><i class="ti ti-device-floppy"></i>حفظ فقط</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal" id="m-pay" style="display:none;max-width:580px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico red"><i class="ti ti-cash"></i></span><span id="pay-mtitle">سند صرف جديد</span></span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <div class="fi full" style="margin-bottom:14px">
+      <label>الصندوق <span class="req">*</span></label>
+      <select id="pay-fund" onchange="window.onPayFundChange()">
+        <option value="food">صندوق الغداء — مصاريف الإطعام</option>
+        <option value="diwan">صندوق الديوان — مصاريف الديوان</option>
+      </select>
+    </div>
+
+    <div class="fg">
+      <div class="fi" id="pay-expense-wrap">
+        <label>فئة المصروف <span class="req">*</span></label>
+        <select id="pay-expense">
+          <option value="food_expense">مصاريف إطعام عزاء</option>
+        </select>
+      </div>
+      <div class="fi">
+        <label>المستفيد <span class="req">*</span></label>
+        <select id="pay-beneficiary-type" onchange="window.onPayBenChange()">
+          <option value="member">عضو من العائلة</option>
+          <option value="manual">إدخال يدوي</option>
+        </select>
+      </div>
+      <div class="fi" id="pay-member-wrap">
+        <label>اسم العضو</label>
+        <select id="pay-member"><option value="">-- اختر عضواً --</option></select>
+      </div>
+      <div class="fi" id="pay-manual-wrap" style="display:none">
+        <label>اسم المستفيد <span class="req">*</span></label>
+        <input type="text" id="pay-ben-name" placeholder="اسم المستفيد">
+        <span class="ferr" id="e-pay-ben"><i class="ti ti-alert-circle"></i>مطلوب</span>
+      </div>
+
+      <!-- المبلغ -->
+      <div class="fi">
+        <label>العملة</label>
+        <select id="pay-currency" onchange="window.onCurrencyChange('pay')">
+          <option value="ILS">₪ شيكل</option>
+          <option value="USD">$ دولار</option>
+          <option value="JOD">د.أ دينار أردني</option>
+        </select>
+      </div>
+      <div class="fi">
+        <label>المبلغ <span class="req">*</span></label>
+        <div class="iw"><span class="ipx" id="pay-currency-sym">₪</span><input type="number" id="pay-amount" min="0.01" step="0.01" placeholder="0.00" oninput="window.calcILS('pay')"></div>
+        <span class="ferr" id="e-pay-amount"><i class="ti ti-alert-circle"></i>مطلوب</span>
+      </div>
+      <div class="fi full" id="pay-ils-row" style="display:none">
+        <div class="ils-row show">
+          <i class="ti ti-calculator"></i>
+          <span>المبلغ بالشيكل: </span>
+          <span class="ils-val" id="pay-ils-val">—</span>
+          <span style="color:var(--tx3);font-size:11px;margin-right:auto" id="pay-rate-label"></span>
+        </div>
+      </div>
+      <div class="fi">
+        <label>التاريخ <span class="req">*</span></label>
+        <input type="date" id="pay-date">
+        <span class="ferr" id="e-pay-date"><i class="ti ti-alert-circle"></i>مطلوب</span>
+      </div>
+      <div class="fi">
+        <label>طريقة الصرف</label>
+        <div class="pills" id="pay-pills">
+          <span class="pill on" data-val="cash" onclick="window.setPill('pay',this)"><i class="ti ti-cash"></i>نقد</span>
+          <span class="pill" data-val="check" onclick="window.setPill('pay',this)"><i class="ti ti-file-dollar"></i>شيك</span>
+          <span class="pill" data-val="transfer" onclick="window.setPill('pay',this)"><i class="ti ti-building-bank"></i>تحويل</span>
+        </div>
+        <input type="hidden" id="pay-method" value="cash">
+      </div>
+      <div class="fi"><label>معتمد من</label><input type="text" id="pay-approved" placeholder="اسم المعتمد"></div>
+      <div class="fi full"><label>ملاحظات</label><textarea id="pay-notes" placeholder="وصف تفصيلي..."></textarea></div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn danger" onclick="window.savePay(true)"><i class="ti ti-printer"></i>حفظ وطباعة</button>
+    <button class="btn" onclick="window.savePay(false)"><i class="ti ti-device-floppy"></i>حفظ فقط</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+<!-- MEMBER MODAL -->
+<div class="modal" id="m-member" style="display:none;max-width:480px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico diwan"><i class="ti ti-user-plus"></i></span>إضافة عضو جديد</span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <div class="fg">
+      <div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="mem-name" placeholder="الاسم الرباعي"><span class="ferr" id="e-mem-name"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
+      <div class="fi"><label>الهاتف</label><input type="tel" id="mem-phone" placeholder="05x-xxx-xxxx"></div>
+      <div class="fi"><label for="set-food-opening" data-i18n="settings.food_opening">الرصيد الافتتاحي لصندوق الغداء ₪</label><input type="number" id="mem-balance" value="0" step="0.01"><span style="font-size:10.5px;color:var(--tx3)">سالب = دين على العضو</span></div>
+      <div class="fi full"><label>ملاحظات</label><textarea id="mem-notes" placeholder="ملاحظات..."></textarea></div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.saveMember()"><i class="ti ti-device-floppy"></i>حفظ</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+<!-- EDIT MEMBER MODAL (admin only) -->
+<div class="modal" id="m-edit-member" style="display:none;max-width:480px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico diwan"><i class="ti ti-edit"></i></span>تعديل بيانات العضو</span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <input type="hidden" id="edit-mem-id">
+    <div class="fg">
+      <div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="edit-mem-name"></div>
+      <div class="fi"><label>الهاتف</label><input type="tel" id="edit-mem-phone"></div>
+      <div class="fi"><label>الرصيد الافتتاحي ₪</label><input type="number" id="edit-mem-balance" step="0.01"></div>
+      <div class="fi full"><label>ملاحظات</label><textarea id="edit-mem-notes"></textarea></div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.updateMember()"><i class="ti ti-device-floppy"></i>حفظ التعديل</button>
+    <button class="btn danger" onclick="window.deleteMember()"><i class="ti ti-trash"></i>حذف العضو</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+<!-- EDIT RECEIPT MODAL (admin only) -->
+<div class="modal" id="m-edit-rec" style="display:none;max-width:420px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico green"><i class="ti ti-edit"></i></span>تعديل الإيصال</span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <input type="hidden" id="edit-rec-id">
+    <div class="ibox warn"><i class="ti ti-lock"></i><span data-i18n="edit.warning">يمكن تعديل المبلغ بالشيكل والملاحظات فقط</span></div>
+    <div class="fg">
+      <div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-rec-amount" min="0.01" step="0.01"></div></div>
+      <div class="fi full"><label>ملاحظات</label><textarea id="edit-rec-notes"></textarea></div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.updateRec()"><i class="ti ti-device-floppy"></i>حفظ</button>
+    <button class="btn danger" onclick="window.deleteRec()"><i class="ti ti-trash"></i>إلغاء السند</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+<!-- EDIT PAYMENT MODAL (admin only) -->
+<div class="modal" id="m-edit-pay" style="display:none;max-width:420px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico red"><i class="ti ti-edit"></i></span>تعديل سند الصرف</span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <input type="hidden" id="edit-pay-id">
+    <div class="ibox warn"><i class="ti ti-lock"></i><span data-i18n="edit.warning">يمكن تعديل المبلغ بالشيكل والملاحظات فقط</span></div>
+    <div class="fg">
+      <div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-pay-amount" min="0.01" step="0.01"></div></div>
+      <div class="fi full"><label>ملاحظات</label><textarea id="edit-pay-notes"></textarea></div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.updatePay()"><i class="ti ti-device-floppy"></i>حفظ</button>
+    <button class="btn danger" onclick="window.deletePay()"><i class="ti ti-trash"></i>إلغاء السند</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+<!-- INVITE USER -->
+<div class="modal" id="m-invite" style="display:none;max-width:420px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico don"><i class="ti ti-send"></i></span>دعوة مستخدم جديد</span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <div class="fg">
+      <div class="fi full"><label>الاسم الكامل</label><input type="text" id="inv-name" placeholder="اسم المستخدم"></div>
+      <div class="fi full"><label>البريد الإلكتروني <span class="req">*</span></label><input type="email" id="inv-email"></div>
+      <div class="fi full"><label>كلمة المرور المؤقتة <span class="req">*</span></label><input type="text" id="inv-pass"></div>
+      <div class="fi full"><label>الدور</label>
+        <select id="inv-role">
+          <option value="viewer">عارض — عرض فقط</option>
+          <option value="accountant">محاسب — إضافة سندات</option>
+          <option value="admin">مدير — كامل الصلاحيات</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.inviteUser()"><i class="ti ti-send"></i>إنشاء الحساب</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal" id="m-change-pass" style="display:none;max-width:400px">
+  <div class="mhd">
+    <span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span>
+    <button class="btn ghost sm" onclick="window.closeM()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mbd">
+    <div class="ibox warn"><i class="ti ti-info-circle"></i><span data-i18n="password.hint">كلمة المرور الجديدة يجب أن تكون <span data-i18n="password.min_length">6 أحرف على الأقل</span></span></div>
+    <div class="fg">
+      <div class="fi full">
+        <label>كلمة المرور الجديدة <span class="req">*</span></label>
+        <input type="password" id="new-pass" placeholder="••••••••" minlength="6">
+        <span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i><span data-i18n="password.min_length">6 أحرف على الأقل</span></span>
+      </div>
+      <div class="fi full">
+        <label>تأكيد كلمة المرور <span class="req">*</span></label>
+        <input type="password" id="confirm-pass" placeholder="••••••••">
+        <span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i><span data-i18n="password.mismatch">كلمات المرور غير متطابقة</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn primary" onclick="window.changePassword()"><i class="ti ti-lock-check"></i>حفظ كلمة المرور</button>
+    <button class="btn" onclick="window.closeM()">إلغاء</button>
+  </div>
+</div>
+
+</div><!-- /overlay -->
+
+<!-- MOBILE BOTTOM NAV -->
+<div id="mobile-nav" style="display:none">
+  <div class="mnb on" onclick="window.nav('dash');setMobileNav(this)">
+    <i class="ti ti-layout-dashboard"></i>
+    <span>الرئيسية</span>
+  </div>
+  <div class="mnb" onclick="window.nav('food-stmt');setMobileNav(this)">
+    <i class="ti ti-tools-kitchen-2"></i>
+    <span>الغداء</span>
+  </div>
+  <div class="mnb" onclick="window.nav('diwan-stmt');setMobileNav(this)">
+    <i class="ti ti-building"></i>
+    <span>الديوان</span>
+  </div>
+  <div class="mnb" onclick="window.nav('members');setMobileNav(this)">
+    <i class="ti ti-users"></i>
+    <span>الأعضاء</span>
+  </div>
+  <div class="mnb" id="mnb-more" onclick="toggleMobileMenu()">
+    <i class="ti ti-menu-2"></i>
+    <span>المزيد</span>
+  </div>
+</div>
+
+<!-- MOBILE MENU (المزيد) -->
+<div id="mobile-menu" style="display:none;position:fixed;bottom:62px;left:0;right:0;background:var(--navy2);border-top:1px solid rgba(255,255,255,.08);z-index:199;padding:8px;display:none">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-rec');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-receipt" style="color:var(--food)"></i>
+      <span>إيصالات الغداء</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-rec');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-receipt" style="color:var(--diwan)"></i>
+      <span>إيصالات الديوان</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('don');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-heart" style="color:var(--don)"></i>
+      <span>التبرعات</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-pay');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-cash" style="color:var(--food)"></i>
+      <span>مصاريف الغداء</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-pay');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-cash" style="color:var(--diwan)"></i>
+      <span>مصاريف الديوان</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('member-stmt');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-user"></i>
+      <span>كشف عضو</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('audit');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-list-check"></i>
+      <span>سجل العمليات</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-annual" onclick="window.nav('annual');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-calendar"></i>
+      <span>الاشتراكات</span>
+    </div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-settings" onclick="window.nav('settings');closeMobileMenu();setMobileNav(null)"><i class="ti ti-settings"></i><span>الإعدادات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-users-mob" onclick="window.nav('users');closeMobileMenu();setMobileNav(null)">
+      <i class="ti ti-shield-lock"></i>
+      <span>المستخدمون</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
