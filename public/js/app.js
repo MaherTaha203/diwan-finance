@@ -84,11 +84,11 @@ const FIN={
 
 /* ═══ UTILS ═══ */
 const today=()=>new Date().toISOString().slice(0,10);
-const fmt=n=>Math.round(Number(n||0)).toLocaleString('ar-SA');
+const fmt=n=>(window.formatNumber?window.formatNumber(n):Math.round(Number(n||0)).toLocaleString('en-US'));
 const fmtEN=n=>Math.round(Number(n||0)).toLocaleString('en-US');
 const fmtDEN=n=>Number(n||0).toFixed(2);
 const fmtD=n=>Number(n||0).toFixed(2);
-const fdate=d=>{if(!d)return'—';try{const dt=new Date(d);const dd=String(dt.getDate()).padStart(2,'0');const mm=String(dt.getMonth()+1).padStart(2,'0');const yy=dt.getFullYear();return dd+'/'+mm+'/'+yy;}catch{return d;}};
+const fdate=d=>(window.formatDate?window.formatDate(d):(()=>{if(!d)return'—';try{const dt=new Date(d);return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();}catch{return d;}})());
 const gm=id=>DB.members.find(m=>m.id===id);
 const gmn=id=>gm(id)?.name||'—';
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -210,12 +210,7 @@ window.toggleTheme=function(){
   const b=document.getElementById('theme-btn');
   if(b) b.innerHTML=document.body.classList.contains('light')?'<i class="ti ti-moon"></i>داكن':'<i class="ti ti-sun"></i>فاتح';
 };
-window.toggleLang=function(){
-  window.LANG = window.LANG==='ar'?'en':'ar';
-  const btn=document.getElementById('lang-btn');
-  if(btn) btn.innerHTML=`<i class="ti ti-language"></i>${window.LANG==='ar'?'EN':'AR'}`;
-  window.applyLang();
-};
+// toggleLang defined in i18n.js
 
 /* ═══ AUTH ═══ */
 window.login=async function(){
@@ -245,9 +240,10 @@ async function afterLogin(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   // الثيم الافتراضي نهار
-  document.body.classList.add('light');
-  const tb=document.getElementById('theme-btn');
-  if(tb)tb.innerHTML='<i class="ti ti-moon"></i>داكن';
+  if(!document.body.classList.contains('light')) document.body.classList.add('light');
+  // تطبيق اللغة المحفوظة
+  window.LANG = localStorage.getItem('diwan_lang')||'ar';
+  window.applyLang();
   await loadSettings();
   await fetchRates();
   await loadAll();
@@ -297,7 +293,7 @@ async function loadAll(){
     DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
     DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];
     renderAll();
-  }catch(e){toast('خطأ في تحميل البيانات','err');console.error(e);}
+  }catch(e){toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err');console.error(e);}
 }
 window.loadAll=loadAll;
 function renderAll(){
@@ -306,6 +302,8 @@ function renderAll(){
   if(active&&D[active]) D[active].render();
   if(active==='settings'){loadSettings().then(renderSettingsSummary);}
   fillMemberSelect();fillMemberDropdowns();fillContactDropdown();
+  // إعادة تطبيق اللغة بعد رسم البيانات
+  if(window.applyLang) setTimeout(window.applyLang,50);
 }
 
 /* ═══ TABLE RENDERERS ═══ */
@@ -471,7 +469,7 @@ function emptyRow(cols,msg){return`<tr><td colspan="${cols}"><div class="empty">
 function renderDash(){
   const fb=FIN.foodBalance(),db=FIN.diwanBalance(),donb=FIN.donBalance();
   const dd=document.getElementById('dash-date');
-  if(dd)dd.textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if(dd)dd.textContent=window.formatDateFull?window.formatDateFull(new Date()):new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
   document.getElementById('fund-cards').innerHTML=`
     <div class="fund-card food"><div class="fund-label">صندوق الغداء</div><div class="fund-balance">₪ ${fmt(fb)}</div><div class="fund-sub">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').length} إيصال</div></div>
@@ -793,7 +791,7 @@ async function logAction(action,desc,tableN,recordId){
 
 /* ═══ SAVE RECEIPT ═══ */
 window.saveRec=async function(print=false){
-  if(!can.write()){toast('ليس لديك صلاحية','err');return;}
+  if(!can.write()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
   const fund=document.getElementById('rec-fund').value;
   const payerType=document.getElementById('rec-payer-type').value;
   const memberId=document.getElementById('rec-member')?.value||null;
@@ -852,7 +850,7 @@ window.saveRec=async function(print=false){
 
 /* ═══ SAVE PAYMENT ═══ */
 window.savePay=async function(print=false){
-  if(!can.write()){toast('ليس لديك صلاحية','err');return;}
+  if(!can.write()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
   const fund=document.getElementById('pay-fund').value;
   const benType=document.getElementById('pay-beneficiary-type').value;
   const memberId=document.getElementById('pay-member')?.value||null;
@@ -894,7 +892,7 @@ window.savePay=async function(print=false){
 
 /* ═══ SAVE MEMBER ═══ */
 window.saveMember=async function(){
-  if(!can.admin()){toast('ليس لديك صلاحية','err');return;}
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
   const name=document.getElementById('mem-name').value.trim();
   if(!vf('mem-name',v=>v.trim().length>1,'e-mem-name'))return;
   if(DB.members.find(m=>m.name.trim()===name)){toast('يوجد عضو بنفس الاسم','warn');return;}
@@ -909,7 +907,7 @@ window.saveMember=async function(){
 
 /* ═══ EDIT RECORDS (admin only) ═══ */
 window.editRec=function(id){
-  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const r=DB.receipts.find(x=>x.id===id);if(!r)return;
   document.getElementById('edit-rec-id').value=id;
   document.getElementById('edit-rec-amount').value=r.amount_ils||r.amount;
@@ -935,7 +933,7 @@ window.deleteRec=async function(){
   window.closeM();await loadAll();toast('تم الإلغاء','warn');
 };
 window.editPay=function(id){
-  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
   document.getElementById('edit-pay-id').value=id;
   document.getElementById('edit-pay-amount').value=p.amount_ils||p.amount;
@@ -961,7 +959,7 @@ window.deletePay=async function(){
   window.closeM();await loadAll();toast('تم الإلغاء','warn');
 };
 window.editMember=function(id){
-  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const m=gm(id);if(!m)return;
   document.getElementById('edit-mem-id').value=id;
   document.getElementById('edit-mem-name').value=m.name;
@@ -994,7 +992,7 @@ window.deleteMember=async function(){
 
 /* ═══ ANNUAL DUES ═══ */
 window.applyAnnualDue=async function(){
-  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const year=parseInt(document.getElementById('due-year').value);
   const amount=parseFloat(document.getElementById('due-amount').value)||200;
   if(!year||year<2020||year>2040){toast('سنة غير صحيحة','warn');return;}
