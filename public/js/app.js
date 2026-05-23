@@ -248,8 +248,14 @@ document.querySelectorAll('.nb[data-p]').forEach(el=>el.addEventListener('click'
 /* ═══ THEME ═══ */
 window.toggleTheme=function(){
   document.body.classList.toggle('light');
+  const isLight=document.body.classList.contains('light');
   const b=document.getElementById('theme-btn');
-  if(b) b.innerHTML=document.body.classList.contains('light')?'<i class="ti ti-moon"></i>داكن':'<i class="ti ti-sun"></i>فاتح';
+  if(b){
+    const lbl=isLight?(window.LANG==='en'?'Dark':'داكن'):(window.LANG==='en'?'Light':'فاتح');
+    const ico=isLight?'ti-moon':'ti-sun';
+    b.innerHTML=`<i class="ti ${ico}"></i>${lbl}`;
+  }
+  localStorage.setItem('diwan_theme',isLight?'light':'dark');
 };
 // toggleLang defined in i18n.js
 
@@ -257,6 +263,7 @@ window.toggleTheme=function(){
 window.login=async function(){
   const email=document.getElementById('l-email').value.trim();
   const pass=document.getElementById('l-pass').value;
+  const remember=document.getElementById('l-remember')?.checked||false;
   const btn=document.getElementById('login-btn');
   const err=document.getElementById('login-err');
   if(!email||!pass){showLoginErr(window.t?window.t('login.fill_all'):'يرجى إدخال البريد وكلمة المرور');return;}
@@ -280,8 +287,13 @@ async function afterLogin(){
   applyPerms();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
-  // الثيم الافتراضي نهار
-  if(!document.body.classList.contains('light')) document.body.classList.add('light');
+  // استعادة الثيم المحفوظ
+  const savedTheme=localStorage.getItem('diwan_theme')||'light';
+  if(savedTheme==='light'){
+    document.body.classList.add('light');
+  } else {
+    document.body.classList.remove('light');
+  }
   // تطبيق اللغة المحفوظة
   window.LANG = localStorage.getItem('diwan_lang')||'ar';
   window.applyLang();
@@ -290,6 +302,8 @@ async function afterLogin(){
   await loadAll();
   startClock();
   initMobile();
+  applyDataProtection();
+  applyLoginLang();
 }
 window.logout=async function(){
   await SB.auth.signOut();CU=null;CUR=null;
@@ -1413,6 +1427,32 @@ window.forgotPassword=function(){
   }
 };
 
+
+/* ── LOGIN PAGE TRANSLATION ── */
+function applyLoginLang(){
+  const isEn = window.LANG==='en';
+  const ids = {
+    'login-title': isEn?'Diwan Al Taha':'ديوان آل طه',
+    'login-sub': isEn?'Financial Management System':'نظام الإدارة المالية',
+    'lbl-email': isEn?'Email Address':'البريد الإلكتروني',
+    'lbl-pass': isEn?'Password':'كلمة المرور',
+    'lbl-remember': isEn?'Remember me':'تذكرني',
+    'btn-forgot': isEn?'Forgot password?':'نسيت كلمة المرور؟',
+    'btn-login-txt': isEn?'Sign In':'تسجيل الدخول',
+    'login-lang-txt': isEn?'AR':'EN',
+  };
+  Object.entries(ids).forEach(([id,txt])=>{
+    const el=document.getElementById(id);
+    if(el)el.textContent=txt;
+  });
+  const lEmail=document.getElementById('l-email');
+  if(lEmail)lEmail.placeholder=isEn?'example@email.com':'example@email.com';
+  const lPass=document.getElementById('l-pass');
+  if(lPass)lPass.placeholder=isEn?'••••••••':'••••••••';
+  const loginBtn=document.getElementById('login-btn');
+  if(loginBtn)loginBtn.innerHTML=`<i class="ti ti-login"></i><span id="btn-login-txt">${isEn?'Sign In':'تسجيل الدخول'}</span>`;
+}
+
 /* ═══ CHANGE PASSWORD ═══ */
 window.changePassword = async function(){
   const newPass = document.getElementById('new-pass').value;
@@ -1583,6 +1623,35 @@ function renderSettingsSummary(){
       </div>
     </div>
   `;
+}
+
+
+/* ═══ DATA PROTECTION ═══ */
+function applyDataProtection(){
+  const role=CUR?.role||'viewer';
+  if(role==='viewer'){
+    // تعطيل كليك يمين
+    document.addEventListener('contextmenu',e=>e.preventDefault());
+    // تعطيل النسخ والقص
+    document.addEventListener('copy',e=>{e.preventDefault();toast(window.t?window.t('errors.no_permission'):'غير مسموح بالنسخ','warn');});
+    document.addEventListener('cut',e=>e.preventDefault());
+    // تعطيل تحديد النص
+    document.addEventListener('selectstart',e=>{
+      if(!['INPUT','TEXTAREA'].includes(e.target.tagName)) e.preventDefault();
+    });
+    // إضافة watermark
+    addWatermark();
+  }
+}
+function addWatermark(){
+  const wm=document.createElement('div');
+  wm.id='watermark';
+  const name=CUR?.full_name||CU?.email||'viewer';
+  const now=new Date();
+  const dt=now.toLocaleDateString('en-US')+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  wm.style.cssText=`position:fixed;inset:0;pointer-events:none;z-index:9998;display:flex;align-items:center;justify-content:center;overflow:hidden`;
+  wm.innerHTML=`<div style="transform:rotate(-35deg);font-size:24px;font-weight:700;color:rgba(0,0,0,.04);white-space:nowrap;user-select:none;letter-spacing:.1em;text-align:center;line-height:3">${name}<br>${dt}<br>${name}<br>${dt}</div>`;
+  document.body.appendChild(wm);
 }
 
 /* ═══ INIT ═══ */
