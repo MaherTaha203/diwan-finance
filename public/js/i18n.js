@@ -165,6 +165,48 @@ const translations = {
       cancel_voucher:'إلغاء السند',
       amount_ils:'المبلغ بالشيكل ₪',
     },
+
+    login: {
+      title:'تسجيل الدخول',
+      email:'البريد الإلكتروني',
+      password:'كلمة المرور',
+      login_btn:'تسجيل الدخول',
+      forgot:'نسيت كلمة المرور؟',
+      fill_all:'يرجى إدخال البريد وكلمة المرور',
+      wrong_credentials:'بريد إلكتروني أو كلمة مرور غير صحيحة',
+      contact_admin:'تواصل مع المدير',
+    },
+    errors: {
+      no_permission:'ليس لديك صلاحية',
+      no_print:'ليس لديك صلاحية الطباعة',
+      required:'مطلوب',
+      invalid_amount:'أدخل مبلغاً صحيحاً',
+      invalid_year:'سنة غير صحيحة',
+      duplicate_member:'يوجد عضو بنفس الاسم',
+      duplicate_year:'تم تطبيق هذا الاشتراك مسبقاً',
+      load_error:'خطأ في تحميل البيانات',
+      save_error:'خطأ في الحفظ',
+      delete_confirm:'هل أنت متأكد من الحذف؟',
+      cancel_confirm:'إلغاء هذا السند نهائياً؟',
+      no_members:'لا يوجد أعضاء نشطون',
+      email_required:'البريد وكلمة المرور مطلوبان',
+      login_error:'بريد إلكتروني أو كلمة مرور غير صحيحة',
+      min_pass:'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+      pass_mismatch:'كلمات المرور غير متطابقة',
+      popup_blocked:'يرجى السماح بالنوافذ المنبثقة',
+    },
+    messages: {
+      saved:'تم الحفظ بنجاح',
+      deleted:'تم الحذف',
+      updated:'تم التعديل بنجاح',
+      logged_out:'تم تسجيل الخروج',
+      pass_changed:'تم تغيير كلمة المرور بنجاح',
+      annual_applied:'تم تطبيق الاشتراك السنوي بنجاح',
+      settings_saved:'تم حفظ الإعدادات',
+      backup_done:'تم تصدير النسخة الاحتياطية',
+      exported:'تم التصدير',
+      forgot_contact:'يرجى التواصل مع المدير لإعادة تعيين كلمة المرور',
+    },
     password: {
       title:'تغيير كلمة المرور',
       new_pass:'كلمة المرور الجديدة',
@@ -182,6 +224,28 @@ const translations = {
       duplicate_member:'يوجد عضو بنفس الاسم',
       load_error:'خطأ في تحميل البيانات',
       save_error:'خطأ في الحفظ',
+      invalid_year:'سنة غير صحيحة',
+      already_applied:'تم تطبيق هذا الاشتراك مسبقاً',
+      no_members:'لا يوجد أعضاء نشطون',
+      confirm_apply:'هل أنت متأكد؟ لا يمكن التراجع.',
+      session_expired:'انتهت الجلسة، يرجى إعادة تسجيل الدخول',
+      network_error:'خطأ في الاتصال بالخادم',
+      min_6_chars:'يجب أن تكون 6 أحرف على الأقل',
+      passwords_mismatch:'كلمات المرور غير متطابقة',
+      email_required:'البريد الإلكتروني مطلوب',
+      password_required:'كلمة المرور مطلوبة',
+    },
+    messages: {
+      saved:'تم الحفظ بنجاح',
+      deleted:'تم الحذف',
+      cancelled:'تم الإلغاء',
+      updated:'تم التحديث بنجاح',
+      logged_out:'تم تسجيل الخروج',
+      annual_applied:'تم تطبيق الاشتراك السنوي بنجاح',
+      contact_saved:'تم حفظ جهة الاتصال',
+      exported:'تم التصدير بنجاح',
+      printed:'جاهز للطباعة',
+      contact_admin:'يرجى التواصل مع المدير لإعادة تعيين كلمة المرور',
     },
   },
 
@@ -343,6 +407,48 @@ const translations = {
       cancel_voucher:'Cancel Voucher',
       amount_ils:'Amount in ILS ₪',
     },
+
+    login: {
+      title:'Sign In',
+      email:'Email Address',
+      password:'Password',
+      login_btn:'Sign In',
+      forgot:'Forgot password?',
+      fill_all:'Please enter email and password',
+      wrong_credentials:'Invalid email or password',
+      contact_admin:'Contact your administrator',
+    },
+    errors: {
+      no_permission:'Permission denied',
+      no_print:'No print permission',
+      required:'Required',
+      invalid_amount:'Enter a valid amount',
+      invalid_year:'Invalid year',
+      duplicate_member:'Member with this name already exists',
+      duplicate_year:'Annual due already applied for this year',
+      load_error:'Error loading data',
+      save_error:'Error saving data',
+      delete_confirm:'Are you sure you want to delete?',
+      cancel_confirm:'Cancel this voucher permanently?',
+      no_members:'No active members found',
+      email_required:'Email and password are required',
+      login_error:'Invalid email or password',
+      min_pass:'Password must be at least 6 characters',
+      pass_mismatch:'Passwords do not match',
+      popup_blocked:'Please allow popups in your browser',
+    },
+    messages: {
+      saved:'Saved successfully',
+      deleted:'Deleted',
+      updated:'Updated successfully',
+      logged_out:'Logged out',
+      pass_changed:'Password changed successfully',
+      annual_applied:'Annual due applied successfully',
+      settings_saved:'Settings saved',
+      backup_done:'Backup exported',
+      exported:'Exported',
+      forgot_contact:'Please contact the admin to reset your password',
+    },
     password: {
       title:'Change Password',
       new_pass:'New Password',
@@ -352,14 +458,46 @@ const translations = {
       mismatch:'Passwords do not match',
       save:'Save Password',
     },
+    login: {
+      title:'Sign In',
+      email:'Email Address',
+      password:'Password',
+      login_btn:'Sign In',
+      forgot:'Forgot password?',
+      fill_all:'Please enter email and password',
+      wrong_credentials:'Invalid email or password',
+      contact_admin:'Contact your administrator',
+    },
     errors: {
-      no_permission:'You do not have permission',
-      no_print:'You do not have print permission',
+      no_permission:'Permission denied',
+      no_print:'No print permission',
       required:'Required',
       invalid_amount:'Enter a valid amount',
       duplicate_member:'A member with this name already exists',
       load_error:'Error loading data',
       save_error:'Error saving data',
+      invalid_year:'Invalid year',
+      already_applied:'This due has already been applied',
+      no_members:'No active members found',
+      confirm_apply:'Are you sure? This cannot be undone.',
+      session_expired:'Session expired, please login again',
+      network_error:'Network connection error',
+      min_6_chars:'Must be at least 6 characters',
+      passwords_mismatch:'Passwords do not match',
+      email_required:'Email is required',
+      password_required:'Password is required',
+    },
+    messages: {
+      saved:'Saved successfully',
+      deleted:'Deleted successfully',
+      cancelled:'Cancelled',
+      updated:'Updated successfully',
+      logged_out:'Logged out successfully',
+      annual_applied:'Annual due applied successfully',
+      contact_saved:'Contact saved',
+      exported:'Exported successfully',
+      printed:'Ready to print',
+      contact_admin:'Please contact the admin to reset your password',
     },
   },
 };
@@ -370,16 +508,13 @@ window.LANG = localStorage.getItem('diwan_lang') || 'ar';
 /* ── FORMATTERS ── */
 window.formatNumber = function(n) {
   const num = Number(n || 0);
-  if (window.LANG === 'ar') {
-    return Math.round(num).toLocaleString('ar-SA');
-  }
   return Math.round(num).toLocaleString('en-US');
 };
 
 window.formatCurrency = function(n) {
   const num = Number(n || 0);
   if (window.LANG === 'ar') {
-    return Math.round(num).toLocaleString('ar-SA') + ' ₪';
+    return Math.round(num).toLocaleString('en-US') + ' ₪';
   }
   return '₪ ' + Math.round(num).toLocaleString('en-US');
 };
@@ -400,11 +535,11 @@ window.formatDate = function(d) {
     const dd = String(dt.getDate()).padStart(2, '0');
     const mm = String(dt.getMonth() + 1).padStart(2, '0');
     const yyyy = dt.getFullYear();
-    if (window.LANG === 'ar') {
-      return dd + '/' + mm + '/' + yyyy;
+    if (window.LANG === 'en') {
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return dd + ' ' + months[dt.getMonth()] + ' ' + yyyy;
     }
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return dd + ' ' + months[dt.getMonth()] + ' ' + yyyy;
+    return dd + '/' + mm + '/' + yyyy;
   } catch(e) { return d; }
 };
 
@@ -421,18 +556,22 @@ window.formatDateFull = function(d) {
 
 /* ── TRANSLATION HELPER ── */
 window.t = function(key) {
+  if(!key) return '';
   const parts = key.split('.');
   let obj = translations[window.LANG] || translations.ar;
   for (const p of parts) {
     if (obj && obj[p] !== undefined) obj = obj[p];
     else {
-      // fallback to Arabic
-      obj = translations.ar;
-      for (const p2 of parts) {
-        if (obj && obj[p2] !== undefined) obj = obj[p2];
-        else return key;
+      if(window.LANG !== 'ar') {
+        let fallback = translations.ar;
+        for (const p2 of parts) {
+          if (fallback && fallback[p2] !== undefined) fallback = fallback[p2];
+          else { console.warn('[i18n] Missing key:', key); return key; }
+        }
+        return typeof fallback === 'string' ? fallback : key;
       }
-      return typeof obj === 'string' ? obj : key;
+      console.warn('[i18n] Missing key:', key);
+      return key;
     }
   }
   return typeof obj === 'string' ? obj : key;
@@ -456,28 +595,153 @@ function qTxt(sel, text) {
   if (el) el.textContent = text;
 }
 
+
+/* ── SCAN FOR UNTRANSLATED TEXT ── */
+window.scanForUntranslatedText = function() {
+  const arabicRegex = /[؀-ۿ]/;
+  const results = { hardcoded: [], missing: [], total: 0 };
+
+  // فحص العناصر التي تحتوي نصاً عربياً بدون data-i18n
+  document.querySelectorAll('button, label, th, td, h1, h2, h3, p, span, div').forEach(el => {
+    if (el.children.length === 0) {
+      const txt = el.textContent.trim();
+      if (arabicRegex.test(txt) && !el.hasAttribute('data-i18n') && !el.closest('[data-i18n]')) {
+        results.hardcoded.push({ tag: el.tagName, text: txt.slice(0,50), el });
+      }
+    }
+    results.total++;
+  });
+
+  // فحص data-i18n مفاتيح غير موجودة
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (window.t(key) === key) {
+      results.missing.push(key);
+    }
+  });
+
+  console.group('[i18n] Scan Report');
+  console.log('Total elements scanned:', results.total);
+  console.log('Hardcoded Arabic text:', results.hardcoded.length);
+  results.hardcoded.forEach(r => console.warn('  Hardcoded:', r.tag, '-', r.text));
+  console.log('Missing translation keys:', results.missing.length);
+  results.missing.forEach(k => console.warn('  Missing key:', k));
+  console.groupEnd();
+
+  return results;
+};
+
+/* ── CACHE DOM REFS FOR PERFORMANCE ── */
+const _i18nCache = {};
+function getCached(sel) {
+  if (!_i18nCache[sel]) _i18nCache[sel] = document.querySelectorAll(sel);
+  return _i18nCache[sel];
+}
+function clearI18nCache() {
+  Object.keys(_i18nCache).forEach(k => delete _i18nCache[k]);
+}
+
+
+/* ── MISSING KEY DETECTOR ── */
+const _missingKeys = new Set();
+const _originalT = window.t;
+window.t = function(key) {
+  const parts = key.split('.');
+  let obj = translations[window.LANG] || translations.ar;
+  let found = true;
+  for (const p of parts) {
+    if (obj && obj[p] !== undefined) { obj = obj[p]; }
+    else { found = false; break; }
+  }
+  if (!found || typeof obj !== 'string') {
+    if (!_missingKeys.has(key)) {
+      _missingKeys.add(key);
+      console.warn(`[i18n] Missing key: "${key}" for lang: ${window.LANG}`);
+    }
+    // fallback to Arabic
+    obj = translations.ar;
+    for (const p of parts) {
+      if (obj && obj[p] !== undefined) obj = obj[p];
+      else return key;
+    }
+    return typeof obj === 'string' ? obj : key;
+  }
+  return obj;
+};
+
+/* ── UNTRANSLATED TEXT SCANNER ── */
+window.scanForUntranslatedText = function() {
+  const arabicRegex = /[؀-ۿ]/;
+  const issues = [];
+  const allText = document.querySelectorAll('*');
+  let count = 0;
+  allText.forEach(el => {
+    if (['SCRIPT','STYLE','META','LINK'].includes(el.tagName)) return;
+    if (el.childNodes.length === 0) return;
+    el.childNodes.forEach(node => {
+      if (node.nodeType === 3) {
+        const txt = node.textContent.trim();
+        if (txt && arabicRegex.test(txt) && !el.hasAttribute('data-i18n')) {
+          issues.push({ element: el.tagName, text: txt.slice(0,50), path: el.className||el.id||'' });
+          count++;
+        }
+      }
+    });
+  });
+  const translated = document.querySelectorAll('[data-i18n]').length;
+  const total = count + translated;
+  console.group('[i18n] Translation Coverage Report');
+  console.log(`Total elements: ${total}`);
+  console.log(`Translated (data-i18n): ${translated}`);
+  console.log(`Potentially untranslated: ${count}`);
+  console.log(`Missing keys logged: ${_missingKeys.size}`);
+  if (issues.length > 0) {
+    console.warn('Untranslated Arabic text found:');
+    issues.slice(0,20).forEach(i => console.warn(`  <${i.element}> "${i.text}" [${i.path}]`));
+  }
+  console.groupEnd();
+  return { total, translated, untranslated: count, missingKeys: [..._missingKeys] };
+};
+
+/* ── DOM CACHE for performance ── */
+const _domCache = new Map();
+function getCached(selector) {
+  if (!_domCache.has(selector)) {
+    _domCache.set(selector, document.querySelector(selector));
+  }
+  return _domCache.get(selector);
+}
+function clearDomCache() { _domCache.clear(); }
+
 /* ── APPLY LANGUAGE ── */
 window.applyLang = function() {
   const lang = window.LANG;
   const isAr = lang === 'ar';
+  clearI18nCache();
 
-  // RTL/LTR — لا نغير اتجاه الصفحة، فقط اللغة
+  // RTL ثابت دائماً
   document.documentElement.setAttribute('lang', lang);
-  // الاتجاه يبقى RTL دائماً حسب طلب المستخدم
   document.documentElement.setAttribute('dir', 'rtl');
 
-  // data-i18n attributes (auto-translate)
+  // data-i18n — ترجمة النصوص
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const text = window.t(key);
     if (text && text !== key) el.textContent = text;
   });
 
-  // data-i18n-placeholder
+  // data-i18n-placeholder — ترجمة placeholders
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const key = el.getAttribute('data-i18n-placeholder');
     const text = window.t(key);
     if (text && text !== key) el.setAttribute('placeholder', text);
+  });
+
+  // data-i18n-title — ترجمة titles
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    const text = window.t(key);
+    if (text && text !== key) el.setAttribute('title', text);
   });
 
   // ── TOPBAR ──
