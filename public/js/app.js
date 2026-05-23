@@ -219,11 +219,11 @@ window.login=async function(){
   const pass=document.getElementById('l-pass').value;
   const btn=document.getElementById('login-btn');
   const err=document.getElementById('login-err');
-  if(!email||!pass){showLoginErr('يرجى إدخال البريد وكلمة المرور');return;}
+  if(!email||!pass){showLoginErr(window.t?window.t('login.fill_all'):'يرجى إدخال البريد وكلمة المرور');return;}
   btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   err.classList.remove('show');
   const{data,error}=await SB.auth.signInWithPassword({email,password:pass});
-  if(error){showLoginErr('بريد إلكتروني أو كلمة مرور غير صحيحة');btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';return;}
+  if(error){showLoginErr(window.t?window.t('login.wrong_credentials'):'بريد إلكتروني أو كلمة مرور غير صحيحة');btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';return;}
   CU=data.user;
   await afterLogin();
 };
@@ -261,7 +261,7 @@ window.logout=async function(){
   // إعادة تفعيل زر الدخول
   const btn=document.getElementById('login-btn');
   if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
-  toast('تم تسجيل الخروج','info');
+  toast(window.t('messages.logged_out'),'info');
 };
 function applyPerms(){
   const w=can.write(),a=can.admin();
@@ -965,7 +965,7 @@ window.deleteRec=async function(){
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('receipts').update({is_deleted:true}).eq('id',id);
   await logAction('delete','إلغاء إيصال','receipts',id);
-  window.closeM();await loadAll();toast('تم الإلغاء','warn');
+  window.closeM();await loadAll();toast(window.t('messages.cancelled'),'warn');
 };
 window.editPay=function(id){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
@@ -991,7 +991,7 @@ window.deletePay=async function(){
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('payments').update({is_deleted:true}).eq('id',id);
   await logAction('delete','إلغاء سند صرف','payments',id);
-  window.closeM();await loadAll();toast('تم الإلغاء','warn');
+  window.closeM();await loadAll();toast(window.t('messages.cancelled'),'warn');
 };
 window.editMember=function(id){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
@@ -1030,7 +1030,7 @@ window.applyAnnualDue=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const year=parseInt(document.getElementById('due-year').value);
   const amount=parseFloat(document.getElementById('due-amount').value)||200;
-  if(!year||year<2020||year>2040){toast('سنة غير صحيحة','warn');return;}
+  if(!year||year<2020||year>2040){toast(window.t('errors.invalid_year'),'warn');return;}
   if(DB.annual.find(a=>a.year===year)){toast(`تم تطبيق اشتراك ${year} مسبقاً`,'warn');return;}
   const members=DB.members.filter(m=>m.is_active);
   if(!members.length){toast('لا يوجد أعضاء','warn');return;}
@@ -1042,7 +1042,7 @@ window.applyAnnualDue=async function(){
   await logAction('add',`تطبيق اشتراك سنة ${year} — ${members.length} عضو — ₪${fmt(amount)} لكل عضو`,'annual_dues',null);
   await loadAll();
   btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';
-  toast(`✓ تم تطبيق اشتراك ${year} على ${members.length} عضو`,'ok');
+  toast(`✓ ${window.t('messages.annual_applied')} — ${year}`,'ok');
 };
 function renderAnnual(){
   const list=document.getElementById('annual-list');if(!list)return;
@@ -1079,7 +1079,7 @@ window.inviteUser=async()=>{
   const pass=document.getElementById('inv-pass').value;
   const role=document.getElementById('inv-role').value;
   const name=document.getElementById('inv-name').value.trim();
-  if(!email||!pass){toast('البريد وكلمة المرور مطلوبان','warn');return;}
+  if(!email||!pass){toast(window.t('errors.required'),'warn');return;}
   const{data,error}=await SB.auth.signUp({email,password:pass});
   if(error){toast('خطأ: '+error.message,'err');return;}
   await SB.from('user_roles').upsert({user_id:data.user.id,role,full_name:name||email});
@@ -1128,7 +1128,7 @@ function openPrintWin(css,body){
   const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"><style>'+css+'</style></head><body>'+body+'<script>window.onload=function(){setTimeout(function(){window.print();},600);}<\/script></body></html>';
   const win=window.open('','_blank','width=850,height=950');
   if(win){win.document.write(html);win.document.close();}
-  else toast('يرجى السماح بالنوافذ المنبثقة','warn');
+  else toast(window.t?window.t('errors.no_print'):'يرجى السماح بالنوافذ المنبثقة','warn');
 }
 
 const REC_CSS='@page{size:A4 portrait;margin:0}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;background:#fff;width:210mm}.half{width:210mm;height:148.5mm;padding:7mm 12mm;display:flex;flex-direction:column;justify-content:space-between;position:relative}.half:first-child{border-bottom:2px dashed #ccc}.cut{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);background:#fff;padding:0 8px;font-size:8pt;color:#aaa;white-space:nowrap}.hdr{background:#1B3A6B;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-radius:4px 4px 0 0}.org-ar{font-size:15pt;font-weight:700;color:#fff;display:block}.org-en{font-size:10pt;color:rgba(255,255,255,.7);display:block}.ttl-ar{font-size:13pt;font-weight:700;color:#00C896;display:block;text-align:center}.ttl-en{font-size:13pt;font-weight:700;color:rgba(255,255,255,.8);display:block;text-align:center}.no-l{font-size:9pt;color:rgba(255,255,255,.5);text-align:left}.no-v{font-size:14pt;font-weight:700;color:#fff;display:block;text-align:left;letter-spacing:.5px}.strip{height:2.5px;background:linear-gradient(90deg,#00C896,#059669,#1B6CA8)}.meta{display:grid;grid-template-columns:1fr 1fr;border-bottom:.5pt solid #e2e8f0}.mi{padding:5px 12px}.mi:first-child{border-left:.5pt solid #e2e8f0}.ml{font-size:7pt;color:#94a3b8;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px}.mv{font-size:10.5pt;font-weight:700;color:#0A1628;display:block}.rows{flex:1}.row{display:flex;padding:4px 12px;border-bottom:.5pt solid #f1f5f9;font-size:9pt}.row:last-child{border-bottom:none}.rk{color:#64748b;flex:0 0 110px}.rv{font-weight:600;color:#0A1628;flex:1;text-align:left}.amt{background:#1B3A6B;padding:9px 14px;text-align:center}.al{font-size:7.5pt;color:rgba(255,255,255,.5);text-transform:uppercase;display:block;margin-bottom:2px}.an{font-size:24pt;font-weight:700;color:#00C896;display:block;letter-spacing:-1px}.aw{font-size:8pt;color:rgba(255,255,255,.5);font-style:italic;display:block;margin-top:3px}.au{font-size:8.5pt;color:rgba(255,255,255,.6);display:block;margin-top:2px}.info{padding:4px 12px;background:#f8fafc;border-top:.5pt solid #e2e8f0;display:flex;justify-content:space-between;font-size:7.5pt;color:#64748b}.sig{padding:9px 12px 7px;border-top:.5pt solid #e2e8f0}.sig-line{border-top:.5pt solid #94a3b8;padding-top:22px;margin-bottom:3px;width:140px}.sig-lbl{font-size:8pt;color:#64748b}.footer{background:#1B3A6B;padding:4px 12px;text-align:center;font-size:7pt;color:rgba(255,255,255,.4);border-radius:0 0 4px 4px}.bb{padding:1px 6px;border-radius:7px;font-size:8pt;font-weight:600}.b-food{background:#FFFBEB;color:#B45309}.b-diwan{background:#EFF6FF;color:#1D4ED8}.b-don{background:#F5F3FF;color:#6D28D9}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
@@ -1285,7 +1285,7 @@ window.prtDonStmt=function(){
 window.doBackup=function(){
   const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='diwan_backup_'+today()+'.json';a.click();
-  toast('تم تصدير النسخة الاحتياطية','ok');
+  toast(window.t('messages.exported'),'ok');
 };
 window.exportCSV=function(type){
   let h,rows;
@@ -1330,7 +1330,7 @@ window.exportCSV=function(type){
   }
   const csv='\uFEFF'+[h,...rows].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=type+'_'+today()+'.csv';a.click();
-  toast('تم التصدير','ok');
+  toast(window.t('messages.exported'),'ok');
 };
 
 /* ═══ CLOCK ═══ */
