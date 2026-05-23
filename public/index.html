@@ -16,20 +16,48 @@
 <div id="login-screen">
   <div class="login-blob1"></div>
   <div class="login-blob2"></div>
+  <button class="login-lang" onclick="window.toggleLang()">
+    <i class="ti ti-language"></i>
+    <span id="login-lang-txt">EN</span>
+  </button>
   <div class="login-box">
     <div class="login-logo">
-      <div class="login-ico"><i class="ti ti-building-bank"></i></div>
-      <h1>ديوان آل طه</h1>
-      <p>نظام الإدارة المالية</p>
+      <div class="login-logo-icon"><i class="ti ti-building-bank"></i></div>
+      <h1 id="login-title">ديوان آل طه</h1>
+      <p id="login-sub">نظام الإدارة المالية</p>
     </div>
-    <div class="lfi"><label data-i18n="login.email">البريد الإلكتروني</label><input type="email" id="l-email" data-i18n-placeholder="login.email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')window.login()"></div>
-    <div class="lfi"><label data-i18n="login.password">كلمة المرور</label><input type="password" id="l-pass" data-i18n-placeholder="login.password" placeholder="••••••••" onkeydown="if(event.key==='Enter')window.login()"></div>
-    <button class="login-btn" id="login-btn" onclick="window.login()"><i class="ti ti-login"></i><span data-i18n="login.login_btn">تسجيل الدخول</span></button>
-    <div id="forgot-msg" style="display:none;background:#FFF8E8;border:1px solid #E8C84A;border-radius:8px;padding:10px 13px;font-size:12px;color:#8B6A00;margin-top:10px;text-align:center"><i class="ti ti-info-circle"></i> يرجى التواصل مع المدير لإعادة تعيين كلمة المرور</div>
-    <button onclick="window.forgotPassword()" data-i18n="login.forgot" style="width:100%;background:none;border:none;color:#8BA5C0;font-size:11.5px;margin-top:8px;cursor:pointer;font-family:inherit;padding:4px">نسيت كلمة المرور؟</button>
+    <div class="lfi">
+      <label id="lbl-email">البريد الإلكتروني</label>
+      <div class="l-input-wrap">
+        <i class="ti ti-mail l-icon"></i>
+        <input type="email" id="l-email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+      </div>
+    </div>
+    <div class="lfi">
+      <label id="lbl-pass">كلمة المرور</label>
+      <div class="l-input-wrap">
+        <i class="ti ti-lock l-icon"></i>
+        <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')window.login()">
+      </div>
+    </div>
+    <div class="login-row">
+      <label class="login-remember">
+        <input type="checkbox" id="l-remember">
+        <span id="lbl-remember">تذكرني</span>
+      </label>
+      <button class="login-forgot-link" onclick="window.forgotPassword()" id="btn-forgot">نسيت كلمة المرور؟</button>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="window.login()">
+      <i class="ti ti-login"></i>
+      <span id="btn-login-txt">تسجيل الدخول</span>
+    </button>
     <div class="login-err" id="login-err"></div>
-    <div class="login-footer"><strong>All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</strong><br><small style="font-size:10px;color:#B0C4D8">by Maher Mohamad Fayez Taha</small></div>
+    <div class="forgot-msg" id="forgot-msg" id="forgot-msg-txt"></div>
+    <div class="login-footer">
+      <strong>All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</strong>
+    </div>
   </div>
+  <div class="login-by">by Maher Mohamad Fayez Taha</div>
 </div>
 
 <!-- APP -->
