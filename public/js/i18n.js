@@ -1000,347 +1000,265 @@ window.applyLang = function() {
 
 
 /* ── COMPLETE UI TRANSLATION ── */
-function translateAll(){
-  const lang = window.LANG;
-  const isAr = lang === 'ar';
 
-  /* TOPBAR */
-  setTxt('top-logo-text', 'ديوان آل طه');
-  setTxt('top-logo-sub', isAr ? 'نظام الإدارة المالية' : 'Financial Management System');
-  const rateChip = document.getElementById('rate-txt');
-  // rate chip stays English always — skip
+// قاموس ثنائي الاتجاه لكل النصوص
+const UI_MAP = {
+  // صناديق
+  'صندوق الغداء': 'Food Fund',
+  'صندوق الديوان': 'Diwan Fund',
+  'صندوق التبرعات': 'Donations Fund',
 
-  /* LOGIN */
-  setTxt('login-btn', isAr
-    ? '<i class="ti ti-login"></i> تسجيل الدخول'
-    : '<i class="ti ti-login"></i> Sign In');
-  const lEmail = document.getElementById('l-email');
-  if(lEmail) lEmail.placeholder = isAr ? 'البريد الإلكتروني' : 'Email Address';
-  const lPass = document.getElementById('l-pass');
-  if(lPass) lPass.placeholder = isAr ? 'كلمة المرور' : 'Password';
-  const forgotBtn = document.querySelector('#login-screen button[onclick="window.forgotPassword()"]');
-  if(forgotBtn) forgotBtn.textContent = isAr ? 'نسيت كلمة المرور؟' : 'Forgot password?';
+  // KPI labels
+  'أعضاء العائلة': 'Family Members',
+  'متأخرون': 'Late Members',
+  'لم يسددوا': 'Unpaid',
+  'إجمالي الإيصالات': 'Total Receipts',
+  'إجمالي المصاريف': 'Total Expenses',
+  'الرصيد الحالي': 'Current Balance',
+  'الرصيد الحالي (2025+)': 'Current Balance (2025+)',
+  'إجمالي التبرعات': 'Total Donations',
+  'إجمالي الإيرادات': 'Total Income',
+  'الرصيد الختامي': 'Closing Balance',
+  'صندوق الغداء (مع الافتتاحي)': 'Food Fund (with Opening)',
+  'صندوق الديوان (مع الافتتاحي)': 'Diwan Fund (with Opening)',
 
-  /* DASHBOARD SECTION TITLES */
-  const secMap = {
-    'الحركات الشهرية': isAr ? 'الحركات الشهرية' : 'Monthly Activity',
-    'آخر الحركات': isAr ? 'آخر الحركات' : 'Recent Operations',
-    'إجراءات سريعة': isAr ? 'إجراءات سريعة' : 'Quick Actions',
-    'أعضاء متأخرون': isAr ? 'أعضاء متأخرون' : 'Late Members',
-  };
-  document.querySelectorAll('.ct').forEach(el => {
-    const txt = el.textContent.trim().replace(/\s+/g,' ');
-    Object.entries(secMap).forEach(([ar, tr]) => {
-      if(txt.includes(ar)) {
-        const ico = el.querySelector('i');
-        el.textContent = tr;
-        if(ico) el.prepend(ico);
-      }
-    });
-  });
+  // dashboard sections
+  'الحركات الشهرية': 'Monthly Activity',
+  'آخر 6 أشهر': 'Last 6 months',
+  'آخر الحركات': 'Recent Operations',
+  'إجراءات سريعة': 'Quick Actions',
+  'أعضاء متأخرون': 'Late Members',
+  '✅ كل الأعضاء ملتزمون': '✅ All members are up to date',
 
-  /* FUND CARDS */
-  document.querySelectorAll('.fund-label').forEach(el => {
-    const txt = el.textContent.trim();
-    if(txt === 'صندوق الغداء' || txt === 'Food Fund') el.textContent = isAr ? 'صندوق الغداء' : 'Food Fund';
-    if(txt === 'صندوق الديوان' || txt === 'Diwan Fund') el.textContent = isAr ? 'صندوق الديوان' : 'Diwan Fund';
-    if(txt === 'صندوق التبرعات' || txt === 'Donations Fund') el.textContent = isAr ? 'صندوق التبرعات' : 'Donations Fund';
-  });
+  // badges / status
+  'نقد': 'Cash', 'شيك': 'Cheque', 'تحويل': 'Transfer',
+  'تحويل بنكي': 'Bank Transfer', 'أونلاين': 'Online',
+  'مسدَّد': 'Paid', 'متأخر': 'Late',
+  'مساهمة': 'Contribution',
+  'كهرباء': 'Electricity', 'ماء': 'Water',
+  'تنظيف': 'Cleaning', 'صيانة': 'Maintenance', 'أخرى': 'Other',
+  'مصاريف إطعام': 'Food Expenses',
+  'مصاريف إطعام عزاء': 'Funeral Food Expenses',
+  'غداء': 'Food', 'ديوان': 'Diwan', 'تبرع': 'Donation',
 
-  /* KPI LABELS */
-  document.querySelectorAll('.kpi-lbl').forEach(el => {
-    const txt = el.textContent.trim();
-    const kpiMap = {
-      'أعضاء العائلة': 'Family Members',
-      'متأخرون': 'Late Members',
-      'لم يسددوا': 'Unpaid',
-      'إجمالي الإيصالات': 'Total Receipts',
-      'إجمالي المصاريف': 'Total Expenses',
-      'الرصيد الحالي': 'Current Balance',
-      'إجمالي التبرعات': 'Total Donations',
-      'إجمالي الإيرادات': 'Total Income',
-      'الرصيد الختامي': 'Closing Balance',
-      'صندوق الغداء (مع الافتتاحي)': 'Food Fund (with Opening)',
-      'صندوق الديوان (مع الافتتاحي)': 'Diwan Fund (with Opening)',
-    };
-    if(!isAr && kpiMap[txt]) el.textContent = kpiMap[txt];
-    else if(isAr) {
-      const rev = Object.entries(kpiMap).find(([,v])=>v===txt);
-      if(rev) el.textContent = rev[0];
-    }
-  });
+  // form labels
+  'نوع الإيصال': 'Receipt Type',
+  'نوع الدافع': 'Payer Type',
+  'اسم العضو': 'Member Name',
+  'جهة الاتصال': 'Contact',
+  'اسم الدافع': 'Payer Name',
+  'حفظ كجهة اتصال': 'Save as Contact',
+  'توجيه التبرع': 'Donation Direction',
+  'يُظهر في كشف أي صندوق؟': 'Show in which fund?',
+  'المبلغ': 'Amount',
+  'طريقة الدفع': 'Payment Method',
+  'طريقة الصرف': 'Payment Method',
+  'فئة المصروف': 'Expense Type',
+  'المستفيد': 'Beneficiary',
+  'نوع المستفيد': 'Beneficiary Type',
+  'اسم المستفيد': 'Beneficiary Name',
+  'معتمد من': 'Approved By',
+  'الاسم الكامل': 'Full Name',
+  'سالب = دين على العضو': 'Negative = debt on member',
+  'الرصيد الافتتاحي لصندوق الغداء ₪': 'Food Fund Opening Balance ₪',
+  'الرصيد الافتتاحي لصندوق الديوان ₪': 'Diwan Fund Opening Balance ₪',
+  'المبلغ الموجود في الصندوق قبل بدء النظام': 'Amount in fund before system start',
+  'سعر الدولار الأمريكي USD ₪': 'USD Rate ₪',
+  'سعر الدينار الأردني JOD ₪': 'JOD Rate ₪',
+  'تُستخدم فقط إذا تعذّر جلب السعر التلقائي من الإنترنت': 'Used only if automatic rate fetch fails',
+  'ملخص الأرصدة مع الافتتاحي': 'Balance Summary with Opening',
+  'السنة': 'Year',
+  'المبلغ ₪': 'Amount ₪',
+  'من تاريخ': 'From Date',
+  'إلى تاريخ': 'To Date',
+  'اختر العضو': 'Select Member',
+  'نوع الحركة': 'Operation Type',
+  'البريد الإلكتروني': 'Email Address',
+  'كلمة المرور المؤقتة': 'Temporary Password',
+  'الدور': 'Role',
+  'كلمة المرور الجديدة': 'New Password',
+  'تأكيد كلمة المرور': 'Confirm Password',
+  'المبلغ بالشيكل ₪': 'Amount in ILS ₪',
+  'رقم الشيك': 'Cheque No.',
+  'تاريخ الشيك': 'Cheque Date',
+  'البنك المسحوب عليه': 'Bank Name',
+  'اسم المتبرع': 'Donor Name',
+  'نوع الدافع': 'Payer Type',
+  'معلومات الشيك': 'Cheque Information',
 
-  /* BADGES */
-  document.querySelectorAll('.badge').forEach(el => {
-    const txt = el.textContent.trim();
-    const badgeMap = {
-      'نقد':'Cash','شيك':'Cheque','تحويل':'Transfer','تحويل بنكي':'Bank Transfer','أونلاين':'Online',
-      'مسدَّد':'Paid','متأخر':'Late','مساهمة':'Contribution',
-      'صندوق الغداء':'Food Fund','صندوق الديوان':'Diwan Fund','تبرع':'Donation',
-      'كهرباء':'Electricity','ماء':'Water','تنظيف':'Cleaning','صيانة':'Maintenance','أخرى':'Other',
-      'مصاريف إطعام':'Food Expenses',
-    };
-    if(!isAr && badgeMap[txt]) el.textContent = badgeMap[txt];
-    else if(isAr){
-      const rev = Object.entries(badgeMap).find(([,v])=>v===txt);
-      if(rev) el.textContent = rev[0];
-    }
-  });
+  // select options
+  'صندوق الغداء — مساهمة عضو': 'Food Fund — Member Contribution',
+  'صندوق الديوان — دفعة للديوان': 'Diwan Fund — Diwan Payment',
+  'تبرع — يُسجَّل في صندوق التبرعات': 'Donation — Donations Fund',
+  'عضو من العائلة': 'Family Member',
+  'جهة اتصال مسجلة': 'Saved Contact',
+  'إدخال يدوي': 'Manual Entry',
+  'كشف صندوق الغداء': 'Food Fund Statement',
+  'كشف صندوق الديوان': 'Diwan Fund Statement',
+  '₪ شيكل إسرائيلي': '₪ Israeli Shekel',
+  '$ دولار أمريكي': '$ US Dollar',
+  'د.أ دينار أردني': 'JD Jordanian Dinar',
+  'صندوق الغداء — مصاريف الإطعام': 'Food Fund — Food Expenses',
+  'صندوق الديوان — مصاريف الديوان': 'Diwan Fund — Diwan Expenses',
+  'كل الفئات': 'All Categories',
+  'الكل': 'All',
+  'إيصالات فقط': 'Receipts Only',
+  'مصاريف فقط': 'Expenses Only',
+  'تبرعات فقط': 'Donations Only',
+  'عليه رصيد': 'Has Balance',
+  'شخص آخر': 'Other Person',
+  'عارض — عرض فقط': 'Viewer — Read Only',
+  'محاسب — إضافة سندات': 'Accountant — Add Vouchers',
+  'مدير — كامل الصلاحيات': 'Admin — Full Access',
+  '-- اختر عضواً --': '-- Select Member --',
+  '-- اختر --': '-- Select --',
 
-  /* FORM LABELS */
-  document.querySelectorAll('.fi label, .lfi label').forEach(el => {
-    const txt = el.textContent.trim().replace(' *','').replace('*','');
-    const hasReq = el.querySelector('.req');
-    const labelMap = {
-      'نوع الإيصال':'Receipt Type','نوع الدافع':'Payer Type','اسم العضو':'Member Name',
-      'جهة الاتصال':'Contact','اسم الدافع':'Payer Name','توجيه التبرع':'Donation Direction',
-      'يُظهر في كشف أي صندوق؟':'Show in which fund?',
-      'العملة':'Currency','المبلغ':'Amount','التاريخ':'Date',
-      'طريقة الدفع':'Payment Method','طريقة الصرف':'Payment Method',
-      'ملاحظات':'Notes','الصندوق':'Fund','فئة المصروف':'Expense Type',
-      'المستفيد':'Beneficiary','نوع المستفيد':'Beneficiary Type',
-      'معتمد من':'Approved By','الاسم الكامل':'Full Name','الهاتف':'Phone',
-      'الرصيد الافتتاحي لصندوق الغداء ₪':'Food Fund Opening Balance ₪',
-      'الرصيد الافتتاحي لصندوق الديوان ₪':'Diwan Fund Opening Balance ₪',
-      'سعر الدولار الأمريكي USD ₪':'USD Rate ₪',
-      'سعر الدينار الأردني JOD ₪':'JOD Rate ₪',
-      'السنة':'Year','المبلغ ₪':'Amount ₪',
-      'من تاريخ':'From Date','إلى تاريخ':'To Date',
-      'اختر العضو':'Select Member','نوع الحركة':'Operation Type',
-      'البريد الإلكتروني':'Email Address',
-      'كلمة المرور المؤقتة':'Temporary Password','الدور':'Role',
-      'كلمة المرور الجديدة':'New Password','تأكيد كلمة المرور':'Confirm Password',
-      'المبلغ بالشيكل ₪':'Amount in ILS ₪',
-      'رقم الشيك':'Cheque No.','تاريخ الشيك':'Cheque Date',
-      'البنك المسحوب عليه':'Bank Name','نوع الدافع':'Payer Type',
-      'اسم المتبرع':'Donor Name',
-    };
-    const key = txt.trim();
-    if(!isAr && labelMap[key]){
-      const newText = labelMap[key] + (hasReq ? ' *' : '');
-      if(hasReq){ el.childNodes[0].textContent = labelMap[key]+' '; }
-      else { el.textContent = newText; }
-    } else if(isAr){
-      const rev = Object.entries(labelMap).find(([,v])=>v===key);
-      if(rev){
-        const newText = rev[0] + (hasReq ? ' ' : '');
-        if(hasReq){ el.childNodes[0].textContent = rev[0]+' '; }
-        else { el.textContent = newText+(hasReq?' *':''); }
-      }
-    }
-  });
+  // empty states
+  'لا توجد إيصالات': 'No receipts found',
+  'لا توجد مصاريف': 'No expenses found',
+  'لا توجد تبرعات': 'No donations found',
+  'لا يوجد أعضاء': 'No members found',
+  'لا توجد حركات': 'No transactions found',
+  'لا توجد حركات في هذه الفترة': 'No transactions in this period',
+  'لا توجد اشتراكات مطبقة': 'No dues applied yet',
+  'السجل فارغ': 'Log is empty',
+  'لا توجد بيانات': 'No data available',
 
-  /* SELECT OPTIONS */
-  document.querySelectorAll('select option').forEach(opt => {
-    const txt = opt.textContent.trim();
-    const optMap = {
-      'صندوق الغداء — مساهمة عضو':'Food Fund — Member Contribution',
-      'صندوق الديوان — دفعة للديوان':'Diwan Fund — Diwan Payment',
-      'تبرع — يُسجَّل في صندوق التبرعات':'Donation — Recorded in Donations Fund',
-      'عضو من العائلة':'Family Member',
-      'جهة اتصال مسجلة':'Saved Contact',
-      'إدخال يدوي':'Manual Entry',
-      'كشف صندوق الغداء':'Food Fund Statement',
-      'كشف صندوق الديوان':'Diwan Fund Statement',
-      '₪ شيكل إسرائيلي':'₪ Israeli Shekel',
-      '$ دولار أمريكي':'$ US Dollar',
-      'د.أ دينار أردني':'JD Jordanian Dinar',
-      'صندوق الغداء — مصاريف الإطعام':'Food Fund — Food Expenses',
-      'صندوق الديوان — مصاريف الديوان':'Diwan Fund — Diwan Expenses',
-      'مصاريف إطعام عزاء':'Funeral Food Expenses',
-      'كهرباء':'Electricity','ماء':'Water','تنظيف':'Cleaning',
-      'صيانة':'Maintenance','أخرى':'Other',
-      'كل الفئات':'All Categories',
-      'الكل':'All','إيصالات فقط':'Receipts Only',
-      'مصاريف فقط':'Expenses Only','تبرعات فقط':'Donations Only',
-      'مسدَّد':'Paid','عليه رصيد':'Has Balance',
-      'عضو من العائلة':'Family Member','شخص آخر':'Other Person',
-      'إدخال يدوي':'Manual Entry',
-      'عارض — عرض فقط':'Viewer — Read Only',
-      'محاسب — إضافة سندات':'Accountant — Add Vouchers',
-      'مدير — كامل الصلاحيات':'Admin — Full Access',
-      '-- اختر عضواً --':'-- Select Member --',
-      '-- اختر --':'-- Select --',
-    };
-    if(!isAr && optMap[txt]) opt.textContent = optMap[txt];
-    else if(isAr){
-      const rev = Object.entries(optMap).find(([,v])=>v===txt);
-      if(rev) opt.textContent = rev[0];
-    }
-  });
+  // mobile nav
+  'الرئيسية': 'Home',
+  'الغداء': 'Food',
+  'الديوان': 'Diwan',
+  'الأعضاء': 'Members',
+  'المزيد': 'More',
+  'إيصالات الغداء': 'Food Receipts',
+  'إيصالات الديوان': 'Diwan Receipts',
+  'مصاريف الغداء': 'Food Expenses',
+  'مصاريف الديوان': 'Diwan Expenses',
+  'كشف عضو': 'Member Stmt',
+  'سجل العمليات': 'Audit Log',
+  'الاشتراكات': 'Annual Dues',
+  'المستخدمون': 'Users',
+  'الإعدادات': 'Settings',
 
-  /* IBOX INFO TEXT */
-  document.querySelectorAll('.ibox').forEach(el => {
-    const txt = el.textContent.trim().replace(/[​-‍﻿]/g,'');
-    const iboxMap = {
-      'مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء':
-        'Family member contributions to the Food Fund',
-      'مصاريف إطعام أهل المتوفى في حالات العزاء — تُدفع من صندوق الغداء':
-        'Funeral food expenses paid from the Food Fund',
-      'مدفوعات للديوان من الأعضاء أو من خارج العائلة':
-        'Payments to Diwan from members or external parties',
-      'التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة':
-        'Donations appear as zero in the directed fund statement — they do not affect balances',
-    };
-    Object.entries(iboxMap).forEach(([ar, en]) => {
-      if(!isAr && txt.includes(ar.slice(0,20))){
-        const ico = el.querySelector('i');
-        const span = el.querySelector('span');
-        if(span) span.textContent = en;
-        else if(!ico) el.textContent = en;
-      } else if(isAr && txt.includes(en.slice(0,20))){
-        const span = el.querySelector('span');
-        if(span) span.textContent = ar;
-      }
-    });
-  });
+  // system info
+  'عدد الأعضاء': 'Members Count',
+  'عدد الإيصالات': 'Receipts Count',
+  'عدد سندات الصرف': 'Payments Count',
+  'رصيد صندوق الغداء': 'Food Fund Balance',
+  'رصيد صندوق الديوان': 'Diwan Fund Balance',
+  'سعر الدولار': 'Dollar Rate',
+  'سعر الدينار الأردني': 'JD Rate',
 
-  /* EMPTY STATES */
-  document.querySelectorAll('.empty-t').forEach(el => {
-    const txt = el.textContent.trim();
-    const emptyMap = {
-      'لا توجد إيصالات':'No receipts found',
-      'لا توجد مصاريف':'No expenses found',
-      'لا توجد تبرعات':'No donations found',
-      'لا يوجد أعضاء':'No members found',
-      'لا توجد حركات':'No transactions found',
-      'لا توجد اشتراكات مطبقة':'No dues applied yet',
-      'السجل فارغ':'Log is empty',
-      'لا توجد بيانات':'No data available',
-    };
-    if(!isAr && emptyMap[txt]) el.textContent = emptyMap[txt];
-    else if(isAr){
-      const rev = Object.entries(emptyMap).find(([,v])=>v===txt);
-      if(rev) el.textContent = rev[0];
-    }
-  });
+  // page subtitles
+  '200 ₪ على كل عضو بداية كل سنة': '₪200 per member at start of each year',
+  'الرصيد الافتتاحي وإعدادات النظام': 'Opening balances and system settings',
+  'مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء': 'Member contributions to the Food Fund',
 
-  /* PILLS / PAYMENT METHODS */
-  document.querySelectorAll('.pill').forEach(el => {
-    const val = el.dataset.val;
-    const pillMap = {
-      cash: isAr?'نقد':'Cash',
-      check: isAr?'شيك':'Cheque',
-      transfer: isAr?'تحويل':'Transfer',
-      online: isAr?'أونلاين':'Online',
-    };
-    if(val && pillMap[val]){
-      const ico = el.querySelector('i');
-      el.textContent = pillMap[val];
-      if(ico) el.prepend(ico);
-    }
-  });
+  // warnings
+  'يمكن تعديل المبلغ بالشيكل والملاحظات فقط': 'Only ILS amount and notes can be edited',
+  'الرصيد الافتتاحي يُحسب أولاً قبل أي عملية — يُدخَل مرة واحدة فقط ولا يتغير إلا بموافقة المدير':
+    'Opening balance is calculated first — entered once only',
 
-  /* MODAL WARNINGS */
-  document.querySelectorAll('.ibox.warn span, .ibox.warn').forEach(el => {
-    const txt = el.textContent.trim();
-    const warnMap = {
-      'يمكن تعديل المبلغ بالشيكل والملاحظات فقط':
-        'Only the ILS amount and notes can be edited',
-      'عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.':
-        'Pressing Apply will add ₪200 as debt on all members for the selected year. Cannot be undone.',
-      'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل':
-        'New password must be at least 6 characters',
-      'الرصيد الافتتاحي يُحسب أولاً قبل أي عملية — يُدخَل مرة واحدة فقط ولا يتغير إلا بموافقة المدير':
-        'Opening balance is calculated first before any operation — entered once only',
-    };
-    Object.entries(warnMap).forEach(([ar, en]) => {
-      if(!isAr && txt.includes(ar.slice(0,20))) el.textContent = en;
-      else if(isAr && txt.includes(en.slice(0,20))) el.textContent = ar;
-    });
-  });
+  // backup
+  'تصدير كامل بصيغة JSON': 'Full export in JSON format',
+  'معلومات النظام': 'System Information',
 
-  /* ANNUAL PAGE */
-  const annWarn = document.querySelector('#pg-annual .ibox.warn span');
-  if(annWarn) annWarn.textContent = isAr
-    ? 'عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.'
-    : 'Pressing Apply will add ₪200 as debt on all members for the selected year. Cannot be undone.';
+  // login
+  'يرجى التواصل مع المدير لإعادة تعيين كلمة المرور': 'Please contact the admin to reset your password',
+  'نسيت كلمة المرور؟': 'Forgot password?',
 
-  /* BACKUP PAGE */
-  const bkDesc = document.querySelector('#pg-bk p');
-  if(bkDesc) bkDesc.textContent = isAr ? 'تصدير كامل بصيغة JSON' : 'Full export in JSON format';
+  // user roles
+  'مدير': 'Admin', 'محاسب': 'Accountant', 'عارض': 'Viewer',
+  '(أنت)': '(You)',
 
-  /* SYSTEM INFO LABELS */
-  document.querySelectorAll('.sr-l').forEach(el => {
-    const txt = el.textContent.trim();
-    const srMap = {
-      'عدد الأعضاء':'Members Count',
-      'عدد الإيصالات':'Receipts Count',
-      'عدد سندات الصرف':'Payments Count',
-      'رصيد صندوق الغداء':'Food Fund Balance',
-      'رصيد صندوق الديوان':'Diwan Fund Balance',
-      'سعر الدولار':'Dollar Rate',
-      'سعر الدينار الأردني':'JD Rate',
-    };
-    if(!isAr && srMap[txt]) el.textContent = srMap[txt];
-    else if(isAr){
-      const rev = Object.entries(srMap).find(([,v])=>v===txt);
-      if(rev) el.textContent = rev[0];
-    }
-  });
+  // annual
+  'سجل الاشتراكات المطبقة': 'Applied Dues History',
+  'طُبِّق': 'Applied',
+  'بواسطة': 'By',
+};
 
-  /* MEMBER STATUS HINTS */
-  document.querySelectorAll('.kpi-sub').forEach(el => {
-    const txt = el.textContent.trim();
-    const subMap = {
-      'لم يسددوا':'Unpaid',
-      'افتتاحي':'Opening',
-      'دافع كل شيء':'All Paid',
-    };
-    if(!isAr && subMap[txt]) el.textContent = subMap[txt];
-    else if(isAr){
-      const rev = Object.entries(subMap).find(([,v])=>v===txt);
-      if(rev) el.textContent = rev[0];
-    }
-  });
+// بناء الخريطة العكسية تلقائياً
+const UI_MAP_REVERSE = {};
+Object.entries(UI_MAP).forEach(([ar, en]) => { UI_MAP_REVERSE[en] = ar; });
 
-  /* MOBILE NAV LABELS */
-  const mobileLabels = document.querySelectorAll('#mobile-nav .mnb span, #mobile-menu .mnb span');
-  const mobMap = {
-    'الرئيسية':'Home','الغداء':'Food','الديوان':'Diwan',
-    'الأعضاء':'Members','المزيد':'More',
-    'إيصالات الغداء':'Food Receipts','إيصالات الديوان':'Diwan Receipts',
-    'التبرعات':'Donations','مصاريف الغداء':'Food Expenses',
-    'مصاريف الديوان':'Diwan Expenses','كشف عضو':'Member Stmt',
-    'سجل العمليات':'Audit Log','الاشتراكات':'Annual Dues',
-    'المستخدمون':'Users','الإعدادات':'Settings',
-  };
-  mobileLabels.forEach(el => {
-    const txt = el.textContent.trim();
-    if(!isAr && mobMap[txt]) el.textContent = mobMap[txt];
-    else if(isAr){
-      const rev = Object.entries(mobMap).find(([,v])=>v===txt);
-      if(rev) el.textContent = rev[0];
-    }
-  });
-
-  /* PAGE SUBTITLES */
-  const subMap2 = {
-    'مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء':
-      'Member contributions to the Food Fund',
-    '200 ₪ على كل عضو بداية كل سنة':
-      '₪200 per member at start of each year',
-    'الرصيد الافتتاحي وإعدادات النظام':
-      'Opening balances and system settings',
-  };
-  document.querySelectorAll('.ph-s').forEach(el => {
-    const txt = el.textContent.trim();
-    if(!isAr && subMap2[txt]) el.textContent = subMap2[txt];
-    else if(isAr){
-      const rev = Object.entries(subMap2).find(([,v])=>v===txt);
-      if(rev) el.textContent = rev[0];
-    }
-  });
-
-  /* MEMBER OPENING BALANCE HINT */
-  const hint = document.querySelector('#m-member .fi span[style*="color"]');
-  if(hint) hint.textContent = isAr ? 'سالب = دين على العضو' : 'Negative = debt on member';
-
-  /* COPYRIGHT */
-  const footer = document.getElementById('copyright-bar');
-  if(footer) footer.textContent = 'All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System';
+function translateText(txt, toEn) {
+  const t = txt.trim();
+  if (toEn) return UI_MAP[t] || t;
+  return UI_MAP_REVERSE[t] || t;
 }
 
+function translateNode(el, toEn) {
+  if (!el) return;
+  // تجاهل العناصر التي لها أطفال عناصر (ليس نص فقط)
+  const hasOnlyText = Array.from(el.childNodes).every(n =>
+    n.nodeType === 3 || (n.nodeType === 1 && ['I','SPAN','B','STRONG','SMALL'].includes(n.tagName))
+  );
+  if (!hasOnlyText) return;
+
+  el.childNodes.forEach(node => {
+    if (node.nodeType === 3 && node.textContent.trim()) {
+      const translated = translateText(node.textContent.trim(), toEn);
+      if (translated !== node.textContent.trim()) {
+        node.textContent = node.textContent.replace(node.textContent.trim(), translated);
+      }
+    }
+  });
+}
+
+function translateAll() {
+  const toEn = window.LANG === 'en';
+
+  // ترجمة كل العناصر النصية في النظام
+  const selectors = [
+    '.fund-label', '.kpi-lbl', '.kpi-sub',
+    '.ct', '.badge', '.role-tag',
+    '.fi label', '.lfi label', '.sdiv',
+    '.empty-t', '.empty-s',
+    '.fund-sub', '.info-t', '.info-d',
+    '.sr-l', '.sr-v',
+    '.ph-s',
+    '.ibox > span', '.ibox > i + span',
+    'select option',
+    '.pill',
+    '.mtt > span:last-child',
+    '#pg-bk p',
+    '.card > .ct',
+    '.ledger-hdr > span',
+    '.lr-desc',
+  ];
+
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      // تجاهل data-i18n (تُترجم تلقائياً)
+      if (el.hasAttribute('data-i18n')) return;
+      // تجاهل الأيقونات
+      if (el.tagName === 'I') return;
+      translateNode(el, toEn);
+    });
+  });
+
+  // ترجمة placeholders
+  document.querySelectorAll('input, textarea').forEach(el => {
+    if (el.hasAttribute('data-i18n-placeholder')) return;
+    const ph = el.placeholder;
+    if (ph) {
+      const tr = translateText(ph, toEn);
+      if (tr !== ph) el.placeholder = tr;
+    }
+  });
+
+  // ترجمة login screen
+  const lEmail = document.getElementById('l-email');
+  if (lEmail) lEmail.placeholder = toEn ? 'Email Address' : 'البريد الإلكتروني';
+  const lPass = document.getElementById('l-pass');
+  if (lPass) lPass.placeholder = toEn ? 'Password' : 'كلمة المرور';
+  const forgotBtn = document.querySelector('#login-screen button[onclick="window.forgotPassword()"]');
+  if (forgotBtn) forgotBtn.textContent = toEn ? 'Forgot password?' : 'نسيت كلمة المرور؟';
+
+  // ترجمة topbar subtitle
+  const sub = document.querySelector('.top-logo-sub');
+  if (sub) sub.textContent = toEn ? 'Financial Management System' : 'نظام الإدارة المالية';
+}
 
 /* ── TOGGLE LANGUAGE ── */
 window.toggleLang = function() {
