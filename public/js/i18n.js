@@ -1264,9 +1264,10 @@ function translateAll() {
 window.toggleLang = function() {
   window.LANG = window.LANG === 'ar' ? 'en' : 'ar';
   localStorage.setItem('diwan_lang', window.LANG);
-  window.applyLang();
-  // إعادة رسم البيانات بالتنسيق الجديد
+  // إعادة رسم كل البيانات أولاً (تستخدم window.LANG الجديد)
   if (typeof renderAll === 'function') renderAll();
+  // ثم تطبيق الترجمة على العناصر الثابتة
+  window.applyLang();
 };
 
 /* ── INIT ON LOAD ── */
