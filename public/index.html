@@ -14,30 +14,32 @@
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-blob1"></div>
-  <div class="login-blob2"></div>
+  <div class="aurora-blob aurora-1"></div>
+  <div class="aurora-blob aurora-2"></div>
+  <div class="aurora-blob aurora-3"></div>
   <button class="login-lang" onclick="window.toggleLang()">
-    <i class="ti ti-language"></i>
-    <span id="login-lang-txt">EN</span>
+    <i class="ti ti-language"></i><span id="login-lang-txt">EN</span>
   </button>
   <div class="login-box">
     <div class="login-logo">
-      <div class="login-logo-icon"><i class="ti ti-building-bank"></i></div>
-      <h1 id="login-title">ديوان آل طه</h1>
-      <p id="login-sub">نظام الإدارة المالية</p>
+      <img src="/logo.jpeg" id="login-logo-img"
+           alt="ديوان آل طه"
+           style="width:200px;height:200px;object-fit:contain;margin:0 auto 6px;display:block;border-radius:12px">
     </div>
     <div class="lfi">
-      <label id="lbl-email">البريد الإلكتروني</label>
+      <label id="lbl-email">رقم الهاتف أو البريد الإلكتروني</label>
       <div class="l-input-wrap">
-        <i class="ti ti-mail l-icon"></i>
-        <input type="email" id="l-email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+        <i class="ti ti-phone l-icon"></i>
+        <input type="text" id="l-email" autocomplete="username" inputmode="text" placeholder="example@email.com"
+               onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
       </div>
     </div>
     <div class="lfi">
       <label id="lbl-pass">كلمة المرور</label>
       <div class="l-input-wrap">
         <i class="ti ti-lock l-icon"></i>
-        <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')window.login()">
+        <input type="password" id="l-pass" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')window.login()">
       </div>
     </div>
     <div class="login-row">
@@ -48,11 +50,10 @@
       <button class="login-forgot-link" onclick="window.forgotPassword()" id="btn-forgot">نسيت كلمة المرور؟</button>
     </div>
     <button class="login-btn" id="login-btn" onclick="window.login()">
-      <i class="ti ti-login"></i>
-      <span id="btn-login-txt">تسجيل الدخول</span>
+      <i class="ti ti-login"></i><span id="btn-login-txt">تسجيل الدخول</span>
     </button>
     <div class="login-err" id="login-err"></div>
-    <div class="forgot-msg" id="forgot-msg" id="forgot-msg-txt"></div>
+    <div class="forgot-msg" id="forgot-msg"></div>
     <div class="login-footer">
       <strong>All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</strong>
     </div>
