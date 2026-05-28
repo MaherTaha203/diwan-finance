@@ -688,6 +688,103 @@ select.fs {
   .top-logo { gap: 6px; }
   .top-logo-text { font-size: 12px; }
 }/* LOGIN */
+/* ══ LOGIN FORCE LIGHT — تجاوز الثيم الداكن ══ */
+#login-screen,
+#login-screen *,
+#login-screen .login-box,
+#login-screen .login-box *,
+#login-screen .lfi input,
+#login-screen .lfi label,
+#login-screen .login-lang,
+#login-screen .login-remember,
+#login-screen .login-forgot-link,
+#login-screen .login-footer,
+#login-screen .login-btn {
+  color-scheme: light;
+}
+
+#login-screen {
+  background: #EEF5FF !important;
+  color: #1C2B3A !important;
+}
+
+#login-screen .aurora-blob {
+  opacity: 1 !important;
+}
+
+#login-screen .login-box {
+  background: #FFFFFF !important;
+  border-color: rgba(0,200,150,.15) !important;
+  color: #1C2B3A !important;
+}
+
+#login-screen .lfi label {
+  color: #3D5A7A !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+}
+
+#login-screen .lfi input {
+  background: #F7FBFF !important;
+  border: 1.5px solid rgba(0,200,150,.2) !important;
+  color: #1C2B3A !important;
+  border-radius: 10px !important;
+}
+
+#login-screen .lfi input:focus {
+  background: #FFFFFF !important;
+  border-color: rgba(0,200,150,.5) !important;
+  box-shadow: 0 0 0 3px rgba(0,200,150,.1) !important;
+  color: #1C2B3A !important;
+}
+
+#login-screen .lfi input::placeholder {
+  color: #B0C4D8 !important;
+}
+
+#login-screen .l-icon {
+  color: rgba(0,200,150,.5) !important;
+}
+
+#login-screen .login-row {
+  color: #6A8AA0 !important;
+}
+
+#login-screen .login-remember {
+  color: #6A8AA0 !important;
+}
+
+#login-screen .login-remember input {
+  background: transparent !important;
+  border: none !important;
+}
+
+#login-screen .login-forgot-link {
+  color: #059669 !important;
+}
+
+#login-screen .login-btn {
+  background: linear-gradient(135deg, #1C2B3A, #243447) !important;
+  color: #FFFFFF !important;
+}
+
+#login-screen .login-footer {
+  color: #B0C4D8 !important;
+  border-top-color: rgba(0,200,150,.12) !important;
+}
+
+#login-screen .login-lang {
+  background: rgba(255,255,255,.9) !important;
+  color: #059669 !important;
+  border-color: rgba(0,200,150,.3) !important;
+}
+
+#login-screen .login-by {
+  color: rgba(28,43,58,.2) !important;
+}
+
 #login-screen {
   position:fixed;inset:0;z-index:1000;
   background:#EEF5FF !important;
@@ -825,6 +922,103 @@ select.fs {
 }
 
 /* LOGIN */
+/* ══ LOGIN FORCE LIGHT — تجاوز الثيم الداكن ══ */
+#login-screen,
+#login-screen *,
+#login-screen .login-box,
+#login-screen .login-box *,
+#login-screen .lfi input,
+#login-screen .lfi label,
+#login-screen .login-lang,
+#login-screen .login-remember,
+#login-screen .login-forgot-link,
+#login-screen .login-footer,
+#login-screen .login-btn {
+  color-scheme: light;
+}
+
+#login-screen {
+  background: #EEF5FF !important;
+  color: #1C2B3A !important;
+}
+
+#login-screen .aurora-blob {
+  opacity: 1 !important;
+}
+
+#login-screen .login-box {
+  background: #FFFFFF !important;
+  border-color: rgba(0,200,150,.15) !important;
+  color: #1C2B3A !important;
+}
+
+#login-screen .lfi label {
+  color: #3D5A7A !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+}
+
+#login-screen .lfi input {
+  background: #F7FBFF !important;
+  border: 1.5px solid rgba(0,200,150,.2) !important;
+  color: #1C2B3A !important;
+  border-radius: 10px !important;
+}
+
+#login-screen .lfi input:focus {
+  background: #FFFFFF !important;
+  border-color: rgba(0,200,150,.5) !important;
+  box-shadow: 0 0 0 3px rgba(0,200,150,.1) !important;
+  color: #1C2B3A !important;
+}
+
+#login-screen .lfi input::placeholder {
+  color: #B0C4D8 !important;
+}
+
+#login-screen .l-icon {
+  color: rgba(0,200,150,.5) !important;
+}
+
+#login-screen .login-row {
+  color: #6A8AA0 !important;
+}
+
+#login-screen .login-remember {
+  color: #6A8AA0 !important;
+}
+
+#login-screen .login-remember input {
+  background: transparent !important;
+  border: none !important;
+}
+
+#login-screen .login-forgot-link {
+  color: #059669 !important;
+}
+
+#login-screen .login-btn {
+  background: linear-gradient(135deg, #1C2B3A, #243447) !important;
+  color: #FFFFFF !important;
+}
+
+#login-screen .login-footer {
+  color: #B0C4D8 !important;
+  border-top-color: rgba(0,200,150,.12) !important;
+}
+
+#login-screen .login-lang {
+  background: rgba(255,255,255,.9) !important;
+  color: #059669 !important;
+  border-color: rgba(0,200,150,.3) !important;
+}
+
+#login-screen .login-by {
+  color: rgba(28,43,58,.2) !important;
+}
+
 #login-screen {
   position:fixed;inset:0;z-index:1000;
   background:#0D1B2A;
