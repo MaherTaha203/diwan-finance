@@ -682,7 +682,7 @@ window.renderMemberStmt=function(){
 
   const rows=[];
   // الاشتراكات من 2025 فقط
-  dues.forEach(d=>rows.push({date:d.applied_at?.slice(0,10)||d.year+'-01-01',desc:`اشتراك سنة ${d.year}`,cr:0,dr:Number(d.amount),type:'due'}));
+  dues.forEach(d=>rows.push({date:d.applied_at?.slice(0,10)||d.year+'-01-01',desc:window.LANG==='en'?`Annual Due ${d.year}`:`اشتراك سنة ${d.year}`,cr:0,dr:Number(d.amount),type:'due'}));
   // الدفعات
   recs.forEach(r=>rows.push({date:r.receipt_date,desc:r.notes||'دفعة مساهمة',cr:Number(r.amount_ils||r.amount),dr:0,type:'cr',no:r.no}));
   rows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
@@ -1452,7 +1452,7 @@ function applyLoginLang(){
     if(el)el.textContent=txt;
   });
   const lEmail=document.getElementById('l-email');
-  if(lEmail)lEmail.placeholder=isEn?'0599123456 or email@example.com':'0599123456 أو example@email.com';
+  if(lEmail)lEmail.placeholder=isEn?'0599123456 or email@example.com':'0599123456 أو email@example.com';
   const lPass=document.getElementById('l-pass');
   if(lPass)lPass.placeholder=isEn?'••••••••':'••••••••';
   const loginBtn=document.getElementById('login-btn');
