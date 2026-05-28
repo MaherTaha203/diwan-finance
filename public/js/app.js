@@ -277,7 +277,7 @@ window.login=async function(){
   }
   btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   err.classList.remove('show');
-  const{data,error}=await SB.auth.signInWithPassword({email,password:pass});
+  const{data,error}=await SB.auth.signInWithPassword({email:input,password:pass});
   if(error){showLoginErr(window.t?window.t('login.wrong_credentials'):'بريد إلكتروني أو كلمة مرور غير صحيحة');btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';return;}
   CU=data.user;
   await afterLogin();
