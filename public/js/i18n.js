@@ -1097,7 +1097,7 @@ const UI_MAP = {
   'كشف صندوق الديوان': 'Diwan Fund Statement',
   '₪ شيكل إسرائيلي': '₪ Israeli Shekel',
   '$ دولار أمريكي': '$ US Dollar',
-  'د.أ دينار أردني': 'JD Jordanian Dinar',
+  'jod دينار أردني': 'JD Jordanian Dinar',
   'صندوق الغداء — مصاريف الإطعام': 'Food Fund — Food Expenses',
   'صندوق الديوان — مصاريف الديوان': 'Diwan Fund — Diwan Expenses',
   'كل الفئات': 'All Categories',
