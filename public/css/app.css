@@ -690,7 +690,7 @@ select.fs {
 }/* LOGIN */
 #login-screen {
   position:fixed;inset:0;z-index:1000;
-  background:#EEF5FF;
+  background:#EEF5FF !important;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
 }
@@ -752,8 +752,8 @@ select.fs {
 @keyframes lineShimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 
 .login-logo{text-align:center;margin-bottom:20px;}
-.login-logo h1{font-size:21px;font-weight:700;color:#1C2B3A;letter-spacing:-.4px;margin-bottom:4px;}
-.login-logo p{font-size:12px;color:#7A9AB8;letter-spacing:.03em;}
+.login-logo h1{font-size:21px;font-weight:700;color:#1C2B3A !important;letter-spacing:-.4px;margin-bottom:4px;}
+.login-logo p{font-size:12px;color:#7A9AB8 !important;letter-spacing:.03em;}
 #login-logo-img{
   filter:drop-shadow(0 4px 16px rgba(0,0,0,.1));
   transition:transform .3s ease;
@@ -761,24 +761,24 @@ select.fs {
 #login-logo-img:hover{transform:scale(1.02);}
 
 .lfi{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
-.lfi label{font-size:11px;font-weight:600;color:#3D5A7A;text-transform:uppercase;letter-spacing:.05em;}
+.lfi label{font-size:11px;font-weight:600;color:#3D5A7A !important;text-transform:uppercase;letter-spacing:.05em;}
 .lfi .l-input-wrap{position:relative;}
 .lfi input{
   width:100%;padding:12px 38px 12px 12px;
-  border-radius:10px;border:1.5px solid rgba(0,200,150,.18);
-  background:rgba(255,255,255,.8);color:#1C2B3A;
-  font-size:13.5px;font-family:var(--fn);outline:none;
+  border-radius:10px;border:1.5px solid rgba(0,200,150,.18) !important;
+  background:#F7FBFF !important;color:#1C2B3A !important;
+  font-size:13.5px;font-family:'Cairo','Segoe UI',sans-serif;outline:none;
   transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.03);
 }
 .lfi input:focus{
-  border-color:rgba(0,200,150,.45);background:rgba(255,255,255,.95);
+  border-color:rgba(0,200,150,.45) !important;background:#FFFFFF !important;
   box-shadow:0 0 0 3px rgba(0,200,150,.1),0 2px 12px rgba(0,0,0,.05);
 }
-.lfi input::placeholder{color:#B0C4D8;}
+.lfi input::placeholder{color:#B0C4D8 !important;}
 .l-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:17px;color:rgba(0,200,150,.5);pointer-events:none;}
 
 .login-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
-.login-remember{display:flex;align-items:center;gap:6px;font-size:12px;color:#6A8AA0;cursor:pointer;}
+.login-remember{display:flex;align-items:center;gap:6px;font-size:12px;color:#6A8AA0 !important;cursor:pointer;}
 .login-remember input{accent-color:#00C896;width:auto;}
 .login-forgot-link{font-size:12px;color:#059669;background:none;border:none;cursor:pointer;font-family:var(--fn);text-decoration:underline;text-underline-offset:2px;transition:color .15s;}
 .login-forgot-link:hover{color:#00A878;}
@@ -815,8 +815,8 @@ select.fs {
 
 .login-footer{
   text-align:center;margin-top:22px;padding-top:18px;
-  border-top:1px solid rgba(0,200,150,.1);
-  font-size:9.5px;color:#B0C4D8;font-weight:700;letter-spacing:.02em;
+  border-top:1px solid rgba(0,200,150,.1) !important;
+  font-size:9.5px;color:#B0C4D8 !important;font-weight:700;letter-spacing:.02em;
 }
 .login-by{
   position:fixed;bottom:14px;left:18px;
