@@ -1661,6 +1661,12 @@ function addWatermark(){
 }
 
 /* ═══ INIT ═══ */
+// تأكد من أن صفحة الدخول دائماً فاتحة
+(function(){
+  const ls=document.getElementById('login-screen');
+  if(ls) ls.setAttribute('data-force-light','1');
+})();
+
 async function init(){
   const{createClient}=supabase;
   SB=createClient(
