@@ -1207,6 +1207,7 @@ function translateNode(el, toEn) {
 
 function translateAll() {
   const toEn = window.LANG === 'en';
+  const isAr = !toEn;
 
   // ترجمة كل العناصر النصية في النظام
   const selectors = [
@@ -1238,10 +1239,33 @@ function translateAll() {
   });
 
   // ترجمة placeholders
+  const phMap = {
+    'ملاحظات اختيارية...': 'Optional notes...',
+    'وصف تفصيلي...': 'Detailed description...',
+    'اسم المعتمد': 'Approver name',
+    'اسم المستفيد': 'Beneficiary name',
+    'Beneficiary Name': 'Beneficiary Name',
+    'اسم الشخص': 'Person name',
+    'اسم الدافع': 'Payer name',
+    'اسم البنك': 'Bank name',
+    'Bank Name': 'Bank Name',
+    'مثال: 123456': 'e.g. 123456',
+    'الاسم الكامل': 'Full name',
+    'ملاحظات...': 'Notes...',
+    'بحث...': 'Search...',
+    'Search...': 'Search...',
+    'اسم العضو': 'Member name',
+    '0599-xxx-xxxx': '0599-xxx-xxxx',
+  };
+  const phMapRev = Object.fromEntries(Object.entries(phMap).map(([k,v])=>[v,k]));
+
   document.querySelectorAll('input, textarea').forEach(el => {
     if (el.hasAttribute('data-i18n-placeholder')) return;
     const ph = el.placeholder;
-    if (ph) {
+    if (!ph) return;
+    if (toEn && phMap[ph]) { el.placeholder = phMap[ph]; }
+    else if (!toEn && phMapRev[ph]) { el.placeholder = phMapRev[ph]; }
+    else {
       const tr = translateText(ph, toEn);
       if (tr !== ph) el.placeholder = tr;
     }
@@ -1249,15 +1273,28 @@ function translateAll() {
 
   // ترجمة login screen
   const lEmail = document.getElementById('l-email');
-  if (lEmail) lEmail.placeholder = toEn ? 'Email Address' : 'البريد الإلكتروني';
+  if (lEmail) lEmail.placeholder = toEn ? '0599123456 or email@example.com' : '0599123456 أو email@example.com';
   const lPass = document.getElementById('l-pass');
   if (lPass) lPass.placeholder = toEn ? 'Password' : 'كلمة المرور';
-  const forgotBtn = document.querySelector('#login-screen button[onclick="window.forgotPassword()"]');
+  const lEmailLbl = document.getElementById('lbl-email');
+  if (lEmailLbl) lEmailLbl.textContent = toEn ? 'Phone or Email' : 'رقم الهاتف أو البريد الإلكتروني';
+  const lPassLbl = document.getElementById('lbl-pass');
+  if (lPassLbl) lPassLbl.textContent = toEn ? 'Password' : 'كلمة المرور';
+  const lRemLbl = document.getElementById('lbl-remember');
+  if (lRemLbl) lRemLbl.textContent = toEn ? 'Remember me' : 'تذكرني';
+  const forgotBtn = document.getElementById('btn-forgot');
   if (forgotBtn) forgotBtn.textContent = toEn ? 'Forgot password?' : 'نسيت كلمة المرور؟';
+  const loginLangTxt = document.getElementById('login-lang-txt');
+  if (loginLangTxt) loginLangTxt.textContent = toEn ? 'AR' : 'EN';
+  const loginBtnTxt = document.getElementById('btn-login-txt');
+  if (loginBtnTxt) loginBtnTxt.textContent = toEn ? 'Sign In' : 'تسجيل الدخول';
 
   // ترجمة topbar subtitle
   const sub = document.querySelector('.top-logo-sub');
   if (sub) sub.textContent = toEn ? 'Financial Management System' : 'نظام الإدارة المالية';
+  // ترجمة topbar title
+  const topTitle = document.querySelector('.top-logo-text');
+  if (topTitle) topTitle.textContent = toEn ? 'Diwan Al Taha' : 'ديوان آل طه';
 }
 
 /* ── TOGGLE LANGUAGE ── */
