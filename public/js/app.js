@@ -261,12 +261,20 @@ window.toggleTheme=function(){
 
 /* ═══ AUTH ═══ */
 window.login=async function(){
-  const email=document.getElementById('l-email').value.trim();
+  let input=document.getElementById('l-email').value.trim();
   const pass=document.getElementById('l-pass').value;
-  const remember=document.getElementById('l-remember')?.checked||false;
   const btn=document.getElementById('login-btn');
   const err=document.getElementById('login-err');
-  if(!email||!pass){showLoginErr(window.t?window.t('login.fill_all'):'يرجى إدخال البريد وكلمة المرور');return;}
+  if(!input||!pass){
+    showLoginErr(window.LANG==='en'?'Please enter your phone/email and password':'يرجى إدخال رقم الهاتف أو البريد وكلمة المرور');
+    return;
+  }
+  // تحويل رقم الهاتف إلى إيميل
+  const isPhone=/^[0-9+\s\-]{7,15}$/.test(input.replace(/\s/g,''));
+  if(isPhone){
+    const phone=input.replace(/[\s\-]/g,'');
+    input=phone+'@diwan-fainance.com';
+  }
   btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   err.classList.remove('show');
   const{data,error}=await SB.auth.signInWithPassword({email,password:pass});
@@ -1432,9 +1440,7 @@ window.forgotPassword=function(){
 function applyLoginLang(){
   const isEn = window.LANG==='en';
   const ids = {
-    'login-title': isEn?'Diwan Al Taha':'ديوان آل طه',
-    'login-sub': isEn?'Financial Management System':'نظام الإدارة المالية',
-    'lbl-email': isEn?'Email Address':'البريد الإلكتروني',
+    'lbl-email': isEn?'Phone or Email':'رقم الهاتف أو البريد الإلكتروني',
     'lbl-pass': isEn?'Password':'كلمة المرور',
     'lbl-remember': isEn?'Remember me':'تذكرني',
     'btn-forgot': isEn?'Forgot password?':'نسيت كلمة المرور؟',
@@ -1446,7 +1452,7 @@ function applyLoginLang(){
     if(el)el.textContent=txt;
   });
   const lEmail=document.getElementById('l-email');
-  if(lEmail)lEmail.placeholder=isEn?'example@email.com':'example@email.com';
+  if(lEmail)lEmail.placeholder=isEn?'0599123456 or email@example.com':'0599123456 أو example@email.com';
   const lPass=document.getElementById('l-pass');
   if(lPass)lPass.placeholder=isEn?'••••••••':'••••••••';
   const loginBtn=document.getElementById('login-btn');
