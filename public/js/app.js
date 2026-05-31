@@ -6,7 +6,10 @@ const RATES={ILS:1,USD:3.7,JOD:5.0};
 window.FOOD_OPENING=0;
 window.DIWAN_OPENING=0;
 const PSZ=20,PS={};
-const ROLES={admin:'مدير',accountant:'محاسب',viewer:'عارض'};
+
+/* ── ROLE MODEL: admin | viewer ONLY ── */
+const ROLES={admin:'مدير',viewer:'عارض'};
+
 const EXPENSE_TYPES={food_expense:'مصاريف إطعام',electricity:'كهرباء',water:'ماء',cleaning:'تنظيف',maintenance:'صيانة',other:'أخرى'};
 const METHOD_LABELS={cash:'نقد',check:'شيك',transfer:'تحويل بنكي',online:'أونلاين'};
 const CURR_SYMS={ILS:'₪',USD:'$',JOD:'د.أ'};
@@ -14,24 +17,18 @@ const CURR_SYMS={ILS:'₪',USD:'$',JOD:'د.أ'};
 
 /* ═══ TRANSLATION HELPER FOR RENDER FUNCTIONS ═══ */
 const L = {
-  // fund labels
   fundLabel: f => f==='food'?(window.LANG==='en'?'Food Fund':'صندوق الغداء'):f==='diwan'?(window.LANG==='en'?'Diwan Fund':'صندوق الديوان'):(window.LANG==='en'?'Donations Fund':'صندوق التبرعات'),
-  // method labels
   method: m => {
     const map={cash:{ar:'نقد',en:'Cash'},check:{ar:'شيك',en:'Cheque'},transfer:{ar:'تحويل',en:'Transfer'},online:{ar:'أونلاين',en:'Online'}};
     return (map[m]||{ar:m,en:m})[window.LANG==='en'?'en':'ar'];
   },
-  // expense types
   expense: e => {
     const map={food_expense:{ar:'مصاريف إطعام عزاء',en:'Funeral Food Expenses'},electricity:{ar:'كهرباء',en:'Electricity'},water:{ar:'ماء',en:'Water'},cleaning:{ar:'تنظيف',en:'Cleaning'},maintenance:{ar:'صيانة',en:'Maintenance'},other:{ar:'أخرى',en:'Other'}};
     return (map[e]||{ar:e,en:e})[window.LANG==='en'?'en':'ar'];
   },
-  // status
   paid: ()=>window.LANG==='en'?'Paid':'مسدَّد',
   late: ()=>window.LANG==='en'?'Late':'متأخر',
-  // pagination
   showing: (s,t)=>window.LANG==='en'?`Showing ${s} of ${t}`:`عرض ${s} من ${t}`,
-  // no data
   noData: k=>window.LANG==='en'?({
     'receipts':'No receipts found','expenses':'No expenses found',
     'donations':'No donations found','members':'No members found',
@@ -43,7 +40,6 @@ const L = {
     'ops':'لا توجد حركات','annual':'لا توجد اشتراكات مطبقة',
     'audit':'السجل فارغ',
   }[k]||'لا توجد بيانات'),
-  // months
   month: m=>{
     const ar=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
     const en=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -51,7 +47,7 @@ const L = {
   },
 };
 
-/* ═══ PERMISSIONS ═══ */
+/* ═══ PERMISSIONS — admin | viewer ONLY ═══ */
 const can={
   write:()=>CUR?.role==='admin',
   admin:()=>CUR?.role==='admin',
@@ -61,39 +57,31 @@ const can={
 
 /* ═══ FINANCIAL ENGINE ═══ */
 const FIN={
-  /* رصيد صندوق الغداء لعضو معين */
   memberBalance(memberId){
     const member=DB.members.find(m=>m.id===memberId);
     if(!member) return 0;
     const openBal=Number(member.opening_balance||0);
-    // الإيصالات (دائن)
     const paid=DB.receipts
       .filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId)
       .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    // الاشتراكات السنوية (مدين)
     const dues=DB.annual.reduce((s,a)=>s+Number(a.amount),0);
-    // openBal سالب = دين، موجب = رصيد
     return openBal + paid - dues;
   },
-  /* رصيد صندوق الغداء الكلي — يشمل الافتتاحي */
   foodBalance(){
     const opening=Number(window.FOOD_OPENING||0);
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     return opening+income-expense;
   },
-  /* رصيد صندوق الديوان — يشمل الافتتاحي */
   diwanBalance(){
     const opening=Number(window.DIWAN_OPENING||0);
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     return opening+income-expense;
   },
-  /* رصيد صندوق التبرعات */
   donBalance(){
     return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   },
-  /* حركات صندوق للكشف */
   fundLedger(fund,from,to,typeFilter){
     const rows=[];
     const fd=from?new Date(from):null;
@@ -104,17 +92,14 @@ const FIN={
       if(td&&dt>td) return false;
       return true;
     };
-    // إيصالات
     if(!typeFilter||typeFilter==='cr'){
       DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund&&inRange(r.receipt_date))
         .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:r.notes||'إيصال قبض',cr:Number(r.amount_ils||r.amount),dr:0,type:'cr',id:r.id,no:r.no}));
     }
-    // مصاريف
     if(!typeFilter||typeFilter==='dr'){
       DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund&&inRange(p.payment_date))
         .forEach(p=>rows.push({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),desc:L.expense(p.expense_type),cr:0,dr:Number(p.amount_ils||p.amount),type:'dr',id:p.id,no:p.no}));
     }
-    // تبرعات (تظهر بصفر مع ملاحظة)
     if(!typeFilter||typeFilter==='don'){
       DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund===fund&&inRange(r.receipt_date))
         .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:'تبرع',cr:0,dr:0,type:'don',id:r.id,no:r.no,note:`تبرع ₪${fmt(r.amount_ils||r.amount)} — ${r.notes||''}`}));
@@ -139,19 +124,16 @@ const nextNo=(prefix,arr)=>prefix+'-'+String(arr.filter(x=>x.no?.startsWith(pref
 /* ═══ EXCHANGE RATES ═══ */
 async function fetchRates(){
   try{
-    // سعر الدولار من بنك إسرائيل
     const r=await fetch('https://data.gov.il/api/3/action/datastore_search?resource_id=88adaee8-624c-4b3b-b0d7-07c39034fa0a&limit=1&sort=_id desc');
     const j=await r.json();
     const rec=j?.result?.records?.[0];
     if(rec) RATES.USD=parseFloat(rec.EXCHANGERATE);
   }catch(e){}
   try{
-    // سعر الدينار الأردني من API
     const r2=await fetch('https://api.exchangerate-api.com/v4/latest/JOD');
     const j2=await r2.json();
     if(j2?.rates?.ILS) RATES.JOD=j2.rates.ILS;
   }catch(e){
-    // fallback من إعدادات Supabase
     const{data}=await SB.from('settings').select('value').eq('key','jod_rate').single();
     if(data) RATES.JOD=parseFloat(data.value)||5.0;
   }
@@ -258,7 +240,6 @@ window.toggleTheme=function(){
   }
   localStorage.setItem('diwan_theme',isLight?'light':'dark');
 };
-// toggleLang defined in i18n.js
 
 /* ═══ AUTH ═══ */
 window.login=async function(){
@@ -270,7 +251,6 @@ window.login=async function(){
     showLoginErr(window.LANG==='en'?'Please enter your phone/email and password':'يرجى إدخال رقم الهاتف أو البريد وكلمة المرور');
     return;
   }
-  // تحويل رقم الهاتف إلى إيميل
   const isPhone=/^[0-9+\s\-]{7,15}$/.test(input.replace(/\s/g,''));
   if(isPhone){
     const phone=input.replace(/[\s\-]/g,'');
@@ -287,7 +267,11 @@ function showLoginErr(msg){const el=document.getElementById('login-err');el.text
 
 async function afterLogin(){
   const{data:role}=await SB.from('user_roles').select('*').eq('user_id',CU.id).single();
-  CUR=role||{role:'viewer',full_name:CU.email};
+  /* Enforce two-role model: any unrecognised role defaults to viewer */
+  const rawRole=role?.role;
+  const safeRole=(rawRole==='admin')?'admin':'viewer';
+  CUR={...(role||{}),role:safeRole,full_name:role?.full_name||CU.email};
+
   const ini=(CUR.full_name||CU.email).charAt(0).toUpperCase();
   document.getElementById('uav').textContent=ini;
   document.getElementById('uav').className='uav '+CUR.role;
@@ -296,14 +280,12 @@ async function afterLogin(){
   applyPerms();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
-  // استعادة الثيم المحفوظ
   const savedTheme=localStorage.getItem('diwan_theme')||'light';
   if(savedTheme==='light'){
     document.body.classList.add('light');
   } else {
     document.body.classList.remove('light');
   }
-  // تطبيق اللغة المحفوظة
   window.LANG = localStorage.getItem('diwan_lang')||'ar';
   window.applyLang();
   await loadSettings();
@@ -314,6 +296,7 @@ async function afterLogin(){
   applyDataProtection();
   applyLoginLang();
 }
+
 window.logout=async function(){
   await SB.auth.signOut();CU=null;CUR=null;
   Object.keys(DB).forEach(k=>DB[k]=[]);
@@ -321,27 +304,37 @@ window.logout=async function(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('l-pass').value='';
   document.getElementById('l-email').value='';
-  // إعادة تفعيل زر الدخول
   const btn=document.getElementById('login-btn');
   if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
   toast(window.t('messages.logged_out'),'info');
 };
+
 function applyPerms(){
   const w=can.write(),a=can.admin();
-  // أزرار الإضافة — ديسكتوب
+
+  /* ── Write-gated buttons (desktop) ── */
   ['btn-food-rec','btn-diwan-rec','btn-don','btn-food-pay','btn-diwan-pay','btn-add-member',
    'dash-btn-rec','dash-btn-pay'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display=w?'':'none';
   });
-  // إخفاء صفحة المستخدمين
-  const nu=document.getElementById('nb-users');if(nu)nu.style.display=a?'':'none';
-  const nuMob=document.getElementById('mnb-users-mob');if(nuMob)nuMob.style.display=a?'':'none';
-  const nset=document.getElementById('nb-settings');if(nset)nset.style.display=a?'':'none';
-  const nsetm=document.getElementById('mnb-settings');if(nsetm)nsetm.style.display=a?'':'none';
-  // إخفاء الاشتراكات السنوية
+
+  /* ── Admin-only nav items (desktop + mobile) ── */
+  ['nb-users','nb-settings'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display=a?'':'none';
+  });
+  ['mnb-users-mob','mnb-settings'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display=a?'':'none';
+  });
+
+  /* ── Annual dues nav (admin only) ── */
   const na=document.querySelector('.nb[data-p="annual"]');if(na)na.style.display=a?'':'none';
   const naMob=document.getElementById('mnb-annual');if(naMob)naMob.style.display=a?'':'none';
+
+  /* ── Export / print buttons (admin only) ── */
+  document.querySelectorAll('[data-requires-export]').forEach(el=>el.style.display=a?'':'none');
+  document.querySelectorAll('[data-requires-print]').forEach(el=>el.style.display=a?'':'none');
 }
+
 async function checkSession(){
   const{data:{session}}=await SB.auth.getSession();
   if(session){CU=session.user;await afterLogin();}
@@ -364,13 +357,13 @@ async function loadAll(){
   }catch(e){toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err');console.error(e);}
 }
 window.loadAll=loadAll;
+
 function renderAll(){
   renderDash();
   const active=document.querySelector('.pg.on')?.id?.replace('pg-','');
   if(active&&D[active]) D[active].render();
   if(active==='settings'){loadSettings().then(renderSettingsSummary);}
   fillMemberSelect();fillMemberDropdowns();fillContactDropdown();
-
 }
 
 /* ═══ TABLE RENDERERS ═══ */
@@ -395,14 +388,14 @@ const D={
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.notes||'—')}</td>
       <td class="tda">
-        <button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')" title="طباعة"><i class="ti ti-printer"></i></button>
+        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')" title="طباعة"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
   'food-pay':{render(){
     const q=(document.getElementById('q-food-pay')?.value||'').toLowerCase();
     let d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food');
-    if(q)d=d.filter(p=>(p.no+(p.beneficiary_name||gmn(p.member_id))+(p.notes||'')).toLowerCase().includes(q));
+    if(q)d=d.filter(p=>(p.no+(p.beneficiary_name||gmn(p.member_id))+(p.notes||'')).toLowerCase().includes(p));
     const tot=d.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     const sub=document.getElementById('food-pay-sub');
     if(sub)sub.textContent=`${d.length} سند — ₪ ${fmt(tot)}`;
@@ -419,7 +412,7 @@ const D={
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
       <td class="tda">
-        <button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')" title="طباعة"><i class="ti ti-printer"></i></button>
+        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')" title="طباعة"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -444,7 +437,7 @@ const D={
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
-        <button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>
+        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -471,7 +464,7 @@ const D={
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
       <td class="tda">
-        <button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>
+        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -496,7 +489,7 @@ const D={
       <td><span class="badge ${r.donation_display_fund==='food'?'food':'diwan'}">${r.donation_display_fund==='food'?L.fundLabel('food'):L.fundLabel('diwan')}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
-        <button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>
+        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -554,7 +547,6 @@ function renderDash(){
     <div class="kpi red"><i class="ti ti-trending-down kpi-ico"></i><div class="kpi-lbl">${isEn?'Total Expenses':'إجمالي المصاريف'}</div><div class="kpi-val">₪ ${fmt(DB.payments.filter(p=>!p.is_deleted).reduce((s,p)=>s+Number(p.amount_ils||p.amount),0))}</div></div>
   `;
 
-  // chart
   const now=new Date();const months=[];
   for(let i=5;i>=0;i--){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
@@ -574,7 +566,6 @@ function renderDash(){
       <div style="font-size:9.5px;color:var(--tx3)">${m.lbl}</div>
     </div>`).join('');
 
-  // recent
   const allOps=[
     ...DB.receipts.filter(r=>!r.is_deleted).slice(0,5).map(r=>({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),amt:r.amount_ils||r.amount,type:'rec',fund:r.fund_type})),
     ...DB.payments.filter(p=>!p.is_deleted).slice(0,5).map(p=>({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),amt:p.amount_ils||p.amount,type:'pay',fund:p.fund_type})),
@@ -586,7 +577,6 @@ function renderDash(){
     </div>`).join('')
     :`<div class="empty" style="padding:14px"><div class="empty-t">${L.noData('ops')}</div></div>`;
 
-  // late members
   document.getElementById('late-members').innerHTML=lateMembers.slice(0,6).length?lateMembers.slice(0,6).map(m=>`
     <div class="sr">
       <span class="sr-l">${esc(m.name)}</span>
@@ -594,7 +584,6 @@ function renderDash(){
     </div>`).join('')
     :`<div style="text-align:center;padding:12px;color:var(--tx3);font-size:12px">${window.LANG==='en'?'✅ All members are up to date':'✅ كل الأعضاء ملتزمون'}</div>`;
 
-  // quick actions
   const _en=window.LANG==='en';
   document.getElementById('quick-actions').innerHTML=`
     ${can.write()?`<button class="btn food" style="width:100%;margin-bottom:6px" onclick="window.openRec('food')"><i class="ti ti-receipt"></i>${_en?'Food Receipt':'إيصال غداء'}</button>`:''}
@@ -629,7 +618,6 @@ window.renderStmt=function(fund){
   }).join('');
 
   const fundLabel=fund==='food'?'صندوق الغداء':'صندوق الديوان';
-  const fundClass=fund==='food'?'food':'diwan';
   out.innerHTML=`
     <div class="card">
       <div style="background:${fund==='food'?'var(--food)':'var(--diwan)'};color:#fff;padding:12px 16px;border-radius:var(--r);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
@@ -651,6 +639,7 @@ window.renderStmt=function(fund){
         <span style="flex:0 0 110px">${window.LANG==='en'?'Notes':'ملاحظات'}</span>
       </div>
       <div class="scroll">${rowsHTML}</div>
+      ${can.print()?`<div style="margin-top:12px;text-align:left"><button class="btn ghost sm" onclick="window.prtStmt('${fund}')" data-requires-print="1"><i class="ti ti-printer"></i> طباعة</button></div>`:''}
     </div>`;
 };
 
@@ -672,19 +661,13 @@ window.renderMemberStmt=function(){
   const td=to?new Date(to)?new Date(to):null:null;
   const inRange=d=>{const dt=new Date(d);if(fd&&dt<fd)return false;if(td&&dt>td)return false;return true;};
 
-  // حركات المساهمات في صندوق الغداء
   const recs=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date));
-  // الاشتراكات السنوية كديون
   const dues=DB.annual;
-  // التبرعات
   const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
-  // ملاحظات سندات الديوان للعضو
   const diwanNotes=DB.audit.filter(a=>a.action==='note'&&a.table_name==='member_note'&&a.record_id===mid);
 
   const rows=[];
-  // الاشتراكات من 2025 فقط
   dues.forEach(d=>rows.push({date:d.applied_at?.slice(0,10)||d.year+'-01-01',desc:window.LANG==='en'?`Annual Due ${d.year}`:`اشتراك سنة ${d.year}`,cr:0,dr:Number(d.amount),type:'due'}));
-  // الدفعات
   recs.forEach(r=>rows.push({date:r.receipt_date,desc:r.notes||'دفعة مساهمة',cr:Number(r.amount_ils||r.amount),dr:0,type:'cr',no:r.no}));
   rows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
 
@@ -736,6 +719,7 @@ window.renderMemberStmt=function(){
       <div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:8px"><i class="ti ti-building"></i> مصاريف الديوان المتعلقة بالعضو (ملاحظات فقط)</div>
       ${diwanNotes.map(n=>`<div class="sr"><span class="sr-l" style="font-size:11px;color:var(--tx3)">${n.description}</span></div>`).join('')}
     </div>`:''}
+    ${can.print()?`<div style="margin-top:12px;text-align:left"><button class="btn ghost sm" onclick="window.prtMemberStmt()" data-requires-print="1"><i class="ti ti-printer"></i> طباعة</button></div>`:''}
   </div>`;
 };
 
@@ -761,13 +745,12 @@ function resetForms(){
   document.querySelectorAll('.pill.on').forEach(p=>{p.classList.remove('on');});
   document.querySelectorAll('.pills .pill:first-child').forEach(p=>p.classList.add('on'));
   document.querySelectorAll('input[type="hidden"][id$="-method"]').forEach(el=>el.value='cash');
-  // reset currency
   document.querySelectorAll('select[id$="-currency"]').forEach(el=>{el.value='ILS';});
   document.querySelectorAll('[id$="-ils-row"]').forEach(el=>el.style.display='none');
 }
 
 window.openRec=function(fund='food'){
-  if(!can.write()){toast('ليس لديك صلاحية الإضافة','err');return;}
+  if(!can.write()){toast(window.LANG==='en'?'No permission to add':'ليس لديك صلاحية الإضافة','err');return;}
   fillMemberDropdowns();
   window.openM('rec');
   const funSel=document.getElementById('rec-fund');
@@ -775,7 +758,7 @@ window.openRec=function(fund='food'){
   document.getElementById('rec-date').value=today();
 };
 window.openPay=function(fund='food'){
-  if(!can.write()){toast('ليس لديك صلاحية الإضافة','err');return;}
+  if(!can.write()){toast(window.LANG==='en'?'No permission to add':'ليس لديك صلاحية الإضافة','err');return;}
   fillMemberDropdowns();
   window.openM('pay');
   const funSel=document.getElementById('pay-fund');
@@ -823,7 +806,6 @@ window.onPayFundChange=function(){
   const benTypeSel=document.getElementById('pay-beneficiary-type');
   if(fund==='food'){
     expSel.innerHTML='<option value="food_expense">مصاريف إطعام عزاء</option>';
-    // مصاريف الغداء — إدخال يدوي فقط دائماً
     if(benTypeSel){
       benTypeSel.innerHTML='<option value="manual">إدخال يدوي</option>';
       benTypeSel.value='manual';
@@ -857,8 +839,6 @@ window.onPayBenChange=function(){
   document.getElementById('pay-member-wrap').style.display=t==='member'?'':'none';
   document.getElementById('pay-manual-wrap').style.display=t==='manual'?'':'none';
 };
-// setPill moved above
-
 
 /* ═══ CHEQUE FIELDS ═══ */
 window.onMethodChange=function(prefix){
@@ -908,20 +888,17 @@ window.saveRec=async function(print=false){
   const donDisplay=document.getElementById('rec-don-display')?.value||null;
   const saveContact=document.getElementById('rec-save-contact')?.checked||false;
 
-  // validation
   const v1=fund==='food'||fund==='donation'?vf('rec-member',v=>!!v,'e-rec-member'):
     payerType==='manual'?vf('rec-payer-name',v=>v.trim().length>0,'e-rec-member'):true;
   const v2=vf('rec-amount',v=>parseFloat(v)>0,'e-rec-amount');
   const v3=vf('rec-date',v=>!!v,'e-rec-date');
   if(!v1||!v2||!v3)return;
 
-  // اسم الدافع
   let payerName='';
   if(payerType==='member') payerName=gmn(memberId);
   else if(payerType==='contact') payerName=DB.contacts.find(c=>c.id===contactId)?.name||'';
   else payerName=payerNameInput;
 
-  // حفظ جهة اتصال جديدة
   let finalContactId=contactId;
   if(payerType==='manual'&&saveContact&&payerName){
     const{data:nc}=await SB.from('contacts').insert({name:payerName}).select().single();
@@ -1016,6 +993,7 @@ window.editRec=function(id){
   window.openM('edit-rec');
 };
 window.updateRec=async function(){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-rec-id').value;
   const amount=parseFloat(document.getElementById('edit-rec-amount').value)||0;
   const notes=document.getElementById('edit-rec-notes').value;
@@ -1026,7 +1004,7 @@ window.updateRec=async function(){
   window.closeM();await loadAll();toast('✓ تم التعديل','ok');
 };
 window.deleteRec=async function(){
-  if(!can.admin())return;
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-rec-id').value;
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('receipts').update({is_deleted:true}).eq('id',id);
@@ -1042,6 +1020,7 @@ window.editPay=function(id){
   window.openM('edit-pay');
 };
 window.updatePay=async function(){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
   const amount=parseFloat(document.getElementById('edit-pay-amount').value)||0;
   const notes=document.getElementById('edit-pay-notes').value;
@@ -1052,7 +1031,7 @@ window.updatePay=async function(){
   window.closeM();await loadAll();toast('✓ تم التعديل','ok');
 };
 window.deletePay=async function(){
-  if(!can.admin())return;
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('payments').update({is_deleted:true}).eq('id',id);
@@ -1070,6 +1049,7 @@ window.editMember=function(id){
   window.openM('edit-member');
 };
 window.updateMember=async function(){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-mem-id').value;
   const name=document.getElementById('edit-mem-name').value.trim();
   if(!name){toast('الاسم مطلوب','warn');return;}
@@ -1082,7 +1062,7 @@ window.updateMember=async function(){
   window.closeM();await loadAll();toast('✓ تم التعديل','ok');
 };
 window.deleteMember=async function(){
-  if(!can.admin())return;
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-mem-id').value;
   const m=gm(id);
   if(!confirm(`حذف العضو ${m?.name}؟ لا يمكن التراجع.`))return;
@@ -1121,34 +1101,42 @@ function renderAnnual(){
     </div>`).join('');
 }
 
-/* ═══ USERS ═══ */
+/* ═══ USERS (admin only) ═══ */
 async function loadUsers(){
   if(!can.admin())return;
   const{data}=await SB.from('user_roles').select('*').order('created_at');
   const list=document.getElementById('users-list');if(!list)return;
   if(!data?.length){list.innerHTML='<div class="empty"><div class="empty-t">لا يوجد مستخدمون</div></div>';return;}
-  const BG={admin:'linear-gradient(135deg,#6D28D9,#4F46E5)',accountant:'linear-gradient(135deg,#059669,#0D9488)',viewer:'linear-gradient(135deg,#1B6CA8,#0284C7)'};
+  const BG={admin:'linear-gradient(135deg,#6D28D9,#4F46E5)',viewer:'linear-gradient(135deg,#1B6CA8,#0284C7)'};
   list.innerHTML=data.map(u=>`
     <div style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;background:var(--bg2)">
       <div style="width:36px;height:36px;border-radius:50%;background:${BG[u.role]||'#475569'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${(u.full_name||'م').charAt(0).toUpperCase()}</div>
       <div style="flex:1"><div style="font-weight:500;font-size:13px">${esc(u.full_name||'—')}</div><div style="font-size:10px;color:var(--tx3)">${u.user_id}</div></div>
-      <span class="role-tag ${u.role}">${ROLES[u.role]}</span>
-      ${u.user_id!==CU?.id?`<select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)"><option value="viewer" ${u.role==='viewer'?'selected':''}>عارض</option><option value="accountant" ${u.role==='accountant'?'selected':''}>محاسب</option><option value="admin" ${u.role==='admin'?'selected':''}>مدير</option></select>`:'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
+      <span class="role-tag ${u.role}">${ROLES[u.role]||u.role}</span>
+      ${u.user_id!==CU?.id?`<select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)">
+        <option value="viewer" ${u.role==='viewer'?'selected':''}>عارض</option>
+        <option value="admin" ${u.role==='admin'?'selected':''}>مدير</option>
+      </select>`:'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
     </div>`).join('');
 }
 window.changeRole=async(uid,role)=>{
-  await SB.from('user_roles').update({role}).eq('user_id',uid);
-  toast(`تم تغيير الدور إلى ${ROLES[role]}`,'ok');loadUsers();
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  /* Enforce valid roles only */
+  const safeRole=(role==='admin')?'admin':'viewer';
+  await SB.from('user_roles').update({role:safeRole}).eq('user_id',uid);
+  toast(`تم تغيير الدور إلى ${ROLES[safeRole]}`,'ok');loadUsers();
 };
 window.inviteUser=async()=>{
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const email=document.getElementById('inv-email').value.trim();
   const pass=document.getElementById('inv-pass').value;
-  const role=document.getElementById('inv-role').value;
+  const roleRaw=document.getElementById('inv-role').value;
+  const safeRole=(roleRaw==='admin')?'admin':'viewer';
   const name=document.getElementById('inv-name').value.trim();
   if(!email||!pass){toast(window.t('errors.required'),'warn');return;}
   const{data,error}=await SB.auth.signUp({email,password:pass});
   if(error){toast('خطأ: '+error.message,'err');return;}
-  await SB.from('user_roles').upsert({user_id:data.user.id,role,full_name:name||email});
+  await SB.from('user_roles').upsert({user_id:data.user.id,role:safeRole,full_name:name||email});
   window.closeM();toast(`تم إنشاء حساب ${email}`,'ok');loadUsers();
 };
 
@@ -1253,6 +1241,8 @@ function buildPayVoucher(p,label){
     +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
     +'</div>';
 }
+
+/* ── Print functions: all guarded by can.print() ── */
 window.prtRec=function(id){
   if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
   const r=DB.receipts.find(x=>x.id===id);if(!r)return;
@@ -1292,7 +1282,6 @@ window.prtMemberStmt=function(){
   const member=gm(mid);if(!member)return;
   const from=document.getElementById('ms-from')?.value||'';
   const to=document.getElementById('ms-to')?.value||'';
-  // build rows
   const rows=[];
   const openBal=Number(member.opening_balance||0);
   if(openBal!==0) rows.push({date:'—',no:'—',desc:'رصيد افتتاحي',cr:openBal>0?openBal:0,dr:openBal<0?Math.abs(openBal):0});
@@ -1308,8 +1297,7 @@ window.prtMemberStmt=function(){
   openPrintWin(css,body);
 };
 
-
-/* ═══ PDF & EXCEL EXPORT ═══ */
+/* ═══ PDF & EXPORT ═══ */
 window.exportPDF=function(type){
   if(!can.print()){toast(window.t?window.t('errors.no_print'):'لا توجد صلاحية','err');return;}
   if(type==='food-stmt')  window.prtStmt('food');
@@ -1319,7 +1307,7 @@ window.exportPDF=function(type){
 };
 
 window.prtDonStmt=function(){
-  if(!can.print())return;
+  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
   const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
   const tot=rows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   const rowsHTML=rows.map(r=>`<tr>
@@ -1347,13 +1335,15 @@ window.prtDonStmt=function(){
   openPrintWin(css,body);
 };
 
-/* ═══ EXPORT ═══ */
+/* ═══ EXPORT CSV / BACKUP ═══ */
 window.doBackup=function(){
+  if(!can.export()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية التصدير','err');return;}
   const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='diwan_backup_'+today()+'.json';a.click();
   toast(window.t('messages.exported'),'ok');
 };
 window.exportCSV=function(type){
+  if(!can.export()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية التصدير','err');return;}
   let h,rows;
   if(type==='food-stmt'){
     const from=document.getElementById('food-stmt-from')?.value||'';
@@ -1405,8 +1395,6 @@ function startClock(){
   if(el)setInterval(()=>{el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});},1000);
 }
 
-
-
 /* ═══ ENTER KEY NAVIGATION ═══ */
 function setupEnterNav(formId){
   const form=document.getElementById(formId);
@@ -1426,7 +1414,6 @@ function setupAllForms(){
   ['m-rec','m-pay','m-member','m-edit-rec','m-edit-pay','m-edit-member','m-invite','m-change-pass'].forEach(setupEnterNav);
 }
 
-
 /* ═══ FORGOT PASSWORD ═══ */
 window.forgotPassword=function(){
   const msg=document.getElementById('forgot-msg');
@@ -1435,7 +1422,6 @@ window.forgotPassword=function(){
     setTimeout(()=>msg.style.display='none',8000);
   }
 };
-
 
 /* ── LOGIN PAGE TRANSLATION ── */
 function applyLoginLang(){
@@ -1464,34 +1450,22 @@ function applyLoginLang(){
 window.changePassword = async function(){
   const newPass = document.getElementById('new-pass').value;
   const confirmPass = document.getElementById('confirm-pass').value;
-
-  // validation
   const v1 = vf('new-pass', v => v.length >= 6, 'e-new-pass');
   const v2 = vf('confirm-pass', v => v === newPass, 'e-confirm-pass');
   if(!v1 || !v2) return;
-
   const btn = document.querySelector('#m-change-pass .btn.primary');
   btn.disabled = true;
   btn.innerHTML = '<div class="spin"></div>';
-
   const { error } = await SB.auth.updateUser({ password: newPass });
-
   btn.disabled = false;
   btn.innerHTML = '<i class="ti ti-lock-check"></i>حفظ كلمة المرور';
-
-  if(error){
-    toast('خطأ: ' + error.message, 'err');
-    return;
-  }
-
+  if(error){toast('خطأ: ' + error.message, 'err');return;}
   await logAction('edit', 'تغيير كلمة المرور', 'auth', null);
   window.closeM();
-  // مسح الحقول
   document.getElementById('new-pass').value = '';
   document.getElementById('confirm-pass').value = '';
   toast('✓ تم تغيير كلمة المرور بنجاح', 'ok');
 };
-
 
 /* ═══ MOBILE NAVIGATION ═══ */
 function isMobile(){ return window.innerWidth <= 768; }
@@ -1530,7 +1504,6 @@ window.closeMobileMenu = function(){
   if(btn) btn.classList.remove('on');
 };
 
-// إغلاق القائمة عند النقر خارجها
 document.addEventListener('click', function(e){
   const menu = document.getElementById('mobile-menu');
   const btn = document.getElementById('mnb-more');
@@ -1541,7 +1514,6 @@ document.addEventListener('click', function(e){
 
 window.addEventListener('resize', initMobile);
 
-
 /* ═══ SETTINGS & OPENING BALANCES ═══ */
 async function loadSettings(){
   try{
@@ -1549,60 +1521,44 @@ async function loadSettings(){
     if(!data) return;
     const map={};
     data.forEach(s=>map[s.key]=s.value);
-
-    // تعبئة حقول الإعدادات
     const foodEl=document.getElementById('set-food-opening');
     const diwanEl=document.getElementById('set-diwan-opening');
     const usdEl=document.getElementById('set-usd-rate');
     const jodEl=document.getElementById('set-jod-rate');
-
     if(foodEl)  foodEl.value  = map['food_opening_balance']  || '0';
     if(diwanEl) diwanEl.value = map['diwan_opening_balance'] || '0';
     if(usdEl)   usdEl.value   = map['usd_rate']  || '3.70';
     if(jodEl)   jodEl.value   = map['jod_rate']  || '5.00';
-
-    // تحديث أسعار الصرف الاحتياطية
     if(map['usd_rate'])  RATES.USD = parseFloat(map['usd_rate']);
     if(map['jod_rate'])  RATES.JOD = parseFloat(map['jod_rate']);
-
-    // تخزين الأرصدة الافتتاحية
     window.FOOD_OPENING  = parseFloat(map['food_opening_balance']  || '0');
     window.DIWAN_OPENING = parseFloat(map['diwan_opening_balance'] || '0');
   }catch(e){ console.error('loadSettings error',e); }
 }
 
 window.saveSettings = async function(){
-  if(!can.admin()){toast('المدير فقط يمكنه تعديل الإعدادات','err');return;}
-
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط يمكنه تعديل الإعدادات','err');return;}
   const foodOpening  = parseFloat(document.getElementById('set-food-opening')?.value)  || 0;
   const diwanOpening = parseFloat(document.getElementById('set-diwan-opening')?.value) || 0;
   const usdRate      = parseFloat(document.getElementById('set-usd-rate')?.value)      || 3.70;
   const jodRate      = parseFloat(document.getElementById('set-jod-rate')?.value)      || 5.00;
-
   const updates = [
     {key:'food_opening_balance',  value: String(foodOpening)},
     {key:'diwan_opening_balance', value: String(diwanOpening)},
     {key:'usd_rate',  value: String(usdRate)},
     {key:'jod_rate',  value: String(jodRate)},
   ];
-
   for(const u of updates){
     await SB.from('settings').upsert({key:u.key, value:u.value, updated_at:new Date().toISOString()});
   }
-
-  // تحديث القيم محلياً
   window.FOOD_OPENING  = foodOpening;
   window.DIWAN_OPENING = diwanOpening;
   RATES.USD = usdRate;
   RATES.JOD = jodRate;
-
   await logAction('edit',`تحديث الإعدادات — رصيد الغداء: ₪${fmt(foodOpening)} | رصيد الديوان: ₪${fmt(diwanOpening)}`,'settings',null);
-
-  // تحديث الملخص
   renderSettingsSummary();
   updateRateDisplay();
   renderDash();
-
   toast('✓ تم حفظ الإعدادات','ok');
 };
 
@@ -1610,12 +1566,9 @@ function renderSettingsSummary(){
   const summaryCard = document.getElementById('settings-summary');
   const summaryEl   = document.getElementById('settings-bal-summary');
   if(!summaryCard||!summaryEl) return;
-
   summaryCard.style.display = '';
-
   const foodTotal  = (window.FOOD_OPENING||0)  + FIN.foodBalance();
   const diwanTotal = (window.DIWAN_OPENING||0) + FIN.diwanBalance();
-
   summaryEl.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
       <div class="kpi food" style="padding:14px">
@@ -1632,21 +1585,16 @@ function renderSettingsSummary(){
   `;
 }
 
-
 /* ═══ DATA PROTECTION ═══ */
 function applyDataProtection(){
   const role=CUR?.role||'viewer';
   if(role==='viewer'){
-    // تعطيل كليك يمين
     document.addEventListener('contextmenu',e=>e.preventDefault());
-    // تعطيل النسخ والقص
     document.addEventListener('copy',e=>{e.preventDefault();toast(window.t?window.t('errors.no_permission'):'غير مسموح بالنسخ','warn');});
     document.addEventListener('cut',e=>e.preventDefault());
-    // تعطيل تحديد النص
     document.addEventListener('selectstart',e=>{
       if(!['INPUT','TEXTAREA'].includes(e.target.tagName)) e.preventDefault();
     });
-    // إضافة watermark
     addWatermark();
   }
 }
@@ -1662,7 +1610,6 @@ function addWatermark(){
 }
 
 /* ═══ INIT ═══ */
-// تأكد من أن صفحة الدخول دائماً فاتحة
 (function(){
   const ls=document.getElementById('login-screen');
   if(ls) ls.setAttribute('data-force-light','1');
@@ -1678,7 +1625,6 @@ async function init(){
   await checkSession();
 }
 
-// إغلاق الفورم بـ ESC
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'&&document.getElementById('ov')?.classList.contains('on')){
     window.closeM();
