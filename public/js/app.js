@@ -121,27 +121,29 @@ const gmn=id=>gm(id)?.name||'—';
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nextNo=(prefix,arr)=>prefix+'-'+String(arr.filter(x=>x.no?.startsWith(prefix)).length+1).padStart(5,'0');
 
-/* ═══ EXCHANGE RATES ═══ */
+/* ═══ EXCHANGE RATES — كلاهما من بنك إسرائيل مباشرة ═══ */
 async function fetchRates(){
-  try{
-    const r=await fetch('https://data.gov.il/api/3/action/datastore_search?resource_id=88adaee8-624c-4b3b-b0d7-07c39034fa0a&limit=1&sort=_id desc');
+  const BOI='https://data.gov.il/api/3/action/datastore_search';
+  const RES='88adaee8-624c-4b3b-b0d7-07c39034fa0a';
+  async function fetchCurrency(code){
+    const url=BOI+'?resource_id='+RES+'&filters=%7B%22CURRENCYCODE%22%3A%22'+code+'%22%7D&limit=1&sort=_id+desc';
+    const r=await fetch(url);
     const j=await r.json();
     const rec=j?.result?.records?.[0];
-    if(rec) RATES.USD=parseFloat(rec.EXCHANGERATE);
-  }catch(e){}
-  try{
-    const r2=await fetch('https://api.exchangerate-api.com/v4/latest/JOD');
-    const j2=await r2.json();
-    if(j2?.rates?.ILS) RATES.JOD=j2.rates.ILS;
-  }catch(e){
-    const{data}=await SB.from('settings').select('value').eq('key','jod_rate').single();
-    if(data) RATES.JOD=parseFloat(data.value)||5.0;
+    return rec?parseFloat(rec.EXCHANGERATE):null;
+  }
+  try{const usd=await fetchCurrency('USD');if(usd&&usd>0)RATES.USD=usd;}
+  catch(e){console.warn('BOI USD fetch failed',e);}
+  try{const jod=await fetchCurrency('JOD');if(jod&&jod>0)RATES.JOD=jod;}
+  catch(e){
+    try{const{data}=await SB.from('settings').select('value').eq('key','jod_rate').single();if(data)RATES.JOD=parseFloat(data.value)||5.0;}
+    catch(e2){}
   }
   updateRateDisplay();
 }
 function updateRateDisplay(){
   const el=document.getElementById('rate-txt');
-  if(el) el.textContent=`$${RATES.USD.toFixed(2)} | د.أ${RATES.JOD.toFixed(2)}`;
+  if(el) el.textContent='$'+RATES.USD.toFixed(2)+' | JOD '+RATES.JOD.toFixed(2);
 }
 window.calcILS=function(prefix){
   const cur=document.getElementById(prefix+'-currency')?.value||'ILS';
@@ -214,6 +216,12 @@ window.gp=(k,p)=>{PS[k]=p;D[k]?.render();};
 
 /* ═══ NAVIGATION ═══ */
 window.nav=function(p){
+  /* Block viewer from accessing restricted pages — even via DevTools console */
+  const ADMIN_PAGES=['audit','bk','users','settings','annual'];
+  if(ADMIN_PAGES.includes(p)&&!can.admin()){
+    toast(window.LANG==='ar'?'ليس لديك صلاحية الوصول لهذه الصفحة':'Access denied','err');
+    return;
+  }
   document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p)?.classList.add('on');
@@ -278,6 +286,7 @@ async function afterLogin(){
   document.getElementById('uname').textContent=CUR.full_name||CU.email;
   document.getElementById('urole').textContent=ROLES[CUR.role]||CUR.role;
   applyPerms();
+  applyTopbarStyles();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   const savedTheme=localStorage.getItem('diwan_theme')||'light';
@@ -356,16 +365,29 @@ function applyPerms(){
   });
 
   /* ── Admin-only nav items (desktop + mobile) ── */
-  ['nb-users','nb-settings'].forEach(id=>{
+  /* Users, Settings, Annual Dues, Audit Log, Backup — admin only */
+  ['nb-users','nb-settings','nb-audit','nb-bk'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display=a?'':'none';
   });
-  ['mnb-users-mob','mnb-settings'].forEach(id=>{
+  ['mnb-users-mob','mnb-settings','mnb-audit','mnb-bk'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display=a?'':'none';
+  });
+  /* Also hide by data-p selectors for any nav buttons using those pages */
+  ['audit','bk'].forEach(p=>{
+    document.querySelectorAll(`.nb[data-p="${p}"],.mnb[data-p="${p}"]`).forEach(el=>el.style.display=a?'':'none');
   });
 
   /* ── Annual dues nav (admin only) ── */
   const na=document.querySelector('.nb[data-p="annual"]');if(na)na.style.display=a?'':'none';
   const naMob=document.getElementById('mnb-annual');if(naMob)naMob.style.display=a?'':'none';
+
+  /* ── If viewer is currently on a restricted page, redirect to dash ── */
+  if(!a){
+    const curPage=document.querySelector('.pg.on')?.id?.replace('pg-','');
+    if(['audit','bk','users','settings','annual'].includes(curPage)){
+      window.nav('dash');
+    }
+  }
 
   /* ── Sweep every static print/export/import element in the DOM ── */
   _sweepRestrictedElements(a);
@@ -1468,7 +1490,19 @@ window.exportCSV=function(type){
 /* ═══ CLOCK ═══ */
 function startClock(){
   const el=document.getElementById('clock');
-  if(el)setInterval(()=>{el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});},1000);
+  if(!el) return;
+  /* Always English digits regardless of UI language; slightly larger */
+  el.style.fontSize='14px';
+  el.style.fontWeight='600';
+  el.style.letterSpacing='0.5px';
+  const tick=()=>{
+    const now=new Date();
+    const hh=String(now.getHours()).padStart(2,'0');
+    const mm=String(now.getMinutes()).padStart(2,'0');
+    el.textContent=hh+':'+mm;
+  };
+  tick();
+  setInterval(tick,1000);
 }
 
 /* ═══ ENTER KEY NAVIGATION ═══ */
@@ -1498,6 +1532,61 @@ window.forgotPassword=function(){
     setTimeout(()=>msg.style.display='none',8000);
   }
 };
+
+/* ═══ TOPBAR STYLE FIXES ═══
+ * - System title: white/green color to match dark navbar background
+ * - Email cell: wider to fit full email without truncation
+ * - Clock: always English digits, larger font
+ * - Rate display: always English digits
+ * ═══════════════════════════════════════════════════════════ */
+function applyTopbarStyles(){
+  /* ── System title color ── */
+  const titleEl=document.getElementById('app-title')||document.querySelector('.app-title,.sys-title,.brand-title,[id*="title"],[class*="brand"]');
+  if(titleEl){
+    titleEl.style.color='#ffffff';
+    titleEl.style.textShadow='0 0 8px rgba(0,200,150,0.4)';
+  }
+  /* Fallback: target any element whose text contains the app name */
+  document.querySelectorAll('.navbar *,.topbar *,.header *,.top-bar *').forEach(el=>{
+    if(el.children.length===0 && el.textContent.includes('نظام الإدارة المالية')){
+      el.style.color='#00C896';
+      el.style.fontWeight='600';
+    }
+  });
+
+  /* ── Email/name cell: wider + no truncation ── */
+  const unameEl=document.getElementById('uname');
+  if(unameEl){
+    unameEl.style.maxWidth='none';
+    unameEl.style.overflow='visible';
+    unameEl.style.whiteSpace='nowrap';
+    unameEl.style.minWidth='180px';
+    /* Parent cell */
+    const parent=unameEl.closest('.user-info,.uinfo,[class*="user"]');
+    if(parent){
+      parent.style.minWidth='200px';
+      parent.style.maxWidth='300px';
+      parent.style.overflow='visible';
+    }
+  }
+
+  /* ── Clock: always English, bigger ── */
+  const clockEl=document.getElementById('clock');
+  if(clockEl){
+    clockEl.style.fontSize='14px';
+    clockEl.style.fontWeight='600';
+    clockEl.style.letterSpacing='0.5px';
+    clockEl.style.fontVariantNumeric='tabular-nums';
+    clockEl.style.fontFamily='monospace, sans-serif';
+  }
+
+  /* ── Rate display: enforce en-US numerals ── */
+  const rateEl=document.getElementById('rate-txt');
+  if(rateEl){
+    rateEl.style.fontFamily='monospace, sans-serif';
+    rateEl.style.fontVariantNumeric='tabular-nums';
+  }
+}
 
 /* ── LOGIN PAGE TRANSLATION ── */
 function applyLoginLang(){
@@ -1671,7 +1760,7 @@ function applyDataProtection(){
     document.addEventListener('selectstart',e=>{
       if(!['INPUT','TEXTAREA'].includes(e.target.tagName)) e.preventDefault();
     });
-    addWatermark();
+    /* Watermark removed — viewer sees clean UI */
   }
 }
 function addWatermark(){
