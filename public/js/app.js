@@ -56,6 +56,7 @@ const can={
   write:()=>['admin','accountant'].includes(CUR?.role),
   admin:()=>CUR?.role==='admin',
   print:()=>['admin','accountant'].includes(CUR?.role),
+  export:()=>CUR?.role==='admin'
 };
 
 /* ═══ FINANCIAL ENGINE ═══ */
