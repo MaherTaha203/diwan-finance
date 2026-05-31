@@ -312,6 +312,43 @@ window.logout=async function(){
 function applyPerms(){
   const w=can.write(),a=can.admin();
 
+  /* ══════════════════════════════════════════════════
+   * VIEWER LOCKDOWN — inject a global CSS rule that
+   * hides every print / export / import element whose
+   * id or class contains a known keyword.
+   * This runs before any dynamic render so no button
+   * can flash visible even for a frame.
+   * ══════════════════════════════════════════════════ */
+  if(!a){
+    if(!document.getElementById('__viewer-style')){
+      const s=document.createElement('style');
+      s.id='__viewer-style';
+      /* Hide by id-fragment, class-fragment, or data-attribute */
+      s.textContent=`
+        /* Print buttons */
+        [id*="btn-prt"],[id*="prt-btn"],[id*="print"],
+        [class*="btn-print"],[class*="print-btn"],
+        button[onclick*="prt"],[data-requires-print],
+        /* Export / CSV / PDF / Excel / Backup buttons */
+        [id*="export"],[id*="csv"],[id*="excel"],[id*="backup"],
+        [id*="download"],[id*="pdf-btn"],
+        [class*="btn-export"],[class*="export-btn"],
+        button[onclick*="export"],[data-requires-export],
+        button[onclick*="exportCSV"],button[onclick*="exportPDF"],
+        button[onclick*="doBackup"],
+        /* Import buttons */
+        [id*="import"],[class*="btn-import"],
+        button[onclick*="import"] {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(s);
+    }
+  } else {
+    /* Remove restriction style if admin is logged in */
+    document.getElementById('__viewer-style')?.remove();
+  }
+
   /* ── Write-gated buttons (desktop) ── */
   ['btn-food-rec','btn-diwan-rec','btn-don','btn-food-pay','btn-diwan-pay','btn-add-member',
    'dash-btn-rec','dash-btn-pay'].forEach(id=>{
@@ -330,9 +367,46 @@ function applyPerms(){
   const na=document.querySelector('.nb[data-p="annual"]');if(na)na.style.display=a?'':'none';
   const naMob=document.getElementById('mnb-annual');if(naMob)naMob.style.display=a?'':'none';
 
-  /* ── Export / print buttons (admin only) ── */
-  document.querySelectorAll('[data-requires-export]').forEach(el=>el.style.display=a?'':'none');
-  document.querySelectorAll('[data-requires-print]').forEach(el=>el.style.display=a?'':'none');
+  /* ── Sweep every static print/export/import element in the DOM ── */
+  _sweepRestrictedElements(a);
+}
+
+/**
+ * DOM sweep — called once at login and re-called after every renderAll()
+ * so that dynamically injected elements are also caught.
+ * For viewer: force display:none on anything print/export/import related.
+ */
+function _sweepRestrictedElements(isAdmin){
+  /* Selector list covers static HTML buttons added by the author */
+  const SELECTORS=[
+    /* data-attribute guards (used on dynamically rendered buttons) */
+    '[data-requires-print]',
+    '[data-requires-export]',
+    '[data-requires-import]',
+    /* onclick-based selectors for buttons already in static HTML */
+    'button[onclick*="prtRec"]',
+    'button[onclick*="prtPay"]',
+    'button[onclick*="prtStmt"]',
+    'button[onclick*="prtMember"]',
+    'button[onclick*="prtDon"]',
+    'button[onclick*="exportPDF"]',
+    'button[onclick*="exportCSV"]',
+    'button[onclick*="doBackup"]',
+    /* id-based selectors for any static export/print/import buttons */
+    '#btn-export-food-rec','#btn-export-food-pay',
+    '#btn-export-diwan-rec','#btn-export-diwan-pay',
+    '#btn-export-don','#btn-export-members',
+    '#btn-export-audit','#btn-export-stmt',
+    '#btn-backup','#btn-import',
+    '[id^="btn-print"]','[id^="btn-prt"]',
+    '[id^="btn-export"]','[id^="btn-csv"]',
+    '[id^="btn-pdf"]','[id^="btn-excel"]',
+    '[id^="btn-download"]','[id^="btn-import"]',
+  ].join(',');
+
+  document.querySelectorAll(SELECTORS).forEach(el=>{
+    el.style.display=isAdmin?'':'none';
+  });
 }
 
 async function checkSession(){
@@ -364,6 +438,8 @@ function renderAll(){
   if(active&&D[active]) D[active].render();
   if(active==='settings'){loadSettings().then(renderSettingsSummary);}
   fillMemberSelect();fillMemberDropdowns();fillContactDropdown();
+  /* Re-sweep after every render so dynamically injected buttons are hidden for viewers */
+  _sweepRestrictedElements(can.admin());
 }
 
 /* ═══ TABLE RENDERERS ═══ */
@@ -1632,3 +1708,45 @@ document.addEventListener('keydown',function(e){
 });
 
 init();
+
+/* ═══════════════════════════════════════════════════════════════
+ * SECURITY SEAL — Wrap all restricted functions so that even a
+ * viewer who calls them from the browser DevTools console gets
+ * blocked with a toast and no action is taken.
+ * Runs after init() so the functions are already defined.
+ * ═══════════════════════════════════════════════════════════════ */
+(function sealRestrictedFunctions(){
+  const PRINT_FNS =['prtRec','prtPay','prtStmt','prtMemberStmt','prtDonStmt','exportPDF'];
+  const EXPORT_FNS=['exportCSV','doBackup'];
+  const WRITE_FNS =['saveRec','savePay','saveMember','updateRec','updatePay',
+                    'deleteRec','deletePay','updateMember','deleteMember',
+                    'applyAnnualDue','saveSettings','inviteUser','changeRole'];
+
+  function seal(name, checkFn, labelAr, labelEn){
+    const orig = window[name];
+    if(typeof orig !== 'function') return;
+    window[name] = function(...args){
+      if(!checkFn()){
+        toast(window.LANG==='ar'? labelAr : labelEn, 'err');
+        console.warn('[SECURITY] Blocked call to '+name+' — insufficient role.');
+        return;
+      }
+      return orig.apply(this, args);
+    };
+  }
+
+  PRINT_FNS.forEach(fn => seal(fn,
+    can.print,
+    'ليس لديك صلاحية الطباعة',
+    'No print permission'));
+
+  EXPORT_FNS.forEach(fn => seal(fn,
+    can.export,
+    'ليس لديك صلاحية التصدير',
+    'No export permission'));
+
+  WRITE_FNS.forEach(fn => seal(fn,
+    can.write,
+    'ليس لديك صلاحية',
+    'No permission'));
+})();
