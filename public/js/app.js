@@ -53,10 +53,9 @@ const L = {
 
 /* ═══ PERMISSIONS ═══ */
 const can={
-  write:()=>CUR?.role==='admin',
+  write:()=>['admin','accountant'].includes(CUR?.role),
   admin:()=>CUR?.role==='admin',
-  print:()=>CUR?.role==='admin',
-  export:()=>CUR?.role==='admin'
+  print:()=>['admin','accountant'].includes(CUR?.role),
 };
 
 /* ═══ FINANCIAL ENGINE ═══ */
