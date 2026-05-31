@@ -395,6 +395,7 @@ const D={
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.notes||'—')}</td>
       <td class="tda">
+      ${can.print() ?
         <button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')" title="طباعة"><i class="ti ti-printer"></i></button>
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
