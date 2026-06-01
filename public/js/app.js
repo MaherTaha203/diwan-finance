@@ -1312,6 +1312,11 @@ function buildRecVoucher(r,label){
 +'</div>'
 +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
 +'<div style="position:absolute;left:12mm;bottom:18mm;text-align:center">'
++'<div id="qr-pay-'+p.no+'" style="width:60px;height:60px;"></div>'
++'<div style="font-size:6pt;color:#64748b;margin-top:2px;max-width:60px;word-break:break-all;line-height:1.2">diwan-finance.com/verify/'+p.no+'</div>'
++'</div>'
++'</div>';
++'<div style="position:absolute;left:12mm;bottom:18mm;text-align:center">'
 +'<div id="qr-rec-'+r.no+'" style="width:60px;height:60px;"></div>'
 +'<div style="font-size:6pt;color:#64748b;margin-top:2px;max-width:60px;word-break:break-all;line-height:1.2">diwan-finance.com/verify/'+r.no+'</div>'
 +'</div>'
