@@ -1021,6 +1021,7 @@ window.saveRec=async function(print=false){
   window.closeM();
   await loadAll();
   toast(`✓ تم حفظ ${no}`,'ok');
+  await SB.from('vouchers').upsert({id:no,type:fund==='food'?'Receipt Voucher — Food Fund':fund==='diwan'?'Receipt Voucher — Diwan Fund':'Donation Voucher',fund:fund==='food'?'Food Fund':fund==='diwan'?'Diwan Fund':'Food Fund',date:fmtDate2(date),amount:fmtD(amountILS)+' ILS',description:notes||'Receipt Voucher',prepared_by:CUR?.full_name||CU?.email});
   if(print) setTimeout(()=>window.prtRec(data.id),300);
 };
 
