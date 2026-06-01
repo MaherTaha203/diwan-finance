@@ -1064,6 +1064,7 @@ window.savePay=async function(print=false){
   window.closeM();
   await loadAll();
   toast(`✓ تم حفظ ${no}`,'ok');
+  await SB.from('vouchers').upsert({id:no,type:fund==='food'?'Payment Voucher — Food Fund':'Payment Voucher — Diwan Fund',fund:fund==='food'?'Food Fund':'Diwan Fund',date:fmtDate2(date),amount:fmtD(amountILS)+' ILS',description:notes||L.expense(expense),prepared_by:CUR?.full_name||CU?.email});
   if(print) setTimeout(()=>window.prtPay(data.id),300);
 };
 
