@@ -32,10 +32,11 @@ console.log('DOC ID:', docId);
   const { data, error } = await supabase
 .from('receipts')
 .select('*')
-.eq('no', docId)
+.ilike('no', docId)
 .eq('is_deleted', false)
 .maybeSingle();
-
+console.log('QUERY RESULT:', data);
+console.log('QUERY ERROR:', error);
 if (error) {
 return res.status(500).json({
 valid: false,
