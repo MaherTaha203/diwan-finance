@@ -21,3 +21,16 @@
     }
   ]
 }
+
+{
+  "rewrites": [
+    {
+      "source": "/verify/:id",
+      "destination": "/verify.html"
+    },
+    {
+      "source": "/api/verify",
+      "destination": "/api/verify.js"
+    }
+  ]
+}
