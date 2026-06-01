@@ -1308,9 +1308,14 @@ function buildRecVoucher(r,label){
     +'<div class="amt"><span class="al">المبلغ / Amount</span><span class="an">₪ '+fmt(r.amount_ils||r.amount)+'</span><span class="aw">'+amountToWords(r.amount_ils||r.amount)+'</span></div>'
     +'<div class="info"><span>بواسطة: '+firstName(r.created_by)+'</span><span>'+label+'</span><span>طُبع: '+pt+'</span></div>'
     +'<div class="sig"><div class="sig-line"></div><div class="sig-lbl">توقيع المستلم / Receiver Signature</div></div>'
-    +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
-    +'</div>'
-    +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
+   +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
++'</div>'
++(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
++'<div style="position:absolute;left:12mm;bottom:18mm;text-align:center">'
++'<div id="qr-rec-'+r.no+'" style="width:60px;height:60px;"></div>'
++'<div style="font-size:6pt;color:#64748b;margin-top:2px;max-width:60px;word-break:break-all;line-height:1.2">diwan-finance.com/verify/'+r.no+'</div>'
++'</div>'
++'</div>';
     +'</div>';
 }
 function buildPayVoucher(p,label){
