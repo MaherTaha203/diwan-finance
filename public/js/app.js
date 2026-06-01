@@ -1309,7 +1309,7 @@ function buildRecVoucher(r,label){
     +'<div class="sig"><div class="sig-line"></div><div class="sig-lbl">توقيع المستلم / Receiver Signature</div></div>'
     +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
     +'</div>'
-    +'<div class="qr-wrap"><div data-qr="'+esc(p.no)+'"></div><div class="qr-lbl">diwan-finance.com/verify/'+esc(r.no)+'</div></div>'
+    +'<div class="qr-wrap"><div data-qr="'+esc(r.no)+'"></div><div class="qr-lbl">diwan-finance.com/verify/'+esc(r.no)+'</div></div>'
     +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
     +'</div>';
 
