@@ -1279,7 +1279,17 @@ function amountToWords(n){
 }
 
 function openPrintWin(css,body){
-const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script><style>'+css+'</style></head><body>'+body+'<script>window.onload=function(){document.querySelectorAll("[data-qr]").forEach(function(el){var no=el.getAttribute("data-qr");new QRCode(el,{text:"https://diwan-finance.com/verify/"+no,width:64,height:64,colorDark:"#1B3A6B",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});});setTimeout(function(){window.print();},900);};<\/script></body></html>';  const win=window.open('','_blank','width=850,height=950');
+  const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
+    +'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">'
+    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>'
+    +'<style>'+css+'</style></head><body>'+body
+    +'<script>window.onload=function(){'
+    +'document.querySelectorAll("[data-qr-url]").forEach(function(el){'
+    +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#1B3A6B",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
+    +'});'
+    +'setTimeout(function(){window.print();},900);'
+    +'};<\/script></body></html>';
+  const win=window.open('','_blank','width=850,height=950');
   if(win){win.document.write(html);win.document.close();}
   else toast(window.t?window.t('errors.no_print'):'يرجى السماح بالنوافذ المنبثقة','warn');
 }
