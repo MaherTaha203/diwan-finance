@@ -27,7 +27,8 @@ module.exports = async function handler(req, res) {
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
-
+console.log('ID FROM URL:', id);
+console.log('DOC ID:', docId);
   const { data, error } = await supabase
 .from('receipts')
 .select('*')
