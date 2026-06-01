@@ -28,11 +28,40 @@ module.exports = async function handler(req, res) {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data, error } = await supabase
-      .from('vouchers')
-      .select('id, type, fund, date, amount, description, prepared_by')
-      .eq('id', docId)
-      .single();
+  const { data, error } = await supabase
+.from('receipts')
+.select('*')
+.eq('no', docId)
+.eq('is_deleted', false)
+.maybeSingle();
+
+if (error) {
+return res.status(500).json({
+valid: false,
+error: error.message,
+code: error.code
+});
+}
+
+if (!data) {
+return res.status(404).json({
+valid: false,
+error: 'Document not found'
+});
+}
+
+return res.status(200).json({
+valid: true,
+document: {
+id: data.no,
+type: 'Receipt Voucher',
+fund: data.fund_type,
+date: data.receipt_date,
+amount: data.amount_ils,
+description: data.description,
+preparedBy: data.created_by
+}
+});
 
     if (error) {
       return res.status(500).json({ 
