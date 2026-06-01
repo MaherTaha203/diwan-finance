@@ -1352,52 +1352,177 @@ function buildRecVoucher(r,label){
   const pt=fmtDate2(now.toISOString())+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
   const meth=r.payment_method||'cash';
   const methAr=METHOD_LABELS[meth]||meth;
+  const verifyUrl='https://www.diwan-finance.com/verify/'+esc(r.no);
+  const stampType='receipt';
+ 
   return '<div class="half">'
-    +'<div><div class="hdr"><div><span class="org-ar">ديوان آل طه</span><span class="org-en">Diwan Al-Taha Family</span></div><div><span class="ttl-ar">سند قبض</span><span class="ttl-en">Receipt Voucher</span></div><div><span class="no-l">Voucher No.</span><span class="no-v">'+esc(r.no)+'</span></div></div>'
-    +'<div class="strip"></div>'
-    +'<div class="meta"><div class="mi"><span class="ml">التاريخ / Date</span><span class="mv">'+fmtDate2(r.receipt_date)+'</span></div><div class="mi"><span class="ml">الدافع / Payer</span><span class="mv">'+esc(r.payer_name||gmn(r.member_id))+'</span></div></div>'
-    +'<div class="rows">'
-    +'<div class="row"><span class="rk">الصندوق / Fund</span><span class="rv"><span class="bb '+fundClass+'">'+fundLabel+'</span></span></div>'
-    +'<div class="row"><span class="rk">طريقة الدفع / Method</span><span class="rv">'+methAr+'</span></div>'
-    +(r.currency!=='ILS'?'<div class="row"><span class="rk">العملة / Currency</span><span class="rv">'+fmtD(r.amount)+' '+r.currency+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</span></div>':'')
-    +(r.notes?'<div class="row"><span class="rk">ملاحظات / Notes</span><span class="rv">'+esc(r.notes)+'</span></div>':'')
-    +'</div></div>'
     +'<div>'
-    +'<div class="amt"><span class="al">المبلغ / Amount</span><span class="an">₪ '+fmt(r.amount_ils||r.amount)+'</span><span class="aw">'+amountToWords(r.amount_ils||r.amount)+'</span></div>'
-    +'<div class="info"><span>بواسطة: '+firstName(r.created_by)+'</span><span>'+label+'</span><span>طُبع: '+pt+'</span></div>'
-    +'<div class="sig"><div class="sig-line"></div><div class="sig-lbl">توقيع المستلم / Receiver Signature</div></div>'
-    +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
+ 
+    /* ── HEADER ── */
+    +'<div class="hdr">'
+      +'<div><span class="org-ar">ديوان آل طه</span><span class="org-en">Diwan Al-Taha Family</span></div>'
+      +'<div style="text-align:center">'
+        +'<span class="ttl-ar">سند قبض</span>'
+        +'<span class="ttl-en">Receipt Voucher</span>'
+        +'<div class="verified-badge"><span style="font-size:9pt;color:#00C896">✓</span><span>معتمد إلكترونياً · Verified</span></div>'
+      +'</div>'
+      +'<div><span class="no-l">Voucher No.</span><span class="no-v">'+esc(r.no)+'</span></div>'
     +'</div>'
-    +'<div class="qr-wrap"><div data-qr="'+esc(r.no)+'"></div><div class="qr-lbl">diwan-finance.com/verify/'+esc(r.no)+'</div></div>'
+ 
+    /* ── STRIP ── */
+    +'<div class="strip"></div>'
+ 
+    /* ── META ── */
+    +'<div class="meta">'
+      +'<div class="mi"><span class="ml">DATE / التاريخ</span><span class="mv">'+fmtDate2(r.receipt_date)+'</span></div>'
+      +'<div class="mi"><span class="ml">PAYER / الدافع</span><span class="mv">'+esc(r.payer_name||gmn(r.member_id))+'</span></div>'
+    +'</div>'
+ 
+    /* ── FIELDS ── */
+    +'<div class="rows">'
+      +'<div class="row"><span class="rk">Fund / الصندوق</span><span class="rv"><span class="bb '+fundClass+'">'+fundLabel+'</span></span></div>'
+      +'<div class="row"><span class="rk">Method / طريقة الدفع</span><span class="rv">'+methAr+'</span></div>'
+      +(r.currency!=='ILS'?'<div class="row"><span class="rk">Currency / العملة</span><span class="rv">'+fmtD(r.amount)+' '+r.currency+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</span></div>':'')
+      +(r.notes?'<div class="row"><span class="rk">Notes / ملاحظات</span><span class="rv">'+esc(r.notes)+'</span></div>':'')
+    +'</div>'
+ 
+    +'</div>'
+ 
+    /* ── BOTTOM SECTION ── */
+    +'<div>'
+ 
+    /* ── AMOUNT + QR ── */
+    +'<div class="amt">'
+      +'<div class="qr-area"><div data-qr-url="'+verifyUrl+'"></div>'
+      +'<span class="qr-cap">Scan To Verify<br>امسح للتحقق</span>'
+      +'<span class="qr-url">diwan-finance.com/verify/'+esc(r.no)+'</span></div>'
+      +'<span class="al">AMOUNT / المبلغ</span>'
+      +'<span class="an">₪ '+fmt(r.amount_ils||r.amount)+'</span>'
+      +'<span class="aw-ar">'+amountToWordsAr(r.amount_ils||r.amount)+'</span>'
+      +'<span class="aw">'+amountToWords(r.amount_ils||r.amount)+'</span>'
+    +'</div>'
+ 
+    /* ── INFO BAR ── */
+    +'<div class="info">'
+      +'<span>Created By: '+firstName(r.created_by)+' · '+pt+'</span>'
+      +'<span class="'+( label==='ORIGINAL'?'badge-orig':'badge-copy')+'">'+label+'</span>'
+    +'</div>'
+ 
+    /* ── SIGNATURES + STAMP ── */
+    +'<div class="sig">'
+      +'<div class="sig-block"><div class="sig-lbl">Prepared By · أعدّه</div>'
+        +'<svg class="stamp-circle" width="70" height="70" viewBox="0 0 70 70">'
+          +'<circle cx="35" cy="35" r="33" fill="none" stroke="#1B3A6B" stroke-width="1.5"/>'
+          +'<circle cx="35" cy="35" r="26" fill="none" stroke="#1B3A6B" stroke-width="0.6" stroke-dasharray="2,2"/>'
+          +'<path id="rtop'+r.no+'" d="M12,35 a23,23 0 0,1 46,0" fill="none"/>'
+          +'<text font-size="5" font-weight="700" fill="#1B3A6B" font-family="Cairo,Arial"><textPath href="#rtop'+r.no+'" startOffset="50%" text-anchor="middle">DIWAN AL TAHA</textPath></text>'
+          +'<text x="35" y="31" text-anchor="middle" font-size="3.8" fill="#1B3A6B" font-family="Cairo,Arial" opacity="0.7">التوقيع · Signature</text>'
+          +'<line x1="20" y1="36" x2="50" y2="36" stroke="#1B3A6B" stroke-width="0.6"/>'
+          +'<path id="rbot'+r.no+'" d="M12,35 a23,23 0 0,0 46,0" fill="none"/>'
+          +'<text font-size="4.5" fill="#1B3A6B" font-family="Arial"><textPath href="#rbot'+r.no+'" startOffset="50%" text-anchor="middle">diwan-finance.com / receipt</textPath></text>'
+        +'</svg>'
+      +'</div>'
+      +'<div class="sig-block">'
+        +'<div class="sig-lbl">Receiver Signature</div>'
+        +'<div class="sig-lbl-ar">توقيع المستلم</div>'
+        +'<div class="sig-line"></div>'
+      +'</div>'
+    +'</div>'
+ 
+    /* ── FOOTER ── */
+    +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
+ 
+    +'</div>'
     +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
     +'</div>';
-
 }
 function buildPayVoucher(p,label){
   const expLabel=L.expense(p.expense_type);
   const fundLabel=p.fund_type==='food'?'صندوق الغداء':'صندوق الديوان';
   const now=new Date();
   const pt=fmtDate2(now.toISOString())+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const verifyUrl='https://www.diwan-finance.com/verify/'+esc(p.no);
+ 
   return '<div class="half">'
-    +'<div><div class="hdr"><div><span class="org-ar">ديوان آل طه</span><span class="org-en">Diwan Al-Taha Family</span></div><div><span class="ttl-ar">سند صرف</span><span class="ttl-en">Payment Voucher</span></div><div><span class="no-l">Voucher No.</span><span class="no-v">'+esc(p.no)+'</span></div></div>'
-    +'<div class="strip"></div>'
-    +'<div class="meta"><div class="mi"><span class="ml">التاريخ / Date</span><span class="mv">'+fmtDate2(p.payment_date)+'</span></div><div class="mi"><span class="ml">المستفيد / Beneficiary</span><span class="mv">'+esc(p.beneficiary_name||gmn(p.member_id))+'</span></div></div>'
-    +'<div class="rows">'
-    +'<div class="row"><span class="rk">الصندوق / Fund</span><span class="rv">'+fundLabel+'</span></div>'
-    +'<div class="row"><span class="rk">الفئة / Category</span><span class="rv">'+expLabel+'</span></div>'
-    +'<div class="row"><span class="rk">طريقة الصرف / Method</span><span class="rv">'+(L.method(p.payment_method))+'</span></div>'
-    +(p.currency!=='ILS'?'<div class="row"><span class="rk">العملة / Currency</span><span class="rv">'+fmtD(p.amount)+' '+p.currency+' × ₪'+Number(p.exchange_rate||1).toFixed(2)+'</span></div>':'')
-    +(p.notes?'<div class="row"><span class="rk">ملاحظات / Notes</span><span class="rv">'+esc(p.notes)+'</span></div>':'')
-    +(p.approved_by?'<div class="row"><span class="rk">معتمد / Approved</span><span class="rv">'+esc(p.approved_by)+'</span></div>':'')
-    +'</div></div>'
     +'<div>'
-    +'<div class="amt"><span class="al">المبلغ / Amount</span><span class="an">₪ '+fmt(p.amount_ils||p.amount)+'</span><span class="aw">'+amountToWords(p.amount_ils||p.amount)+'</span></div>'
-    +'<div class="info"><span>بواسطة: '+firstName(p.created_by)+'</span><span>'+label+'</span><span>طُبع: '+pt+'</span></div>'
-    +'<div class="sig"><div class="sig-line"></div><div class="sig-lbl">توقيع الدافع / Payer Signature</div></div>'
-    +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
+ 
+    /* ── HEADER ── */
+    +'<div class="hdr">'
+      +'<div><span class="org-ar">ديوان آل طه</span><span class="org-en">Diwan Al-Taha Family</span></div>'
+      +'<div style="text-align:center">'
+        +'<span class="ttl-ar">سند صرف</span>'
+        +'<span class="ttl-en">Payment Voucher</span>'
+        +'<div class="verified-badge"><span style="font-size:9pt;color:#FCA5A5">✓</span><span>معتمد إلكترونياً · Verified</span></div>'
+      +'</div>'
+      +'<div><span class="no-l">Voucher No.</span><span class="no-v">'+esc(p.no)+'</span></div>'
     +'</div>'
-
-    +'<div class="qr-wrap"><div data-qr="'+esc(p.no)+'"></div><div class="qr-lbl">diwan-finance.com/verify/'+esc(p.no)+'</div></div>'
+ 
+    /* ── STRIP ── */
+    +'<div class="strip"></div>'
+ 
+    /* ── META ── */
+    +'<div class="meta">'
+      +'<div class="mi"><span class="ml">DATE / التاريخ</span><span class="mv">'+fmtDate2(p.payment_date)+'</span></div>'
+      +'<div class="mi"><span class="ml">BENEFICIARY / المستفيد</span><span class="mv">'+esc(p.beneficiary_name||gmn(p.member_id))+'</span></div>'
+    +'</div>'
+ 
+    /* ── FIELDS ── */
+    +'<div class="rows">'
+      +'<div class="row"><span class="rk">Fund / الصندوق</span><span class="rv">'+fundLabel+'</span></div>'
+      +'<div class="row"><span class="rk">Category / الفئة</span><span class="rv">'+expLabel+'</span></div>'
+      +'<div class="row"><span class="rk">Method / طريقة الصرف</span><span class="rv">'+(L.method(p.payment_method))+'</span></div>'
+      +(p.currency!=='ILS'?'<div class="row"><span class="rk">Currency / العملة</span><span class="rv">'+fmtD(p.amount)+' '+p.currency+' × ₪'+Number(p.exchange_rate||1).toFixed(2)+'</span></div>':'')
+      +(p.notes?'<div class="row"><span class="rk">Notes / ملاحظات</span><span class="rv">'+esc(p.notes)+'</span></div>':'')
+      +(p.approved_by?'<div class="row"><span class="rk">Approved / معتمد</span><span class="rv">'+esc(p.approved_by)+'</span></div>':'')
+    +'</div>'
+ 
+    +'</div>'
+ 
+    /* ── BOTTOM SECTION ── */
+    +'<div>'
+ 
+    /* ── AMOUNT + QR ── */
+    +'<div class="amt">'
+      +'<div class="qr-area"><div data-qr-url="'+verifyUrl+'"></div>'
+      +'<span class="qr-cap">Scan To Verify<br>امسح للتحقق</span>'
+      +'<span class="qr-url">diwan-finance.com/verify/'+esc(p.no)+'</span></div>'
+      +'<span class="al">AMOUNT / المبلغ</span>'
+      +'<span class="an">₪ '+fmt(p.amount_ils||p.amount)+'</span>'
+      +'<span class="aw-ar">'+amountToWordsAr(p.amount_ils||p.amount)+'</span>'
+      +'<span class="aw">'+amountToWords(p.amount_ils||p.amount)+'</span>'
+    +'</div>'
+ 
+    /* ── INFO BAR ── */
+    +'<div class="info">'
+      +'<span>Created By: '+firstName(p.created_by)+' · '+pt+'</span>'
+      +'<span class="'+( label==='ORIGINAL'?'badge-orig':'badge-copy')+'">'+label+'</span>'
+    +'</div>'
+ 
+    /* ── SIGNATURES + STAMP ── */
+    +'<div class="sig">'
+      +'<div class="sig-block"><div class="sig-lbl">Prepared By · أعدّه</div>'
+        +'<svg class="stamp-circle" width="70" height="70" viewBox="0 0 70 70">'
+          +'<circle cx="35" cy="35" r="33" fill="none" stroke="#2d1b69" stroke-width="1.5"/>'
+          +'<circle cx="35" cy="35" r="26" fill="none" stroke="#2d1b69" stroke-width="0.6" stroke-dasharray="2,2"/>'
+          +'<path id="ptop'+p.no+'" d="M12,35 a23,23 0 0,1 46,0" fill="none"/>'
+          +'<text font-size="5" font-weight="700" fill="#2d1b69" font-family="Cairo,Arial"><textPath href="#ptop'+p.no+'" startOffset="50%" text-anchor="middle">DIWAN AL TAHA</textPath></text>'
+          +'<text x="35" y="31" text-anchor="middle" font-size="3.8" fill="#2d1b69" font-family="Cairo,Arial" opacity="0.7">التوقيع · Signature</text>'
+          +'<line x1="20" y1="36" x2="50" y2="36" stroke="#2d1b69" stroke-width="0.6"/>'
+          +'<path id="pbot'+p.no+'" d="M12,35 a23,23 0 0,0 46,0" fill="none"/>'
+          +'<text font-size="4.5" fill="#2d1b69" font-family="Arial"><textPath href="#pbot'+p.no+'" startOffset="50%" text-anchor="middle">diwan-finance.com / payment</textPath></text>'
+        +'</svg>'
+      +'</div>'
+      +'<div class="sig-block">'
+        +'<div class="sig-lbl">Payer Signature</div>'
+        +'<div class="sig-lbl-ar">توقيع الدافع</div>'
+        +'<div class="sig-line"></div>'
+      +'</div>'
+    +'</div>'
+ 
+    /* ── FOOTER ── */
+    +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
+ 
+    +'</div>'
     +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
     +'</div>';
 }
@@ -1413,7 +1538,35 @@ window.prtPay=function(id){
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
   openPrintWin(PAY_CSS,buildPayVoucher(p,'ORIGINAL')+buildPayVoucher(p,'COPY'));
 };
-
+function amountToWordsAr(n){
+  n=Math.round(Number(n||0));
+  if(n===0) return 'صفر شيكل فقط لا غير';
+  const ones=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة',
+    'أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
+  const tens=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+  const hundreds=['','مائة','مئتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
+  let parts=[];
+  if(n>=1000){
+    const t=Math.floor(n/1000);
+    if(t===1) parts.push('ألف');
+    else if(t===2) parts.push('ألفان');
+    else if(t<=10) parts.push(ones[t]+' آلاف');
+    else parts.push(t+' ألف');
+    n=n%1000;
+  }
+  if(n>=100){
+    parts.push(hundreds[Math.floor(n/100)]);
+    n=n%100;
+  }
+  if(n>=20){
+    const u=n%10;
+    if(u>0) parts.push(ones[u]+' و'+tens[Math.floor(n/10)]);
+    else parts.push(tens[Math.floor(n/10)]);
+  } else if(n>0){
+    parts.push(ones[n]);
+  }
+  return parts.join(' و')+' شيكل فقط لا غير';
+}
 /* ═══ PRINT STATEMENTS ═══ */
 window.prtStmt=function(fund){
   if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
