@@ -1,10 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
@@ -17,14 +12,38 @@ module.exports = async function handler(req, res) {
 
   const docId = id.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
 
+  // تحقق من المتغيرات
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ 
+      valid: false, 
+      error: 'Missing env vars',
+      url: supabaseUrl ? 'OK' : 'MISSING',
+      key: supabaseKey ? 'OK' : 'MISSING'
+    });
+  }
+
   try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const { data, error } = await supabase
       .from('vouchers')
       .select('id, type, fund, date, amount, description, prepared_by')
       .eq('id', docId)
       .single();
 
-    if (error || !data) {
+    if (error) {
+      return res.status(500).json({ 
+        valid: false, 
+        error: error.message,
+        code: error.code,
+        details: error.details
+      });
+    }
+
+    if (!data) {
       return res.status(404).json({ valid: false, error: 'Document not found' });
     }
 
@@ -42,6 +61,6 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (err) {
-    return res.status(500).json({ valid: false, error: 'Server error' });
+    return res.status(500).json({ valid: false, error: err.message });
   }
 };
