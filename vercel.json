@@ -13,24 +13,8 @@
     {
       "source": "/verify/(.*)",
       "headers": [
-        { "key": "X-Robots-Tag",         "value": "noindex, nofollow" },
-        { "key": "X-Frame-Options",       "value": "DENY" },
-        { "key": "X-Content-Type-Options","value": "nosniff" },
-        { "key": "Cache-Control",         "value": "no-store, no-cache" }
+        { "key": "Cache-Control", "value": "no-store" }
       ]
-    }
-  ]
-}
-
-{
-  "rewrites": [
-    {
-      "source": "/verify/:id",
-      "destination": "/verify.html"
-    },
-    {
-      "source": "/api/verify",
-      "destination": "/api/verify.js"
     }
   ]
 }
