@@ -668,7 +668,10 @@ function renderDash(){
     <div class="fund-card don"><div class="fund-label">${L.fundLabel('donation')}</div><div class="fund-balance">₪ ${fmt(donb)}</div><div class="fund-sub">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').length} ${donLbl}</div></div>
   `;
 
-  const lateMembers=DB.members.filter(m=>m.is_active).map(m=>({...m,bal:FIN.memberBalance(m.id)})).filter(m=>m.bal<0).sort((a,b)=>a.bal-b.bal);
+ const lateMembers=DB.members
+ .filter(m=>m.is_active)
+ .map(m=>({...m,bal:FIN.memberBalance(m.id)}))
+ .filter(m=>m.bal>0);
   const isEn=window.LANG==='en';
   document.getElementById('kpis').innerHTML=`
     <div class="kpi food"><i class="ti ti-users kpi-ico"></i><div class="kpi-lbl">${isEn?'Family Members':'أعضاء العائلة'}</div><div class="kpi-val">${DB.members.filter(m=>m.is_active).length}</div></div>
