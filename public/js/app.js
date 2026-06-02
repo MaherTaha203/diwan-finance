@@ -173,8 +173,11 @@ const FIN={
       .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
 
     const dues=DB.annual
-      .reduce((s,a)=>s+Number(a.amount||0),0);
-
+  .filter(a =>
+    !member.active_from_year ||
+    a.year >= member.active_from_year
+  )
+  .reduce((s,a)=>s+Number(a.amount||0),0);
     return openingBalance + dues - paid;
   },
 
@@ -1364,7 +1367,9 @@ window.applyAnnualDue=async function(){
   (!m.active_from_year || m.active_from_year <= year)
 );
   if(!members.length){toast('لا يوجد أعضاء','warn');return;}
-  if(!confirm(`سيُضاف ${fmt(amount)} ₪ كدين على ${members.length} عضو للسنة ${year}. متأبد؟`))return;
+  if(!confirm(
+  `سيُضاف ${fmt(amount)} ₪ كاشتراك سنة ${year} على ${members.length} عضو مستحق. هل تريد المتابعة؟`
+)) return;
   const btn=document.getElementById('btn-apply-due');
   btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   const{error}=await SB.from('annual_dues').insert({year,amount,applied_by:CUR?.full_name||CU?.email,member_count:members.length});
