@@ -608,8 +608,14 @@ const D={
     let d=DB.members.filter(m=>m.is_active);
     if(q)d=d.filter(m=>m.name.toLowerCase().includes(q)||(m.phone||'').includes(q));
     d=d.map(m=>({...m,bal:FIN.memberBalance(m.id)}));
-    if(st==='paid')d=d.filter(m=>m.bal>=0);
-    else if(st==='due')d=d.filter(m=>m.bal<0);
+    if(st==='paid')
+  d=d.filter(m=>m.bal===0);
+
+else if(st==='due')
+  d=d.filter(m=>m.bal>0);
+
+else if(st==='credit')
+  d=d.filter(m=>m.bal<0);
     const sub=document.getElementById('members-sub');
     if(sub)sub.textContent=`${d.length} عضو`;
     if(!PS['members'])PS['members']=1;
