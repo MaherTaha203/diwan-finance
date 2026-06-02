@@ -162,28 +162,29 @@ const can={
 
 /* ═══ FINANCIAL ENGINE ═══ */
 const FIN={
-  memberBalance(memberId){
-    const member=DB.members.find(m=>m.id===memberId);
-    if(!member) return 0;
+ memberBalance(memberId){
+  const member=DB.members.find(m=>m.id===memberId);
+  if(!member) return 0;
 
-    const openingBalance=Number(member.opening_balance||0);
+  const openingBalance=Number(member.opening_balance||0);
 
-    const paid=DB.receipts
-      .filter(r=>!r.is_deleted && r.fund_type==='food' && r.member_id===memberId)
-      .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+  const paid=DB.receipts
+    .filter(r =>
+      !r.is_deleted &&
+      r.fund_type==='food' &&
+      r.member_id===memberId
+    )
+    .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
 
-    const dues = DB.annual.filter(d =>
-  !member.active_from_year ||
-  d.year >= member.active_from_year
-);
-  .filter(a =>
-    !member.active_from_year ||
-    a.year >= member.active_from_year
-  )
-  .reduce((s,a)=>s+Number(a.amount||0),0);
-    return openingBalance + dues - paid;
-  },
+  const dues = DB.annual
+    .filter(a =>
+      !member.active_from_year ||
+      a.year >= member.active_from_year
+    )
+    .reduce((s,a)=>s+Number(a.amount||0),0);
 
+  return openingBalance + dues - paid;
+},
   foodBalance(){
     const opening=Number(window.FOOD_OPENING||0);
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
