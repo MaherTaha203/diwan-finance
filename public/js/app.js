@@ -633,7 +633,17 @@ else if(m.bal < 0){
         <td style="color:var(--tx3)">${(PS['members']-1)*PSZ+i+1}</td>
         <td><b>${esc(m.name)}</b></td>
         <td style="color:var(--tx2)">${esc(m.phone||'—')}</td>
-        <td class="num" style="color:${m.bal>=0?'#00C896':'var(--danger)'}">₪ ${fmt(m.bal)}</td>
+       <td class="num" style="color:${
+  m.bal > 0 ? 'var(--danger)' :
+  m.bal < 0 ? '#2563EB' :
+  '#00C896'
+}">
+${
+  m.bal < 0
+    ? `رصيد دائن ₪ ${fmt(Math.abs(m.bal))}`
+    : `₪ ${fmt(m.bal)}`
+}
+</td>
         <td><span class="badge ${cls}">${lbl}</span></td>
         <td class="tda">
           <button class="btn ghost sm" style="color:#60A5FA" onclick="window.nav('member-stmt');setTimeout(()=>{document.getElementById('ms-member').value='${m.id}';window.renderMemberStmt();},80)" title="كشف الحساب"><i class="ti ti-file-description"></i></button>
