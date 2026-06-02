@@ -1359,7 +1359,10 @@ window.applyAnnualDue=async function(){
   const amount=parseFloat(document.getElementById('due-amount').value)||200;
   if(!year||year<2020||year>2040){toast(window.t('errors.invalid_year'),'warn');return;}
   if(DB.annual.find(a=>a.year===year)){toast(`تم تطبيق اشتراك ${year} مسبقاً`,'warn');return;}
-  const members=DB.members.filter(m=>m.is_active);
+ const members=DB.members.filter(m =>
+  m.is_active &&
+  (!m.active_from_year || m.active_from_year <= year)
+);
   if(!members.length){toast('لا يوجد أعضاء','warn');return;}
   if(!confirm(`سيُضاف ${fmt(amount)} ₪ كدين على ${members.length} عضو للسنة ${year}. متأبد؟`))return;
   const btn=document.getElementById('btn-apply-due');
