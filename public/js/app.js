@@ -17,36 +17,105 @@ const CURR_SYMS={ILS:'₪',USD:'$',JOD:'د.أ'};
 
 /* ═══ TRANSLATION HELPER FOR RENDER FUNCTIONS ═══ */
 const L = {
-  fundLabel: f => f==='food'?(window.LANG==='en'?'Food Fund':'صندوق الغداء'):f==='diwan'?(window.LANG==='en'?'Diwan Fund':'صندوق الديوان'):(window.LANG==='en'?'Donations Fund':'صندوق التبرعات'),
-  method: m => {
-    const map={cash:{ar:'نقد',en:'Cash'},check:{ar:'شيك',en:'Cheque'},transfer:{ar:'تحويل',en:'Transfer'},online:{ar:'أونلاين',en:'Online'}};
-    return (map[m]||{ar:m,en:m})[window.LANG==='en'?'en':'ar'];
-  },
-  expense: e => {
-    const map={food_expense:{ar:'مصاريف إطعام عزاء',en:'Funeral Food Expenses'},electricity:{ar:'كهرباء',en:'Electricity'},water:{ar:'ماء',en:'Water'},cleaning:{ar:'تنظيف',en:'Cleaning'},maintenance:{ar:'صيانة',en:'Maintenance'},other:{ar:'أخرى',en:'Other'}};
-    return (map[e]||{ar:e,en:e})[window.LANG==='en'?'en':'ar'];
-  },
-  paid: ()=>window.LANG==='en'?'Paid':'مسدَّد',
-  late: ()=>window.LANG==='en'?'Late':'متأخر',
-  showing: (s,t)=>window.LANG==='en'?`Showing ${s} of ${t}`:`عرض ${s} من ${t}`,
-  noData: k=>window.LANG==='en'?({
-    'receipts':'No receipts found','expenses':'No expenses found',
-    'donations':'No donations found','members':'No members found',
-    'ops':'No transactions found','annual':'No dues applied yet',
-    'audit':'Log is empty',
-  }[k]||'No data'):({
-    'receipts':'لا توجد إيصالات','expenses':'لا توجد مصاريف',
-    'donations':'لا توجد تبرعات','members':'لا يوجد أعضاء',
-    'ops':'لا توجد حركات','annual':'لا توجد اشتراكات مطبقة',
-    'audit':'السجل فارغ',
-  }[k]||'لا توجد بيانات'),
-  month: m=>{
-    const ar=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-    const en=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return window.LANG==='en'?en[m]:ar[m];
-  },
-};
 
+  fundLabel: f => {
+    if (f === 'food')
+      return window.LANG === 'en' ? 'Food Fund' : 'صندوق الغداء';
+
+    if (f === 'diwan')
+      return window.LANG === 'en' ? 'Diwan Fund' : 'صندوق الديوان';
+
+    return window.LANG === 'en'
+      ? 'Donations Fund'
+      : 'صندوق التبرعات';
+  },
+
+  method: m => {
+    const map = {
+      cash:     { ar:'نقد',     en:'Cash' },
+      check:    { ar:'شيك',     en:'Cheque' },
+      transfer: { ar:'تحويل',   en:'Transfer' },
+      online:   { ar:'أونلاين', en:'Online' }
+    };
+
+    return (map[m] || { ar:m, en:m })[
+      window.LANG === 'en' ? 'en' : 'ar'
+    ];
+  },
+
+  expense: e => {
+    const map = {
+      food_expense:{ ar:'مصاريف إطعام عزاء', en:'Funeral Food Expenses' },
+      electricity:{ ar:'كهرباء', en:'Electricity' },
+      water:{ ar:'ماء', en:'Water' },
+      cleaning:{ ar:'تنظيف', en:'Cleaning' },
+      maintenance:{ ar:'صيانة', en:'Maintenance' },
+      other:{ ar:'أخرى', en:'Other' }
+    };
+
+    return (map[e] || { ar:e, en:e })[
+      window.LANG === 'en' ? 'en' : 'ar'
+    ];
+  },
+
+  paid: () =>
+    window.LANG === 'en'
+      ? 'Paid'
+      : 'مسدد',
+
+  late: () =>
+    window.LANG === 'en'
+      ? 'Overdue'
+      : 'متأخر',
+
+  credit: () =>
+    window.LANG === 'en'
+      ? 'Credit Balance'
+      : 'رصيد دائن',
+
+  showing: (shown,total) =>
+    window.LANG === 'en'
+      ? `Showing ${shown} of ${total}`
+      : `عرض ${shown} من ${total}`,
+
+  noData: k => window.LANG === 'en'
+    ? ({
+        receipts:'No receipts found',
+        expenses:'No expenses found',
+        donations:'No donations found',
+        members:'No members found',
+        ops:'No transactions found',
+        annual:'No dues applied yet',
+        audit:'Log is empty'
+      }[k] || 'No data')
+    : ({
+        receipts:'لا توجد إيصالات',
+        expenses:'لا توجد مصاريف',
+        donations:'لا توجد تبرعات',
+        members:'لا يوجد أعضاء',
+        ops:'لا توجد حركات',
+        annual:'لا توجد اشتراكات مطبقة',
+        audit:'السجل فارغ'
+      }[k] || 'لا توجد بيانات'),
+
+  month: m => {
+    const ar = [
+      'يناير','فبراير','مارس','أبريل',
+      'مايو','يونيو','يوليو','أغسطس',
+      'سبتمبر','أكتوبر','نوفمبر','ديسمبر'
+    ];
+
+    const en = [
+      'Jan','Feb','Mar','Apr',
+      'May','Jun','Jul','Aug',
+      'Sep','Oct','Nov','Dec'
+    ];
+
+    return window.LANG === 'en'
+      ? en[m]
+      : ar[m];
+  }
+};
 /* ═══ PERMISSIONS — admin | viewer ONLY ═══ */
 const can={
   write:()=>CUR?.role==='admin',
