@@ -618,7 +618,17 @@ const D={
     const body=document.getElementById('members-body');
     if(!page.length){body.innerHTML=emptyRow(6,'members');return;}
     body.innerHTML=page.map((m,i)=>{
-      const cls=m.bal>=0?'green':'red',lbl=m.bal>=0?L.paid():L.late();
+      let cls='green';
+let lbl='مسدد';
+
+if(m.bal > 0){
+  cls='red';
+  lbl='متأخر';
+}
+else if(m.bal < 0){
+  cls='blue';
+  lbl='رصيد دائن';
+}
       return`<tr>
         <td style="color:var(--tx3)">${(PS['members']-1)*PSZ+i+1}</td>
         <td><b>${esc(m.name)}</b></td>
