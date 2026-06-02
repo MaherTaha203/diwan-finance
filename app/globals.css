@@ -1,0 +1,358 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-glow: hsl(var(--glow));
+  
+  --font-sans: var(--font-cairo), system-ui, sans-serif;
+  
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  
+  --animate-glow-sweep: glow-sweep 3s ease-in-out infinite;
+  --animate-border-glow: border-glow 3s ease infinite;
+  --animate-subtle-pulse: subtle-pulse 3s ease-in-out infinite;
+  
+  @keyframes glow-sweep {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+  
+  @keyframes border-glow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes subtle-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+}
+
+:root {
+  /* Theme 1: Executive Corporate - Deep Navy & Gold */
+  --background: 222 47% 6%;
+  --foreground: 40 20% 95%;
+  --card: 222 40% 10%;
+  --card-foreground: 40 20% 95%;
+  --primary: 40 75% 55%;
+  --primary-foreground: 222 47% 6%;
+  --secondary: 222 30% 18%;
+  --secondary-foreground: 40 20% 95%;
+  --muted: 222 30% 15%;
+  --muted-foreground: 220 15% 60%;
+  --accent: 40 75% 55%;
+  --accent-foreground: 222 47% 6%;
+  --border: 222 30% 20%;
+  --input: 222 30% 15%;
+  --ring: 40 75% 55%;
+  --glow: 40 75% 55%;
+  --radius: 0.75rem;
+}
+
+[data-theme="banking-luxury"] {
+  /* Theme 2: Banking Luxury - Emerald & Silver */
+  --background: 160 30% 5%;
+  --foreground: 0 0% 95%;
+  --card: 160 25% 9%;
+  --card-foreground: 0 0% 95%;
+  --primary: 160 60% 45%;
+  --primary-foreground: 160 30% 5%;
+  --secondary: 160 20% 15%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 160 20% 12%;
+  --muted-foreground: 160 10% 55%;
+  --accent: 160 60% 45%;
+  --accent-foreground: 160 30% 5%;
+  --border: 160 20% 18%;
+  --input: 160 20% 12%;
+  --ring: 160 60% 45%;
+  --glow: 160 60% 45%;
+}
+
+[data-theme="modern-fintech"] {
+  /* Theme 3: Modern Fintech - Electric Blue & Cyan */
+  --background: 225 50% 6%;
+  --foreground: 210 40% 98%;
+  --card: 225 45% 10%;
+  --card-foreground: 210 40% 98%;
+  --primary: 200 95% 55%;
+  --primary-foreground: 225 50% 6%;
+  --secondary: 225 35% 18%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 225 35% 14%;
+  --muted-foreground: 215 20% 55%;
+  --accent: 200 95% 55%;
+  --accent-foreground: 225 50% 6%;
+  --border: 225 35% 22%;
+  --input: 225 35% 14%;
+  --ring: 200 95% 55%;
+  --glow: 200 95% 55%;
+}
+
+[data-theme="professional-government"] {
+  /* Theme 4: Professional Government - Royal Blue & Slate */
+  --background: 215 35% 8%;
+  --foreground: 210 30% 96%;
+  --card: 215 30% 12%;
+  --card-foreground: 210 30% 96%;
+  --primary: 215 80% 55%;
+  --primary-foreground: 215 35% 8%;
+  --secondary: 215 25% 20%;
+  --secondary-foreground: 210 30% 96%;
+  --muted: 215 25% 16%;
+  --muted-foreground: 215 15% 55%;
+  --accent: 215 80% 55%;
+  --accent-foreground: 215 35% 8%;
+  --border: 215 25% 24%;
+  --input: 215 25% 16%;
+  --ring: 215 80% 55%;
+  --glow: 215 80% 55%;
+}
+
+[data-theme="premium-saas"] {
+  /* Theme 5: Premium SaaS - Indigo & Rose */
+  --background: 250 35% 7%;
+  --foreground: 250 20% 96%;
+  --card: 250 30% 11%;
+  --card-foreground: 250 20% 96%;
+  --primary: 340 75% 60%;
+  --primary-foreground: 250 35% 7%;
+  --secondary: 250 25% 18%;
+  --secondary-foreground: 250 20% 96%;
+  --muted: 250 25% 14%;
+  --muted-foreground: 250 15% 55%;
+  --accent: 340 75% 60%;
+  --accent-foreground: 250 35% 7%;
+  --border: 250 25% 22%;
+  --input: 250 25% 14%;
+  --ring: 340 75% 60%;
+  --glow: 340 75% 60%;
+}
+
+[data-theme="executive-dark"] {
+  /* Theme 6: Executive Dark - Pure Black & Platinum */
+  --background: 0 0% 4%;
+  --foreground: 0 0% 95%;
+  --card: 0 0% 8%;
+  --card-foreground: 0 0% 95%;
+  --primary: 0 0% 85%;
+  --primary-foreground: 0 0% 4%;
+  --secondary: 0 0% 14%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 0 0% 85%;
+  --accent-foreground: 0 0% 4%;
+  --border: 0 0% 18%;
+  --input: 0 0% 12%;
+  --ring: 0 0% 85%;
+  --glow: 0 0% 85%;
+}
+
+/* Light mode variants */
+.light {
+  --background: 40 20% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --primary: 40 75% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 15% 92%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 40 15% 94%;
+  --muted-foreground: 222 30% 40%;
+  --accent: 40 75% 45%;
+  --accent-foreground: 0 0% 100%;
+  --border: 40 20% 88%;
+  --input: 40 15% 92%;
+  --ring: 40 75% 45%;
+  --glow: 40 75% 45%;
+}
+
+.light[data-theme="banking-luxury"] {
+  --background: 160 20% 98%;
+  --foreground: 160 30% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 160 30% 8%;
+  --primary: 160 60% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 160 15% 92%;
+  --secondary-foreground: 160 30% 8%;
+  --muted: 160 15% 94%;
+  --muted-foreground: 160 20% 40%;
+  --accent: 160 60% 35%;
+  --accent-foreground: 0 0% 100%;
+  --border: 160 15% 88%;
+  --input: 160 15% 92%;
+  --ring: 160 60% 35%;
+  --glow: 160 60% 35%;
+}
+
+.light[data-theme="modern-fintech"] {
+  --background: 210 40% 98%;
+  --foreground: 225 50% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 225 50% 10%;
+  --primary: 200 95% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 20% 92%;
+  --secondary-foreground: 225 50% 10%;
+  --muted: 210 20% 94%;
+  --muted-foreground: 215 25% 40%;
+  --accent: 200 95% 45%;
+  --accent-foreground: 0 0% 100%;
+  --border: 210 15% 88%;
+  --input: 210 20% 92%;
+  --ring: 200 95% 45%;
+  --glow: 200 95% 45%;
+}
+
+.light[data-theme="professional-government"] {
+  --background: 215 30% 98%;
+  --foreground: 215 35% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 215 35% 10%;
+  --primary: 215 80% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 215 15% 92%;
+  --secondary-foreground: 215 35% 10%;
+  --muted: 215 15% 94%;
+  --muted-foreground: 215 20% 40%;
+  --accent: 215 80% 45%;
+  --accent-foreground: 0 0% 100%;
+  --border: 215 15% 88%;
+  --input: 215 15% 92%;
+  --ring: 215 80% 45%;
+  --glow: 215 80% 45%;
+}
+
+.light[data-theme="premium-saas"] {
+  --background: 250 20% 98%;
+  --foreground: 250 35% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 250 35% 10%;
+  --primary: 340 75% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 250 15% 92%;
+  --secondary-foreground: 250 35% 10%;
+  --muted: 250 15% 94%;
+  --muted-foreground: 250 20% 40%;
+  --accent: 340 75% 50%;
+  --accent-foreground: 0 0% 100%;
+  --border: 250 15% 88%;
+  --input: 250 15% 92%;
+  --ring: 340 75% 50%;
+  --glow: 340 75% 50%;
+}
+
+.light[data-theme="executive-dark"] {
+  --background: 0 0% 98%;
+  --foreground: 0 0% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 8%;
+  --primary: 0 0% 20%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 94%;
+  --secondary-foreground: 0 0% 8%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 0 0% 20%;
+  --accent-foreground: 0 0% 100%;
+  --border: 0 0% 90%;
+  --input: 0 0% 94%;
+  --ring: 0 0% 20%;
+  --glow: 0 0% 20%;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* Glow text effect */
+.glow-text {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--foreground)) 0%,
+    hsl(var(--foreground)) 40%,
+    hsl(var(--glow)) 50%,
+    hsl(var(--foreground)) 60%,
+    hsl(var(--foreground)) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glow-sweep 3s ease-in-out infinite;
+}
+
+/* Animated border glow */
+.animated-border-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.animated-border-glow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--glow) / 0.3) 25%,
+    hsl(var(--glow)) 50%,
+    hsl(var(--glow) / 0.3) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: border-glow 3s ease infinite;
+}
+
+/* Glowing underline */
+.glow-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.glow-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--glow) / 0.3) 25%,
+    hsl(var(--glow)) 50%,
+    hsl(var(--glow) / 0.3) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: border-glow 3s ease infinite;
+}
