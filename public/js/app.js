@@ -172,7 +172,10 @@ const FIN={
       .filter(r=>!r.is_deleted && r.fund_type==='food' && r.member_id===memberId)
       .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
 
-    const dues=DB.annual
+    const dues = DB.annual.filter(d =>
+  !member.active_from_year ||
+  d.year >= member.active_from_year
+);
   .filter(a =>
     !member.active_from_year ||
     a.year >= member.active_from_year
@@ -573,7 +576,9 @@ async function loadAll(){
     const[r1,r2,r3,r4,r5,r6]=await Promise.all([
       SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
-      SB.from('members').select('id,name,phone,notes,opening_balance,is_active,created_at').order('name'),
+      SB.from('members').select(
+'id,name,phone,notes,opening_balance,is_active,created_at,active_from_year'
+).order('name'),
       SB.from('contacts').select('*').order('name'),
       SB.from('annual_dues').select('*').order('year',{ascending:false}),
       SB.from('audit_log').select('id,action,description,user_name,created_at').order('created_at',{ascending:false}).limit(50),
