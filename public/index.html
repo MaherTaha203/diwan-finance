@@ -20,36 +20,30 @@
   <button class="login-lang" onclick="window.toggleLang()">
     <i class="ti ti-language"></i><span id="login-lang-txt">EN</span>
   </button>
-  <div class="login-box">
-    <div class="login-logo">
-      <img src="/logo.webp" id="login-logo-img"
-           alt="ديوان آل طه"
-           style="width:210px;height:210px;object-fit:contain;margin:0 auto 6px;display:block;border-radius:12px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.12))"
-           onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='block'">
-      <div id="login-logo-fallback" style="display:none;text-align:center;padding:8px 0">
-        <div style="width:64px;height:64px;border-radius:16px;background:#1C2B3A;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(28,43,58,.25)">
-          <i class="ti ti-home" style="font-size:30px;color:#00C896"></i>
-        </div>
-        <div style="font-size:20px;font-weight:700;color:#1C2B3A;margin-bottom:4px">ديوان آل طه</div>
-        <div style="font-size:11px;color:#7A9AB8">المنصة المالية والإدارية للعائلة</div>
-      </div>
-    </div>
+ <div class="login-box">
+ 
     <div class="lfi">
-      <label id="lbl-email">رقم الهاتف أو البريد الإلكتروني</label>
       <div class="l-input-wrap">
-        <i class="ti ti-phone l-icon"></i>
-        <input type="text" id="l-email" autocomplete="username" inputmode="text" placeholder="example@email.com"
+        <input type="text" id="l-email" autocomplete="username" inputmode="text" placeholder="email"
                onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+        <label for="l-email">
+          <i class="ti ti-phone l-icon-label"></i>
+          <span id="lbl-email">رقم الهاتف أو البريد الإلكتروني</span>
+        </label>
       </div>
     </div>
+ 
     <div class="lfi">
-      <label id="lbl-pass">كلمة المرور</label>
       <div class="l-input-wrap">
-        <i class="ti ti-lock l-icon"></i>
-        <input type="password" id="l-pass" placeholder="••••••••"
+        <input type="password" id="l-pass" placeholder="password"
                onkeydown="if(event.key==='Enter')window.login()">
+        <label for="l-pass">
+          <i class="ti ti-lock l-icon-label"></i>
+          <span id="lbl-pass">كلمة المرور</span>
+        </label>
       </div>
     </div>
+ 
     <div class="login-row">
       <label class="login-remember">
         <input type="checkbox" id="l-remember">
@@ -57,6 +51,7 @@
       </label>
       <button class="login-forgot-link" onclick="window.forgotPassword()" id="btn-forgot">نسيت كلمة المرور؟</button>
     </div>
+ 
     <button class="login-btn" id="login-btn" onclick="window.login()">
       <i class="ti ti-login"></i><span id="btn-login-txt">تسجيل الدخول</span>
     </button>
