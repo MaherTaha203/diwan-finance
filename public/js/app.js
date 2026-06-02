@@ -920,7 +920,10 @@ window.renderMemberStmt=function(){
   const inRange=d=>{const dt=new Date(d);if(fd&&dt<fd)return false;if(td&&dt>td)return false;return true;};
 
   const recs=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date));
-  const dues=DB.annual;
+ const dues = DB.annual.filter(d =>
+  !member.active_from_year ||
+  d.year >= member.active_from_year
+);
   const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
   const diwanNotes=DB.audit.filter(a=>a.action==='note'&&a.table_name==='member_note'&&a.record_id===mid);
 
@@ -947,7 +950,7 @@ const rowsHTML=rows.map(r=>{
       <span class="lr-desc">${esc(r.desc)}</span>
       <span class="lr-cr">${r.cr>0?'₪ '+fmt(r.cr):'—'}</span>
       <span class="lr-dr">${r.dr>0?'₪ '+fmt(r.dr):'—'}</span>
-      <<span class="lr-bal" style="color:${balColor}">
+      <span class="lr-bal" style="color:${balColor}">
   ${
     bal < 0
       ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
@@ -978,13 +981,19 @@ const rowsHTML=rows.map(r=>{
 </span>
     </div>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <<div class="kpi ${
+      <div class="kpi ${
   bal > 0
     ? 'red'
     : bal < 0
       ? 'blue'
       : 'green'
-}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance (2025+)':'الرصيد الحالي (2025+)'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(bal)}</div></div>
+}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance (2025+)':'الرصيد الحالي (2025+)'}</div><<div class="kpi-val" style="font-size:16px">
+${
+  bal < 0
+    ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
+    : `₪ ${fmt(bal)}`
+}
+</div></div>
       <div class="kpi food" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Total Donations':'إجمالي التبرعات'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDons)}</div></div>
     </div>
     <div class="ledger-hdr">
