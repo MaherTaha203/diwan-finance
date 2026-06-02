@@ -250,27 +250,44 @@ function getRate(prefix){
   return RATES[cur]||1;
 }
 
-/* ═══ TOAST ═══ */
-const TICONS={ok:'ti-circle-check',err:'ti-circle-x',warn:'ti-alert-triangle',info:'ti-info-circle'};
+const TICONS={
+  ok:'ti-circle-check',
+  err:'ti-circle-x',
+  warn:'ti-alert-triangle',
+  info:'ti-info-circle'
+};
+
 function toast(msg,type='ok'){
+
   const c=document.getElementById('tc');
+
+  if(!c){
+    console.warn('Toast container not found');
+    return;
+  }
+
+  const icon=TICONS[type]||TICONS.info;
+
   const el=document.createElement('div');
+
   el.className=`toast ${type}`;
-  el.innerHTML=`<i class="ti ${TICONS[type]}"></i><span>${esc(msg)}</span>`;
+
+  el.innerHTML=`
+    <i class="ti ${icon}"></i>
+    <span>${esc(String(msg||''))}</span>
+  `;
+
   c.appendChild(el);
-  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),280);},3500);
-}
 
-/* ═══ VALIDATION ═══ */
-function vf(id,test,eid){
-  const el=document.getElementById(id);
-  const ok=el&&test(el.value);
-  el?.classList.toggle('err',!ok);
-  const fe=document.getElementById(eid);
-  if(fe) fe.classList.toggle('on',!ok);
-  return ok;
-}
+  setTimeout(()=>{
+    el.classList.add('out');
 
+    setTimeout(()=>{
+      el.remove();
+    },280);
+
+  },3500);
+}
 /* ═══ PAGINATION ═══ */
 function mkPag(key,total){
   if(!PS[key]) PS[key]=1;
@@ -873,15 +890,31 @@ window.renderMemberStmt=function(){
   recs.forEach(r=>rows.push({date:r.receipt_date,desc:r.notes||'دفعة مساهمة',cr:Number(r.amount_ils||r.amount),dr:0,type:'cr',no:r.no}));
   rows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
 
-  let bal=0;const rowsHTML=rows.map(r=>{
-    bal+=r.cr-r.dr;
+ let bal=0;
+
+const rowsHTML=rows.map(r=>{
+
+  bal += r.dr - r.cr;
+
+  let balColor='#00C896';
+
+  if(bal > 0)
+    balColor='var(--danger)';
+  else if(bal < 0)
+    balColor='#2563EB';
     return`<div class="lr">
       <span class="lr-date">${r.date==='—'?'—':fdate(r.date)}</span>
       <span class="lr-name">${r.no?esc(r.no):'—'}</span>
       <span class="lr-desc">${esc(r.desc)}</span>
       <span class="lr-cr">${r.cr>0?'₪ '+fmt(r.cr):'—'}</span>
       <span class="lr-dr">${r.dr>0?'₪ '+fmt(r.dr):'—'}</span>
-      <span class="lr-bal" style="color:${bal>=0?'#00C896':'var(--danger)'}">₪ ${fmt(bal)}</span>
+      <<span class="lr-bal" style="color:${balColor}">
+  ${
+    bal < 0
+      ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
+      : `₪ ${fmt(bal)}`
+  }
+</span>
       <span class="lr-note"></span>
     </div>`;
   }).join('');
@@ -901,10 +934,18 @@ window.renderMemberStmt=function(){
     </div>
     ${openBal!==0?`<div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:12px;color:var(--food);font-weight:500"><i class="ti ti-history"></i> رصيد ما قبل 2025 (للاطلاع فقط)</span>
-      <span style="font-size:15px;font-weight:700;color:${openBal>=0?'var(--food)':'var(--danger)'}">₪ ${fmt(Math.abs(openBal))} ${openBal<0?'دين':'رصيد'}</span>
+      <span style="font-size:15px;font-weight:700;color:var(--food)">
+₪ ${fmt(openBal)}
+</span>
     </div>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="kpi ${bal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance (2025+)':'الرصيد الحالي (2025+)'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(bal)}</div></div>
+      <<div class="kpi ${
+  bal > 0
+    ? 'red'
+    : bal < 0
+      ? 'blue'
+      : 'green'
+}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance (2025+)':'الرصيد الحالي (2025+)'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(bal)}</div></div>
       <div class="kpi food" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Total Donations':'إجمالي التبرعات'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDons)}</div></div>
     </div>
     <div class="ledger-hdr">
