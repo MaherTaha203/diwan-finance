@@ -2340,4 +2340,4 @@ WRITE_FNS.forEach(fn => seal(fn,
     'ليس لديك صلاحية',
     'No permission'));
 })();
-};
+
