@@ -69,7 +69,7 @@ const translations = {
       no_data:'لا توجد إيصالات',
       receipt_no:'رقم الإيصال',
     },
-payments: {
+    payments: {
       title_food:'مصاريف صندوق الغداء',
       title_diwan:'مصاريف صندوق الديوان',
       new:'مصروف جديد', beneficiary:'المستفيد',
