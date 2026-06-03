@@ -1392,7 +1392,7 @@ window.editRec=function(id){
   document.getElementById('edit-rec-amount').value = r.amount_ils || r.amount;
   document.getElementById('edit-rec-date').value = r.date || '';
   document.getElementById('edit-rec-notes').value = r.notes || '';
-
+  r.date = document.getElementById('edit-rec-date').value;
   window.openM('edit-rec');
 };
 window.updateRec=async function(){
