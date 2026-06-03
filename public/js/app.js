@@ -1396,15 +1396,47 @@ window.editRec=function(id){
   window.openM('edit-rec');
 };
 window.updateRec=async function(){
-  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
-  const id=document.getElementById('edit-rec-id').value;
-  const amount=parseFloat(document.getElementById('edit-rec-amount').value)||0;
-  const notes=document.getElementById('edit-rec-notes').value;
-  if(amount<=0){toast('أدخل مبلغاً صحيحاً','warn');return;}
-  const{error}=await SB.from('receipts').update({amount_ils:amount,amount,notes,updated_at:new Date().toISOString()}).eq('id',id);
-  if(error){toast('خطأ: '+error.message,'err');return;}
-  await logAction('edit',`تعديل إيصال — ₪${fmt(amount)}`,'receipts',id);
-  window.closeM();await loadAll();toast('✓ تم التعديل','ok');
+  if(!can.admin()){
+    toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');
+    return;
+  }
+
+  const id = document.getElementById('edit-rec-id').value;
+  const amount = parseFloat(document.getElementById('edit-rec-amount').value)||0;
+  const date = document.getElementById('edit-rec-date').value;
+  const notes = document.getElementById('edit-rec-notes').value;
+
+  if(amount<=0){
+    toast('أدخل مبلغاً صحيحاً','warn');
+    return;
+  }
+
+  const { error } = await SB
+    .from('receipts')
+    .update({
+      amount_ils: amount,
+      amount: amount,
+      date: date,
+      notes: notes,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if(error){
+    toast('خطأ: '+error.message,'err');
+    return;
+  }
+
+  await logAction(
+    'edit',
+    `تعديل إيصال — ₪${fmt(amount)}`,
+    'receipts',
+    id
+  );
+
+  window.closeM();
+  await loadAll();
+  toast('✓ تم التعديل','ok');
 };
 window.deleteRec=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
