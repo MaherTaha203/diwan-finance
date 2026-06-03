@@ -3,9 +3,9 @@
    DIWAN FINANCE — i18n System
    Bilingual: Arabic (RTL) + English (LTR)
    Persistent via localStorage
-═══════════════════════════════════════════════════ */
+=== ... === */
 
-/* ── TRANSLATIONS ── */
+/* == TRANSLATIONS == */
 const translations = {
   ar: {
     common: {
@@ -553,7 +553,7 @@ window.formatDateFull = function(d) {
   } catch(e) { return d; }
 };
 
-/* ── TRANSLATION HELPER ── */
+/* == TRANSLATION HELPER == */
 window.t = function(key) {
   if(!key) return '';
   const parts = key.split('.');
@@ -576,7 +576,7 @@ window.t = function(key) {
   return typeof obj === 'string' ? obj : key;
 };
 
-/* ── SET EL TEXT SAFELY ── */
+/* == SET EL TEXT SAFELY == */
 function setTxt(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
@@ -595,7 +595,7 @@ function qTxt(sel, text) {
 }
 
 
-/* ── SCAN FOR UNTRANSLATED TEXT ── */
+/* == SCAN FOR UNTRANSLATED TEXT == */
 window.scanForUntranslatedText = function() {
   const arabicRegex = /[؀-ۿ]/;
   const results = { hardcoded: [], missing: [], total: 0 };
@@ -630,7 +630,7 @@ window.scanForUntranslatedText = function() {
   return results;
 };
 
-/* ── CACHE DOM REFS FOR PERFORMANCE ── */
+/* == CACHE DOM REFS FOR PERFORMANCE == */
 const _i18nCache = {};
 function getCached(sel) {
   if (!_i18nCache[sel]) _i18nCache[sel] = document.querySelectorAll(sel);
@@ -641,7 +641,7 @@ function clearI18nCache() {
 }
 
 
-/* ── MISSING KEY DETECTOR ── */
+/* == CACHE DOM REFS FOR PERFORMANCE == */
 const _missingKeys = new Set();
 const _originalT = window.t;
 window.t = function(key) {
@@ -668,7 +668,7 @@ window.t = function(key) {
   return obj;
 };
 
-/* ── UNTRANSLATED TEXT SCANNER ── */
+/* == CACHE DOM REFS FOR PERFORMANCE == */
 window.scanForUntranslatedText = function() {
   const arabicRegex = /[؀-ۿ]/;
   const issues = [];
@@ -702,7 +702,7 @@ window.scanForUntranslatedText = function() {
   return { total, translated, untranslated: count, missingKeys: [..._missingKeys] };
 };
 
-/* ── DOM CACHE for performance ── */
+/* == DOM CACHE for performance == */
 const _domCache = new Map();
 function getCached(selector) {
   if (!_domCache.has(selector)) {
@@ -712,7 +712,7 @@ function getCached(selector) {
 }
 function clearDomCache() { _domCache.clear(); }
 
-/* ── APPLY LANGUAGE ── */
+/* == APPLY LANGUAGE == */
 window.applyLang = function() {
   const lang = window.LANG;
   const isAr = lang === 'ar';
@@ -998,7 +998,7 @@ window.applyLang = function() {
 };
 
 
-/* ── COMPLETE UI TRANSLATION ── */
+/* == COMPLETE UI TRANSLATION == */
 
 // قاموس ثنائي الاتجاه لكل النصوص
 const UI_MAP = {
@@ -1296,7 +1296,7 @@ function translateAll() {
   if (topTitle) topTitle.textContent = toEn ? 'Diwan Al Taha' : 'ديوان آل طه';
 }
 
-/* ── TOGGLE LANGUAGE ── */
+/* == TOGGLE LANGUAGE == */
 window.toggleLang = function() {
   window.LANG = window.LANG === 'ar' ? 'en' : 'ar';
   localStorage.setItem('diwan_lang', window.LANG);
@@ -1306,7 +1306,7 @@ window.toggleLang = function() {
   window.applyLang();
 };
 
-/* ── INIT ON LOAD ── */
+/* == INIT ON LOAD == */
 document.addEventListener('DOMContentLoaded', () => {
   window.LANG = localStorage.getItem('diwan_lang') || 'ar';
 });
