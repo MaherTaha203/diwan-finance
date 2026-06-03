@@ -41,7 +41,7 @@ function getMemberStatus(balance){
   };
 }
 
-function formatMemberBalance(balance){
+function formatBalance(balance){
 
   if(balance < 0){
     return `${L.credit()} ₪ ${fmt(Math.abs(balance))}`;
@@ -119,7 +119,7 @@ const L = {
         receipts:'No receipts found',
         expenses:'No expenses found',
         donations:'No donations found',
-        members:'No members found',
+        s:'No s found',
         ops:'No transactions found',
         annual:'No dues applied yet',
         audit:'Log is empty'
@@ -128,7 +128,7 @@ const L = {
         receipts:'لا توجد إيصالات',
         expenses:'لا توجد مصاريف',
         donations:'لا توجد تبرعات',
-        members:'لا يوجد أعضاء',
+        s:'لا يوجد أعضاء',
         ops:'لا توجد حركات',
         annual:'لا توجد اشتراكات مطبقة',
         audit:'السجل فارغ'
@@ -162,9 +162,9 @@ const can={
 
 /* ═══ FINANCIAL ENGINE ═══ */
 const FIN={
- memberBalance(memberId){
-  const member=DB.members.find(m=>m.id===memberId);
-  if(!member) return 0;
+ Balance(Id){
+  const =DB.s.find(m=>m.id===Id);
+  if(!) return 0;
 
   const openingBalance=Number(member.opening_balance||0);
 
@@ -933,12 +933,43 @@ window.renderMemberStmt=function(){
   const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
   const diwanNotes=DB.audit.filter(a=>a.action==='note'&&a.table_name==='member_note'&&a.record_id===mid);
 
-  const rows=[];
-  dues.forEach(d=>rows.push({date:d.applied_at?.slice(0,10)||d.year+'-01-01',desc:window.LANG==='en'?`Annual Due ${d.year}`:`اشتراك سنة ${d.year}`,cr:0,dr:Number(d.amount),type:'due'}));
-  recs.forEach(r=>rows.push({date:r.receipt_date,desc:r.notes||'دفعة مساهمة',cr:Number(r.amount_ils||r.amount),dr:0,type:'cr',no:r.no}));
+ const rows=[];
+
+const openBal = Number(member.opening_balance || 0);
+
+if(openBal !== 0){
+  rows.push({
+    date:'—',
+    desc:'رصيد افتتاحي',
+    cr:0,
+    dr:openBal,
+    type:'opening'
+  });
+}
+
+dues.forEach(d =>
+  rows.push({
+    date:d.applied_at?.slice(0,10) || `${d.year}-01-01`,
+    desc:`اشتراك سنة ${d.year}`,
+    cr:0,
+    dr:Number(d.amount),
+    type:'due'
+  })
+);
+
+recs.forEach(r =>
+  rows.push({
+    date:r.receipt_date,
+    desc:r.notes || 'دفعة مساهمة',
+    cr:Number(r.amount_ils || r.amount),
+    dr:0,
+    type:'receipt',
+    no:r.no
+  })
+);
   rows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
 
- let bal=0;
+let bal = 0;
 
 const rowsHTML=rows.map(r=>{
 
@@ -993,7 +1024,7 @@ const rowsHTML=rows.map(r=>{
     : bal < 0
       ? 'blue'
       : 'green'
-}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance (2025+)':'الرصيد الحالي (2025+)'}</div><<div class="kpi-val" style="font-size:16px">
+}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance (2025+)':'الرصيد الحالي (2025+)'}</div><div class="kpi-val" style="font-size:16px">
 ${
   bal < 0
     ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
