@@ -1102,14 +1102,7 @@ window.renderMemberStmt=function(){
     </div>
   `;
 };
-    ${donsHTML}
-    ${diwanNotes.length?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-      <div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:8px"><i class="ti ti-building"></i> مصاريف الديوان المتعلقة بالعضو (ملاحظات فقط)</div>
-      ${diwanNotes.map(n=>`<div class="sr"><span class="sr-l" style="font-size:11px;color:var(--tx3)">${n.description}</span></div>`).join('')}
-    </div>`:''}
-    ${can.print()?`<div style="margin-top:12px;text-align:left"><button class="btn ghost sm" onclick="window.prtMemberStmt()" data-requires-print="1"><i class="ti ti-printer"></i> طباعة</button></div>`:''}
-  </div>`;
-};
+
 
 /* ═══ MODAL ═══ */
 window.openM=function(type){
