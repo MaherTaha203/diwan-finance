@@ -504,7 +504,12 @@ cash:'Cash', check:'Cheque', transfer:'Transfer', online:'Online',
 };
 
 /* ── LANGUAGE STATE ── */
-window.LANG = localStorage.getItem('diwan_lang') || 'ar';
+window.LANG = localStorage.getItem('diwan_lang')||'ar';
+if(typeof window.applyLang === 'function'){
+  window.applyLang();
+} else {
+  console.warn('applyLang not ready yet');
+}
 
 /* ── FORMATTERS ── */
 window.formatNumber = function(n) {
