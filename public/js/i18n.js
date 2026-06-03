@@ -313,18 +313,16 @@ const translations = {
       receipt_no:'Receipt No.',
     },
     payments: {
-      title_food:'Food Fund Expenses',
-      title_diwan:'Diwan Fund Expenses',
-      new:'New Expense', beneficiary:'Beneficiary',
-      ben_type:'Beneficiary Type', expense_type:'Expense Type',
-      approved_by:'Approved By',
-      food_expense:'Funeral Food Expenses',
-      electricity:'Electricity', water:'Water',
-      cleaning:'Cleaning', maintenance:'Maintenance', other:'Other',
-      no_data:'No expenses found',
-      payment_no:'Payment No.',
-method:'Payment Method',
-cash:'Cash', check:'Cheque', transfer:'Transfer', online:'Online',
+  title_food:'Food Fund Expenses',
+  title_diwan:'Diwan Fund Expenses',
+  ...
+  cash:'Cash',
+  check:'Cheque',
+  transfer:'Transfer',
+  online:'Online',
+},
+
+
     donations: {
       title:'Donations Registry', new:'New Donation',
       donor:'Donor', show_in:'Show In',
