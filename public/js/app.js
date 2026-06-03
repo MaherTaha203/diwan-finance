@@ -2323,8 +2323,9 @@ init();
     'ليس لديك صلاحية التصدير',
     'No export permission'));
 
-  WRITE_FNS.forEach(fn => seal(fn,
+WRITE_FNS.forEach(fn => seal(fn,
     can.write,
     'ليس لديك صلاحية',
     'No permission'));
 })();
+};
