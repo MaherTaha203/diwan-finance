@@ -920,7 +920,6 @@ function fillMemberSelect(){
 }
 window.renderMemberStmt=function(){
 
-
   const mid=document.getElementById('ms-member')?.value;
   const from=document.getElementById('ms-from')?.value||'';
   const to=document.getElementById('ms-to')?.value||'';
@@ -1024,23 +1023,18 @@ window.renderMemberStmt=function(){
         <span class="lr-date">
           ${r.type==='opening'?'—':fdate(r.date)}
         </span>
-
         <span class="lr-name">
           ${r.no?esc(r.no):'—'}
         </span>
-
         <span class="lr-desc">
           ${esc(r.desc)}
         </span>
-
         <span class="lr-cr">
           ${r.cr>0 ? '₪ '+fmt(r.cr) : '—'}
         </span>
-
         <span class="lr-dr">
           ${r.dr>0 ? '₪ '+fmt(r.dr) : '—'}
         </span>
-
         <span class="lr-bal" style="color:${balColor}">
           ${
             bal<0
@@ -1048,7 +1042,6 @@ window.renderMemberStmt=function(){
               : `₪ ${fmt(bal)}`
           }
         </span>
-
         <span class="lr-note"></span>
       </div>
     `;
@@ -1059,13 +1052,11 @@ window.renderMemberStmt=function(){
       <div style="font-size:11px;font-weight:600;color:var(--don);margin-bottom:8px">
         التبرعات (لا تؤثر على الرصيد)
       </div>
-
       ${dons.map(d=>`
         <div class="sr">
           <span class="sr-l">
             ${fdate(d.receipt_date)} — ${esc(d.notes||'تبرع')}
           </span>
-
           <span class="sr-v" style="color:var(--don)">
             ₪ ${fmt(d.amount_ils||d.amount)}
           </span>
@@ -1076,13 +1067,11 @@ window.renderMemberStmt=function(){
 
   out.innerHTML=`
     <div class="card">
-
       <div style="margin-bottom:12px">
         <div style="font-size:18px;font-weight:700">
           ${esc(member.name)}
         </div>
       </div>
-
       <div class="ledger-hdr">
         <span style="flex:0 0 90px">التاريخ</span>
         <span style="flex:0 0 120px">المرجع</span>
@@ -1092,13 +1081,10 @@ window.renderMemberStmt=function(){
         <span style="flex:0 0 120px">الرصيد</span>
         <span style="flex:0 0 80px"></span>
       </div>
-
       <div class="scroll">
         ${rowsHTML}
       </div>
-
       ${donsHTML}
-
     </div>
   `;
 };
