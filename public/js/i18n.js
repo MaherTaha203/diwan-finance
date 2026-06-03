@@ -323,8 +323,8 @@ const translations = {
       cleaning:'Cleaning', maintenance:'Maintenance', other:'Other',
       no_data:'No expenses found',
       payment_no:'Payment No.',
-      cash:'Cash', check:'Cheque', transfer:'Transfer', online:'Online',
-    },
+method:'Payment Method',
+cash:'Cash', check:'Cheque', transfer:'Transfer', online:'Online',
     donations: {
       title:'Donations Registry', new:'New Donation',
       donor:'Donor', show_in:'Show In',
