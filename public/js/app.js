@@ -255,7 +255,7 @@ function vf(inputId,validatorFn,errorId){
 }
 
 
-/* ═══ EXCHANGE RATES — كلاهما من بنك إسرائيل مباشرة ═══ */
+/* ═══ EXCHANGE RATES ═══ */
 async function fetchRates(){
   try{
     // استدعاء Edge Function لتحديث الأسعار
