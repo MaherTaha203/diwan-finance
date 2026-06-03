@@ -865,7 +865,8 @@ window.applyLang = function() {
   Object.entries(thMap).forEach(([bodyId, headers]) => {
     const tbody = document.getElementById(bodyId);
     if (!tbody) return;
-    const thead = tbody.closest('table')?.querySelector('thead tr');
+    const table = tbody.closest('table');
+    const thead = table ? table.querySelector('thead tr') : null;;
     if (thead) thead.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
   });
 
