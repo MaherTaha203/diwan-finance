@@ -476,7 +476,7 @@ window.logout=async function(){
   document.getElementById('l-email').value='';
   const btn=document.getElementById('login-btn');
   if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
-  toast(window.t('messages.logged_out'),'info');
+  toast(window.t?window.t('messages.logged_out'):'تم تسجيل الخروج','info');
 };
 
 function applyPerms(){
@@ -656,7 +656,7 @@ const D={
   'food-pay':{render(){
     const q=(document.getElementById('q-food-pay')?.value||'').toLowerCase();
     let d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food');
-    if(q)d=d.filter(p=>(p.no+(p.beneficiary_name||gmn(p.member_id))+(p.notes||'')).toLowerCase().includes(p));
+   if(q)d=d.filter(p=>(p.no+(p.beneficiary_name||gmn(p.member_id))+(p.notes||'')).toLowerCase().includes(q));
     const tot=d.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     const sub=document.getElementById('food-pay-sub');
     if(sub)sub.textContent=`${d.length} سند — ₪ ${fmt(tot)}`;
@@ -1478,7 +1478,8 @@ window.applyAnnualDue=async function(){
   `سيُضاف ${fmt(amount)} ₪ كاشتراك سنة ${year} على ${members.length} عضو مستحق. هل تريد المتابعة؟`
 )) return;
   const btn=document.getElementById('btn-apply-due');
-  btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
+if(!btn)return;
+btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   const{error}=await SB.from('annual_dues').insert({year,amount,applied_by:CUR?.full_name||CU?.email,member_count:members.length});
   if(error){toast('خطأ: '+error.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
   await logAction('add',`تطبيق اشتراك سنة ${year} — ${members.length} عضو — ₪${fmt(amount)} لكل عضو`,'annual_dues',null);
