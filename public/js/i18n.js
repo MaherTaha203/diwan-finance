@@ -1,5 +1,5 @@
 'use strict';
-/* ═══════════════════════════════════════════════════
+/* ===================================================
    DIWAN FINANCE — i18n System
    Bilingual: Arabic (RTL) + English (LTR)
    Persistent via localStorage
@@ -743,7 +743,7 @@ window.applyLang = function() {
     if (text && text !== key) el.setAttribute('title', text);
   });
 
-  // ── TOPBAR ──
+  // -- TOPBAR --
   const themeBtn = document.getElementById('theme-btn');
   if (themeBtn) {
     const isLight = document.body.classList.contains('light');
@@ -761,7 +761,7 @@ window.applyLang = function() {
   const logoutBtn = document.querySelector('.tbtn.red[onclick="window.logout()"]');
   if (logoutBtn) logoutBtn.innerHTML = `<i class="ti ti-logout"></i>${window.t('topbar.logout')}`;
 
-  // ── SIDEBAR ──
+  // -- SIDEBAR --
   const nbMap = {
     'dash':        ['ti-layout-dashboard', 'nav.dashboard'],
     'food-rec':    ['ti-receipt',          'nav.food_receipts'],
@@ -792,7 +792,7 @@ window.applyLang = function() {
   ];
   secs.forEach((el, i) => { if (secLabels[i]) el.textContent = window.t(secLabels[i]); });
 
-  // ── PAGE HEADERS ──
+  // -- PAGE HEADERS --
   qTxt('#pg-dash .ph-t',       window.t('dashboard.title'));
   qTxt('#pg-food-rec .ph-t',   window.t('receipts.title_food'));
   qTxt('#pg-food-pay .ph-t',   window.t('payments.title_food'));
@@ -811,7 +811,7 @@ window.applyLang = function() {
   qTxt('#pg-settings .ph-t',   window.t('settings.title'));
   qTxt('#pg-settings .ph-s',   window.t('settings.subtitle'));
 
-  // ── ACTION BUTTONS ──
+  // -- ACTION BUTTONS --
   const btnMap = {
     'dash-btn-rec':   ['ti-plus',     'dashboard.new_receipt'],
     'dash-btn-pay':   ['ti-minus',    'dashboard.new_payment'],
@@ -842,7 +842,7 @@ window.applyLang = function() {
     el.innerHTML = `<i class="ti ti-refresh"></i>${window.t('common.refresh')}`;
   });
 
-  // ── TABLE HEADERS ──
+  // -- TABLE HEADERS --
   const thMap = {
     'food-rec-body':   [t('receipts.receipt_no'), t('common.date'), t('receipts.payer'), t('common.amount'), t('payments.method'), t('common.notes'), t('common.actions')],
     'food-pay-body':   [t('payments.payment_no'), t('common.date'), t('payments.beneficiary'), t('common.amount'), t('payments.method'), t('common.notes'), t('common.actions')],
@@ -858,7 +858,7 @@ window.applyLang = function() {
     if (thead) thead.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
   });
 
-  // ── STATEMENT FILTERS ──
+  // -- STATEMENT FILTERS --
   [['food-stmt-from','diwan-stmt-from','ms-from']].flat().forEach(id => {
     const lbl = document.querySelector(`label[for="${id}"]`);
     if (lbl) lbl.textContent = window.t('common.from_date');
@@ -874,7 +874,7 @@ window.applyLang = function() {
     if (opt.value === 'don') opt.text = window.t('stmt.type_don');
   });
 
-  // ── DIWAN PAY FILTER ──
+  // -- DIWAN PAY FILTER --
   const diwanPayFilter = document.getElementById('f-diwan-pay-type');
   if (diwanPayFilter) {
     const opts = diwanPayFilter.options;
@@ -886,7 +886,7 @@ window.applyLang = function() {
     if (opts[5]) opts[5].text = window.t('payments.other');
   }
 
-  // ── MEMBER FILTER ──
+  // -- MEMBER FILTER --
   const memFilter = document.getElementById('f-member-status');
   if (memFilter) {
     const opts = memFilter.options;
@@ -895,7 +895,7 @@ window.applyLang = function() {
     if (opts[2]) opts[2].text = window.t('members.late');
   }
 
-  // ── MODALS ──
+  // -- MODALS --
   // Receipt modal
   qTxt('#rec-mtitle', window.t('receipts.new'));
   const recFundSel = document.getElementById('rec-fund');
