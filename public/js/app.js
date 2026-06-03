@@ -257,22 +257,32 @@ function vf(inputId,validatorFn,errorId){
 
 /* ═══ EXCHANGE RATES — كلاهما من بنك إسرائيل مباشرة ═══ */
 async function fetchRates(){
-  const BOI='https://data.gov.il/api/3/action/datastore_search';
-  const RES='88adaee8-624c-4b3b-b0d7-07c39034fa0a';
-  async function fetchCurrency(code){
-    const url=BOI+'?resource_id='+RES+'&filters=%7B%22CURRENCYCODE%22%3A%22'+code+'%22%7D&limit=1&sort=_id+desc';
-    const r=await fetch(url);
-    const j=await r.json();
-    const rec=j?.result?.records?.[0];
-    return rec?parseFloat(rec.EXCHANGERATE):null;
-  }
-  try{const usd=await fetchCurrency('USD');if(usd&&usd>0)RATES.USD=usd;}
-  catch(e){console.warn('BOI USD fetch failed',e);}
-  try{const jod=await fetchCurrency('JOD');if(jod&&jod>0)RATES.JOD=jod;}
-  catch(e){
-    try{const{data}=await SB.from('settings').select('value').eq('key','jod_rate').single();if(data)RATES.JOD=parseFloat(data.value)||5.0;}
-    catch(e2){}
-  }
+  try{
+    // استدعاء Edge Function لتحديث الأسعار
+    await fetch(
+      'https://ralifvemgapmsgrjgazh.supabase.co/functions/v1/super-function',
+      {
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4',
+          'Content-Type':'application/json'
+        }
+      }
+    );
+  }catch(e){console.warn('Edge function failed',e);}
+
+  // اقرأ الأسعار المحدّثة من Supabase
+  try{
+    const{data}=await SB.from('settings').select('key,value')
+      .in('key',['usd_rate','jod_rate']);
+    if(data){
+      data.forEach(s=>{
+        if(s.key==='usd_rate'&&parseFloat(s.value)>0)RATES.USD=parseFloat(s.value);
+        if(s.key==='jod_rate'&&parseFloat(s.value)>0)RATES.JOD=parseFloat(s.value);
+      });
+    }
+  }catch(e){console.warn('fetchRates error',e);}
+
   updateRateDisplay();
 }
 function updateRateDisplay(){
