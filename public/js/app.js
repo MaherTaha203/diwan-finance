@@ -919,7 +919,7 @@ function fillMemberSelect(){
   if(cur)sel.value=cur;
 }
 window.renderMemberStmt=function(){
-window.renderMemberStmt=function(){
+
 
   const mid=document.getElementById('ms-member')?.value;
   const from=document.getElementById('ms-from')?.value||'';
