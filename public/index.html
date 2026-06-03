@@ -545,12 +545,86 @@
     <div class="mft"><button class="btn primary" onclick="window.updateMember()"><i class="ti ti-device-floppy"></i>حفظ التعديل</button><button class="btn danger" onclick="window.deleteMember()"><i class="ti ti-trash"></i>حذف العضو</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
   </div>
 
-  <!-- Edit Receipt -->
-  <div class="modal" id="m-edit-rec" style="display:none;max-width:420px">
-    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-edit"></i></span>تعديل الإيصال</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><input type="hidden" id="edit-rec-id"><div class="ibox warn"><i class="ti ti-lock"></i>يمكن تعديل المبلغ بالشيكل والملاحظات فقط</div><div class="fg"><div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-rec-amount" min="0.01" step="0.01"></div></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-rec-notes"></textarea></div></div></div>
-    <div class="mft"><button class="btn primary" onclick="window.updateRec()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn danger" onclick="window.deleteRec()"><i class="ti ti-trash"></i>إلغاء السند</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+ <!-- Edit Receipt -->
+
+<div class="modal" id="m-edit-rec" style="display:none;max-width:420px">
+  <div class="mhd">
+    <span class="mtt">
+      <span class="mico green">
+        <i class="ti ti-edit"></i>
+      </span>
+      تعديل الإيصال
+    </span>
+
+```
+<button class="btn ghost" onclick="window.closeM()">
+  <i class="ti ti-x"></i>
+</button>
+```
+
   </div>
+
+  <div class="mbd">
+
+```
+<input type="hidden" id="edit-rec-id">
+
+<div class="ibox warn">
+  <i class="ti ti-lock"></i>
+  يمكن تعديل المبلغ والتاريخ والملاحظات فقط
+</div>
+
+<div class="fg">
+
+  <div class="fi full">
+    <label>المبلغ بالشيكل ₪ <span class="req">*</span></label>
+    <div class="iw">
+      <span class="ipx">₪</span>
+      <input
+        type="number"
+        id="edit-rec-amount"
+        min="0.01"
+        step="0.01">
+    </div>
+  </div>
+
+  <div class="fi full">
+    <label>التاريخ <span class="req">*</span></label>
+    <input
+      type="date"
+      id="edit-rec-date">
+  </div>
+
+  <div class="fi full">
+    <label>ملاحظات</label>
+    <textarea id="edit-rec-notes"></textarea>
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <div class="mft">
+    <button class="btn primary" onclick="window.updateRec()">
+      <i class="ti ti-device-floppy"></i>
+      حفظ
+    </button>
+
+```
+<button class="btn danger" onclick="window.deleteRec()">
+  <i class="ti ti-trash"></i>
+  إلغاء السند
+</button>
+
+<button class="btn" onclick="window.closeM()">
+  إلغاء
+</button>
+```
+
+  </div>
+</div>
+
 
   <!-- Edit Payment -->
   <div class="modal" id="m-edit-pay" style="display:none;max-width:420px">
