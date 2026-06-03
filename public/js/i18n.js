@@ -504,7 +504,7 @@ cash:'Cash', check:'Cheque', transfer:'Transfer', online:'Online',
 };
 
 
-/* ── FORMATTERS ── */
+/* == FORMATTERS == */
 window.formatNumber = function(n) {
   const num = Number(n || 0);
   return Math.round(num).toLocaleString('en-US');
