@@ -1380,11 +1380,19 @@ window.saveMember=async function(){
 
 /* ═══ EDIT RECORDS (admin only) ═══ */
 window.editRec=function(id){
-  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
-  const r=DB.receipts.find(x=>x.id===id);if(!r)return;
-  document.getElementById('edit-rec-id').value=id;
-  document.getElementById('edit-rec-amount').value=r.amount_ils||r.amount;
-  document.getElementById('edit-rec-notes').value=r.notes||'';
+  if(!can.admin()){
+    toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
+    return;
+  }
+
+  const r = DB.receipts.find(x=>x.id===id);
+  if(!r) return;
+
+  document.getElementById('edit-rec-id').value = id;
+  document.getElementById('edit-rec-amount').value = r.amount_ils || r.amount;
+  document.getElementById('edit-rec-date').value = r.date || '';
+  document.getElementById('edit-rec-notes').value = r.notes || '';
+
   window.openM('edit-rec');
 };
 window.updateRec=async function(){
