@@ -915,133 +915,189 @@ function fillMemberSelect(){
   if(cur)sel.value=cur;
 }
 window.renderMemberStmt=function(){
+window.renderMemberStmt=function(){
+
   const mid=document.getElementById('ms-member')?.value;
   const from=document.getElementById('ms-from')?.value||'';
   const to=document.getElementById('ms-to')?.value||'';
   const out=document.getElementById('ms-out');
-  if(!mid){out.innerHTML='';return;}
-  const member=gm(mid);if(!member){out.innerHTML='';return;}
-  const fd=from?new Date(from):null;
-  const td=to?new Date(to)?new Date(to):null:null;
-  const inRange=d=>{const dt=new Date(d);if(fd&&dt<fd)return false;if(td&&dt>td)return false;return true;};
 
-  const recs=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date));
- const dues = DB.annual.filter(d =>
-  !member.active_from_year ||
-  d.year >= member.active_from_year
-);
-  const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
-  const diwanNotes=DB.audit.filter(a=>a.action==='note'&&a.table_name==='member_note'&&a.record_id===mid);
-
- const rows=[];
-
-const openBal = Number(member.opening_balance || 0);
-
-if(openBal !== 0){
-  rows.push({
-    date:'—',
-    desc:'رصيد افتتاحي',
-    cr:0,
-    dr:openBal,
-    type:'opening'
-  });
-}
-
-dues.forEach(d =>
-  rows.push({
-    date:d.applied_at?.slice(0,10) || `${d.year}-01-01`,
-    desc:`اشتراك سنة ${d.year}`,
-    cr:0,
-    dr:Number(d.amount),
-    type:'due'
-  })
-);
-
-recs.forEach(r =>
-  rows.push({
-    date:r.receipt_date,
-    desc:r.notes || 'دفعة مساهمة',
-    cr:Number(r.amount_ils || r.amount),
-    dr:0,
-    type:'receipt',
-    no:r.no
-  })
-);
-  rows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
-
-let bal = 0;
-
-const rowsHTML=rows.map(r=>{
-
-  bal += r.dr - r.cr;
-
-  let balColor='#00C896';
-
-  if(bal > 0)
-    balColor='var(--danger)';
-  else if(bal < 0)
-    balColor='#2563EB';
-    return`<div class="lr">
-      <span class="lr-date">${r.date==='—'?'—':fdate(r.date)}</span>
-      <span class="lr-name">${r.no?esc(r.no):'—'}</span>
-      <span class="lr-desc">${esc(r.desc)}</span>
-      <span class="lr-cr">${r.cr>0?'₪ '+fmt(r.cr):'—'}</span>
-      <span class="lr-dr">${r.dr>0?'₪ '+fmt(r.dr):'—'}</span>
-      <span class="lr-bal" style="color:${balColor}">
-  ${
-    bal < 0
-      ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
-      : `₪ ${fmt(bal)}`
+  if(!mid){
+    out.innerHTML='';
+    return;
   }
-</span>
-      <span class="lr-note"></span>
-    </div>`;
-  }).join('');
 
-  const donsHTML=dons.length?`
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-      <div style="font-size:11px;font-weight:600;color:var(--don);margin-bottom:8px">التبرعات (لا تؤثر على الرصيد)</div>
-      ${dons.map(d=>`<div class="sr"><span class="sr-l">${fdate(d.receipt_date)} — ${esc(d.notes||'تبرع')}</span><span class="sr-v" style="color:var(--don)">₪ ${fmt(d.amount_ils||d.amount)}</span></div>`).join('')}
-    </div>`:'' ;
+  const member=gm(mid);
+
+  if(!member){
+    out.innerHTML='';
+    return;
+  }
+
+  const fd=from?new Date(from):null;
+  const td=to?new Date(to):null;
+
+  const inRange=d=>{
+    const dt=new Date(d);
+    if(fd && dt<fd) return false;
+    if(td && dt>td) return false;
+    return true;
+  };
+
+  const recs=DB.receipts.filter(r=>
+    !r.is_deleted &&
+    r.fund_type==='food' &&
+    r.member_id===mid &&
+    inRange(r.receipt_date)
+  );
+
+  const dues=DB.annual
+    .filter(d =>
+      !member.active_from_year ||
+      d.year >= member.active_from_year
+    );
+
+  const dons=DB.receipts.filter(r=>
+    !r.is_deleted &&
+    r.fund_type==='donation' &&
+    r.member_id===mid &&
+    inRange(r.receipt_date)
+  );
+
+  const rows=[];
 
   const openBal=Number(member.opening_balance||0);
-  const totalDons=dons.reduce((s,d)=>s+Number(d.amount_ils||d.amount),0);
-  out.innerHTML=`<div class="card">
-    <div style="background:var(--navy2);color:#fff;padding:12px 16px;border-radius:var(--r);margin-bottom:14px">
-      <div style="font-size:15px;font-weight:700">${esc(member.name)}</div>
-      <div style="font-size:11px;opacity:.6;margin-top:2px">${window.LANG==='en'?'Food Fund Statement':'كشف حساب صندوق الغداء'}</div>
+
+  if(openBal!==0){
+    rows.push({
+      date:'1900-01-01',
+      desc:'رصيد افتتاحي',
+      cr:0,
+      dr:openBal,
+      type:'opening'
+    });
+  }
+
+  dues.forEach(d=>{
+    rows.push({
+      date:d.applied_at?.slice(0,10) || `${d.year}-01-01`,
+      desc:`اشتراك سنة ${d.year}`,
+      cr:0,
+      dr:Number(d.amount||0),
+      type:'due'
+    });
+  });
+
+  recs.forEach(r=>{
+    rows.push({
+      date:r.receipt_date,
+      desc:r.notes || 'دفعة مساهمة',
+      cr:Number(r.amount_ils||r.amount||0),
+      dr:0,
+      type:'receipt',
+      no:r.no
+    });
+  });
+
+  rows.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  let bal=0;
+
+  const rowsHTML=rows.map(r=>{
+
+    bal += r.dr - r.cr;
+
+    let balColor='#00C896';
+
+    if(bal>0){
+      balColor='var(--danger)';
+    }else if(bal<0){
+      balColor='#2563EB';
+    }
+
+    return `
+      <div class="lr">
+        <span class="lr-date">
+          ${r.type==='opening'?'—':fdate(r.date)}
+        </span>
+
+        <span class="lr-name">
+          ${r.no?esc(r.no):'—'}
+        </span>
+
+        <span class="lr-desc">
+          ${esc(r.desc)}
+        </span>
+
+        <span class="lr-cr">
+          ${r.cr>0 ? '₪ '+fmt(r.cr) : '—'}
+        </span>
+
+        <span class="lr-dr">
+          ${r.dr>0 ? '₪ '+fmt(r.dr) : '—'}
+        </span>
+
+        <span class="lr-bal" style="color:${balColor}">
+          ${
+            bal<0
+              ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
+              : `₪ ${fmt(bal)}`
+          }
+        </span>
+
+        <span class="lr-note"></span>
+      </div>
+    `;
+  }).join('');
+
+  const donsHTML=dons.length ? `
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
+      <div style="font-size:11px;font-weight:600;color:var(--don);margin-bottom:8px">
+        التبرعات (لا تؤثر على الرصيد)
+      </div>
+
+      ${dons.map(d=>`
+        <div class="sr">
+          <span class="sr-l">
+            ${fdate(d.receipt_date)} — ${esc(d.notes||'تبرع')}
+          </span>
+
+          <span class="sr-v" style="color:var(--don)">
+            ₪ ${fmt(d.amount_ils||d.amount)}
+          </span>
+        </div>
+      `).join('')}
     </div>
-    ${openBal!==0?`<div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:12px;color:var(--food);font-weight:500"><i class="ti ti-history"></i> رصيد ما قبل 2025 (للاطلاع فقط)</span>
-      <span style="font-size:15px;font-weight:700;color:var(--food)">
-₪ ${fmt(openBal)}
-</span>
-    </div>`:''}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="kpi ${
-  bal > 0
-    ? 'red'
-    : bal < 0
-      ? 'blue'
-      : 'green'
-}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance (2025+)':'الرصيد الحالي (2025+)'}</div><div class="kpi-val" style="font-size:16px">
-${
-  bal < 0
-    ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
-    : `₪ ${fmt(bal)}`
-}
-</div></div>
-      <div class="kpi food" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Total Donations':'إجمالي التبرعات'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDons)}</div></div>
+  ` : '';
+
+  out.innerHTML=`
+    <div class="card">
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:18px;font-weight:700">
+          ${esc(member.name)}
+        </div>
+      </div>
+
+      <div class="ledger-hdr">
+        <span style="flex:0 0 90px">التاريخ</span>
+        <span style="flex:0 0 120px">المرجع</span>
+        <span style="flex:1">البيان</span>
+        <span style="flex:0 0 90px">دائن</span>
+        <span style="flex:0 0 90px">مدين</span>
+        <span style="flex:0 0 120px">الرصيد</span>
+        <span style="flex:0 0 80px"></span>
+      </div>
+
+      <div class="scroll">
+        ${rowsHTML}
+      </div>
+
+      ${donsHTML}
+
     </div>
-    <div class="ledger-hdr">
-      <span style="flex:0 0 85px">${window.LANG==='en'?'Date':'التاريخ'}</span><span style="flex:0 0 120px">${window.LANG==='en'?'Receipt No.':'رقم السند'}</span>
-      <span style="flex:1">${window.LANG==='en'?'Description':'البيان'}</span>
-      <span style="flex:0 0 80px;text-align:left">${window.LANG==='en'?'Credit ₪':'دائن ₪'}</span>
-      <span style="flex:0 0 80px;text-align:left">${window.LANG==='en'?'Debit ₪':'مدين ₪'}</span>
-      <span style="flex:0 0 85px;text-align:left">${window.LANG==='en'?'Balance ₪':'الرصيد ₪'}</span>
-      <span style="flex:0 0 110px"></span>
-    </div>
-    <div class="scroll">${rowsHTML||`<div class="empty" style="padding:14px"><div class="empty-t">${L.noData('ops')}</div></div>`}</div>
+  `;
+};
     ${donsHTML}
     ${diwanNotes.length?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
       <div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:8px"><i class="ti ti-building"></i> مصاريف الديوان المتعلقة بالعضو (ملاحظات فقط)</div>
