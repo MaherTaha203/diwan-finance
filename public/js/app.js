@@ -457,7 +457,11 @@ async function afterLogin(){
     document.body.classList.remove('light');
   }
   window.LANG = localStorage.getItem('diwan_lang')||'ar';
+if(typeof window.applyLang === 'function'){
   window.applyLang();
+}else{
+  console.warn('applyLang not ready yet');
+}
   await loadSettings();
   await fetchRates();
   await loadAll();
