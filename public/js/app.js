@@ -243,6 +243,18 @@ const gmn=id=>gm(id)?.name||'—';
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nextNo=(prefix,arr)=>prefix+'-'+String(arr.filter(x=>x.no?.startsWith(prefix)).length+1).padStart(5,'0');
 
+/* ═══ FORM VALIDATION ═══ */
+function vf(inputId,validatorFn,errorId){
+  const el=document.getElementById(inputId);
+  const errEl=document.getElementById(errorId);
+  const val=el?el.value:'';
+  const ok=validatorFn(val);
+  if(el){if(ok)el.classList.remove('err');else el.classList.add('err');}
+  if(errEl){if(ok)errEl.classList.remove('on');else errEl.classList.add('on');}
+  return ok;
+}
+
+
 /* ═══ EXCHANGE RATES — كلاهما من بنك إسرائيل مباشرة ═══ */
 async function fetchRates(){
   const BOI='https://data.gov.il/api/3/action/datastore_search';
