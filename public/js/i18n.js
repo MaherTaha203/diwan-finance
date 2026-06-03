@@ -509,7 +509,6 @@ if(typeof window.applyLang === 'function'){
   window.applyLang();
 } else {
   console.warn('applyLang not ready yet');
-}
 
 /* ── FORMATTERS ── */
 window.formatNumber = function(n) {
