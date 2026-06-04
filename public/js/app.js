@@ -1392,9 +1392,10 @@ window.editRec=function(id){
   document.getElementById('edit-rec-amount').value = r.amount_ils || r.amount;
   document.getElementById('edit-rec-notes').value = r.notes || '';
 
+  /* BUG 2 FIX: قراءة receipt_date وليس r.date */
   const dateEl = document.getElementById('edit-rec-date');
   if(dateEl){
-    dateEl.value = r.date || '';
+    dateEl.value = r.receipt_date || '';
   }
 
   window.openM('edit-rec');
@@ -1402,11 +1403,8 @@ window.editRec=function(id){
 window.updateRec = async function () {
 
 if (!can.admin()) {
-toast(
-window.t ? window.t('errors.no_permission') : 'المدير فقط',
-'err'
-);
-return;
+  toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
+  return;
 }
 
 const id = document.getElementById('edit-rec-id').value;
@@ -1415,45 +1413,31 @@ const date = document.getElementById('edit-rec-date')?.value || null;
 const notes = document.getElementById('edit-rec-notes').value || '';
 
 if (amount <= 0) {
-toast('أدخل مبلغاً صحيحاً', 'warn');
-return;
+  toast('أدخل مبلغاً صحيحاً', 'warn');
+  return;
 }
 
-console.log('Receipt ID:', id);
-console.log('Amount:', amount);
-console.log('Date:', date);
-console.log('Notes:', notes);
-
-const { data, error } = await SB
-.from('receipts')
-.update({
-amount_ils: amount,
-amount: amount,
-date: date,
-notes: notes,
-updated_at: new Date().toISOString()
-})
-.eq('id', id)
-.select();
-
-console.log('UPDATE DATA:', data);
-console.log('UPDATE ERROR:', error);
+/* BUG 3 FIX: حفظ receipt_date وليس date
+   BUG 4 FIX: لا نغير amount الأصلي — فقط amount_ils
+   نحافظ على: amount (العملة الأصلية), currency, exchange_rate */
+const { error } = await SB
+  .from('receipts')
+  .update({
+    amount_ils: amount,
+    receipt_date: date,
+    notes: notes,
+    updated_at: new Date().toISOString()
+  })
+  .eq('id', id);
 
 if (error) {
-toast('خطأ: ' + error.message, 'err');
-return;
+  toast('خطأ: ' + error.message, 'err');
+  return;
 }
 
-await logAction(
-'edit',
-`تعديل إيصال — ₪${fmt(amount)}`,
-'receipts',
-id
-);
-
+await logAction('edit',`تعديل إيصال — ₪${fmt(amount)} | تاريخ: ${date||'—'}`, 'receipts', id);
 window.closeM();
 await loadAll();
-
 toast('✓ تم التعديل', 'ok');
 
 };
@@ -1704,7 +1688,15 @@ const REC_CSS='@page{size:A4 portrait;margin:0}*{box-sizing:border-box;margin:0;
 +'.b-diwan{background:#EFF6FF;color:#1D4ED8}'
 +'.b-don{background:#F5F3FF;color:#6D28D9}'
 +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-const PAY_CSS=REC_CSS.replace(/background:#1B3A6B/g,'background:#2d1b69').replace(/color:#00C896/g,'color:#FCA5A5').replace(/background:linear-gradient\(90deg,#00C896,#059669,#1B6CA8\)/,'background:linear-gradient(90deg,#DC2626,#B91C1C,#2d1b69)').replace(/border:1px solid rgba\(0,200,150,.5\)/g,'border:1px solid rgba(252,165,165,.5)').replace(/background:rgba\(0,200,150,.15\)/g,'background:rgba(252,165,165,.15)').replace(/color:#00C896/g,'color:#FCA5A5').replace(/#1B3A6B/g,'#2d1b69');
+/* PAY_CSS: Navy professional (not purple) with red accent for payment distinction */
+const PAY_CSS=REC_CSS
+  .replace(/background:#1B3A6B/g,'background:#111827')
+  .replace(/.hdr\{background:#1B3A6B/g,'.hdr{background:#111827')
+  .replace(/color:#00C896/g,'color:#F87171')
+  .replace(/background:linear-gradient\(90deg,#00C896,#059669,#1B6CA8\)/,'background:linear-gradient(90deg,#F87171,#DC2626,#111827)')
+  .replace(/border:1px solid rgba\(0,200,150,.5\)/g,'border:1px solid rgba(248,113,113,.5)')
+  .replace(/background:rgba\(0,200,150,.15\)/g,'background:rgba(248,113,113,.12)')
+  .replace(/#1B3A6B/g,'#111827');
 function buildRecVoucher(r,label){
   const fundLabel=r.fund_type==='food'?'صندوق الغداء':r.fund_type==='donation'?'تبرع':'صندوق الديوان';
   const fundClass=r.fund_type==='food'?'b-food':r.fund_type==='donation'?'b-don':'b-diwan';
@@ -1790,7 +1782,7 @@ function buildRecVoucher(r,label){
     +'</div>'
  
     /* ── FOOTER ── */
-    +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
+    +'<div class="footer">جميع الحقوق محفوظة © 2026 | ديوان آل طه | All rights reserved | diwan-finance.com</div>'
  
     +'</div>'
     +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
@@ -1880,7 +1872,7 @@ function buildPayVoucher(p,label){
     +'</div>'
  
     /* ── FOOTER ── */
-    +'<div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>'
+    +'<div class="footer">جميع الحقوق محفوظة © 2026 | ديوان آل طه | All rights reserved | diwan-finance.com</div>'
  
     +'</div>'
     +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
@@ -1955,18 +1947,147 @@ window.prtMemberStmt=function(){
   const member=gm(mid);if(!member)return;
   const from=document.getElementById('ms-from')?.value||'';
   const to=document.getElementById('ms-to')?.value||'';
+
+  /* ── date range filter ── */
+  const fd=from?new Date(from):null;
+  const td=to?new Date(to):null;
+  const inRange=d=>{
+    if(!d||d==='—') return true;
+    const dt=new Date(d);
+    if(fd&&dt<fd) return false;
+    if(td&&dt>td) return false;
+    return true;
+  };
+
   const rows=[];
   const openBal=Number(member.opening_balance||0);
-  if(openBal!==0) rows.push({date:'—',no:'—',desc:'رصيد افتتاحي',cr:openBal>0?openBal:0,dr:openBal<0?Math.abs(openBal):0});
-  DB.annual.forEach(a=>rows.push({date:a.applied_at?.slice(0,10)||a.year+'-01-01',no:'—',desc:`اشتراك سنة ${a.year}`,cr:0,dr:Number(a.amount)}));
-  DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid).forEach(r=>rows.push({date:r.receipt_date,no:r.no,desc:r.notes||'مساهمة',cr:Number(r.amount_ils||r.amount),dr:0}));
+
+  /* opening balance — موجب = مدين على العضو (متطابق مع الشاشة) */
+  if(openBal!==0) rows.push({date:'—',no:'—',desc:'رصيد افتتاحي · Opening Balance',cr:0,dr:openBal,cls:'opening'});
+
+  /* annual dues — مفلتر بـ active_from_year (إصلاح BUG 1) */
+  DB.annual
+    .filter(a=>!member.active_from_year||a.year>=member.active_from_year)
+    .forEach(a=>rows.push({date:a.applied_at?.slice(0,10)||a.year+'-01-01',no:'—',desc:`اشتراك سنة ${a.year}`,cr:0,dr:Number(a.amount),cls:'due'}));
+
+  /* receipts — مفلترة بالتاريخ */
+  DB.receipts
+    .filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date))
+    .forEach(r=>rows.push({date:r.receipt_date,no:r.no,desc:r.notes||'مساهمة',cr:Number(r.amount_ils||r.amount),dr:0,cls:'paid'}));
+
   rows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
+
+  /* summary */
+  const totalDues=rows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
+  const totalPaid=rows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
   let bal=0;
-  const rowsHTML=rows.map(r=>{bal+=r.cr-r.dr;return`<tr><td>${r.date==='—'?'—':fmtDate2(r.date)}</td><td>${r.no}</td><td>${r.desc}</td><td style="color:green;text-align:left">${r.cr>0?'₪ '+fmt(r.cr):'—'}</td><td style="color:red;text-align:left">${r.dr>0?'₪ '+fmt(r.dr):'—'}</td><td style="text-align:left;font-weight:600;color:${bal>=0?'green':'red'}">₪ ${fmt(bal)}</td></tr>`;}).join('');
-  const css='@page{size:A4 portrait;margin:14mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000}h1{font-size:14pt;margin-bottom:3px}h2{font-size:11pt;color:#1B6CA8;margin-bottom:12px}table{width:100%;border-collapse:collapse;font-size:9.5pt}thead th{background:#0A1628;color:#fff;padding:6px 10px;text-align:right;font-weight:500}tbody td{padding:5px 10px;border-bottom:.5pt solid #f0f0f0}tbody tr:nth-child(even){background:#f9f9f9}.footer{text-align:center;font-size:7.5pt;color:#aaa;margin-top:16px;border-top:1pt solid #eee;padding-top:8px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-  const body=`<h1>${esc(member.name)}</h1><h2>كشف حساب صندوق الغداء</h2>
-  <table><thead><tr><th>التاريخ</th><th>رقم السند</th><th>البيان</th><th>دائن ₪</th><th>مدين ₪</th><th>الرصيد ₪</th></tr></thead><tbody>${rowsHTML}</tbody></table>
-  <div class="footer">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>`;
+  const rowsHTML=rows.map(r=>{
+    bal+=r.dr-r.cr;
+    const rowBg=r.cls==='due'?'background:#fff8f0':r.cls==='paid'?'background:#f0fdf4':r.cls==='opening'?'background:#f0f4ff':'';
+    const balColor=bal>0?'#DC2626':bal<0?'#059669':'#374151';
+    return`<tr style="${rowBg}">
+      <td style="white-space:nowrap">${r.date==='—'?'—':fmtDate2(r.date)}</td>
+      <td style="font-family:monospace;font-size:8pt">${esc(r.no)}</td>
+      <td>${esc(r.desc)}</td>
+      <td style="color:#059669;text-align:left;font-weight:600">${r.cr>0?'₪ '+fmt(r.cr):'—'}</td>
+      <td style="color:#DC2626;text-align:left;font-weight:600">${r.dr>0?'₪ '+fmt(r.dr):'—'}</td>
+      <td style="text-align:left;font-weight:700;color:${balColor}">₪ ${fmt(bal)}</td>
+    </tr>`;
+  }).join('');
+
+  const finalBal=openBal+totalDues-totalPaid;
+  const finalColor=finalBal>0?'#DC2626':finalBal<0?'#059669':'#374151';
+  const printDate=new Date().toLocaleDateString('en-GB').replace(/\//g,'/');
+  const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`من ${fmtDate2(from)}`:to?`حتى ${fmtDate2(to)}`:'كل الفترات';
+
+  const css=`@page{size:A4 portrait;margin:12mm 14mm}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:10pt}
+    .hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0}
+    .hdr-left .org{font-size:13pt;font-weight:700;color:#fff;display:block}
+    .hdr-left .org-en{font-size:8pt;color:rgba(255,255,255,.45);display:block;letter-spacing:.5px}
+    .hdr-center .doc-type{font-size:12pt;font-weight:700;color:#00C896;display:block;text-align:center}
+    .hdr-center .doc-type-en{font-size:8pt;color:rgba(0,200,150,.6);display:block;text-align:center}
+    .hdr-right{text-align:left}
+    .hdr-right .lbl{font-size:7pt;color:rgba(255,255,255,.4)}
+    .hdr-right .val{font-size:10pt;font-weight:700;color:#fff;font-family:monospace}
+    .strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896)}
+    .member-info{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:.5pt solid #e2e8f0}
+    .mi{padding:6px 10px;border-left:.5pt solid #e2e8f0}
+    .mi .lbl{font-size:7pt;color:#94a3b8;text-transform:uppercase;display:block;margin-bottom:1px;letter-spacing:.05em}
+    .mi .val{font-size:10pt;font-weight:600;color:#0A1628}
+    .summary{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;background:#f8fafc;border-bottom:1pt solid #e2e8f0;padding:8px 10px;gap:8px}
+    .sum-cell{text-align:center;padding:6px;background:#fff;border:.5pt solid #e2e8f0;border-radius:3px}
+    .sum-lbl{font-size:7pt;color:#64748b;display:block;margin-bottom:2px}
+    .sum-val{font-size:11pt;font-weight:700}
+    table{width:100%;border-collapse:collapse;font-size:9pt;margin-top:0}
+    thead th{background:#0F2B5B;color:#fff;padding:6px 8px;text-align:right;font-weight:500;font-size:8.5pt}
+    tbody td{padding:5px 8px;border-bottom:.5pt solid #f1f5f9;vertical-align:middle}
+    .final-row{background:#0F2B5B;color:#fff;font-weight:700;font-size:10pt}
+    .final-row td{padding:7px 8px;color:#fff}
+    .sig-area{display:flex;justify-content:space-between;padding:10px 10px 6px;border-top:.5pt solid #e2e8f0;margin-top:8px}
+    .sig-block{text-align:center;min-width:100px}
+    .sig-lbl{font-size:7.5pt;color:#64748b;display:block}
+    .sig-lbl-ar{font-size:7pt;color:#94a3b8;display:block;margin-top:1px}
+    .sig-line{border-top:.5pt solid #94a3b8;margin:10px auto 3px;width:90px}
+    .stamp{width:50px;height:50px;border-radius:50%;border:1pt solid #0F2B5B;margin:2px auto;display:flex;align-items:center;justify-content:center;font-size:6pt;color:#0F2B5B;text-align:center;line-height:1.3;font-family:Arial}
+    .footer{background:#0F2B5B;padding:4px 10px;text-align:center;font-size:7pt;color:rgba(255,255,255,.4);margin-top:6px;border-radius:0 0 4px 4px}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
+
+  const body=`
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="org">ديوان آل طه</span>
+        <span class="org-en">DIWAN AL-TAHA FAMILY</span>
+      </div>
+      <div class="hdr-center">
+        <span class="doc-type">كشف حساب العضو</span>
+        <span class="doc-type-en">MEMBER ACCOUNT STATEMENT</span>
+      </div>
+      <div class="hdr-right">
+        <div class="lbl">طُبع في</div>
+        <div class="val">${printDate}</div>
+      </div>
+    </div>
+    <div class="strip"></div>
+    <div class="member-info">
+      <div class="mi"><span class="lbl">الاسم · Name</span><span class="val">${esc(member.name)}</span></div>
+      <div class="mi"><span class="lbl">عضو منذ · Since</span><span class="val">${member.active_from_year||'—'}</span></div>
+      <div class="mi"><span class="lbl">الفترة · Period</span><span class="val">${periodLabel}</span></div>
+    </div>
+    <div class="summary">
+      <div class="sum-cell"><span class="sum-lbl">رصيد افتتاحي</span><span class="sum-val" style="color:#1D4ED8">₪ ${fmt(openBal)}</span></div>
+      <div class="sum-cell"><span class="sum-lbl">إجمالي الاشتراكات</span><span class="sum-val" style="color:#DC2626">₪ ${fmt(totalDues)}</span></div>
+      <div class="sum-cell"><span class="sum-lbl">إجمالي المدفوعات</span><span class="sum-val" style="color:#059669">₪ ${fmt(totalPaid)}</span></div>
+      <div class="sum-cell"><span class="sum-lbl">الرصيد الحالي</span><span class="sum-val" style="color:${finalColor}">₪ ${fmt(finalBal)}</span></div>
+    </div>
+    <table>
+      <thead><tr><th>التاريخ</th><th>رقم السند</th><th>البيان</th><th>دائن ₪</th><th>مدين ₪</th><th>الرصيد ₪</th></tr></thead>
+      <tbody>${rowsHTML}
+        <tr class="final-row">
+          <td colspan="5" style="text-align:right">الرصيد النهائي · Final Balance</td>
+          <td style="text-align:left;color:${finalColor}">₪ ${fmt(finalBal)}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="sig-area">
+      <div class="sig-block">
+        <div class="stamp">DIWAN<br>AL TAHA</div>
+        <span class="sig-lbl">Prepared By</span>
+        <span class="sig-lbl-ar">أعدّه</span>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <span class="sig-lbl">Member Signature</span>
+        <span class="sig-lbl-ar">توقيع العضو</span>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <span class="sig-lbl">Manager Approval</span>
+        <span class="sig-lbl-ar">اعتماد المسؤول</span>
+      </div>
+    </div>
+    <div class="footer">جميع الحقوق محفوظة © 2026 | ديوان آل طه | All rights reserved | diwan-finance.com</div>`;
   openPrintWin(css,body);
 };
 
@@ -2037,10 +2158,19 @@ window.exportCSV=function(type){
     const member=gm(mid);
     if(!member){toast('اختر عضواً أولاً','warn');return;}
     h=['التاريخ','رقم السند','البيان','دائن ₪','مدين ₪','الرصيد ₪'];
-    const stmtRows=[];
-    DB.annual.forEach(d=>stmtRows.push([fmtDate2(d.applied_at?.slice(0,10)),'—',`اشتراك سنة ${d.year}`,'',d.amount,'']));
-    DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid).forEach(r=>stmtRows.push([fmtDate2(r.receipt_date),r.no,r.notes||'مساهمة',r.amount_ils||r.amount,'','']));
-    rows=stmtRows;
+    const csvRows=[];
+    const openBal=Number(member.opening_balance||0);
+    let csvBal=0;
+    if(openBal!==0){csvBal+=openBal;csvRows.push(['—','—','رصيد افتتاحي','',openBal,csvBal]);}
+    /* BUG 5 FIX: active_from_year filter */
+    DB.annual
+      .filter(a=>!member.active_from_year||a.year>=member.active_from_year)
+      .forEach(a=>{csvBal+=Number(a.amount);csvRows.push([a.applied_at?.slice(0,10)||a.year+'-01-01','—',`اشتراك سنة ${a.year}`,'',a.amount,csvBal]);});
+    DB.receipts
+      .filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid)
+      .sort((a,b)=>new Date(a.receipt_date)-new Date(b.receipt_date))
+      .forEach(r=>{csvBal-=Number(r.amount_ils||r.amount);csvRows.push([r.receipt_date,r.no,r.notes||'مساهمة',r.amount_ils||r.amount,'',csvBal]);});
+    rows=csvRows;
   }else if(type==='food-rec'){
     h=['رقم','التاريخ','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
     rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').map(r=>[r.no,r.receipt_date,r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
@@ -2100,9 +2230,23 @@ function setupAllForms(){
 }
 
 /* ═══ FORGOT PASSWORD ═══ */
-window.forgotPassword=function(){
+window.forgotPassword=async function(){
+  const emailEl=document.getElementById('l-email');
+  const email=(emailEl?.value||'').trim();
   const msg=document.getElementById('forgot-msg');
+  if(!email){
+    if(msg){msg.textContent=window.LANG==='en'?'Enter your email first.':'أدخل بريدك الإلكتروني أولاً.';msg.style.display='block';setTimeout(()=>msg.style.display='none',5000);}
+    return;
+  }
+  const {error}=await SB.auth.resetPasswordForEmail(email,{
+    redirectTo:'https://www.diwan-finance.com/reset-password'
+  });
   if(msg){
+    if(error){
+      msg.textContent=window.LANG==='en'?'Error: '+error.message:'خطأ: '+error.message;
+    } else {
+      msg.textContent=window.LANG==='en'?'Reset link sent to '+email:'تم إرسال رابط إعادة تعيين كلمة المرور إلى '+email+'. تحقق من بريدك.';
+    }
     msg.style.display='block';
     setTimeout(()=>msg.style.display='none',8000);
   }
@@ -2414,4 +2558,3 @@ WRITE_FNS.forEach(fn => seal(fn,
     'ليس لديك صلاحية',
     'No permission'));
 })();
-
