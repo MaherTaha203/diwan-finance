@@ -2192,6 +2192,89 @@ window.exportCSV=function(type){
   toast(window.t('messages.exported'),'ok');
 };
 
+/* ═══ MEMBER STATEMENT EXPORTS ═══ */
+window.exportMemberStmt=function(format){
+  if(!can.export()&&format!=='pdf'){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
+  const mid=document.getElementById('ms-member')?.value;
+  const member=gm(mid);
+  if(!member){toast('اختر عضواً أولاً','warn');return;}
+  const from=document.getElementById('ms-from')?.value||'';
+  const to=document.getElementById('ms-to')?.value||'';
+  const fd=from?new Date(from):null;
+  const td=to?new Date(to):null;
+  const inRange=d=>{if(!d||d==='—')return true;const dt=new Date(d);if(fd&&dt<fd)return false;if(td&&dt>td)return false;return true;};
+  const openBal=Number(member.opening_balance||0);
+  const stmtRows=[];
+  if(openBal!==0) stmtRows.push({date:'—',no:'—',desc:'\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a \u00b7 Opening Balance',cr:0,dr:openBal,cls:'opening'});
+  DB.annual
+    .filter(a=>!member.active_from_year||a.year>=member.active_from_year)
+    .forEach(a=>stmtRows.push({date:a.applied_at?.slice(0,10)||a.year+'-01-01',no:'—',desc:`\u0627\u0634\u062a\u0631\u0627\u0643 \u0633\u0646\u0629 ${a.year}`,cr:0,dr:Number(a.amount),cls:'due'}));
+  DB.receipts
+    .filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date))
+    .forEach(r=>stmtRows.push({date:r.receipt_date,no:r.no,desc:r.notes||'\u062f\u0641\u0639\u0629 \u0645\u0633\u0627\u0647\u0645\u0629',cr:Number(r.amount_ils||r.amount),dr:0,cls:'paid'}));
+  stmtRows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
+
+  /* running balance: dr-cr (dues+, payments-) */
+  let runBal=0;
+  const computed=stmtRows.map(r=>{runBal+=r.dr-r.cr;return{...r,bal:runBal};});
+
+  const totalDues=stmtRows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
+  const totalPaid=stmtRows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
+  const finalBal=openBal+totalDues-totalPaid;
+  const periodLabel=from&&to?`${from} - ${to}`:from?`\u0645\u0646 ${from}`:to?`\u062d\u062a\u0649 ${to}`:'\u0643\u0644 \u0627\u0644\u0641\u062a\u0631\u0627\u062a';
+  const printDate=new Date().toLocaleDateString('en-GB');
+  const fname=`member-stmt_${today()}`;
+
+  /* CSV */
+  if(format==='csv'){
+    const h=['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f','\u0627\u0644\u0628\u064a\u0627\u0646','\u062f\u0627\u0626\u0646 \u20aa','\u0645\u062f\u064a\u0646 \u20aa','\u0627\u0644\u0631\u0635\u064a\u062f \u20aa'];
+    const body=computed.map(r=>[r.date==='—'?'—':r.date,r.no,r.desc,r.cr>0?r.cr:'',r.dr>0?r.dr:'',r.bal]);
+    const csv='\uFEFF'+[h,...body].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=fname+'.csv';a.click();
+    toast('\u2713 CSV exported','ok');return;
+  }
+
+  /* JSON */
+  if(format==='json'){
+    const payload={generated_at:new Date().toISOString(),member:{id:member.id,name:member.name,active_from_year:member.active_from_year},period:{from,to},summary:{opening_balance:openBal,total_dues:totalDues,total_paid:totalPaid,final_balance:finalBal},rows:computed.map(r=>({date:r.date,voucher_no:r.no,description:r.desc,credit:r.cr,debit:r.dr,running_balance:r.bal}))};
+    const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(payload,null,2));a.download=fname+'.json';a.click();
+    toast('\u2713 JSON exported','ok');return;
+  }
+
+  /* EXCEL */
+  if(format==='excel'){
+    const doExcel=()=>{
+      const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064f \u062a\u062d\u0645\u064a\u0644 \u0645\u0643\u062a\u0628\u0629 Excel...','info');return;}
+      const wsData=[['\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 \u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648'],[`\u0627\u0644\u0639\u0636\u0648: ${member.name}  |  \u0627\u0644\u0641\u062a\u0631\u0629: ${periodLabel}`],[],['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f','\u0627\u0644\u0628\u064a\u0627\u0646','\u062f\u0627\u0626\u0646 \u20aa','\u0645\u062f\u064a\u0646 \u20aa','\u0627\u0644\u0631\u0635\u064a\u062f \u20aa'],...computed.map(r=>[r.date==='—'?'—':r.date,r.no,r.desc,r.cr>0?r.cr:'',r.dr>0?r.dr:'',r.bal]),[],['\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a','','',openBal,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a','','',totalDues,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a','','','',totalPaid,''],['\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a','','','','',finalBal]];
+      const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!cols']=[{wch:12},{wch:14},{wch:30},{wch:12},{wch:12},{wch:14}];ws['!rtl']=true;
+      const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'\u0643\u0634\u0641 \u0627\u0644\u062d\u0633\u0627\u0628');XLSX.writeFile(wb,fname+'.xlsx');
+      toast('\u2713 Excel exported','ok');
+    };
+    if(window.XLSX){doExcel();}else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=doExcel;document.head.appendChild(s);}
+    return;
+  }
+
+  /* Shared HTML template */
+  const bc=finalBal>0?'#DC2626':finalBal<0?'#059669':'#374151';
+  const rowsHtml=computed.map(r=>{const bg=r.cls==='due'?'background:#fff8f0':r.cls==='paid'?'background:#f0fdf4':r.cls==='opening'?'background:#eef2ff':'';const rc=r.bal>0?'#DC2626':r.bal<0?'#059669':'#374151';return`<tr style="${bg}"><td>${r.date==='—'?'—':r.date}</td><td style="font-family:monospace">${esc(r.no)}</td><td>${esc(r.desc)}</td><td style="color:#059669;text-align:left;font-weight:600">${r.cr>0?'\u20aa '+fmt(r.cr):'—'}</td><td style="color:#DC2626;text-align:left;font-weight:600">${r.dr>0?'\u20aa '+fmt(r.dr):'—'}</td><td style="text-align:left;font-weight:700;color:${rc}">\u20aa ${fmt(r.bal)}</td></tr>`;}).join('');
+  const htmlDoc=`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u2014 ${esc(member.name)}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:10pt;padding:14mm}.hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0}.org{font-size:13pt;font-weight:700;color:#fff}.org-en{font-size:8pt;color:rgba(255,255,255,.4);display:block}.strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896)}.summary{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:8px;background:#f8fafc;border-bottom:1pt solid #e2e8f0}.sc{text-align:center;padding:5px;background:#fff;border:.5pt solid #e2e8f0;border-radius:3px}.sl{font-size:7pt;color:#64748b;display:block;margin-bottom:2px}.sv{font-size:11pt;font-weight:700}table{width:100%;border-collapse:collapse;font-size:9pt;margin-top:0}thead th{background:#0F2B5B;color:#fff;padding:5px 8px;text-align:right;font-weight:500}tbody td{padding:4px 8px;border-bottom:.5pt solid #f1f5f9}.final{background:#0F2B5B}.final td{color:#fff;font-weight:700;padding:6px 8px}.footer{background:#0F2B5B;padding:3px;text-align:center;font-size:7pt;color:rgba(255,255,255,.3);margin-top:6px}@media print{body{padding:0}@page{size:A4 portrait;margin:12mm 14mm}}</style></head><body><div class="hdr"><div><span class="org">\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</span><span class="org-en">DIWAN AL-TAHA</span></div><div style="text-align:center"><div style="font-size:12pt;font-weight:700;color:#00C896">\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0639\u0636\u0648</div></div><div style="text-align:left;font-size:9pt;font-weight:600;color:#fff">${printDate}</div></div><div class="strip"></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:.5pt solid #e2e8f0"><div style="padding:5px 10px;border-left:.5pt solid #e2e8f0"><span style="font-size:7pt;color:#94a3b8;display:block">\u0627\u0644\u0627\u0633\u0645</span><span style="font-size:9.5pt;font-weight:600">${esc(member.name)}</span></div><div style="padding:5px 10px;border-left:.5pt solid #e2e8f0"><span style="font-size:7pt;color:#94a3b8;display:block">\u0639\u0636\u0648 \u0645\u0646\u0630</span><span style="font-size:9.5pt;font-weight:600">${member.active_from_year||'—'}</span></div><div style="padding:5px 10px"><span style="font-size:7pt;color:#94a3b8;display:block">\u0627\u0644\u0641\u062a\u0631\u0629</span><span style="font-size:9.5pt;font-weight:600">${periodLabel}</span></div></div><div class="summary"><div class="sc"><span class="sl">\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a</span><span class="sv" style="color:#1D4ED8">\u20aa ${fmt(openBal)}</span></div><div class="sc"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a</span><span class="sv" style="color:#DC2626">\u20aa ${fmt(totalDues)}</span></div><div class="sc"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a</span><span class="sv" style="color:#059669">\u20aa ${fmt(totalPaid)}</span></div><div class="sc"><span class="sl">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</span><span class="sv" style="color:${bc}">\u20aa ${fmt(finalBal)}</span></div></div><table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u062f\u0627\u0626\u0646 \u20aa</th><th>\u0645\u062f\u064a\u0646 \u20aa</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u20aa</th></tr></thead><tbody>${rowsHtml}<tr class="final"><td colspan="5" style="text-align:right">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a</td><td style="text-align:left;color:${bc}">\u20aa ${fmt(finalBal)}</td></tr></tbody></table><div class="footer">\u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0642 \u0645\u062d\u0641\u0648\u0638\u0629 \u00a9 2026 | \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 | diwan-finance.com</div></body></html>`;
+
+  if(format==='html'){
+    const a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(htmlDoc);a.download=fname+'.html';a.click();
+    toast('\u2713 HTML exported','ok');return;
+  }
+
+  /* PDF */
+  if(format==='pdf'){
+    const w=window.open('','_blank','width=800,height=700');
+    if(!w){toast('\u0627\u0644\u0633\u0645\u0627\u062d \u0628\u0627\u0644\u0646\u0648\u0627\u0641\u0630 \u0627\u0644\u0645\u0646\u0628\u062b\u0642\u0629 \u0645\u0637\u0644\u0648\u0628','warn');return;}
+    w.document.write(htmlDoc);w.document.close();
+    w.onload=()=>{w.focus();w.print();};
+    toast('\u2713 \u0627\u0641\u062a\u062d \u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0637\u0628\u0627\u0639\u0629 \u0648\u062d\u062f\u062f "Save as PDF"','info');return;
+  }
+};
+
+
 /* ═══ CLOCK ═══ */
 function startClock(){
   const el=document.getElementById('clock');
