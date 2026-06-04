@@ -2275,6 +2275,151 @@ window.exportMemberStmt=function(format){
 };
 
 
+/* ═══ UNIVERSAL PDF + EXCEL EXPORT ═══ */
+window.exportPagePDF=function(type){
+  const css='@page{size:A4 portrait;margin:12mm 14mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:9.5pt}.hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0;margin-bottom:0}.org{font-size:13pt;font-weight:700;color:#fff}.org-en{font-size:8pt;color:rgba(255,255,255,.4);display:block}.doc-type{font-size:12pt;font-weight:700;color:#00C896;text-align:center}.doc-sub{font-size:8pt;color:rgba(0,200,150,.5);text-align:center}.strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896);margin-bottom:8px}table{width:100%;border-collapse:collapse;font-size:9pt}thead th{background:#0F2B5B;color:#fff;padding:5px 8px;text-align:right;font-weight:500;font-size:8.5pt}tbody td{padding:4px 8px;border-bottom:.5pt solid #f1f5f9}tbody tr:nth-child(even){background:#f8fafc}.total-row{background:#0F2B5B;color:#fff;font-weight:600}.total-row td{padding:6px 8px;color:#fff}.footer{background:#0F2B5B;padding:4px 10px;text-align:center;font-size:7pt;color:rgba(255,255,255,.35);margin-top:8px;border-radius:0 0 4px 4px}.meta{font-size:8pt;color:#64748b;margin-bottom:6px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+  const printDate=new Date().toLocaleDateString('en-GB');
+  const titles={
+    'food-rec':['\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621','Food Fund Receipts'],
+    'food-pay':['\u0645\u0635\u0627\u0631\u064a\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621','Food Fund Expenses'],
+    'food-stmt':['\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621','Food Fund Statement'],
+    'diwan-rec':['\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646','Diwan Fund Receipts'],
+    'diwan-pay':['\u0645\u0635\u0627\u0631\u064a\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646','Diwan Fund Expenses'],
+    'diwan-stmt':['\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646','Diwan Fund Statement'],
+    'don':['\u0633\u062c\u0644 \u0627\u0644\u062a\u0628\u0631\u0639\u0627\u062a','Donations Registry'],
+    'members':['\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0623\u0639\u0636\u0627\u0621','Members List'],
+    'annual':['\u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a \u0627\u0644\u0633\u0646\u0648\u064a\u0629','Annual Subscriptions'],
+    'users':['\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646','Users'],
+    'audit':['\u0633\u062c\u0644 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a','Audit Log']
+  };
+  const t=titles[type]||[type,type];
+  let tableHTML='';
+  const fund=type.startsWith('food')?'food':'diwan';
+
+  if(type==='food-rec'||type==='diwan-rec'){
+    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund);
+    let total=0;
+    tableHTML='<table><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u062f\u0627\u0641\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0637\u0631\u064a\u0642\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
+    d.sort((a,b)=>new Date(a.receipt_date)-new Date(b.receipt_date)).forEach(r=>{
+      const amt=Number(r.amount_ils||r.amount||0);total+=amt;
+      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.member_id?gmn(r.member_id):r.payer_name||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.method(r.payment_method)}</td><td>${esc(r.notes||'')}</td></tr>`;
+    });
+    tableHTML+=`<tr class="total-row"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0625\u064a\u0635\u0627\u0644)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+  }
+  else if(type==='food-pay'||type==='diwan-pay'){
+    const d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund);
+    let total=0;
+    tableHTML='<table><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0641\u0626\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
+    d.sort((a,b)=>new Date(a.payment_date)-new Date(b.payment_date)).forEach(p=>{
+      const amt=Number(p.amount_ils||p.amount||0);total+=amt;
+      tableHTML+=`<tr><td>${esc(p.no)}</td><td>${p.payment_date}</td><td>${esc(p.beneficiary_name||gmn(p.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.expense(p.expense_type)}</td><td>${esc(p.notes||'')}</td></tr>`;
+    });
+    tableHTML+=`<tr class="total-row"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0633\u0646\u062f)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+  }
+  else if(type==='food-stmt'||type==='diwan-stmt'){
+    const el=document.getElementById(fund+'-stmt-body');
+    if(el) tableHTML='<table>'+document.querySelector('#pg-'+type+' .card table')?.innerHTML+'</table>';
+    else tableHTML='<p>\u0627\u0639\u0631\u0636 \u0627\u0644\u0643\u0634\u0641 \u0623\u0648\u0644\u0627\u064b</p>';
+  }
+  else if(type==='don'){
+    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
+    let total=0;
+    tableHTML='<table><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
+    d.forEach(r=>{
+      const amt=Number(r.amount_ils||r.amount||0);total+=amt;
+      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${r.donation_display_fund||''}</td><td>${esc(r.notes||'')}</td></tr>`;
+    });
+    tableHTML+=`<tr class="total-row"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length})</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+  }
+  else if(type==='members'){
+    tableHTML='<table><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0639\u0636\u0648 \u0645\u0646\u0630</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0627\u0641\u062a\u062a\u0627\u062d\u064a</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th><th>\u0627\u0644\u062d\u0627\u0644\u0629</th></tr></thead><tbody>';
+    DB.members.filter(m=>m.is_active!==false).forEach(m=>{
+      const bal=FIN.memberBalance(m.id);
+      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>${m.active_from_year||'—'}</td><td>\u20aa ${fmt(m.opening_balance||0)}</td><td style="color:${bal>0?'#DC2626':'#059669'}">\u20aa ${fmt(bal)}</td><td>${m.is_active!==false?'\u0646\u0634\u0637':'\u063a\u064a\u0631 \u0646\u0634\u0637'}</td></tr>`;
+    });
+    tableHTML+='</tbody></table>';
+  }
+  else if(type==='annual'){
+    tableHTML='<table><thead><tr><th>\u0627\u0644\u0633\u0646\u0629</th><th>\u0627\u0644\u0645\u0628\u0644\u063a</th><th>\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621</th><th>\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629</th><th>\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062a\u0637\u0628\u064a\u0642</th></tr></thead><tbody>';
+    DB.annual.forEach(a=>{
+      tableHTML+=`<tr><td>${a.year}</td><td>\u20aa ${fmt(a.amount)}</td><td>${a.member_count}</td><td>${esc(a.applied_by||'')}</td><td>${a.applied_at?.slice(0,10)||''}</td></tr>`;
+    });
+    tableHTML+='</tbody></table>';
+  }
+  else if(type==='audit'){
+    tableHTML='<table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0625\u062c\u0631\u0627\u0621</th><th>\u0627\u0644\u0648\u0635\u0641</th><th>\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645</th><th>\u0627\u0644\u062c\u062f\u0648\u0644</th></tr></thead><tbody>';
+    DB.audit.slice(0,200).forEach(a=>{
+      tableHTML+=`<tr><td style="white-space:nowrap">${a.created_at?.slice(0,10)||''}</td><td>${esc(a.action)}</td><td>${esc(a.description||'')}</td><td>${esc(a.user_name||'')}</td><td>${esc(a.table_name||'')}</td></tr>`;
+    });
+    tableHTML+='</tbody></table>';
+  }
+  else if(type==='users'){
+    tableHTML='<table><thead><tr><th>\u0627\u0644\u0628\u0631\u064a\u062f</th><th>\u0627\u0644\u062f\u0648\u0631</th></tr></thead><tbody>';
+    (DB.users||[]).forEach(u=>{
+      tableHTML+=`<tr><td>${esc(u.email)}</td><td>${u.role==='admin'?'\u0645\u062f\u064a\u0631':'\u0645\u0634\u0627\u0647\u062f'}</td></tr>`;
+    });
+    tableHTML+='</tbody></table>';
+  }
+
+  const body=`<div class="hdr"><div><span class="org">\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</span><span class="org-en">DIWAN AL-TAHA</span></div><div><div class="doc-type">${t[0]}</div><div class="doc-sub">${t[1]}</div></div><div style="text-align:left"><div style="font-size:7pt;color:rgba(255,255,255,.35)">\u0637\u064f\u0628\u0639 \u0641\u064a</div><div style="font-size:9pt;font-weight:600;color:#fff">${printDate}</div></div></div><div class="strip"></div>${tableHTML}<div class="footer">\u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0642 \u0645\u062d\u0641\u0648\u0638\u0629 \u00a9 2026 | \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 | diwan-finance.com</div>`;
+  openPrintWin(css,body);
+};
+
+/* Universal Excel Export */
+window.exportPageExcel=function(type){
+  if(!can.export()){toast('\u0644\u0627 \u062a\u0648\u062c\u062f \u0635\u0644\u0627\u062d\u064a\u0629','err');return;}
+  const fund=type.startsWith('food')?'food':'diwan';
+  let wsData=[];
+  const fname='diwan-'+type+'-'+today();
+
+  if(type==='food-rec'||type==='diwan-rec'){
+    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund);
+    wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u062f\u0627\u0641\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u0627\u0644\u0637\u0631\u064a\u0642\u0629','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
+    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.member_id?gmn(r.member_id):r.payer_name||'',Number(r.amount_ils||r.amount||0),L.method(r.payment_method),r.notes||'']));
+  }
+  else if(type==='food-pay'||type==='diwan-pay'){
+    const d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund);
+    wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f','\u0627\u0644\u0645\u0628\u0644\u063a','\u0627\u0644\u0641\u0626\u0629','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
+    d.forEach(p=>wsData.push([p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id)||'',Number(p.amount_ils||p.amount||0),L.expense(p.expense_type),p.notes||'']));
+  }
+  else if(type==='don'){
+    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
+    wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u062a\u0628\u0631\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u064a\u0638\u0647\u0631 \u0641\u064a','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
+    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),r.donation_display_fund||'',r.notes||'']));
+  }
+  else if(type==='members'){
+    wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0639\u0636\u0648 \u0645\u0646\u0630','\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
+    DB.members.filter(m=>m.is_active!==false).forEach(m=>wsData.push([m.name,m.phone||'',m.active_from_year||'',m.opening_balance||0,FIN.memberBalance(m.id)]));
+  }
+  else if(type==='annual'){
+    wsData=[['\u0627\u0644\u0633\u0646\u0629','\u0627\u0644\u0645\u0628\u0644\u063a','\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621','\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629','\u0627\u0644\u062a\u0627\u0631\u064a\u062e']];
+    DB.annual.forEach(a=>wsData.push([a.year,a.amount,a.member_count,a.applied_by||'',a.applied_at?.slice(0,10)||'']));
+  }
+  else if(type==='audit'){
+    wsData=[['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0625\u062c\u0631\u0627\u0621','\u0627\u0644\u0648\u0635\u0641','\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645','\u0627\u0644\u062c\u062f\u0648\u0644']];
+    DB.audit.forEach(a=>wsData.push([a.created_at?.slice(0,10)||'',a.action,a.description||'',a.user_name||'',a.table_name||'']));
+  }
+
+  const doExcel=()=>{
+    const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644...','info');return;}
+    const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a');
+    XLSX.writeFile(wb,fname+'.xlsx');
+    toast('\u2713 Excel','ok');
+  };
+  if(window.XLSX){doExcel();}
+  else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=doExcel;document.head.appendChild(s);}
+};
+
+/* Toggle export dropdown */
+window.togglePageExport=function(e,menuId){
+  e.stopPropagation();
+  document.querySelectorAll('.export-dropdown-menu').forEach(m=>{if(m.id!==menuId)m.classList.remove('show');});
+  var m=document.getElementById(menuId);if(m)m.classList.toggle('show');
+};
+document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown-menu').forEach(m=>m.classList.remove('show'));});
+
+
 /* ═══ CLOCK ═══ */
 function startClock(){
   const el=document.getElementById('clock');
