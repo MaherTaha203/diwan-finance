@@ -12,211 +12,130 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* ══ LOGIN PAGE — تصميم ديوان آل طه الذهبي ══ */
+/* == CONCEPT B — PREMIUM FINANCIAL INSTITUTION == */
 :root {
-  --bg-left:#181c2a; --bg-right:#161a28;
-  --card-bg:rgba(255,255,255,0.04); --card-border:rgba(200,169,110,0.13);
-  --title-color:#e8c97a;
-  --en-title:rgba(200,169,110,0.45);
-  --desc-main:rgba(220,190,140,0.88); --desc-sub:rgba(195,165,110,0.62);
-  --label-color:rgba(200,169,110,0.75);
-  --input-bg:rgba(255,255,255,0.04); --input-border:rgba(200,169,110,0.13);
-  --input-text:#c8d4e4; --input-ph:rgba(180,155,100,0.28);
-  --input-focus-border:rgba(200,169,110,0.38); --input-focus-bg:rgba(200,169,110,0.05);
-  --card-title:#e0d0a0; --card-sub:rgba(185,205,230,0.65);
-  --remember:rgba(190,165,115,0.65);
-  --btn2-bg:rgba(200,169,110,0.07); --btn2-border:rgba(200,169,110,0.16); --btn2-text:rgba(200,169,110,0.75);
-  --btn3-border:rgba(200,169,110,0.09); --btn3-text:rgba(185,160,110,0.45);
-  --pill-bg:rgba(200,169,110,0.06); --pill-border:rgba(200,169,110,0.12); --pill-text:rgba(200,169,110,0.5);
-  --pill-on-bg:rgba(200,169,110,0.2); --pill-on-border:rgba(200,169,110,0.34); --pill-on-text:#c8a96e;
-  --div-line:rgba(200,169,110,0.26); --ornament:rgba(200,169,110,0.2);
-  --sep:rgba(200,169,110,0.07);
-  --footer-brand:rgba(200,169,110,0.38); --footer-copy:rgba(180,150,90,0.3);
-  --footer-dev:rgba(170,140,80,0.28); --footer-addr:rgba(190,160,100,0.55);
-  --icon-color:rgba(180,155,100,0.4);
+  --b-navy:#1A1A2E; --b-navy2:#252538; --b-gold:#C4A450;
+  --b-cream:#F5F3EE; --b-white:#fff; --b-border:#EDE9E0;
+  --b-input-border:#DDD9D0; --b-input-bg:#FAFAF8;
+  --b-text:#1A1A2E; --b-text2:#555; --b-text3:#888; --b-placeholder:#B8B4AC;
 }
 
-/* LOGIN SCREEN override */
-#login-screen {
-  position:fixed; inset:0; z-index:1000;
-  background:transparent !important;
-  display:flex; align-items:stretch; justify-content:stretch;
-  overflow:hidden;
-}
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;overflow:hidden}
+#login-page{display:flex;width:100%;min-height:100vh;direction:rtl}
 
-/* صفحة الدخول بالتصميم الكامل */
-#login-page {
-  display:flex; width:100%; min-height:100vh;
-}
+/* LEFT PANEL — Navy institutional */
+.lp{width:44%;min-height:100vh;background:var(--b-navy);position:relative;display:flex;flex-direction:column;padding:22px 26px;overflow:hidden;transition:background .3s}
+.lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 40% at 60% 30%,rgba(196,164,80,.04) 0%,transparent 60%);pointer-events:none}
 
-/* اللوحة اليسرى */
-.lp {
-  width:50%; min-height:100vh;
-  background:var(--bg-left);
-  position:relative;
-  display:flex; flex-direction:column;
-  justify-content:space-between; align-items:center;
-  padding:52px 40px 32px;
-  overflow:hidden;
-  transition:background 0.3s;
-}
-.lp::before {
-  content:''; position:absolute; inset:0;
-  background:radial-gradient(ellipse 60% 45% at 70% 35%,rgba(200,169,110,0.06) 0%,transparent 60%);
-  pointer-events:none;
-}
-.lp-div {
-  position:absolute; top:0; right:0; bottom:0; width:1px;
-  background:linear-gradient(180deg,transparent,var(--div-line) 30%,var(--div-line) 70%,transparent);
-}
-.orn-tr { position:absolute; top:26px; right:26px; width:38px; height:38px; border-top:1px solid var(--ornament); border-right:1px solid var(--ornament); }
-.orn-bl { position:absolute; bottom:26px; left:26px; width:38px; height:38px; border-bottom:1px solid var(--ornament); border-left:1px solid var(--ornament); }
-.lp-center {
-  position:relative; z-index:2;
-  display:flex; flex-direction:column; align-items:center; text-align:center;
-  flex:1; justify-content:center; width:100%; max-width:460px;
-}
-.title-base {
-  font-family:'Cairo',sans-serif;
-  font-size:46px; font-weight:900;
-  line-height:1.25; text-align:center;
-  display:block; white-space:nowrap;
-  background:linear-gradient(160deg,#f5e080 0%,#c8a96e 25%,#f0d070 45%,#b8912a 65%,#e8c060 80%,#c8a96e 100%);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-}
-.lp-en-title {
-  font-family:'Cormorant Garamond',serif;
-  font-size:16px; font-weight:400; font-style:italic;
-  color:var(--en-title); text-align:center; letter-spacing:1.5px;
-  margin-bottom:22px;
-}
-@keyframes lineSweep{0%{left:-40%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:130%;opacity:0}}
-@keyframes cardGlow{0%{right:-45%;opacity:0}15%{opacity:1}85%{opacity:1}100%{right:145%;opacity:0}}
-.gline{width:82%;height:1px;background:rgba(200,169,110,0.08);margin:0 auto 8px;position:relative;overflow:hidden}
-.gline::before{content:'';position:absolute;top:0;height:100%;left:-40%;width:38%;background:linear-gradient(90deg,transparent,rgba(200,169,110,0.5),rgba(255,230,140,0.9),rgba(200,169,110,0.5),transparent);animation:lineSweep 3s ease-in-out infinite}
-.gline2{width:50%;height:1px;background:rgba(200,169,110,0.05);margin:0 auto 30px;position:relative;overflow:hidden}
-.gline2::before{content:'';position:absolute;top:0;height:100%;left:-50%;width:45%;background:linear-gradient(90deg,transparent,rgba(200,169,110,0.22),transparent);animation:lineSweep 3s 0.7s ease-in-out infinite}
-.desc-main{font-family:'Cairo',sans-serif;font-size:15.5px;font-weight:600;color:var(--desc-main);text-align:center;direction:rtl;margin-bottom:8px;line-height:1.6;}
-.desc-sub{font-family:'Cairo',sans-serif;font-size:13px;font-weight:400;color:var(--desc-sub);text-align:center;letter-spacing:2px;}
-.lp-foot{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
-.foot-addr{text-align:center}
-.foot-addr-ar{font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:var(--footer-addr);margin-bottom:2px;}
-.foot-addr-en{font-family:'Inter',sans-serif;font-size:10px;font-weight:400;color:var(--footer-addr);opacity:0.75;}
-.foot-sep-line{width:120px;height:1px;background:rgba(200,169,110,0.1);margin:0 auto}
-.foot-bottom{width:100%;display:flex;align-items:flex-end;justify-content:space-between}
-.foot-dev{font-family:'Inter',sans-serif;font-size:8.5px;color:var(--footer-dev);letter-spacing:0.2px;flex-shrink:0;}
-.foot-center{text-align:center;flex:1}
-.foot-brand{font-family:'Inter',sans-serif;font-size:9px;font-weight:600;color:var(--footer-brand);letter-spacing:0.8px;margin-bottom:3px;}
-.foot-copy{font-family:'Inter',sans-serif;font-size:8px;color:var(--footer-copy);letter-spacing:0.2px;}
-.foot-spacer{width:140px;flex-shrink:0}
+/* Logo emblem */
+.lp-logo{display:flex;align-items:center;gap:10px;margin-bottom:8px;position:relative;z-index:2}
+.lp-emblem{width:44px;height:44px;border-radius:8px;background:rgba(196,164,80,.06);border:1px solid rgba(196,164,80,.18);display:flex;align-items:center;justify-content:center}
+.lp-emblem-inner{width:32px;height:32px;border-radius:50%;border:.5px solid rgba(196,164,80,.25);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#C4A450;font-family:'Cairo',sans-serif}
+.lp-org{font-size:14px;font-weight:600;color:#fff;font-family:'Cairo',sans-serif;display:block}
+.lp-org-en{font-size:8px;color:rgba(255,255,255,.22);letter-spacing:1.5px;display:block}
 
-/* اللوحة اليمنى */
-.rp {
-  width:50%; min-height:100vh;
-  background:var(--bg-right);
-  display:flex; align-items:center; justify-content:center;
-  padding:40px 48px; position:relative;
-}
-.login-card {
-  width:100%; max-width:430px;
-  background:var(--card-bg);
-  border:1px solid var(--card-border);
-  border-radius:18px;
-  padding:34px 32px 30px;
-  position:relative; overflow:hidden;
-}
-.card-glow-bar{position:absolute;top:0;left:0;right:0;height:2px;overflow:hidden;border-radius:18px 18px 0 0}
-.card-glow-bar::before{content:'';position:absolute;top:0;height:100%;right:-45%;width:42%;background:linear-gradient(90deg,transparent,rgba(180,140,70,0.55),rgba(255,235,160,1),rgba(180,140,70,0.55),transparent);animation:cardGlow 3.2s ease-in-out infinite}
-.card-glow-bar::after{content:'';position:absolute;top:-1px;height:4px;right:-45%;width:42%;background:linear-gradient(90deg,transparent,rgba(200,169,110,0.2),rgba(255,235,160,0.35),rgba(200,169,110,0.2),transparent);animation:cardGlow 3.2s ease-in-out infinite;filter:blur(3px)}
-.login-card::before{content:'';position:absolute;top:0;left:0;width:36px;height:36px;border-top:1px solid var(--card-border);border-left:1px solid var(--card-border);border-radius:18px 0 0 0;pointer-events:none}
-.login-card::after{content:'';position:absolute;top:0;right:0;width:36px;height:36px;border-top:1px solid var(--card-border);border-right:1px solid var(--card-border);border-radius:0 18px 0 0;pointer-events:none}
+/* Institutional content */
+.lp-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;padding:8px 0}
+.lp-gold-bar{width:32px;height:2px;background:#C4A450;border-radius:1px;margin-bottom:10px}
+.lp-title{font-size:13px;font-weight:600;color:#fff;line-height:1.5;margin-bottom:12px;font-family:'Cairo',sans-serif}
+.lp-inst{font-size:8.5px;color:rgba(255,255,255,.42);line-height:1.85;margin-bottom:10px;font-family:'Cairo',sans-serif;text-align:justify}
 
-/* أزرار التحكم */
-.ctrl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;position:relative;z-index:2}
-.ctrl-group{display:flex;gap:3px;background:var(--pill-bg);border:1px solid var(--pill-border);border-radius:20px;padding:3px}
-.ctrl-btn{font-family:'Cairo',sans-serif;font-size:10.5px;font-weight:600;padding:5px 13px;border-radius:16px;border:none;background:transparent;color:var(--pill-text);cursor:pointer;transition:all 0.2s;white-space:nowrap}
-.ctrl-btn.on{background:var(--pill-on-bg);color:var(--pill-on-text);border:1px solid var(--pill-on-border)}
+/* Features */
+.lp-feats{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.lp-feat{display:flex;align-items:center;gap:7px}
+.lp-feat-icon{width:16px;height:16px;border-radius:3px;background:rgba(196,164,80,.08);border:.5px solid rgba(196,164,80,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;color:#C4A450}
+.lp-feat-text{font-size:8.5px;color:rgba(255,255,255,.52);font-family:'Cairo',sans-serif}
 
-/* عنوان الكارد */
-.login-card-title{font-family:'Cairo',sans-serif;font-size:24px;font-weight:800;color:var(--card-title);text-align:right;margin-bottom:4px;position:relative;z-index:2;}
-.login-card-sub{font-family:'Cairo',sans-serif;font-size:12px;color:var(--card-sub);text-align:right;margin-bottom:24px;font-weight:400;position:relative;z-index:2;}
+/* Compliance notice */
+.lp-notice{font-size:7.5px;color:rgba(196,164,80,.5);line-height:1.75;padding:8px 10px;background:rgba(196,164,80,.03);border:.5px solid rgba(196,164,80,.1);border-radius:5px;margin-bottom:12px;font-family:'Cairo',sans-serif;text-align:justify}
 
-/* حقول الإدخال */
-.login-form-group{margin-bottom:14px;position:relative;z-index:2}
-.login-form-label{display:block;font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;color:var(--label-color);text-align:right;margin-bottom:6px;}
+/* System info */
+.lp-sys{display:flex;gap:8px;margin-bottom:10px}
+.lp-sys-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.06);border-radius:5px;padding:5px 10px;flex:1;text-align:center}
+.lp-sys-lbl{font-size:7px;color:rgba(255,255,255,.28);font-family:'Cairo',sans-serif;display:block;margin-bottom:1px}
+.lp-sys-val{font-size:12px;font-weight:600;color:#C4A450;display:block}
+
+/* Authorized users */
+.lp-auth-title{font-size:7.5px;color:rgba(255,255,255,.22);margin-bottom:5px;font-family:'Cairo',sans-serif}
+.lp-auth{display:flex;gap:8px;margin-bottom:10px}
+.lp-auth-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.06);border-radius:5px;padding:6px 10px;flex:1;display:flex;align-items:center;gap:6px}
+.lp-auth-icon{width:18px;height:18px;border-radius:3px;background:rgba(196,164,80,.06);border:.5px solid rgba(196,164,80,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lp-auth-lbl{font-size:7px;color:rgba(255,255,255,.28);display:block;font-family:'Cairo',sans-serif}
+.lp-auth-val{font-size:10px;font-weight:500;color:rgba(255,255,255,.65);font-family:'Cairo',sans-serif}
+
+/* Footer */
+.lp-foot{position:relative;z-index:2;padding-top:8px;border-top:.5px solid rgba(255,255,255,.04)}
+.lp-foot-title{font-size:7.5px;color:rgba(196,164,80,.4);font-family:'Cairo',sans-serif;margin-bottom:3px}
+.lp-foot-text{font-size:7px;color:rgba(255,255,255,.18);line-height:1.6;font-family:'Cairo',sans-serif}
+
+/* RIGHT PANEL — Cream form */
+.rp{flex:1;min-height:100vh;background:var(--b-cream);display:flex;align-items:center;justify-content:center;padding:30px 40px;position:relative}
+
+/* Login card */
+.login-card{width:100%;max-width:320px;background:var(--b-white);border:.5px solid var(--b-border);border-radius:12px;padding:22px 24px;position:relative}
+
+/* Language switch */
+.lc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.lc-pills{display:flex;border-radius:5px;border:.5px solid var(--b-border);overflow:hidden}
+.lc-pill{padding:5px 14px;font-size:10px;font-family:'Cairo',sans-serif;color:var(--b-text3);background:#F9F7F3;cursor:pointer;transition:all .15s;border:none}
+.lc-pill.on{background:var(--b-navy);color:#fff;font-weight:500}
+
+/* Form elements */
+.lc-gold{width:28px;height:2px;background:var(--b-gold);border-radius:1px;margin-bottom:8px}
+.login-card-title{font-family:'Cairo',sans-serif;font-size:17px;font-weight:500;color:var(--b-text);margin-bottom:3px}
+.login-card-sub{font-family:'Cairo',sans-serif;font-size:10px;color:var(--b-text3);margin-bottom:18px}
+
+.login-form-group{margin-bottom:12px}
+.login-form-label{display:block;font-family:'Cairo',sans-serif;font-size:9px;font-weight:500;color:var(--b-text2);margin-bottom:4px}
 .iw-login{position:relative}
-.login-input{width:100%;height:46px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:10px;padding:0 42px;font-family:'Cairo',sans-serif;font-size:12.5px;color:var(--input-text);direction:rtl;text-align:right;outline:none;transition:border-color 0.25s,background 0.25s}
-.login-input::placeholder{color:var(--input-ph);font-size:11.5px}
-.login-input:focus{border-color:var(--input-focus-border);background:var(--input-focus-bg)}
-.ii-r-login{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--icon-color);pointer-events:none}
-.ii-l-login{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--icon-color);cursor:pointer;transition:color 0.15s;background:none;border:none;padding:0}
-.ii-l-login:hover{color:rgba(200,169,110,0.75)}
-.fsep-login{height:1px;background:var(--sep);margin:2px 0 13px}
+.login-input{width:100%;height:38px;background:var(--b-input-bg);border:1px solid var(--b-input-border);border-radius:7px;padding:0 12px 0 36px;font-family:'Cairo',sans-serif;font-size:11px;color:var(--b-text);direction:rtl;text-align:right;outline:none;transition:border-color .2s,background .2s}
+.login-input::placeholder{color:var(--b-placeholder);font-size:10px}
+.login-input:focus{border-color:var(--b-navy);background:var(--b-white)}
+.ii-r-login{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--b-gold);pointer-events:none}
+.ii-l-login{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:#9CA3AF;cursor:pointer;background:none;border:none;padding:0;transition:color .15s}
+.ii-l-login:hover{color:var(--b-text2)}
 
-/* صف تذكرني */
-.rem-row-login{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:22px;position:relative;z-index:2}
-.cchk-login{width:15px;height:15px;border-radius:3px;border:1px solid rgba(200,169,110,0.3);background:rgba(200,169,110,0.05);appearance:none;-webkit-appearance:none;cursor:pointer;position:relative;flex-shrink:0;transition:all 0.15s}
-.cchk-login:checked{background:rgba(200,169,110,0.25);border-color:rgba(200,169,110,0.6)}
-.cchk-login:checked::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#e8c97a;font-weight:900}
-.rem-lbl-login{font-family:'Cairo',sans-serif;font-size:11.5px;color:var(--remember);cursor:pointer;}
+/* Remember + forgot */
+.rem-row-login{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.rem-right{display:flex;align-items:center;gap:5px}
+.cchk-login{width:14px;height:14px;border-radius:3px;border:1px solid var(--b-input-border);background:var(--b-white);appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;transition:all .15s}
+.cchk-login:checked{background:#E8E4DC;border-color:#C4A450}
+.cchk-login:checked::after{content:'✓';position:absolute;font-size:8px;color:var(--b-navy);font-weight:700}
+.rem-lbl-login{font-family:'Cairo',sans-serif;font-size:9px;color:#666;cursor:pointer}
+.forgot-link{font-family:'Cairo',sans-serif;font-size:9px;color:var(--b-navy);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0}
 
-/* زر الدخول */
-.login-btn-main{
-  width:100%;height:46px;
-  background:linear-gradient(135deg,#a07d3a 0%,#c8a96e 45%,#e8c97a 65%,#c8a96e 80%,#a07d3a 100%);
-  background-size:200% 100%;background-position:100% 0;
-  border:none;border-radius:10px;
-  font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;color:#09121f;
-  cursor:pointer;transition:background-position 0.45s,transform 0.15s;
-  margin-bottom:10px;position:relative;z-index:2;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.login-btn-main:hover{background-position:0% 0;transform:translateY(-1px)}
+/* Login button */
+.login-btn-main{width:100%;height:40px;background:var(--b-navy);border:none;border-radius:7px;font-family:'Cairo',sans-serif;font-size:11px;font-weight:500;color:#fff;cursor:pointer;transition:background .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:6px}
+.login-btn-main:hover{background:var(--b-navy2)}
 .login-btn-main:active{transform:scale(0.985)}
-.login-btn-main:disabled{opacity:0.5;cursor:default;transform:none}
 
-/* رسالة خطأ */
-.login-err-box{
-  background:rgba(220,38,38,.08);color:#FCA5A5;
-  border:1px solid rgba(220,38,38,.2);
-  border-radius:8px;padding:10px 13px;font-size:12.5px;
-  margin-top:10px;display:none;text-align:center;font-family:'Cairo',sans-serif;
-}
+/* Error + forgot msg */
+.login-err-box{background:rgba(220,38,38,.06);color:#DC2626;border:1px solid rgba(220,38,38,.15);border-radius:7px;padding:8px 12px;font-size:11px;margin-top:8px;display:none;text-align:center;font-family:'Cairo',sans-serif}
 .login-err-box.show{display:block}
+.forgot-msg{display:none;background:rgba(196,164,80,.06);border:1px solid rgba(196,164,80,.15);border-radius:7px;padding:8px 12px;font-size:11px;color:#92700C;margin-top:8px;text-align:center;font-family:'Cairo',sans-serif}
 
-/* footer الكارد */
-.login-card-footer{
-  text-align:center;margin-top:20px;padding-top:14px;
-  border-top:1px solid rgba(200,169,110,0.12);
-  font-size:9.5px;color:rgba(200,169,110,0.38);font-weight:700;letter-spacing:.02em;font-family:'Inter',sans-serif;
-}
+/* Card footer */
+.login-card-footer{text-align:center;margin-top:14px;padding-top:12px;border-top:.5px solid var(--b-border);font-size:8px;color:#aaa;font-family:'Cairo',sans-serif}
 
-/* وضع Light */
-#login-page.light { --bg-left:#ffffff; --bg-right:#ffffff; --card-bg:rgba(245,235,210,0.65); --card-border:rgba(160,115,50,0.18); --en-title:rgba(140,95,35,0.48); --desc-main:rgba(90,58,12,0.88); --desc-sub:rgba(120,82,25,0.65); --label-color:rgba(140,95,35,0.8); --input-bg:rgba(255,255,255,0.75); --input-border:rgba(160,115,50,0.18); --input-text:#2e1c06; --input-ph:rgba(160,115,50,0.32); --input-focus-border:rgba(160,115,50,0.42); --input-focus-bg:rgba(255,255,255,0.92); --card-title:#2e1c06; --card-sub:rgba(90,62,18,0.68); --remember:rgba(120,82,25,0.65); --pill-bg:rgba(160,115,50,0.08); --pill-border:rgba(160,115,50,0.15); --pill-text:rgba(140,95,35,0.58); --pill-on-bg:rgba(160,115,50,0.2); --pill-on-border:rgba(160,115,50,0.38); --pill-on-text:#7a5010; --div-line:rgba(160,115,50,0.3); --ornament:rgba(160,115,50,0.22); --sep:rgba(160,115,50,0.1); --footer-brand:rgba(140,95,35,0.45); --footer-copy:rgba(120,82,25,0.35); --footer-dev:rgba(120,82,25,0.32); --footer-addr:rgba(110,72,20,0.62); --icon-color:rgba(140,95,35,0.42); --btn2-bg:rgba(160,115,50,0.09); --btn2-border:rgba(160,115,50,0.22); --btn2-text:rgba(120,82,28,0.8); --btn3-border:rgba(160,115,50,0.13); --btn3-text:rgba(120,82,28,0.5); }
-#login-page.light .title-base{background:linear-gradient(160deg,#a06010 0%,#c07820 30%,#8a4e08 55%,#b06820 75%,#7a4808 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-
-/* LTR */
-#login-page.ltr{direction:ltr}
-#login-page.ltr .lp-center{direction:ltr}
-#login-page.ltr .desc-main,#login-page.ltr .desc-sub,#login-page.ltr .lp-en-title{direction:ltr;text-align:center}
-#login-page.ltr .orn-tr{right:auto;left:26px;border-right:none;border-left:1px solid var(--ornament)}
-#login-page.ltr .ctrl-row{flex-direction:row-reverse}
-#login-page.ltr .login-card-title,#login-page.ltr .login-card-sub,#login-page.ltr .login-form-label{text-align:left}
-#login-page.ltr .login-input{direction:ltr;text-align:left;padding:0 42px}
-#login-page.ltr .ii-r-login{right:auto;left:13px}
-#login-page.ltr .ii-l-login{left:auto;right:13px}
-#login-page.ltr .rem-row-login{justify-content:flex-start;flex-direction:row-reverse}
-
-/* موبايل */
+/* MOBILE */
 @media(max-width:768px){
   #login-page{flex-direction:column}
   .lp,.rp{width:100%;min-height:auto}
-  .lp{padding:44px 28px 36px}
-  .rp{padding:32px 24px}
-  .title-base{font-size:34px}
-  .foot-bottom{flex-direction:column;align-items:center;gap:6px;text-align:center}
-  .foot-dev,.foot-spacer{width:auto}
+  .lp{padding:16px 18px}
+  .lp-body{padding:4px 0}
+  .lp-inst{font-size:8px}
+  .rp{padding:14px 16px}
+  .login-card{max-width:100%}
 }
+
+/* Export dropdown */
+.export-dropdown{position:relative;display:inline-block}
+.export-dropdown-btn{display:flex;align-items:center;gap:4px}
+.export-dropdown-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card,#fff);border:1px solid var(--bd,#e2e8f0);border-radius:8px;padding:4px;min-width:140px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.export-dropdown-menu.show{display:block}
+.export-dropdown-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;font-size:12px;color:var(--tx1,#333);cursor:pointer;font-family:'Cairo',sans-serif;border:none;background:none;width:100%;text-align:right}
+.export-dropdown-item:hover{background:var(--bg2,#f5f5f5)}
+.export-dropdown-item i{font-size:16px;color:var(--tx2,#666)}
 </style>
 </head>
 <body>
@@ -227,104 +146,110 @@
 <div id="login-screen">
   <div id="login-page">
 
-    <!-- اللوحة اليسرى -->
+    <!-- LEFT PANEL — Institutional -->
     <div class="lp">
-      <div class="lp-div"></div>
-      <div class="orn-tr"></div>
-      <div class="orn-bl"></div>
-      <div class="lp-center">
-        <span class="title-base" id="lp-title">نظام الإدارة المالية</span>
-        <div class="lp-en-title" id="lp-en-title">Financial Management System</div>
-        <div class="gline"></div>
-        <div class="gline2"></div>
-        <p class="desc-main" id="lp-desc-main">منصة ديوان فاينانس للإدارة المالية المتكاملة</p>
-        <p class="desc-sub" id="lp-desc-sub">كفاءة &nbsp;·&nbsp; شفافية</p>
+      <div class="lp-logo">
+        <div class="lp-emblem"><div class="lp-emblem-inner">د</div></div>
+        <div><span class="lp-org" id="lp-org">ديوان آل طه</span><span class="lp-org-en">DIWAN AL-TAHA</span></div>
       </div>
-      <div class="lp-foot">
-        <div class="foot-addr">
-          <div class="foot-addr-ar">ديوان آل طه — سردا، الشارع الرئيسي</div>
-          <div class="foot-addr-en">Diwan Al-Taha — Sarda, Main Street</div>
+
+      <div class="lp-body">
+        <div class="lp-gold-bar"></div>
+        <div class="lp-title" id="lp-title">النظام المالي والإداري الرسمي</div>
+        <div class="lp-inst" id="lp-inst-1">تم إنشاء هذا النظام من قبل لجنة ديوان آل طه في عام 2026 ليكون المرجع المالي الرئيسي لإدارة المدفوعات والمصاريف والإدارة الإلكترونية لصناديق الديوان، ولتسهيل مراجعة الحسابات ومتابعة العمليات المالية من قبل أعضاء اللجنة.</div>
+        <div class="lp-inst" id="lp-inst-2">جميع المعلومات والبيانات الموجودة داخل هذا النظام هي ملك حصري للجنة ديوان آل طه، ولا يحق لأي شخص أو جهة الاطلاع عليها أو استخدامها أو تداولها إلا بموافقة كاملة وصريحة من مؤسسي النظام والجهات المخولة بذلك.</div>
+
+        <div class="lp-feats">
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f1">تقارير مالية دقيقة</span></div>
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f2">حماية البيانات والمعلومات</span></div>
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f3">سجل مالي متكامل ومتعدد العمليات</span></div>
         </div>
-        <div class="foot-sep-line"></div>
-        <div class="foot-bottom">
-          <div class="foot-dev">Developed by Maher Mohamad Fayez Taha</div>
-          <div class="foot-center">
-            <div class="foot-brand">Diwan Finance Management</div>
-            <div class="foot-copy">© 2026–2027 All Rights Reserved</div>
+
+        <div class="lp-notice" id="lp-notice">على كل من يصل إلى هذا النظام الالتزام الكامل بالتعليمات والسياسات المعتمدة والمحافظة على سرية البيانات والمعلومات، ويُمنع استخدام أو مشاركة أي معلومات دون صلاحية، وذلك تحت طائلة المساءلة.</div>
+
+        <div class="lp-sys">
+          <div class="lp-sys-card"><span class="lp-sys-lbl" id="lp-mem-lbl">عدد الأعضاء</span><span class="lp-sys-val" id="lp-mem-count">149</span></div>
+          <div class="lp-sys-card"><span class="lp-sys-lbl" id="lp-fy-lbl">السنة المالية</span><span class="lp-sys-val" style="font-size:10px">2026 – 2027</span></div>
+        </div>
+
+        <div class="lp-auth-title" id="lp-auth-title">المستخدمون المصرح لهم بالدخول</div>
+        <div class="lp-auth">
+          <div class="lp-auth-card">
+            <div class="lp-auth-icon"><i class="ti ti-shield-check" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div><span class="lp-auth-lbl" id="lp-admin-lbl">مدير النظام</span><span class="lp-auth-val">1</span></div>
           </div>
-          <div class="foot-spacer"></div>
+          <div class="lp-auth-card">
+            <div class="lp-auth-icon"><i class="ti ti-users" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div><span class="lp-auth-lbl" id="lp-comm-lbl">أعضاء اللجنة</span><span class="lp-auth-val">6</span></div>
+          </div>
         </div>
+      </div>
+
+      <div class="lp-foot">
+        <div class="lp-foot-title" id="lp-foot-title">الإصدار 2.0 — النظام المالي لديوان آل طه © 2026–2027</div>
+        <div class="lp-foot-text" id="lp-foot-text">تم تطوير هذا النظام ليكون المرجع المالي والإداري الرسمي لصناديق ديوان آل طه، مع توفير بيئة آمنة لإدارة العمليات المالية ومراجعة الحسابات وحفظ السجلات.</div>
       </div>
     </div>
 
-    <!-- اللوحة اليمنى -->
+    <!-- RIGHT PANEL — Login Form -->
     <div class="rp">
       <div class="login-card">
-        <div class="card-glow-bar"></div>
-
-        <!-- أزرار التحكم -->
-        <div class="ctrl-row">
-          <div class="ctrl-group">
-            <button class="ctrl-btn on" id="lp-btn-ar" onclick="loginSetLang('ar')">العربية</button>
-            <button class="ctrl-btn" id="lp-btn-en" onclick="loginSetLang('en')">English</button>
-          </div>
-          <div class="ctrl-group">
-            <button class="ctrl-btn on" id="lp-btn-dk" onclick="loginSetMode('dark')">☾ Dark</button>
-            <button class="ctrl-btn" id="lp-btn-lt" onclick="loginSetMode('light')">☼ Light</button>
+        <div class="lc-row">
+          <div class="lc-pills">
+            <button class="lc-pill on" id="lp-btn-ar" onclick="loginSetLang('ar')">AR</button>
+            <button class="lc-pill" id="lp-btn-en" onclick="loginSetLang('en')">EN</button>
           </div>
         </div>
 
-        <div class="login-card-title" id="lp-welcome">مرحباً بك</div>
-        <div class="login-card-sub" id="lp-subtitle">سجل الدخول للوصول إلى النظام</div>
+        <div class="lc-gold"></div>
+        <div class="login-card-title" id="lp-welcome">تسجيل الدخول</div>
+        <div class="login-card-sub" id="lp-subtitle">أدخل بيانات حسابك للوصول إلى النظام</div>
 
-        <!-- حقل الإيميل -->
         <div class="login-form-group">
-          <label class="login-form-label" id="lbl-email">البريد الإلكتروني أو رقم الهاتف</label>
+          <label class="login-form-label" id="lbl-email">البريد الإلكتروني</label>
           <div class="iw-login">
-            <input class="login-input" type="text" id="l-email" autocomplete="username" inputmode="text"
-              placeholder="أدخل البريد الإلكتروني أو رقم الهاتف" dir="rtl"
+            <input class="login-input" type="text" id="l-email" autocomplete="username" inputmode="email"
+              placeholder="أدخل البريد الإلكتروني" dir="rtl"
               onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
-            <span class="ii-r-login" style="font-size:15px">✉</span>
+            <span class="ii-r-login"><i class="ti ti-mail" aria-hidden="true"></i></span>
           </div>
         </div>
-        <div class="fsep-login"></div>
 
-        <!-- حقل كلمة المرور -->
         <div class="login-form-group">
           <label class="login-form-label" id="lbl-pass">كلمة المرور</label>
           <div class="iw-login">
             <input class="login-input" type="password" id="l-pass" autocomplete="current-password"
-              placeholder="أدخل كلمة المرور" dir="rtl"
+              placeholder="••••••••" dir="rtl"
               onkeydown="if(event.key==='Enter')window.login()">
-            <span class="ii-r-login" style="font-size:15px">🔒</span>
-            <button class="ii-l-login" onclick="loginTogglePw()" style="font-size:13px;font-family:monospace">
-              <span id="lp-eye">👁</span>
-            </button>
+            <span class="ii-r-login"><i class="ti ti-lock" aria-hidden="true"></i></span>
+            <button class="ii-l-login" onclick="loginTogglePw()"><i class="ti ti-eye" id="lp-eye" aria-hidden="true"></i></button>
           </div>
         </div>
 
-        <!-- تذكرني + نسيت -->
         <div class="rem-row-login">
-          <input type="checkbox" class="cchk-login" id="l-remember">
-          <label class="rem-lbl-login" for="l-remember" id="lbl-remember">تذكرني</label>
+          <div class="rem-right">
+            <input type="checkbox" class="cchk-login" id="l-remember">
+            <label class="rem-lbl-login" for="l-remember" id="lbl-remember">تذكرني على هذا الجهاز</label>
+          </div>
+          <button class="forgot-link" onclick="window.forgotPassword()" id="lbl-forgot">نسيت كلمة المرور؟</button>
         </div>
 
-        <!-- زر الدخول -->
         <button class="login-btn-main" id="login-btn" onclick="window.login()">
           <i class="ti ti-login"></i>
           <span id="btn-login-txt">تسجيل الدخول</span>
         </button>
 
         <div class="login-err-box" id="login-err"></div>
-        <div class="forgot-msg" id="forgot-msg" style="display:none;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);border-radius:8px;padding:10px 13px;font-size:12px;color:rgba(245,200,100,.8);margin-top:10px;text-align:center;font-family:'Cairo',sans-serif;"></div>
+        <div class="forgot-msg" id="forgot-msg"></div>
 
-        <div class="login-card-footer">
-          All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System
-        </div>
+        <div class="login-card-footer" id="lp-card-footer">للدعم الفني: support@diwantaha.com</div>
       </div>
     </div>
 
   </div>
+</div>
+
+<!-- ══ APP ══ -->  </div>
 </div>
 
 <!-- ══ APP ══ -->
@@ -448,7 +373,7 @@
   </div>
   <div class="pg" id="pg-member-stmt">
     <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div></div>
-    <div class="card" style="margin-bottom:14px"><div class="fg"><div class="fi full"><label>اختر العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div><div class="fi"><label>من تاريخ</label><input type="date" id="ms-from"></div><div class="fi"><label>إلى تاريخ</label><input type="date" id="ms-to"></div></div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض الكشف</button><button class="btn" onclick="window.prtMemberStmt()"><i class="ti ti-printer"></i>طباعة</button><button class="btn" onclick="window.exportMemberStmt('csv')"><i class="ti ti-file-text"></i>CSV</button><button class="btn" onclick="window.exportMemberStmt('excel')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="btn" onclick="window.exportMemberStmt('json')"><i class="ti ti-braces"></i>JSON</button><button class="btn" onclick="window.exportMemberStmt('html')"><i class="ti ti-world"></i>HTML</button><button class="btn" onclick="window.exportMemberStmt('pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="fg"><div class="fi full"><label>اختر العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div><div class="fi"><label>من تاريخ</label><input type="date" id="ms-from"></div><div class="fi"><label>إلى تاريخ</label><input type="date" id="ms-to"></div></div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض الكشف</button><button class="btn" onclick="window.prtMemberStmt()"><i class="ti ti-printer"></i>طباعة</button><div class="export-dropdown"><button class="btn export-dropdown-btn" onclick="toggleExportMenu(event)"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="export-member-menu"><button class="export-dropdown-item" onclick="window.exportMemberStmt('excel');closeExportMenu()"><i class="ti ti-file-spreadsheet"></i>Excel (.xlsx)</button><button class="export-dropdown-item" onclick="window.exportMemberStmt('pdf');closeExportMenu()"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
     <div id="ms-out"></div>
   </div>
   <div class="pg" id="pg-annual">
@@ -681,68 +606,115 @@ var LP_LANG = 'ar', LP_MODE = 'dark', LP_PW = false;
 
 function loginSetLang(l) {
   LP_LANG = l;
-  var page = document.getElementById('login-page');
   document.getElementById('lp-btn-ar').classList.toggle('on', l==='ar');
   document.getElementById('lp-btn-en').classList.toggle('on', l==='en');
+
+  var $ = function(id){ return document.getElementById(id); };
+  var set = function(id, txt){ var el=$(id); if(el) el.textContent=txt; };
+  var ph = function(id, txt){ var el=$(id); if(el) el.placeholder=txt; };
+
   if(l==='en') {
-    page.classList.add('ltr');
-    page.setAttribute('dir','ltr');
-    document.getElementById('l-email').setAttribute('dir','ltr');
-    document.getElementById('l-pass').setAttribute('dir','ltr');
-    document.getElementById('lp-title').textContent='Financial Management System';
-    document.getElementById('lp-en-title').textContent='نظام الإدارة المالية';
-    document.getElementById('lp-desc-main').textContent='Diwan Finance Platform for Integrated Financial Management';
-    document.getElementById('lp-desc-sub').textContent='Efficiency · Transparency';
-    document.getElementById('lp-welcome').textContent='Welcome Back';
-    document.getElementById('lp-subtitle').textContent='Sign in to access your account';
-    document.getElementById('lbl-email').textContent='Email or Phone Number';
-    document.getElementById('l-email').placeholder='Enter your email or phone number';
-    document.getElementById('lbl-pass').textContent='Password';
-    document.getElementById('l-pass').placeholder='Enter your password';
-    document.getElementById('lbl-remember').textContent='Remember me';
-    document.getElementById('btn-login-txt').textContent='Sign In';
-    document.getElementById('login-lang-txt') && (document.getElementById('login-lang-txt').textContent='AR');
+    // LEFT PANEL
+    set('lp-org', 'Diwan Al-Taha');
+    set('lp-title', 'Official Financial and Administrative System');
+    set('lp-inst-1', 'This system was established by the Diwan Al Taha Committee in 2026 to serve as the primary financial reference for managing payments, expenses, and electronic administration of Diwan funds, and to facilitate account review and financial operations tracking by committee members.');
+    set('lp-inst-2', 'All information and data within this system are the exclusive property of the Diwan Al Taha Committee. No person or entity may access, use, or share this data without the full and explicit consent of the system founders and authorized parties.');
+    set('lp-f1', 'Accurate financial reports');
+    set('lp-f2', 'Data and information protection');
+    set('lp-f3', 'Comprehensive multi-operation financial records');
+    set('lp-notice', 'Anyone accessing this system must fully comply with the approved policies and instructions, maintain data confidentiality, and is prohibited from using or sharing any information without authorization, subject to accountability.');
+    set('lp-mem-lbl', 'Members');
+    set('lp-fy-lbl', 'Fiscal Year');
+    set('lp-auth-title', 'Authorized users');
+    set('lp-admin-lbl', 'System Admin');
+    set('lp-comm-lbl', 'Committee');
+    set('lp-foot-title', 'Version 2.0 \u2014 Diwan Al Taha Financial Management System \u00a9 2026\u20132027');
+    set('lp-foot-text', 'This system serves as the official financial and administrative platform for Diwan Al Taha funds, providing a secure environment for financial operations, account review, and record management.');
+
+    // RIGHT PANEL (form)
+    set('lp-welcome', 'Sign In');
+    set('lp-subtitle', 'Enter your credentials to access the system');
+    set('lbl-email', 'Email Address');
+    ph('l-email', 'Enter your email address');
+    set('lbl-pass', 'Password');
+    ph('l-pass', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
+    set('lbl-remember', 'Remember this device');
+    set('lbl-forgot', 'Forgot password?');
+    set('btn-login-txt', 'Sign In');
+    set('lp-card-footer', 'Support: support@diwantaha.com');
   } else {
-    page.classList.remove('ltr');
-    page.setAttribute('dir','rtl');
-    document.getElementById('l-email').setAttribute('dir','rtl');
-    document.getElementById('l-pass').setAttribute('dir','rtl');
-    document.getElementById('lp-title').textContent='نظام الإدارة المالية';
-    document.getElementById('lp-en-title').textContent='Financial Management System';
-    document.getElementById('lp-desc-main').textContent='منصة ديوان فاينانس للإدارة المالية المتكاملة';
-    document.getElementById('lp-desc-sub').textContent='كفاءة · شفافية';
-    document.getElementById('lp-welcome').textContent='مرحباً بك';
-    document.getElementById('lp-subtitle').textContent='سجل الدخول للوصول إلى النظام';
-    document.getElementById('lbl-email').textContent='البريد الإلكتروني أو رقم الهاتف';
-    document.getElementById('l-email').placeholder='أدخل البريد الإلكتروني أو رقم الهاتف';
-    document.getElementById('lbl-pass').textContent='كلمة المرور';
-    document.getElementById('l-pass').placeholder='أدخل كلمة المرور';
-    document.getElementById('lbl-remember').textContent='تذكرني';
-    document.getElementById('btn-login-txt').textContent='تسجيل الدخول';
+    // LEFT PANEL
+    set('lp-org', '\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647');
+    set('lp-title', '\u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0645\u0627\u0644\u064a \u0648\u0627\u0644\u0625\u062f\u0627\u0631\u064a \u0627\u0644\u0631\u0633\u0645\u064a');
+    set('lp-inst-1', '\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0645\u0646 \u0642\u0628\u0644 \u0644\u062c\u0646\u0629 \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u0641\u064a \u0639\u0627\u0645 2026 \u0644\u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0645\u0627\u0644\u064a \u0627\u0644\u0631\u0626\u064a\u0633\u064a \u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a \u0648\u0627\u0644\u0645\u0635\u0627\u0631\u064a\u0641 \u0648\u0627\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629 \u0644\u0635\u0646\u0627\u062f\u064a\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646\u060c \u0648\u0644\u062a\u0633\u0647\u064a\u0644 \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a \u0648\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0645\u0646 \u0642\u0628\u0644 \u0623\u0639\u0636\u0627\u0621 \u0627\u0644\u0644\u062c\u0646\u0629.');
+    set('lp-inst-2', '\u062c\u0645\u064a\u0639 \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0648\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u0648\u062c\u0648\u062f\u0629 \u062f\u0627\u062e\u0644 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0647\u064a \u0645\u0644\u0643 \u062d\u0635\u0631\u064a \u0644\u0644\u062c\u0646\u0629 \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647\u060c \u0648\u0644\u0627 \u064a\u062d\u0642 \u0644\u0623\u064a \u0634\u062e\u0635 \u0623\u0648 \u062c\u0647\u0629 \u0627\u0644\u0627\u0637\u0644\u0627\u0639 \u0639\u0644\u064a\u0647\u0627 \u0623\u0648 \u0627\u0633\u062a\u062e\u062f\u0627\u0645\u0647\u0627 \u0623\u0648 \u062a\u062f\u0627\u0648\u0644\u0647\u0627 \u0625\u0644\u0627 \u0628\u0645\u0648\u0627\u0641\u0642\u0629 \u0643\u0627\u0645\u0644\u0629 \u0648\u0635\u0631\u064a\u062d\u0629 \u0645\u0646 \u0645\u0624\u0633\u0633\u064a \u0627\u0644\u0646\u0638\u0627\u0645 \u0648\u0627\u0644\u062c\u0647\u0627\u062a \u0627\u0644\u0645\u062e\u0648\u0644\u0629 \u0628\u0630\u0644\u0643.');
+    set('lp-f1', '\u062a\u0642\u0627\u0631\u064a\u0631 \u0645\u0627\u0644\u064a\u0629 \u062f\u0642\u064a\u0642\u0629');
+    set('lp-f2', '\u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0648\u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a');
+    set('lp-f3', '\u0633\u062c\u0644 \u0645\u0627\u0644\u064a \u0645\u062a\u0643\u0627\u0645\u0644 \u0648\u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a');
+    set('lp-notice', '\u0639\u0644\u0649 \u0643\u0644 \u0645\u0646 \u064a\u0635\u0644 \u0625\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645 \u0627\u0644\u0643\u0627\u0645\u0644 \u0628\u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0648\u0627\u0644\u0633\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629 \u0648\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629 \u0639\u0644\u0649 \u0633\u0631\u064a\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0648\u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a\u060c \u0648\u064a\u064f\u0645\u0646\u0639 \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0623\u0648 \u0645\u0634\u0627\u0631\u0643\u0629 \u0623\u064a \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u062f\u0648\u0646 \u0635\u0644\u0627\u062d\u064a\u0629\u060c \u0648\u0630\u0644\u0643 \u062a\u062d\u062a \u0637\u0627\u0626\u0644\u0629 \u0627\u0644\u0645\u0633\u0627\u0621\u0644\u0629.');
+    set('lp-mem-lbl', '\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621');
+    set('lp-fy-lbl', '\u0627\u0644\u0633\u0646\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629');
+    set('lp-auth-title', '\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646 \u0627\u0644\u0645\u0635\u0631\u062d \u0644\u0647\u0645 \u0628\u0627\u0644\u062f\u062e\u0648\u0644');
+    set('lp-admin-lbl', '\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645');
+    set('lp-comm-lbl', '\u0623\u0639\u0636\u0627\u0621 \u0627\u0644\u0644\u062c\u0646\u0629');
+    set('lp-foot-title', '\u0627\u0644\u0625\u0635\u062f\u0627\u0631 2.0 \u2014 \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0645\u0627\u0644\u064a \u0644\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u00a9 2026\u20132027');
+    set('lp-foot-text', '\u062a\u0645 \u062a\u0637\u0648\u064a\u0631 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0644\u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0645\u0627\u0644\u064a \u0648\u0627\u0644\u0625\u062f\u0627\u0631\u064a \u0627\u0644\u0631\u0633\u0645\u064a \u0644\u0635\u0646\u0627\u062f\u064a\u0642 \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647\u060c \u0645\u0639 \u062a\u0648\u0641\u064a\u0631 \u0628\u064a\u0626\u0629 \u0622\u0645\u0646\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0648\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a \u0648\u062d\u0641\u0638 \u0627\u0644\u0633\u062c\u0644\u0627\u062a.');
+
+    // RIGHT PANEL
+    set('lp-welcome', '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
+    set('lp-subtitle', '\u0623\u062f\u062e\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u062d\u0633\u0627\u0628\u0643 \u0644\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0646\u0638\u0627\u0645');
+    set('lbl-email', '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a');
+    ph('l-email', '\u0623\u062f\u062e\u0644 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a');
+    set('lbl-pass', '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631');
+    ph('l-pass', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
+    set('lbl-remember', '\u062a\u0630\u0643\u0631\u0646\u064a \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u062c\u0647\u0627\u0632');
+    set('lbl-forgot', '\u0646\u0633\u064a\u062a \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631\u061f');
+    set('btn-login-txt', '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
+    set('lp-card-footer', '\u0644\u0644\u062f\u0639\u0645 \u0627\u0644\u0641\u0646\u064a: support@diwantaha.com');
   }
-  // حفظ اللغة لاستخدامها في app.js
   localStorage.setItem('diwan_lang', l);
   window.LANG = l;
-}
-
-function loginSetMode(m) {
-  LP_MODE = m;
-  document.getElementById('lp-btn-dk').classList.toggle('on', m==='dark');
-  document.getElementById('lp-btn-lt').classList.toggle('on', m==='light');
-  document.getElementById('login-page').classList.toggle('light', m==='light');
 }
 
 function loginTogglePw() {
   LP_PW = !LP_PW;
   document.getElementById('l-pass').type = LP_PW ? 'text' : 'password';
-  document.getElementById('lp-eye').textContent = LP_PW ? '🙈' : '👁';
+  var icon = document.getElementById('lp-eye');
+  if(icon) icon.className = LP_PW ? 'ti ti-eye-off' : 'ti ti-eye';
 }
 
-// تطبيق اللغة المحفوظة عند التحميل
+/* Export dropdown */
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('export-member-menu');
+  if(menu) menu.classList.toggle('show');
+}
+function closeExportMenu() {
+  var menu = document.getElementById('export-member-menu');
+  if(menu) menu.classList.remove('show');
+}
+document.addEventListener('click', function(){ closeExportMenu(); });
+
+/* Dynamic member count on login */
+async function updateLoginMemberCount() {
+  try {
+    var SB2 = supabase.createClient(
+      'https://ralifvemgapmsgrjgazh.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4'
+    );
+    var res = await SB2.from('members').select('id', {count:'exact', head:true}).eq('is_active', true);
+    if(res.count) {
+      var el = document.getElementById('lp-mem-count');
+      if(el) el.textContent = res.count;
+    }
+  } catch(e) { /* silent */ }
+}
+
 (function(){
   var savedLang = localStorage.getItem('diwan_lang') || 'ar';
   window.LANG = savedLang;
   if(savedLang === 'en') loginSetLang('en');
+  updateLoginMemberCount();
 })();
 </script>
 
