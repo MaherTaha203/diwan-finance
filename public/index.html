@@ -370,7 +370,7 @@
     <div class="pag" id="don-pag"></div>
   </div>
   <div class="pg" id="pg-members">
-    <div class="ph"><div><div class="ph-t">أعضاء العائلة</div><div class="ph-s" id="members-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-add-member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i>عضو جديد</button></div></div>
+    <div class="ph"><div><div class="ph-t">أعضاء العائلة</div><div class="ph-s" id="members-sub"></div></div><div class="ph-a"><button class="btn sm" onclick="togglePageExport(event,'exp-members')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-members"><button class="export-dropdown-item" onclick="window.exportPageExcel('members')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('members')"><i class="ti ti-file-type-pdf"></i>PDF</button></div><button class="btn sm primary" id="btn-add-member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i>عضو جديد</button></div></div>
     <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-members" placeholder="بحث بالاسم..." oninput="D['members'].render()"></div><select class="fs" id="f-member-status" onchange="D['members'].render()"><option value="">الكل</option><option value="paid">مسدَّد</option><option value="due">عليه رصيد</option></select></div>
     <div class="tw"><table><thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>رصيد الغداء ₪</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="members-body"></tbody></table></div>
     <div class="pag" id="members-pag"></div>
@@ -381,12 +381,12 @@
     <div id="ms-out"></div>
   </div>
   <div class="pg" id="pg-annual">
-    <div class="ph"><div><div class="ph-t">الاشتراكات السنوية</div><div class="ph-s">200 ₪ على كل عضو بداية كل سنة</div></div></div>
+    <div class="ph"><div><div class="ph-t">الاشتراكات السنوية</div><div class="ph-s">200 ₪ على كل عضو بداية كل سنة</div></div><div class="ph-a"><button class="btn sm" onclick="togglePageExport(event,'exp-annual')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-annual"><button class="export-dropdown-item" onclick="window.exportPageExcel('annual')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('annual')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
     <div class="card"><div class="ibox warn"><i class="ti ti-alert-triangle"></i>عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.</div><div class="fg" style="max-width:400px;margin-bottom:16px"><div class="fi"><label>السنة</label><input type="number" id="due-year" min="2020" max="2040" value="2026"></div><div class="fi"><label>المبلغ ₪</label><input type="number" id="due-amount" value="200" min="1"></div></div><button class="btn primary" id="btn-apply-due" onclick="window.applyAnnualDue()"><i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي</button></div>
     <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-history"></i>سجل الاشتراكات المطبقة</div><div id="annual-list"></div></div>
   </div>
   <div class="pg" id="pg-users">
-    <div class="ph"><div><div class="ph-t">إدارة المستخدمين</div></div><div class="ph-a"><button class="btn sm primary" onclick="window.openM('invite')"><i class="ti ti-user-plus"></i>دعوة مستخدم</button></div></div>
+    <div class="ph"><div><div class="ph-t">إدارة المستخدمين</div></div><div class="ph-a"><button class="btn sm" onclick="togglePageExport(event,'exp-users')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-users"><button class="export-dropdown-item" onclick="window.exportPageExcel('users')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('users')"><i class="ti ti-file-type-pdf"></i>PDF</button></div><button class="btn sm primary" onclick="window.openM('invite')"><i class="ti ti-user-plus"></i>دعوة مستخدم</button></div></div>
     <div class="card"><div id="users-list"></div></div>
   </div>
   <div class="pg" id="pg-audit">
