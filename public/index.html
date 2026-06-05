@@ -121,15 +121,40 @@
 @media(max-width:768px){
   #login-page{flex-direction:column}
   .lp,.rp{width:100%;min-height:auto}
-  .lp{padding:20px 20px}
-  .lp-body{padding:6px 0}
+  .lp{padding:16px 20px}
+  .lp-body{padding:4px 0}
   .lp-title{font-size:15px}
   .lp-inst{font-size:11px}
-  .lp-notice{margin-bottom:20px;font-size:10px}
+  .lp-notice{margin-bottom:12px;font-size:10px}
   .lp-feat-text{font-size:11px}
-  .rp{padding:16px 18px}
+  .rp{padding:14px 16px}
   .login-card{max-width:100%;padding:22px 20px}
   .login-card-title{font-size:18px}
+}
+@media(max-width:480px){
+  .lp{padding:14px 16px}
+  .lp-inst,.lp-notice,.lp-auth,.lp-auth-title,.lp-feats,.lp-foot-text{display:none}
+  .lp-title{font-size:14px;margin-bottom:10px}
+  .lp-gold-bar{margin-bottom:8px}
+  .lp-sys{margin-bottom:6px}
+  .lp-sys-card{padding:8px 12px}
+  .lp-sys-val{font-size:20px}
+  .lp-sys-lbl{font-size:10px}
+  .lp-foot{padding-top:6px}
+  .lp-foot-title{font-size:9px}
+  .rp{padding:12px 14px}
+  .login-card{padding:18px 16px}
+  .login-card-title{font-size:16px}
+  .login-card-sub{font-size:12px;margin-bottom:16px}
+  .login-input{height:44px;font-size:14px}
+  .login-btn-main{height:46px;font-size:14px}
+  .lc-pill{padding:6px 14px;font-size:12px}
+}
+
+/* ── Mobile touch targets ── */
+@media(max-width:768px){
+  .btn.ghost.sm{min-width:36px;min-height:36px;padding:6px}
+  .tda .btn{min-width:36px;min-height:36px}
 }
 
 /* ── Export dropdown ── */
@@ -140,6 +165,11 @@
 .export-dropdown-item{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:6px;font-size:13px;color:var(--tx1,#333);cursor:pointer;font-family:'Cairo',sans-serif;border:none;background:none;width:100%;text-align:right}
 .export-dropdown-item:hover{background:var(--bg2,#f5f5f5)}
 .export-dropdown-item i{font-size:17px;color:var(--tx2,#666)}
+@media(max-width:768px){
+  .btn.ghost.sm{min-width:36px;min-height:36px;padding:6px;display:inline-flex;align-items:center;justify-content:center}
+  .btn.ghost.sm i{font-size:16px}
+  .tda{gap:4px}
+}
 </style>
 </head>
 <body>
