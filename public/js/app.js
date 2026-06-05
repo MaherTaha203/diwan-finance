@@ -393,6 +393,10 @@ window.nav=function(p){
   if(p==='bk') renderSysInfo();
   if(p==='annual') renderAnnual();
   if(p==='member-stmt') fillMemberSelect();
+  const pages=document.querySelectorAll('.pg');
+pages.forEach(pg=>pg.classList.remove('on'));
+
+document.getElementById('pg-'+p)?.classList.add('on');
   D[p]?.render();
 };
 document.querySelectorAll('.nb[data-p]').forEach(el=>el.addEventListener('click',()=>window.nav(el.dataset.p)));
