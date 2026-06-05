@@ -393,7 +393,6 @@ window.nav=function(p){
   if(p==='bk') renderSysInfo();
   if(p==='annual') renderAnnual();
   if(p==='member-stmt') fillMemberSelect();
- 
   D[p]?.render();
 };
 document.querySelectorAll('.nb[data-p]').forEach(el=>el.addEventListener('click',()=>window.nav(el.dataset.p)));
