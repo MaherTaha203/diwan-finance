@@ -1,64 +1,17 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="html-root">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ديوان آل طه · الإدارة المالية</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/app.css"> <!-- External CSS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
-    <div id="pra"></div>
-    <div class="tc" id="tc"></div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ديوان آل طه · الإدارة المالية</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- ══ LOGIN ══ -->
-    <div id="login-screen">
-        <div id="login-page">
-            <!-- LEFT PANEL — Institutional -->
-            <div class="lp">
-                <!-- ... (content as before) ... -->
-            </div>
-
-            <!-- RIGHT PANEL — Login Form -->
-            <div class="rp">
-                <div class="login-card">
-                    <!-- ... (form elements as before) ... -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ══ APP ══ -->
-    <div id="app" style="display:none">
-        <!-- ... (App content as before) ... -->
-    </div>
-
-    <div id="copyright-bar">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
-
-    <!-- MODALS -->
-    <div class="ov" id="ov">
-        <!-- ... (Modals as before) ... -->
-    </div>
-
-    <!-- Mobile Nav -->
-    <div id="mobile-nav" style="display:none">
-        <!-- ... (Mobile Nav as before) ... -->
-    </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" style="display:none;position:fixed;bottom:62px;left:0;right:0;background:var(--navy2);border-top:1px solid rgba(255,255,255,.08);z-index:199;padding:8px">
-        <!-- ... (Mobile Menu as before) ... -->
-    </div>
-
-    <!-- External JavaScript -->
-    <script src="/js/login.js?v=2.1"></script>
-    <script src="/js/app.js?v=2.1"></script>
-</body>
-</html>
+<style>
 /* == CONCEPT B — PREMIUM FINANCIAL INSTITUTION — REVISION 3 == */
 :root {
   --b-navy:#1A1A2E; --b-navy2:#252538; --b-gold:#C4A450;
@@ -67,114 +20,613 @@
   --b-text:#1A1A2E; --b-text2:#555; --b-text3:#888; --b-placeholder:#B8B4AC;
 }
 
-/* Login Screen */
-#login-screen {
-  position:fixed;
-  inset:0;
-  z-index:1000;
-  display:flex;
-  overflow:hidden;
-}
-#login-page {
-  display:flex;
-  width:100%;
-  min-height:100vh;
-  direction:rtl;
-}
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;overflow:hidden}
+#login-page{display:flex;width:100%;min-height:100vh;direction:rtl}
 
-/* Left Panel */
-.lp {
-  width:55%;
-  min-height:100vh;
-  background:var(--b-navy);
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  padding:26px 36px 20px;
-  overflow-y:auto;
-  transition:background .3s;
-}
-.lp::before {
-  content:'';
-  position:absolute;
-  inset:0;
-  background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(196,164,80,.05) 0%,transparent 60%);
-  pointer-events:none;
-}
-/* ... (rest of LP styles) ... */
+/* ── LEFT PANEL — 60% Navy institutional ── */
+.lp{width:55%;min-height:100vh;background:var(--b-navy);position:relative;display:flex;flex-direction:column;padding:26px 36px 20px;overflow-y:auto;transition:background .3s}
+.lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(196,164,80,.05) 0%,transparent 60%);pointer-events:none}
 
-/* Right Panel */
-.rp {
-  width:45%;
-  min-height:100vh;
-  background:var(--b-cream);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:30px 28px;
-  position:relative;
-}
-/* ... (rest of RP styles) ... */
+/* Logo emblem */
+.lp-logo{display:flex;align-items:center;gap:0;margin-bottom:20px;position:relative;z-index:2}
+.lp-emblem{display:none}
+.lp-emblem-inner{display:none}
+.lp-org{font-size:26px;font-weight:600;color:#fff;font-family:'Cairo',sans-serif;display:block}
+.lp-org-en{font-size:13px;color:rgba(255,255,255,.28);letter-spacing:3px;display:block;margin-top:1px}
 
-/* Responsive Styles */
+/* Institutional content */
+.lp-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;padding:8px 0;max-width:none}
+.lp-gold-bar{width:56px;height:3px;background:#C4A450;border-radius:1px;margin-bottom:14px}
+.lp-title{font-size:30px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:22px;font-family:'Cairo',sans-serif}
+.lp-inst{font-size:15.5px;color:rgba(255,255,255,.52);line-height:2;margin-bottom:18px;font-family:'Cairo',sans-serif;text-align:justify}
+
+/* Features */
+.lp-feats{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.lp-feat{display:flex;align-items:center;gap:9px}
+.lp-feat-icon{width:30px;height:30px;border-radius:5px;background:rgba(196,164,80,.08);border:.5px solid rgba(196,164,80,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#C4A450}
+.lp-feat-text{font-size:16px;color:rgba(255,255,255,.58);font-family:'Cairo',sans-serif}
+
+/* Compliance notice */
+.lp-notice{font-size:14px;color:rgba(196,164,80,.58);line-height:1.9;padding:16px 20px;background:rgba(196,164,80,.03);border:.5px solid rgba(196,164,80,.12);border-radius:6px;margin-bottom:20px;font-family:'Cairo',sans-serif;text-align:justify}
+
+/* System info */
+.lp-sys{display:flex;gap:14px;margin-bottom:16px}
+.lp-sys-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;text-align:center}
+.lp-sys-lbl{font-size:13px;color:rgba(255,255,255,.32);font-family:'Cairo',sans-serif;display:block;margin-bottom:2px}
+.lp-sys-val{font-size:28px;font-weight:600;color:#C4A450;display:block}
+
+/* Authorized users */
+.lp-auth-title{font-size:13px;color:rgba(255,255,255,.28);margin-bottom:8px;font-family:'Cairo',sans-serif}
+.lp-auth{display:flex;gap:14px;margin-bottom:16px}
+.lp-auth-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;display:flex;align-items:center;gap:8px}
+.lp-auth-icon{width:32px;height:32px;border-radius:4px;background:rgba(196,164,80,.06);border:.5px solid rgba(196,164,80,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lp-auth-lbl{font-size:13px;color:rgba(255,255,255,.3);display:block;font-family:'Cairo',sans-serif}
+.lp-auth-val{font-size:18px;font-weight:500;color:rgba(255,255,255,.7);font-family:'Cairo',sans-serif}
+
+/* Footer */
+.lp-foot{position:relative;z-index:2;padding-top:12px;border-top:.5px solid rgba(255,255,255,.05)}
+.lp-foot-title{font-size:12px;color:rgba(196,164,80,.45);font-family:'Cairo',sans-serif;margin-bottom:4px}
+.lp-foot-text{font-size:11px;color:rgba(255,255,255,.24);line-height:1.75;font-family:'Cairo',sans-serif}
+
+/* ── RIGHT PANEL — 40% Cream form ── */
+.rp{width:45%;min-height:100vh;background:var(--b-cream);display:flex;align-items:center;justify-content:center;padding:30px 28px;position:relative}
+
+/* Login card — wider + more padding */
+.login-card{width:100%;max-width:520px;background:var(--b-white);border:.5px solid var(--b-border);border-radius:14px;padding:36px 38px;position:relative;box-shadow:0 2px 16px rgba(0,0,0,.04)}
+
+/* Language switch */
+.lc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.lc-pills{display:flex;border-radius:6px;border:.5px solid var(--b-border);overflow:hidden}
+.lc-pill{padding:9px 22px;font-size:15px;font-family:'Cairo',sans-serif;color:var(--b-text3);background:#F9F7F3;cursor:pointer;transition:all .15s;border:none;font-weight:500}
+.lc-pill.on{background:var(--b-navy);color:#fff;font-weight:600}
+
+/* Form elements */
+.lc-gold{width:40px;height:3px;background:var(--b-gold);border-radius:1px;margin-bottom:16px}
+.login-card-title{font-family:'Cairo',sans-serif;font-size:28px;font-weight:600;color:var(--b-text);margin-bottom:4px}
+.login-card-sub{font-family:'Cairo',sans-serif;font-size:15px;color:var(--b-text3);margin-bottom:28px}
+
+.login-form-group{margin-bottom:20px}
+.login-form-label{display:block;font-family:'Cairo',sans-serif;font-size:14px;font-weight:500;color:var(--b-text2);margin-bottom:6px}
+.iw-login{position:relative}
+.login-input{width:100%;height:52px;background:var(--b-input-bg);border:1px solid var(--b-input-border);border-radius:8px;padding:0 48px 0 48px;font-family:'Cairo',sans-serif;font-size:15px;color:var(--b-text);direction:rtl;text-align:right;outline:none;transition:border-color .2s,background .2s}
+.login-input::placeholder{color:var(--b-placeholder);font-size:13px}
+.login-input:focus{border-color:var(--b-navy);background:var(--b-white);box-shadow:0 0 0 3px rgba(26,26,46,.06)}
+.ii-r-login{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--b-gold);pointer-events:none}
+.ii-l-login{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;color:#9CA3AF;cursor:pointer;background:none;border:none;padding:0;transition:color .15s}
+.ii-l-login:hover{color:var(--b-text2)}
+
+/* Remember + forgot */
+.rem-row-login{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.rem-right{display:flex;align-items:center;gap:6px}
+.cchk-login{width:18px;height:18px;border-radius:3px;border:1px solid var(--b-input-border);background:var(--b-white);appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;transition:all .15s;position:relative}
+.cchk-login:checked{background:#E8E4DC;border-color:#C4A450}
+.cchk-login:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:var(--b-navy);font-weight:700}
+.rem-lbl-login{font-family:'Cairo',sans-serif;font-size:14px;color:#666;cursor:pointer}
+.forgot-link{font-family:'Cairo',sans-serif;font-size:14px;color:var(--b-navy);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0}
+
+/* Login button */
+.login-btn-main{width:100%;height:56px;background:var(--b-navy);border:none;border-radius:9px;font-family:'Cairo',sans-serif;font-size:17px;font-weight:600;color:#fff;cursor:pointer;transition:background .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.login-btn-main:hover{background:var(--b-navy2)}
+.login-btn-main:active{transform:scale(0.985)}
+
+/* Error + forgot msg */
+.login-err-box{background:rgba(220,38,38,.06);color:#DC2626;border:1px solid rgba(220,38,38,.15);border-radius:8px;padding:12px 16px;font-size:13px;margin-top:10px;display:none;text-align:center;font-family:'Cairo',sans-serif}
+.login-err-box.show{display:block}
+.forgot-msg{display:none;background:rgba(196,164,80,.06);border:1px solid rgba(196,164,80,.15);border-radius:8px;padding:12px 16px;font-size:13px;color:#92700C;margin-top:10px;text-align:center;font-family:'Cairo',sans-serif}
+
+/* Card footer */
+.login-card-footer{text-align:center;margin-top:22px;padding-top:16px;border-top:.5px solid var(--b-border);font-size:13px;color:#aaa;font-family:'Cairo',sans-serif}
+
+/* ── MOBILE ── */
 @media(max-width:768px){
   #login-page{flex-direction:column}
   .lp,.rp{width:100%;min-height:auto}
-  /* ... */
+  .lp{padding:16px 20px}
+  .lp-body{padding:4px 0}
+  .lp-title{font-size:15px}
+  .lp-inst{font-size:11px}
+  .lp-notice{margin-bottom:12px;font-size:10px}
+  .lp-feat-text{font-size:11px}
+  .rp{padding:14px 16px}
+  .login-card{max-width:100%;padding:22px 20px}
+  .login-card-title{font-size:18px}
 }
 @media(max-width:480px){
-  /* ... */
+  .lp{padding:14px 16px}
+  .lp-inst,.lp-notice,.lp-auth,.lp-auth-title,.lp-feats,.lp-foot-text{display:none}
+  .lp-title{font-size:14px;margin-bottom:10px}
+  .lp-gold-bar{margin-bottom:8px}
+  .lp-sys{margin-bottom:6px}
+  .lp-sys-card{padding:8px 12px}
+  .lp-sys-val{font-size:20px}
+  .lp-sys-lbl{font-size:10px}
+  .lp-foot{padding-top:6px}
+  .lp-foot-title{font-size:9px}
+  .rp{padding:12px 14px}
+  .login-card{padding:18px 16px}
+  .login-card-title{font-size:16px}
+  .login-card-sub{font-size:12px;margin-bottom:16px}
+  .login-input{height:44px;font-size:14px}
+  .login-btn-main{height:46px;font-size:14px}
+  .lc-pill{padding:6px 14px;font-size:12px}
 }
 
-/* Export Dropdown */
-.export-dropdown{
-  position:relative;
-  display:inline-block;
+/* ── Mobile touch targets ── */
+@media(max-width:768px){
+  .btn.ghost.sm{min-width:36px;min-height:36px;padding:6px}
+  .tda .btn{min-width:36px;min-height:36px}
 }
-.export-dropdown-btn{
-  display:flex;
-  align-items:center;
-  gap:4px;
+
+/* ── Export dropdown ── */
+.export-dropdown{position:relative;display:inline-block}
+.export-dropdown-btn{display:flex;align-items:center;gap:4px}
+.export-dropdown-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card,#fff);border:1px solid var(--bd,#e2e8f0);border-radius:8px;padding:4px;min-width:150px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.export-dropdown-menu.show{display:block}
+.export-dropdown-item{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:6px;font-size:13px;color:var(--tx1,#333);cursor:pointer;font-family:'Cairo',sans-serif;border:none;background:none;width:100%;text-align:right}
+.export-dropdown-item:hover{background:var(--bg2,#f5f5f5)}
+.export-dropdown-item i{font-size:17px;color:var(--tx2,#666)}
+@media(max-width:768px){
+  .btn.ghost.sm{min-width:36px;min-height:36px;padding:6px;display:inline-flex;align-items:center;justify-content:center}
+  .btn.ghost.sm i{font-size:16px}
+  .tda{gap:4px}
 }
-.export-dropdown-menu{
-  display:none;
-  position:absolute;
-  top:100%;
-  right:0;
-  margin-top:4px;
-  background:var(--card,#fff);
-  border:1px solid var(--bd,#e2e8f0);
-  border-radius:8px;
-  padding:4px;
-  min-width:150px;
-  z-index:100;
-  box-shadow:0 4px 12px rgba(0,0,0,.1);
-}
-.export-dropdown-menu.show{
-  display:block;
-}
-.export-dropdown-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:9px 14px;
-  border-radius:6px;
-  font-size:13px;
-  color:var(--tx1,#333);
-  cursor:pointer;
-  font-family:'Cairo',sans-serif;
-  border:none;
-  background:none;
-  width:100%;
-  text-align:right;
-}
-.export-dropdown-item:hover{
-  background:var(--bg2,#f5f5f5);
-}
-.export-dropdown-item i{
-  font-size:17px;
-  color:var(--tx2,#666);
-}
+</style>
+</head>
+<body>
+<!-- Removed empty divs: #pra, #tc -->
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div id="login-page">
+
+    <!-- LEFT PANEL — Institutional -->
+    <div class="lp">
+      <div class="lp-logo">
+        <div class="lp-emblem"><div class="lp-emblem-inner">د</div></div>
+        <div><span class="lp-org" id="lp-org">ديوان آل طه</span><span class="lp-org-en">DIWAN AL-TAHA</span></div>
+      </div>
+
+      <div class="lp-body">
+        <div class="lp-gold-bar"></div>
+        <div class="lp-title" id="lp-title">النظام المالي والإداري الرسمي</div>
+        <div class="lp-inst" id="lp-inst-1">تم إنشاء هذا النظام من قبل لجنة ديوان آل طه في عام 2026 ليكون المرجع المالي الرئيسي لإدارة المدفوعات والمصاريف والإدارة الإلكترونية لصناديق الديوان، ولتسهيل مراجعة الحسابات ومتابعة العمليات المالية من قبل أعضاء اللجنة.</div>
+        <div class="lp-inst" id="lp-inst-2">جميع المعلومات والبيانات الموجودة داخل هذا النظام هي ملك حصري للجنة ديوان آل طه، ولا يحق لأي شخص أو جهة الاطلاع عليها أو استخدامها أو تداولها إلا بموافقة كاملة وصريحة من مؤسسي النظام والجهات المخولة بذلك.</div>
+
+        <div class="lp-feats">
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f1">تقارير مالية دقيقة</span></div>
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f2">حماية البيانات والمعلومات</span></div>
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f3">سجل مالي متكامل ومتعدد العمليات</span></div>
+        </div>
+
+        <div class="lp-notice" id="lp-notice">على كل من يصل إلى هذا النظام الالتزام الكامل بالتعليمات والسياسات المعتمدة والمحافظة على سرية البيانات والمعلومات، ويُمنع استخدام أو مشاركة أي معلومات دون صلاحية، وذلك تحت طائلة المساءلة.</div>
+
+        <div class="lp-sys">
+          <div class="lp-sys-card"><span class="lp-sys-lbl" id="lp-mem-lbl">عدد الأعضاء</span><span class="lp-sys-val" id="lp-mem-count">149</span></div>
+          <div class="lp-sys-card"><span class="lp-sys-lbl" id="lp-fy-lbl">السنة المالية</span><span class="lp-sys-val" style="font-size:10px">2026 – 2027</span></div>
+        </div>
+
+        <div class="lp-auth-title" id="lp-auth-title">المستخدمون المصرح لهم بالدخول</div>
+        <div class="lp-auth">
+          <div class="lp-auth-card">
+            <div class="lp-auth-icon"><i class="ti ti-shield-check" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div><span class="lp-auth-lbl" id="lp-admin-lbl">مدير النظام</span><span class="lp-auth-val">1</span></div>
+          </div>
+          <div class="lp-auth-card">
+            <div class="lp-auth-icon"><i class="ti ti-users" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div><span class="lp-auth-lbl" id="lp-comm-lbl">أعضاء اللجنة</span><span class="lp-auth-val">6</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-foot">
+        <div class="lp-foot-title" id="lp-foot-title">الإصدار 2.0 — النظام المالي لديوان آل طه © 2026–2027</div>
+        <div class="lp-foot-text" id="lp-foot-text">تم تطوير هذا النظام ليكون المرجع المالي والإداري الرسمي لصناديق ديوان آل طه، مع توفير بيئة آمنة لإدارة العمليات المالية ومراجعة الحسابات وحفظ السجلات.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — Login Form -->
+    <div class="rp">
+      <div class="login-card">
+        <div class="lc-row">
+          <div class="lc-pills">
+            <button class="lc-pill on" id="lp-btn-ar" onclick="loginSetLang('ar')">AR</button>
+            <button class="lc-pill" id="lp-btn-en" onclick="loginSetLang('en')">EN</button>
+          </div>
+        </div>
+
+        <form onsubmit="event.preventDefault();window.login();" autocomplete="on">
+        <div class="lc-gold"></div>
+        <div class="login-card-title" id="lp-welcome">تسجيل الدخول</div>
+        <div class="login-card-sub" id="lp-subtitle">أدخل بيانات حسابك للوصول إلى النظام</div>
+
+        <div class="login-form-group">
+          <label class="login-form-label" id="lbl-email">البريد الإلكتروني</label>
+          <div class="iw-login">
+            <input class="login-input" type="text" id="l-email" autocomplete="username" inputmode="email"
+              placeholder="أدخل البريد الإلكتروني" dir="rtl"
+              onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+            <span class="ii-r-login"><i class="ti ti-mail" aria-hidden="true"></i></span>
+          </div>
+        </div>
+
+        <div class="login-form-group">
+          <label class="login-form-label" id="lbl-pass">كلمة المرور</label>
+          <div class="iw-login">
+            <input class="login-input" type="password" id="l-pass" autocomplete="current-password"
+              placeholder="••••••••" dir="rtl"
+              onkeydown="if(event.key==='Enter')window.login()">
+            <span class="ii-r-login"><i class="ti ti-lock" aria-hidden="true"></i></span>
+            <button class="ii-l-login" onclick="loginTogglePw()"><i class="ti ti-eye" id="lp-eye" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+        <div class="rem-row-login">
+          <div class="rem-right">
+            <input type="checkbox" class="cchk-login" id="l-remember">
+            <label class="rem-lbl-login" for="l-remember" id="lbl-remember">تذكرني على هذا الجهاز</label>
+          </div>
+          <button class="forgot-link" onclick="window.forgotPassword()" id="lbl-forgot">نسيت كلمة المرور؟</button>
+        </div>
+
+        <button class="login-btn-main" id="login-btn" onclick="window.login()">
+          <i class="ti ti-login"></i>
+          <span id="btn-login-txt">تسجيل الدخول</span>
+        </button>
+
+        <div class="login-err-box" id="login-err"></div>
+        <div class="forgot-msg" id="forgot-msg"></div>
+        </form>
+
+        <div class="login-card-footer" id="lp-card-footer">للدعم الفني: support@diwantaha.com</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app" class="hidden"> <!-- Added 'hidden' class for initial display control -->
+<div class="top">
+  <div class="top-logo">
+    <div class="top-logo-ico"><i class="ti ti-building-bank"></i></div>
+    <div><div class="top-logo-text">ديوان آل طه</div><div class="top-logo-sub">نظام الإدارة المالية</div></div>
+  </div>
+  <div class="top-actions">
+    <span id="clock"></span>
+    <div class="rate-chip" id="rate-chip"><i class="ti ti-currency-dollar"></i><span id="rate-txt">جاري التحديث...</span></div>
+    <button class="tbtn" id="theme-btn" onclick="window.toggleTheme()"><i class="ti ti-sun"></i>فاتح</button>
+    <button class="tbtn" id="lang-btn" onclick="window.toggleLang()"><i class="ti ti-language"></i>EN</button>
+    <div class="uchip">
+      <div class="uav" id="uav">م</div>
+      <div><span class="uname" id="uname">...</span><span class="urole" id="urole">...</span></div>
+    </div>
+    <button class="tbtn" onclick="window.openM('change-pass')"><i class="ti ti-lock"></i>كلمة المرور</button>
+    <button class="tbtn red" onclick="window.logout()"><i class="ti ti-logout"></i>خروج</button>
+  </div>
+</div>
+
+<div class="layout">
+<div class="sb">
+  <div class="sb-sec" data-i18n="nav.home">الرئيسية</div>
+  <div class="nb on" data-p="dash"><i class="ti ti-layout-dashboard"></i>لوحة التحكم</div>
+  <div class="sb-sec" data-i18n="nav.food_fund">صندوق الغداء</div>
+  <div class="nb" data-p="food-rec"><i class="ti ti-receipt"></i>إيصالات الغداء</div>
+  <div class="nb" data-p="food-pay"><i class="ti ti-cash"></i>مصاريف الغداء</div>
+  <div class="nb" data-p="food-stmt"><i class="ti ti-file-description"></i>كشف الغداء</div>
+  <div class="sb-sec" data-i18n="nav.diwan_fund">صندوق الديوان</div>
+  <div class="nb" data-p="diwan-rec"><i class="ti ti-receipt"></i>إيصالات الديوان</div>
+  <div class="nb" data-p="diwan-pay"><i class="ti ti-cash"></i>مصاريف الديوان</div>
+  <div class="nb" data-p="diwan-stmt"><i class="ti ti-file-description"></i>كشف الديوان</div>
+  <div class="sb-sec" data-i18n="nav.donations_sec">التبرعات</div>
+  <div class="nb" data-p="don"><i class="ti ti-heart"></i>سجل التبرعات</div>
+  <div class="sb-sec" data-i18n="nav.members_sec">الأعضاء</div>
+  <div class="nb" data-p="members"><i class="ti ti-users"></i>أعضاء العائلة</div>
+  <div class="nb" data-p="member-stmt"><i class="ti ti-user"></i>كشف حساب عضو</div>
+  <div class="nb" data-p="annual"><i class="ti ti-calendar"></i>الاشتراكات السنوية</div>
+  <div class="sb-sec" data-i18n="nav.system_sec">النظام</div>
+  <div class="nb" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i>المستخدمون</div>
+  <div class="nb" data-p="audit"><i class="ti ti-list-check"></i>سجل العمليات</div>
+  <div class="nb" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i>الإعدادات</div>
+  <div class="nb" data-p="bk"><i class="ti ti-database"></i>النسخ الاحتياطي</div>
+</div>
+
+<div class="main">
+  <div class="pg on" id="pg-dash">
+  <div class="ph">
+    <div><div class="ph-t" data-i18n="dashboard.title">لوحة التحكم</div><div class="ph-s" id="dash-date"></div></div>
+    <div class="ph-a">
+      <button class="btn sm" onclick="window.loadAll()"><i class="ti ti-refresh"></i>تحديث</button>
+      <button class="btn primary sm" id="dash-btn-rec" onclick="window.openRec()"><i class="ti ti-plus"></i>سند قبض</button>
+      <button class="btn danger sm" id="dash-btn-pay" onclick="window.openPay()"><i class="ti ti-minus"></i>سند صرف</button>
+    </div>
+  </div>
+  <div class="fund-grid" id="fund-cards"></div>
+  <div class="kgrid" id="kpis"></div>
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:14px">
+    <div>
+      <div class="card"><div class="ch"><span class="ct"><i class="ti ti-chart-histogram"></i>الحركات الشهرية</span></div><div id="month-chart" style="height:130px;display:flex;align-items:flex-end;gap:6px;padding-top:10px"></div></div>
+      <div class="card"><div class="ch"><span class="ct"><i class="ti ti-clock"></i>آخر الحركات</span></div><div id="recent-ops"></div></div>
+    </div>
+    <div>
+      <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-bolt"></i>إجراءات سريعة</div><div id="quick-actions"></div></div>
+      <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i>أعضاء متأخرون</div><div id="late-members" class="scroll"></div></div>
+    </div>
+  </div>
+</div>
+  <div class="pg" id="pg-food-rec">
+    <div class="ph"><div><div class="ph-t" data-i18n="receipts.title_food">إيصالات صندوق الغداء</div><div class="ph-s" id="food-rec-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-food-rec" onclick="window.openRec('food')"><i class="ti ti-plus"></i>إيصال جديد</button><button class="btn sm" onclick="togglePageExport(event,'exp-food-rec')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-food-rec"><button class="export-dropdown-item" onclick="window.exportPageExcel('food-rec')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('food-rec')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="ibox food"><i class="ti ti-info-circle"></i>مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء</div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-food-rec" placeholder="بحث..." oninput="D['food-rec'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>الدافع</th><th>المبلغ ₪</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="food-rec-body"></tbody></table></div>
+    <div class="pag" id="food-rec-pag"></div>
+  </div>
+  <div class="pg" id="pg-food-pay">
+    <div class="ph"><div><div class="ph-t">مصاريف صندوق الغداء</div><div class="ph-s" id="food-pay-sub"></div></div><div class="ph-a"><button class="btn sm food" id="btn-food-pay" onclick="window.openPay('food')"><i class="ti ti-plus"></i>مصروف جديد</button><button class="btn sm" onclick="togglePageExport(event,'exp-food-pay')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-food-pay"><button class="export-dropdown-item" onclick="window.exportPageExcel('food-pay')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('food-pay')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="ibox food"><i class="ti ti-info-circle"></i>مصاريف إطعام أهل المتوفى في حالات العزاء — تُدفع من صندوق الغداء</div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-food-pay" placeholder="بحث..." oninput="D['food-pay'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المستفيد</th><th>المبلغ ₪</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="food-pay-body"></tbody></table></div>
+    <div class="pag" id="food-pay-pag"></div>
+  </div>
+  <div class="pg" id="pg-food-stmt">
+    <div class="ph"><div><div class="ph-t">كشف حساب صندوق الغداء</div></div><div class="ph-a"><button class="btn sm food" onclick="window.prtStmt('food')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-food-stmt')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-food-stmt"><button class="export-dropdown-item" onclick="window.exportPageExcel('food-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('food-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="fg"><div class="fi"><label>من تاريخ</label><input type="date" id="food-stmt-from"></div><div class="fi"><label>إلى تاريخ</label><input type="date" id="food-stmt-to"></div><div class="fi"><label>نوع الحركة</label><select id="food-stmt-type"><option value="">الكل</option><option value="cr">إيصالات فقط</option><option value="dr">مصاريف فقط</option><option value="don">تبرعات فقط</option></select></div><div class="fi" style="justify-content:flex-end"><button class="btn primary" onclick="window.renderStmt('food')" style="margin-top:18px"><i class="ti ti-search"></i>عرض</button></div></div></div>
+    <div id="food-stmt-out"></div>
+  </div>
+  <div class="pg" id="pg-diwan-rec">
+    <div class="ph"><div><div class="ph-t">إيصالات صندوق الديوان</div><div class="ph-s" id="diwan-rec-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-diwan-rec" onclick="window.openRec('diwan')"><i class="ti ti-plus"></i>إيصال جديد</button><button class="btn sm" onclick="togglePageExport(event,'exp-diwan-rec')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-diwan-rec"><button class="export-dropdown-item" onclick="window.exportPageExcel('diwan-rec')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('diwan-rec')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="ibox diwan"><i class="ti ti-info-circle"></i>مدفوعات للديوان من الأعضاء أو من خارج العائلة</div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-diwan-rec" placeholder="بحث..." oninput="D['diwan-rec'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>الدافع</th><th>المبلغ ₪</th><th>العملة</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="diwan-rec-body"></tbody></table></div>
+    <div class="pag" id="diwan-rec-pag"></div>
+  </div>
+  <div class="pg" id="pg-diwan-pay">
+    <div class="ph"><div><div class="ph-t">مصاريف صندوق الديوان</div><div class="ph-s" id="diwan-pay-sub"></div></div><div class="ph-a"><button class="btn sm diwan" id="btn-diwan-pay" onclick="window.openPay('diwan')"><i class="ti ti-plus"></i>مصروف جديد</button><button class="btn sm" onclick="togglePageExport(event,'exp-diwan-pay')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-diwan-pay"><button class="export-dropdown-item" onclick="window.exportPageExcel('diwan-pay')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('diwan-pay')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-diwan-pay" placeholder="بحث..." oninput="D['diwan-pay'].render()"></div><select class="fs" id="f-diwan-pay-type" onchange="D['diwan-pay'].render()"><option value="">كل الفئات</option><option value="electricity">كهرباء</option><option value="water">ماء</option><option value="cleaning">تنظيف</option><option value="maintenance">صيانة</option><option value="other">أخرى</option></select></div>
+    <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المستفيد</th><th>المبلغ ₪</th><th>الفئة</th><th>طريقة الدفع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="diwan-pay-body"></tbody></table></div>
+    <div class="pag" id="diwan-pay-pag"></div>
+  </div>
+  <div class="pg" id="pg-diwan-stmt">
+    <div class="ph"><div><div class="ph-t">كشف حساب صندوق الديوان</div></div><div class="ph-a"><button class="btn sm diwan" onclick="window.prtStmt('diwan')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-diwan-stmt')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-diwan-stmt"><button class="export-dropdown-item" onclick="window.exportPageExcel('diwan-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('diwan-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="fg"><div class="fi"><label>من تاريخ</label><input type="date" id="diwan-stmt-from"></div><div class="fi"><label>إلى تاريخ</label><input type="date" id="diwan-stmt-to"></div><div class="fi"><label>نوع الحركة</label><select id="diwan-stmt-type"><option value="">الكل</option><option value="cr">إيصالات فقط</option><option value="dr">مصاريف فقط</option><option value="don">تبرعات فقط</option></select></div><div class="fi" style="justify-content:flex-end"><button class="btn primary" onclick="window.renderStmt('diwan')" style="margin-top:18px"><i class="ti ti-search"></i>عرض</button></div></div></div>
+    <div id="diwan-stmt-out"></div>
+  </div>
+  <div class="pg" id="pg-don">
+    <div class="ph"><div><div class="ph-t">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>تبرع جديد</button><button class="btn sm" onclick="window.prtDonStmt()"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-don')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-don"><button class="export-dropdown-item" onclick="window.exportPageExcel('don')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('don')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="ibox don"><i class="ti ti-info-circle"></i>التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة</div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-don" placeholder="بحث..." oninput="D['don'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المتبرع</th><th>المبلغ ₪</th><th>العملة</th><th>يُظهر في</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="don-body"></tbody></table></div>
+    <div class="pag" id="don-pag"></div>
+  </div>
+  <div class="pg" id="pg-members">
+    <div class="ph"><div><div class="ph-t">أعضاء العائلة</div><div class="ph-s" id="members-sub"></div></div><div class="ph-a"><button class="btn sm" onclick="togglePageExport(event,'exp-members')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-members"><button class="export-dropdown-item" onclick="window.exportPageExcel('members')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('members')"><i class="ti ti-file-type-pdf"></i>PDF</button></div><button class="btn sm primary" id="btn-add-member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i>عضو جديد</button></div></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-members" placeholder="بحث بالاسم..." oninput="D['members'].render()"></div><select class="fs" id="f-member-status" onchange="D['members'].render()"><option value="">الكل</option><option value="paid">مسدَّد</option><option value="due">عليه رصيد</option></select></div>
+    <div class="tw"><table><thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>رصيد الغداء ₪</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="members-body"></tbody></table></div>
+    <div class="pag" id="members-pag"></div>
+  </div>
+  <div class="pg" id="pg-member-stmt">
+    <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="fg"><div class="fi full"><label>اختر العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div><div class="fi"><label>من تاريخ</label><input type="date" id="ms-from"></div><div class="fi"><label>إلى تاريخ</label><input type="date" id="ms-to"></div></div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض الكشف</button><button class="btn" onclick="window.prtMemberStmt()"><i class="ti ti-printer"></i>طباعة</button><div class="export-dropdown"><button class="btn export-dropdown-btn" onclick="toggleExportMenu(event)"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="export-member-menu"><button class="export-dropdown-item" onclick="window.exportMemberStmt('excel');closeExportMenu()"><i class="ti ti-file-spreadsheet"></i>Excel (.xlsx)</button><button class="export-dropdown-item" onclick="window.exportMemberStmt('pdf');closeExportMenu()"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div id="ms-out"></div>
+  </div>
+  <div class="pg" id="pg-annual">
+    <div class="ph"><div><div class="ph-t">الاشتراكات السنوية</div><div class="ph-s">200 ₪ على كل عضو بداية كل سنة</div></div><div class="ph-a"><button class="btn sm" onclick="togglePageExport(event,'exp-annual')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-annual"><button class="export-dropdown-item" onclick="window.exportPageExcel('annual')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('annual')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="card"><div class="ibox warn"><i class="ti ti-alert-triangle"></i>عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.</div><div class="fg" style="max-width:400px;margin-bottom:16px"><div class="fi"><label>السنة</label><input type="number" id="due-year" min="2020" max="2040" value="2026"></div><div class="fi"><label>المبلغ ₪</label><input type="number" id="due-amount" value="200" min="1"></div></div><button class="btn primary" id="btn-apply-due" onclick="window.applyAnnualDue()"><i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي</button></div>
+    <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-history"></i>سجل الاشتراكات المطبقة</div><div id="annual-list"></div></div>
+  </div>
+  <div class="pg" id="pg-users">
+    <div class="ph"><div><div class="ph-t">إدارة المستخدمين</div></div><div class="ph-a"><button class="btn sm" onclick="togglePageExport(event,'exp-users')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-users"><button class="export-dropdown-item" onclick="window.exportPageExcel('users')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('users')"><i class="ti ti-file-type-pdf"></i>PDF</button></div><button class="btn sm primary" onclick="window.openM('invite')"><i class="ti ti-user-plus"></i>دعوة مستخدم</button></div></div>
+    <div class="card"><div id="users-list"></div></div>
+  </div>
+  <div class="pg" id="pg-audit">
+    <div class="ph"><div><div class="ph-t">سجل العمليات</div></div><div class="ph-a"><button class="btn sm" onclick="togglePageExport(event,'exp-audit')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-audit"><button class="export-dropdown-item" onclick="window.exportPageExcel('audit')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('audit')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div>
+    <div class="card"><div id="audit-list"></div></div>
+  </div>
+  <div class="pg" id="pg-bk">
+    <div class="ph"><div><div class="ph-t">النسخ الاحتياطي</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="card" style="text-align:center;padding:28px"><i class="ti ti-database-export" style="font-size:40px;color:var(--diwan);display:block;margin-bottom:12px"></i><p style="font-size:12px;color:var(--tx2);margin-bottom:12px">تصدير كامل بصيغة JSON</p><button class="btn primary" onclick="window.doBackup()"><i class="ti ti-download"></i>تحميل النسخة</button><button class="btn" onclick="window.doRestore()" style="margin-top:8px"><i class="ti ti-upload"></i>استعادة نسخة</button></div><div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>معلومات النظام</div><div id="sys-info"></div></div></div>
+  </div>
+  <div class="pg" id="pg-settings">
+    <div class="ph"><div><div class="ph-t">الإعدادات</div><div class="ph-s">الرصيد الافتتاحي وإعدادات النظام</div></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-wallet"></i>الرصيد الافتتاحي للصناديق</span></div><div class="ibox warn"><i class="ti ti-alert-triangle"></i>الرصيد الافتتاحي يُحسب أولاً قبل أي عملية</div><div class="fg" style="max-width:500px"><div class="fi"><label>الرصيد الافتتاحي لصندوق الغداء ₪</label><div class="iw"><span class="ipx" style="color:var(--food)">₪</span><input type="number" id="set-food-opening" placeholder="0.00" step="0.01"></div></div><div class="fi"><label>الرصيد الافتتاحي لصندوق الديوان ₪</label><div class="iw"><span class="ipx" style="color:var(--diwan)">₪</span><input type="number" id="set-diwan-opening" placeholder="0.00" step="0.01"></div></div></div><div style="margin-top:16px"><button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ الإعدادات</button></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i>أسعار الصرف الاحتياطية</span></div><div class="fg" style="max-width:500px"><div class="fi"><label>سعر الدولار USD ₪</label><div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" placeholder="3.70" step="0.01" min="0.01"></div></div><div class="fi"><label>سعر الدينار JOD ₪</label><div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" placeholder="5.00" step="0.01" min="0.01"></div></div></div><div style="margin-top:16px"><button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ</button></div></div>
+    <div class="card" id="settings-summary" style="display:none"><div class="ch"><span class="ct"><i class="ti ti-chart-pie"></i>ملخص الأرصدة مع الافتتاحي</span></div><div id="settings-bal-summary"></div></div>
+  </div>
+</div>
+</div>
+
+<div id="copyright-bar">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
+
+<!-- MODALS -->
+<div class="ov" id="ov">
+  <!-- Receipt Modal -->
+  <div class="modal" id="m-rec" style="display:none;max-width:580px">
+    <div class="mhd"><span class="mtt"><span class="mico green" id="rec-mico"><i class="ti ti-receipt"></i></span><span id="rec-mtitle">سند قبض جديد</span></span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <div class="fi full" style="margin-bottom:14px"><label>نوع الإيصال <span class="req">*</span></label><select id="rec-fund" onchange="window.onRecFundChange()"><option value="food">صندوق الغداء — مساهمة عضو</option><option value="diwan">صندوق الديوان — دفعة للديوان</option><option value="donation">تبرع — يُسجَّل في صندوق التبرعات</option></select></div>
+      <div class="sdiv">بيانات الدافع</div>
+      <div class="fg">
+        <div class="fi" id="rec-payer-type-wrap"><label>نوع الدافع</label><select id="rec-payer-type" onchange="window.onPayerTypeChange()"><option value="member">عضو من العائلة</option><option value="contact" id="opt-contact" style="display:none">جهة اتصال مسجلة</option><option value="manual" id="opt-manual" style="display:none">إدخال يدوي</option></select></div>
+        <div class="fi" id="rec-member-wrap"><label>اسم العضو <span class="req">*</span></label><select id="rec-member"><option value="">-- اختر عضواً --</option></select><span class="ferr" id="e-rec-member"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
+        <div class="fi" id="rec-contact-wrap" style="display:none"><label>جهة الاتصال</label><select id="rec-contact"><option value="">-- اختر --</option></select></div>
+        <div class="fi" id="rec-manual-wrap" style="display:none"><label>اسم الدافع <span class="req">*</span></label><input type="text" id="rec-payer-name" placeholder="اكتب الاسم"><div style="margin-top:4px"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="rec-save-contact" style="width:auto;padding:0">حفظ كجهة اتصال</label></div></div>
+      </div>
+      <div id="rec-don-fund-wrap" style="display:none"><div class="sdiv">توجيه التبرع</div><div class="fi full"><label>يُظهر في كشف أي صندوق؟</label><select id="rec-don-display"><option value="food">كشف صندوق الغداء</option><option value="diwan">كشف صندوق الديوان</option></select></div></div>
+      <div class="sdiv">المبلغ والتاريخ</div>
+      <div class="fg">
+        <div class="fi"><label>العملة</label><select id="rec-currency" onchange="window.onCurrencyChange('rec')"><option value="ILS">₪ شيكل إسرائيلي</option><option value="USD">$ دولار أمريكي</option><option value="JOD">د.أ دينار أردني</option></select></div>
+        <div class="fi"><label>المبلغ <span class="req">*</span></label><div class="iw"><span class="ipx" id="rec-currency-sym">₪</span><input type="number" id="rec-amount" min="0.01" step="0.01" placeholder="0.00" oninput="window.calcILS('rec')"></div><span class="ferr" id="e-rec-amount"><i class="ti ti-alert-circle"></i>أدخل مبلغاً</span></div>
+        <div class="fi full" id="rec-ils-row" style="display:none"><div class="ils-row show"><i class="ti ti-calculator"></i><span>المبلغ بالشيكل: </span><span class="ils-val" id="rec-ils-val">—</span><span style="color:var(--tx3);font-size:11px;margin-right:auto" id="rec-rate-label"></span></div></div>
+        <div class="fi"><label>التاريخ <span class="req">*</span></label><input type="date" id="rec-date"><span class="ferr" id="e-rec-date"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
+        <div class="fi"><label>طريقة الدفع</label><div class="pills" id="rec-pills"><span class="pill on" data-val="cash" onclick="window.setPill('rec',this)"><i class="ti ti-cash"></i>نقد</span><span class="pill" data-val="check" onclick="window.setPill('rec',this)"><i class="ti ti-file-dollar"></i>شيك</span><span class="pill" data-val="transfer" onclick="window.setPill('rec',this)"><i class="ti ti-building-bank"></i>تحويل</span><span class="pill" data-val="online" onclick="window.setPill('rec',this)"><i class="ti ti-device-mobile"></i>أونلاين</span></div><input type="hidden" id="rec-method" value="cash"></div>
+        <div class="fi full" id="rec-cheque-wrap" style="display:none"><div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> معلومات الشيك</div><div class="fg"><div class="fi"><label>رقم الشيك</label><input type="text" id="rec-cheque-no" placeholder="مثال: 123456"></div><div class="fi"><label>تاريخ الشيك</label><input type="date" id="rec-cheque-date"></div><div class="fi full"><label>البنك المسحوب عليه</label><input type="text" id="rec-cheque-bank" placeholder="اسم البنك"></div></div></div></div>
+        <div class="fi full"><label>ملاحظات</label><textarea id="rec-notes" placeholder="ملاحظات اختيارية..."></textarea></div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn primary" onclick="window.saveRec(true)"><i class="ti ti-printer"></i>حفظ وطباعة</button><button class="btn green" onclick="window.saveRec(false)"><i class="ti ti-device-floppy"></i>حفظ فقط</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal" id="m-pay" style="display:none;max-width:580px">
+    <div class="mhd"><span class="mtt"><span class="mico red"><i class="ti ti-cash"></i></span><span id="pay-mtitle">سند صرف جديد</span></span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <div class="fi full" style="margin-bottom:14px"><label>الصندوق <span class="req">*</span></label><select id="pay-fund" onchange="window.onPayFundChange()"><option value="food">صندوق الغداء — مصاريف الإطعام</option><option value="diwan">صندوق الديوان — مصاريف الديوان</option></select></div>
+      <div class="fg">
+        <div class="fi" id="pay-expense-wrap"><label>فئة المصروف <span class="req">*</span></label><select id="pay-expense"><option value="food_expense">مصاريف إطعام عزاء</option></select></div>
+        <div class="fi"><label>المستفيد <span class="req">*</span></label><select id="pay-beneficiary-type" onchange="window.onPayBenChange()"><option value="member">عضو من العائلة</option><option value="manual">إدخال يدوي</option></select></div>
+        <div class="fi" id="pay-member-wrap"><label>اسم العضو</label><select id="pay-member"><option value="">-- اختر عضواً --</option></select></div>
+        <div class="fi" id="pay-manual-wrap" style="display:none"><label>اسم المستفيد <span class="req">*</span></label><input type="text" id="pay-ben-name" placeholder="اسم المستفيد"><span class="ferr" id="e-pay-ben"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
+        <div class="fi"><label>العملة</label><select id="pay-currency" onchange="window.onCurrencyChange('pay')"><option value="ILS">₪ شيكل</option><option value="USD">$ دولار</option><option value="JOD">د.أ دينار أردني</option></select></div>
+        <div class="fi"><label>المبلغ <span class="req">*</span></label><div class="iw"><span class="ipx" id="pay-currency-sym">₪</span><input type="number" id="pay-amount" min="0.01" step="0.01" placeholder="0.00" oninput="window.calcILS('pay')"></div><span class="ferr" id="e-pay-amount"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
+        <div class="fi full" id="pay-ils-row" style="display:none"><div class="ils-row show"><i class="ti ti-calculator"></i><span>المبلغ بالشيكل: </span><span class="ils-val" id="pay-ils-val">—</span><span style="color:var(--tx3);font-size:11px;margin-right:auto" id="pay-rate-label"></span></div></div>
+        <div class="fi"><label>التاريخ <span class="req">*</span></label><input type="date" id="pay-date"><span class="ferr" id="e-pay-date"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
+        <div class="fi"><label>طريقة الصرف</label><div class="pills" id="pay-pills"><span class="pill on" data-val="cash" onclick="window.setPill('pay',this)"><i class="ti ti-cash"></i>نقد</span><span class="pill" data-val="check" onclick="window.setPill('pay',this)"><i class="ti ti-file-dollar"></i>شيك</span><span class="pill" data-val="transfer" onclick="window.setPill('pay',this)"><i class="ti ti-building-bank"></i>تحويل</span></div><input type="hidden" id="pay-method" value="cash"></div>
+        <div class="fi full" id="pay-cheque-wrap" style="display:none"><div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> معلومات الشيك</div><div class="fg"><div class="fi"><label>رقم الشيك</label><input type="text" id="pay-cheque-no"></div><div class="fi"><label>تاريخ الشيك</label><input type="date" id="pay-cheque-date"></div><div class="fi full"><label>البنك المسحوب عليه</label><input type="text" id="pay-cheque-bank"></div></div></div></div>
+        <div class="fi"><label>معتمد من</label><input type="text" id="pay-approved" placeholder="اسم المعتمد"></div>
+        <div class="fi full"><label>ملاحظات</label><textarea id="pay-notes" placeholder="وصف تفصيلي..."></textarea></div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn danger" onclick="window.savePay(true)"><i class="ti ti-printer"></i>حفظ وطباعة</button><button class="btn" onclick="window.savePay(false)"><i class="ti ti-device-floppy"></i>حفظ فقط</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Member Modal -->
+  <div class="modal" id="m-member" style="display:none;max-width:480px">
+    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-user-plus"></i></span>إضافة عضو جديد</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="mem-name" placeholder="الاسم الرباعي"><span class="ferr" id="e-mem-name"><i class="ti ti-alert-circle"></i>مطلوب</span></div><div class="fi"><label>الهاتف</label><input type="tel" id="mem-phone" placeholder="05x-xxx-xxxx"></div><div class="fi"><label>الرصيد الافتتاحي ₪</label><input type="number" id="mem-balance" value="0" step="0.01"><span style="font-size:10.5px;color:var(--tx3)">سالب = دين على العضو</span></div><div class="fi full"><label>ملاحظات</label><textarea id="mem-notes" placeholder="ملاحظات..."></textarea></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.saveMember()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Edit Member -->
+  <div class="modal" id="m-edit-member" style="display:none;max-width:480px">
+    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-edit"></i></span>تعديل بيانات العضو</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><input type="hidden" id="edit-mem-id"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="edit-mem-name"></div><div class="fi"><label>الهاتف</label><input type="tel" id="edit-mem-phone"></div><div class="fi"><label>الرصيد الافتتاحي ₪</label><input type="number" id="edit-mem-balance" step="0.01"></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-mem-notes"></textarea></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.updateMember()"><i class="ti ti-device-floppy"></i>حفظ التعديل</button><button class="btn danger" onclick="window.deleteMember()"><i class="ti ti-trash"></i>حذف العضو</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+ <!-- Edit Receipt -->
+
+<div class="modal" id="m-edit-rec" style="display:none;max-width:420px">
+  <div class="mhd">
+    <span class="mtt">
+      <span class="mico green">
+        <i class="ti ti-edit"></i>
+      </span>
+      تعديل الإيصال
+    </span>
+
+<button class="btn ghost" onclick="window.closeM()">
+  <i class="ti ti-x"></i>
+</button>
+
+  </div>
+
+  <div class="mbd">
+
+<input type="hidden" id="edit-rec-id">
+
+<div class="ibox warn">
+  <i class="ti ti-lock"></i>
+  يمكن تعديل المبلغ والتاريخ والملاحظات فقط
+</div>
+
+<div class="fg">
+
+  <div class="fi full">
+    <label>المبلغ بالشيكل ₪ <span class="req">*</span></label>
+    <div class="iw">
+      <span class="ipx">₪</span>
+      <input
+        type="number"
+        id="edit-rec-amount"
+        min="0.01"
+        step="0.01">
+    </div>
+  </div>
+
+  <div class="fi full">
+    <label>التاريخ <span class="req">*</span></label>
+    <input
+      type="date"
+      id="edit-rec-date">
+  </div>
+
+  <div class="fi full">
+    <label>ملاحظات</label>
+    <textarea id="edit-rec-notes"></textarea>
+  </div>
+
+</div>
+
+  </div>
+
+  <div class="mft">
+    <button class="btn primary" onclick="window.updateRec()">
+      <i class="ti ti-device-floppy"></i>
+      حفظ
+    </button>
+
+<button class="btn danger" onclick="window.deleteRec()">
+  <i class="ti ti-trash"></i>
+  إلغاء السند
+</button>
+
+<button class="btn" onclick="window.closeM()">
+  إلغاء
+</button>
+
+  </div>
+</div>
+
+
+  <!-- Edit Payment -->
+  <div class="modal" id="m-edit-pay" style="display:none;max-width:420px">
+    <div class="mhd"><span class="mtt"><span class="mico red"><i class="ti ti-edit"></i></span>تعديل سند الصرف</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><input type="hidden" id="edit-pay-id"><div class="ibox warn"><i class="ti ti-lock"></i>يمكن تعديل المبلغ بالشيكل والملاحظات فقط</div><div class="fg"><div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-pay-amount" min="0.01" step="0.01"></div></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-pay-notes"></textarea></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.updatePay()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn danger" onclick="window.deletePay()"><i class="ti ti-trash"></i>إلغاء السند</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Invite User -->
+  <div class="modal" id="m-invite" style="display:none;max-width:420px">
+    <div class="mhd"><span class="mtt"><span class="mico don"><i class="ti ti-send"></i></span>دعوة مستخدم جديد</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل</label><input type="text" id="inv-name" placeholder="اسم المستخدم"></div><div class="fi full"><label>البريد الإلكتروني <span class="req">*</span></label><input type="email" id="inv-email"></div><div class="fi full"><label>كلمة المرور المؤقتة <span class="req">*</span></label><input type="text" id="inv-pass"></div><div class="fi full"><label>الدور</label><select id="inv-role"><option value="viewer">عارض — عرض فقط</option><option value="admin">مدير — كامل الصلاحيات</option></select></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.inviteUser()"><i class="ti ti-send"></i>إنشاء الحساب</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Change Password -->
+  <div class="modal" id="m-change-pass" style="display:none;max-width:400px">
+    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><form onsubmit="event.preventDefault();window.changePassword();"><div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div><div class="fg"><div class="fi full"><label>كلمة المرور الجديدة <span class="req">*</span></label><input type="password" id="new-pass" placeholder="••••••••" minlength="6"><span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span></div><div class="fi full"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" id="confirm-pass" placeholder="••••••••"><span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span></form></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.changePassword()"><i class="ti ti-lock-check"></i>حفظ كلمة المرور</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+</div>
+
+<!-- Mobile Nav -->
+<div id="mobile-nav" style="display:none">
+  <div class="mnb on" onclick="window.nav('dash');setMobileNav(this)"><i class="ti ti-layout-dashboard"></i><span>الرئيسية</span></div>
+  <div class="mnb" onclick="window.nav('food-stmt');setMobileNav(this)"><i class="ti ti-tools-kitchen-2"></i><span>الغداء</span></div>
+  <div class="mnb" onclick="window.nav('diwan-stmt');setMobileNav(this)"><i class="ti ti-building"></i><span>الديوان</span></div>
+  <div class="mnb" onclick="window.nav('members');setMobileNav(this)"><i class="ti ti-users"></i><span>الأعضاء</span></div>
+  <div class="mnb" id="mnb-more" onclick="toggleMobileMenu()"><i class="ti ti-menu-2"></i><span>المزيد</span></div>
+</div>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" style="display:none;position:fixed;bottom:62px;left:0;right:0;background:var(--navy2);border-top:1px solid rgba(255,255,255,.08);z-index:199;padding:8px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:var(--food)"></i><span>إيصالات الغداء</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:var(--diwan)"></i><span>إيصالات الديوان</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('don');closeMobileMenu();setMobileNav(null)"><i class="ti ti-heart" style="color:var(--don)"></i><span>التبرعات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:var(--food)"></i><span>مصاريف الغداء</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:var(--diwan)"></i><span>مصاريف الديوان</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('member-stmt');closeMobileMenu();setMobileNav(null)"><i class="ti ti-user"></i><span>كشف عضو</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('audit');closeMobileMenu();setMobileNav(null)"><i class="ti ti-list-check"></i><span>سجل العمليات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-annual" onclick="window.nav('annual');closeMobileMenu();setMobileNav(null)"><i class="ti ti-calendar"></i><span>الاشتراكات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-settings" onclick="window.nav('settings');closeMobileMenu();setMobileNav(null)"><i class="ti ti-settings"></i><span>الإعدادات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-users-mob" onclick="window.nav('users');closeMobileMenu();setMobileNav(null)"><i class="ti ti-shield-lock"></i><span>المستخدمون</span></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
 // ── Login page controls (مستقلة عن app.js) ──
 var LP_LANG = 'ar', LP_MODE = 'dark', LP_PW = false;
 
@@ -225,25 +677,25 @@ function loginSetLang(l) {
     set('lp-f1', '\u062a\u0642\u0627\u0631\u064a\u0631 \u0645\u0627\u0644\u064a\u0629 \u062f\u0642\u064a\u0642\u0629');
     set('lp-f2', '\u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0648\u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a');
     set('lp-f3', '\u0633\u062c\u0644 \u0645\u0627\u0644\u064a \u0645\u062a\u0643\u0627\u0645\u0644 \u0648\u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a');
-    set('lp-notice', '\u0639\u0644\u0649 \u0643\u0644 \u0645\u0646 \u064a\u0635\u0644 \u0625\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645 \u0627\u0644\u0643\u0627\u0645\u0644 \u0628\u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0648\u0627\u0644\u0633\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629 \u0648\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629 \u0639\u0644\u0649 \u0633\u0631\u064a\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0648\u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a\u060c \u0648\u064a\u064f\u0645\u0646\u0639 \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0623\u0648 \u0645\u0634\u0627\u0631\u0643\u0629 \u0623\u064a \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u062f\u0648\u0646 \u0635\u0644\u0627\u062d\u064a\u0629\u060c \u0648\u0630\u0644\u0643 \u062a\u062d\u062a \u0637\u0627\u0626\u0644\u0629 \u0627\u0644\u0645\u0633\u0627\u0621\u0644\u0629.');
-    set('lp-mem-lbl', '\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621');
-    set('lp-fy-lbl', '\u0627\u0644\u0633\u0646\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629');
-    set('lp-auth-title', '\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646 \u0627\u0644\u0645\u0635\u0631\u062d \u0644\u0647\u0645 \u0628\u0627\u0644\u062f\u062e\u0648\u0644');
-    set('lp-admin-lbl', '\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645');
-    set('lp-comm-lbl', '\u0623\u0639\u0636\u0627\u0621 \u0627\u0644\u0644\u062c\u0646\u0629');
-    set('lp-foot-title', '\u0627\u0644\u0625\u0635\u062f\u0627\u0631 2.0 \u2014 \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0645\u0627\u0644\u064a \u0644\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u00a9 2026\u20132027');
-    set('lp-foot-text', '\u062a\u0645 \u062a\u0637\u0648\u064a\u0631 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0644\u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0645\u0627\u0644\u064a \u0648\u0627\u0644\u0625\u062f\u0627\u0631\u064a \u0627\u0644\u0631\u0633\u0645\u064a \u0644\u0635\u0646\u0627\u062f\u064a\u0642 \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647\u060c \u0645\u0639 \u062a\u0648\u0641\u064a\u0631 \u0628\u064a\u0626\u0629 \u0622\u0645\u0646\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0648\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a \u0648\u062d\u0641\u0638 \u0627\u0644\u0633\u062c\u0644\u0627\u062a.');
+    set('lp-notice', '\u0639\u0644\u0649 \u0643\u0644 \u0645\u0646 \u064a\u0635\u0644 \u0625\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645 \u0627\u0644\u0643\u0627\u0645\u0644 \u0628\u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062ت \u0648\u0627\u0644\u0633\u064a\u0627\u0633\u0627\u062ت \u0627\u0644\u0645\u0639\u062ت\u064م\u062f\u062ة \u0648\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u062ة \u0639\u0644\u0649 \u0633\u0631\u064a\u062ة \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062ت \u0648\u062ا\u0644\u0645\u0639\u0644\u0648\u0645\u062ا\u062ت\u060c \u0648\u064a\u064f\u0645\u0646\u0639 \u0627\u0633\u062ت\u062e\u062ا\u062د\u062ا\u0645 \u0623\u0648 \u0645\u0634\u062ا\u0631\u064ك\u062ة \u0623\u064a \u0645\u0639\u0644\u0648\u0645\u062ا\u062ت \u062f\u0648\u0646 \u0635\u0644\u062ا\u062ح\u064a\u062ة\u060c \u0648\u0630\u0644\u0643 \u062ت\u062d\u062ت \u0637\u062ا\u062ئ\u0644\u062ة \u0627\u0644\u0645\u0633\u062ا\u062ء\u0644\u062ة.');
+    set('lp-mem-lbl', '\u0639\u062f\u062د \u0627\u0644\u0623\u0639\u0636\u062ا\u062ء');
+    set('lp-fy-lbl', '\u0627\u0644\u0633\u0646\u062ة \u0627\u0644\u0645\u062ا\u0644\u064a\u062ة');
+    set('lp-auth-title', '\u0627\u0644\u0645\u0633\u062ت\u062e\u062f\u0645\u0648\u0646 \u0627\u0644\u0645\u0635\u0631\u062d \u0644\u0647\u0645 \u0628\u062ا\u062د\u062خ\u0648\u0644');
+    set('lp-admin-lbl', '\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u062ا\u0645');
+    set('lp-comm-lbl', '\u0623\u0639\u0636\u062ا\u062ء \u0627\u0644\u0644\u062c\u0646\u062ة');
+    set('lp-foot-title', '\u0627\u0644\u0625\u0635\u062دا\u0631 2.0 \u2014 \u0627\u0644\u0646\u0638\u062ا\u0645 \u0627\u0644\u0645\u062ا\u0644\u064a \u0644\u062f\u064a\u0648\u062ا\u0646 \u0622\u0644 \u0637\u0647 \u00a9 2026\u20132027');
+    set('lp-foot-text', '\u062ت\u0645 \u062ت\u0637\u0648\u064a\u0631 \u0647\u0630\u062ا \u0627\u0644\u0646\u0638\u062ا\u0645 \u0644\u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0645\u062ا\u0644\u064a \u0648\u062ا\u0644\u0625\u062f\u062ا\u0631\u064a \u0627\u0644\u0631\u0633\u0645\u064a \u0644\u0635\u0646\u062ا\u062د\u064a\u0642 \u062f\u064a\u0648\u062ا\u0646 \u0622\u0644 \u0637\u0647\u060c \u0645\u0639 \u062ت\u0648\u0641\u064a\u0631 \u0628\u064a\u0626\u062ة \u0622\u0645\u0646\u062ة \u0644\u0625\u062f\u062ا\u0631\u062ة \u0627\u0644\u0639\u0645\u0644\u064a\u062ا\u062ت \u0627\u0644\u0645\u062ا\u0644\u064a\u062ة \u0648\u0645\u0631\u062ا\u062c\u0639\u062ة \u0627\u0644\u062d\u0633\u062ا\u062ب\u062ا\u062ت \u0648\u062ح\u0641\u0638 \u0627\u0644\u0633\u062c\u0644\u062ا\u062ت.');
 
     // RIGHT PANEL
-    set('lp-welcome', '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
-    set('lp-subtitle', '\u0623\u062f\u062e\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u062d\u0633\u0627\u0628\u0643 \u0644\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0646\u0638\u0627\u0645');
+    set('lp-welcome', '\u062ت\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
+    set('lp-subtitle', '\u0623\u062f\u062e\u0644 \u0628\u064a\u062ا\u0646\u062ا\u062ت \u062d\u0633\u062ا\u062ب\u0643 \u0644\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0646\u0638\u062ا\u0645');
     set('lbl-email', '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062ت\u0631\u0648\u0646\u064a');
     ph('l-email', '\u0623\u062f\u062e\u0644 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062ت\u0631\u0648\u0646\u064a');
-    set('lbl-pass', '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631');
+    set('lbl-pass', '\u0643\u0644\u0645\u062ة \u0627\u0644\u0645\u0631\u0648\u0631');
     ph('l-pass', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
-    set('lbl-remember', '\u062a\u0630\u0643\u0631\u0646\u064a \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u062c\u0647\u0627\u0632');
-    set('lbl-forgot', '\u0646\u0633\u064a\u062a \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631\u061f');
-    set('btn-login-txt', '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
+    set('lbl-remember', '\u062ت\u0630\u0643\u0631\u0646\u064a \u0639\u0644\u0649 \u0647\u0630\u062ا \u0627\u0644\u062c\u0647\u062ا\u0632');
+    set('lbl-forgot', '\u0646\u0633\u064a\u062ت \u0643\u0644\u0645\u062ة \u0627\u0644\u0645\u0631\u0648\u0631\u061f');
+    set('btn-login-txt', '\u062ت\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
     set('lp-card-footer', '\u0644\u0644\u062f\u0639\u0645 \u0627\u0644\u0641\u0646\u064a: support@diwantaha.com');
   }
   localStorage.setItem('diwan_lang', l);
@@ -257,12 +709,24 @@ function loginTogglePw() {
   if(icon) icon.className = LP_PW ? 'ti ti-eye-off' : 'ti ti-eye';
 }
 
+/* Export dropdown */
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('export-member-menu');
+  if(menu) menu.classList.toggle('show');
+}
+function closeExportMenu() {
+  var menu = document.getElementById('export-member-menu');
+  if(menu) menu.classList.remove('show');
+}
+document.addEventListener('click', function(){ closeExportMenu(); });
+
 /* Dynamic member count on login */
 async function updateLoginMemberCount() {
   try {
-    // IMPORTANT: Replace with a secure method for API key management
-    var url = 'https://ralifvemgapmsgrjgazh.supabase.co/rest/v1/members?select=id&is_active=eq.true&limit=1';
-    var key = 'YOUR_SECURE_SUPABASE_KEY'; // NEVER hardcode keys in production
+    // NOTE: Hardcoded API key is a security risk and should be managed securely.
+    var url = 'https://ralifvemgapmsgrjgrzgazh.supabase.co/rest/v1/members?select=id&is_active=eq.true&limit=1';
+    var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4';
     var res = await fetch(url, {
       headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Prefer': 'count=exact' }
     });
@@ -272,9 +736,7 @@ async function updateLoginMemberCount() {
       var el = document.getElementById('lp-mem-count');
       if(el && total) el.textContent = total;
     }
-  } catch(e) {
-    console.error("Failed to update member count:", e); // Log errors
-  }
+  } catch(e) { /* silent */ }
 }
 
 (function(){
@@ -283,3 +745,9 @@ async function updateLoginMemberCount() {
   if(savedLang === 'en') loginSetLang('en');
   updateLoginMemberCount();
 })();
+</script>
+
+<script src="/js/i18n.js?v=2.1"></script>
+<script src="/js/app.js?v=2.1"></script>
+</body>
+</html>
