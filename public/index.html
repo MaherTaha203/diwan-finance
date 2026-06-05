@@ -395,7 +395,7 @@
   </div>
   <div class="pg" id="pg-bk">
     <div class="ph"><div><div class="ph-t">النسخ الاحتياطي</div></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="card" style="text-align:center;padding:28px"><i class="ti ti-database-export" style="font-size:40px;color:var(--diwan);display:block;margin-bottom:12px"></i><p style="font-size:12px;color:var(--tx2);margin-bottom:12px">تصدير كامل بصيغة JSON</p><button class="btn primary" onclick="window.doBackup()"><i class="ti ti-download"></i>تحميل النسخة</button></div><div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>معلومات النظام</div><div id="sys-info"></div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="card" style="text-align:center;padding:28px"><i class="ti ti-database-export" style="font-size:40px;color:var(--diwan);display:block;margin-bottom:12px"></i><p style="font-size:12px;color:var(--tx2);margin-bottom:12px">تصدير كامل بصيغة JSON</p><button class="btn primary" onclick="window.doBackup()"><i class="ti ti-download"></i>تحميل النسخة</button><button class="btn" onclick="window.doRestore()" style="margin-top:8px"><i class="ti ti-upload"></i>استعادة نسخة</button></div><div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>معلومات النظام</div><div id="sys-info"></div></div></div>
   </div>
   <div class="pg" id="pg-settings">
     <div class="ph"><div><div class="ph-t">الإعدادات</div><div class="ph-s">الرصيد الافتتاحي وإعدادات النظام</div></div></div>
