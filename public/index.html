@@ -205,6 +205,7 @@
           </div>
         </div>
 
+        <form onsubmit="event.preventDefault();window.login();" autocomplete="on">
         <div class="lc-gold"></div>
         <div class="login-card-title" id="lp-welcome">تسجيل الدخول</div>
         <div class="login-card-sub" id="lp-subtitle">أدخل بيانات حسابك للوصول إلى النظام</div>
@@ -245,6 +246,7 @@
 
         <div class="login-err-box" id="login-err"></div>
         <div class="forgot-msg" id="forgot-msg"></div>
+        </form>
 
         <div class="login-card-footer" id="lp-card-footer">للدعم الفني: support@diwantaha.com</div>
       </div>
@@ -340,7 +342,7 @@
     <div class="pag" id="food-pay-pag"></div>
   </div>
   <div class="pg" id="pg-food-stmt">
-    <div class="ph"><div><div class="ph-t">كشف حساب صندوق الغداء</div></div><div class="ph-a"><button class="btn sm food" onclick="window.prtStmt('food')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-food-stmt')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-food-stmt"><button class="export-dropdown-item" onclick="window.exportPageExcel('food-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('food-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><!--</button></div></div>
+    <div class="ph"><div><div class="ph-t">كشف حساب صندوق الغداء</div></div><div class="ph-a"><button class="btn sm food" onclick="window.prtStmt('food')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-food-stmt')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-food-stmt"><button class="export-dropdown-item" onclick="window.exportPageExcel('food-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('food-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
     <div class="card" style="margin-bottom:14px"><div class="fg"><div class="fi"><label>من تاريخ</label><input type="date" id="food-stmt-from"></div><div class="fi"><label>إلى تاريخ</label><input type="date" id="food-stmt-to"></div><div class="fi"><label>نوع الحركة</label><select id="food-stmt-type"><option value="">الكل</option><option value="cr">إيصالات فقط</option><option value="dr">مصاريف فقط</option><option value="don">تبرعات فقط</option></select></div><div class="fi" style="justify-content:flex-end"><button class="btn primary" onclick="window.renderStmt('food')" style="margin-top:18px"><i class="ti ti-search"></i>عرض</button></div></div></div>
     <div id="food-stmt-out"></div>
   </div>
@@ -358,12 +360,12 @@
     <div class="pag" id="diwan-pay-pag"></div>
   </div>
   <div class="pg" id="pg-diwan-stmt">
-    <div class="ph"><div><div class="ph-t">كشف حساب صندوق الديوان</div></div><div class="ph-a"><button class="btn sm diwan" onclick="window.prtStmt('diwan')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-diwan-stmt')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-diwan-stmt"><button class="export-dropdown-item" onclick="window.exportPageExcel('diwan-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('diwan-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><!--</button></div></div>
+    <div class="ph"><div><div class="ph-t">كشف حساب صندوق الديوان</div></div><div class="ph-a"><button class="btn sm diwan" onclick="window.prtStmt('diwan')"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-diwan-stmt')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-diwan-stmt"><button class="export-dropdown-item" onclick="window.exportPageExcel('diwan-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('diwan-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
     <div class="card" style="margin-bottom:14px"><div class="fg"><div class="fi"><label>من تاريخ</label><input type="date" id="diwan-stmt-from"></div><div class="fi"><label>إلى تاريخ</label><input type="date" id="diwan-stmt-to"></div><div class="fi"><label>نوع الحركة</label><select id="diwan-stmt-type"><option value="">الكل</option><option value="cr">إيصالات فقط</option><option value="dr">مصاريف فقط</option><option value="don">تبرعات فقط</option></select></div><div class="fi" style="justify-content:flex-end"><button class="btn primary" onclick="window.renderStmt('diwan')" style="margin-top:18px"><i class="ti ti-search"></i>عرض</button></div></div></div>
     <div id="diwan-stmt-out"></div>
   </div>
   <div class="pg" id="pg-don">
-    <div class="ph"><div><div class="ph-t">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>تبرع جديد</button><button class="btn sm" onclick="window.prtDonStmt()"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-don')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-don"><button class="export-dropdown-item" onclick="window.exportPageExcel('don')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('don')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><!--</button></div></div>
+    <div class="ph"><div><div class="ph-t">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>تبرع جديد</button><button class="btn sm" onclick="window.prtDonStmt()"><i class="ti ti-printer"></i>طباعة</button><button class="btn sm" onclick="togglePageExport(event,'exp-don')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-don"><button class="export-dropdown-item" onclick="window.exportPageExcel('don')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('don')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
     <div class="ibox don"><i class="ti ti-info-circle"></i>التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة</div>
     <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-don" placeholder="بحث..." oninput="D['don'].render()"></div></div>
     <div class="tw"><table><thead><tr><th>الرقم</th><th>التاريخ</th><th>المتبرع</th><th>المبلغ ₪</th><th>العملة</th><th>يُظهر في</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="don-body"></tbody></table></div>
@@ -572,7 +574,7 @@
   <!-- Change Password -->
   <div class="modal" id="m-change-pass" style="display:none;max-width:400px">
     <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div><div class="fg"><div class="fi full"><label>كلمة المرور الجديدة <span class="req">*</span></label><input type="password" id="new-pass" placeholder="••••••••" minlength="6"><span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span></div><div class="fi full"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" id="confirm-pass" placeholder="••••••••"><span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span></div></div></div>
+    <div class="mbd"><form onsubmit="event.preventDefault();window.changePassword();"><div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div><div class="fg"><div class="fi full"><label>كلمة المرور الجديدة <span class="req">*</span></label><input type="password" id="new-pass" placeholder="••••••••" minlength="6"><span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span></div><div class="fi full"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" id="confirm-pass" placeholder="••••••••"><span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span></form></div></div></div>
     <div class="mft"><button class="btn primary" onclick="window.changePassword()"><i class="ti ti-lock-check"></i>حفظ كلمة المرور</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
   </div>
 </div>
@@ -702,14 +704,16 @@ document.addEventListener('click', function(){ closeExportMenu(); });
 /* Dynamic member count on login */
 async function updateLoginMemberCount() {
   try {
-    var SB2 = supabase.createClient(
-      'https://ralifvemgapmsgrjgazh.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4'
-    );
-    var res = await SB2.from('members').select('id', {count:'exact', head:true}).eq('is_active', true);
-    if(res.count) {
+    var url = 'https://ralifvemgapmsgrjgazh.supabase.co/rest/v1/members?select=id&is_active=eq.true&limit=1';
+    var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4';
+    var res = await fetch(url, {
+      headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Prefer': 'count=exact' }
+    });
+    var count = res.headers.get('content-range');
+    if(count) {
+      var total = count.split('/')[1];
       var el = document.getElementById('lp-mem-count');
-      if(el) el.textContent = res.count;
+      if(el && total) el.textContent = total;
     }
   } catch(e) { /* silent */ }
 }
