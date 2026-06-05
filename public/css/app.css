@@ -27,12 +27,12 @@ body.light {
 html { font-size:14px; }
 body {
   font-family:var(--fn); direction:rtl; background:var(--bg); color:var(--tx);
-  height:100vh; overflow:hidden; display:flex; flex-direction:column;
+  height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
   -webkit-font-smoothing:antialiased;
 }
 
 /* ═══ APP ═══ */
-#app { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+#app { display:flex; flex-direction:column; height:100vh; height:100dvh; overflow:hidden; }
 .top {
   height:58px; background:var(--navy);
   display:flex; align-items:center; justify-content:space-between;
@@ -201,7 +201,7 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
   .top{padding:0 10px;height:50px} .top-logo-sub{display:none} .top-logo-text{font-size:13px}
   .rate-chip{display:none} #clock{display:none} .tbtn{padding:0 7px;font-size:11px}
   .uchip{padding:0 7px 0 4px} .uname{font-size:11px} .urole{display:none}
-  .sb{display:none} .layout{flex-direction:column} .main{padding-bottom:72px} .pg{padding:12px 10px}
+  .sb{display:none} .layout{flex-direction:column} .main{padding-bottom:80px;-webkit-overflow-scrolling:touch} .pg{padding:12px 10px}
   #mobile-nav{position:fixed;bottom:0;left:0;right:0;height:62px;background:var(--navy);border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-around;z-index:200;padding:0 4px}
   .mnb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border-radius:10px;color:rgba(255,255,255,.45);cursor:pointer;transition:all .15s;flex:1;max-width:70px}
   .mnb.on{color:#00C896} .mnb i{font-size:20px} .mnb span{font-size:9px;font-weight:500;white-space:nowrap}
@@ -246,10 +246,10 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .login-lang {
   position:absolute; top:18px; left:18px; z-index:10;
   display:flex; align-items:center; gap:5px;
-  padding:10px 18px; border-radius:20px;
+  padding:6px 13px; border-radius:20px;
   border:1px solid rgba(200,150,26,.3);
   background:#ffffff;
-  font-size:15px; color:#C8961A;
+  font-size:11.5px; color:#C8961A;
   cursor:pointer; font-family:var(--fn);
   transition:all .15s;
 }
@@ -260,9 +260,8 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
   background:#ffffff;
   border:none;
   border-radius:22px;
-  padding:65px 55px 45px;
-  width:95%;
-  max-width:520px;
+  padding:52px 40px 36px;
+  width:94%; max-width:400px;
   position:relative; z-index:2;
   box-shadow:0 2px 40px rgba(200,150,26,.10);
   animation:loginFadeUp .55s cubic-bezier(.22,1,.36,1) both;
@@ -276,7 +275,7 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .login-box::before {
   content:'ديوان آل طه';
   display:block; text-align:center;
-  font-size:38px; font-weight:700;
+  font-size:26px; font-weight:700;
   font-family:'Cairo',sans-serif;
   background:linear-gradient(135deg,#C8961A 0%,#E5A820 50%,#F0C050 100%);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
@@ -303,13 +302,13 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 
 .lfi input {
   width:100% !important;
-  padding:16px 0 7px 0 !important;
+  padding:10px 0 7px 0 !important;
   background:transparent !important;
   border:none !important;
   border-bottom:1.5px solid rgba(200,150,26,.28) !important;
   border-radius:0 !important;
   color:#1A1A1A !important;
-  font-size:18px !important;
+  font-size:15px !important;
   font-family:'Cairo',sans-serif !important;
   outline:none !important;
   box-shadow:none !important;
@@ -339,7 +338,7 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
   right:0 !important;
   top:50% !important;
   transform:translateY(-50%) !important;
-  font-size:16px !important;
+  font-size:13.5px !important;
   font-weight:400 !important;
   color:#B8A060 !important;
   text-transform:none !important;
@@ -383,10 +382,10 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .login-forgot-link:hover { color:#E5A820; }
 
 .login-btn {
-  width:100%; height:62px;
+  width:100%; height:52px;
   background:linear-gradient(135deg,#C8961A 0%,#E5A820 50%,#F0C050 100%);
   border:none; border-radius:12px;
-  color:#fff; font-size:20px; font-weight:600;
+  color:#fff; font-size:16px; font-weight:600;
   cursor:pointer; font-family:var(--fn);
   display:flex; align-items:center; justify-content:center; gap:8px;
   letter-spacing:.5px;
