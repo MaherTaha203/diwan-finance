@@ -647,6 +647,7 @@ const D={
     mkPag('food-rec',d.length);
     const page=d.slice((PS['food-rec']-1)*PSZ,PS['food-rec']*PSZ);
     const body=document.getElementById('food-rec-body');
+    if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(7,'receipts');return;}
     body.innerHTML=page.map(r=>`<tr>
       <td><b style="font-size:11px">${esc(r.no)}</b></td>
@@ -671,6 +672,7 @@ const D={
     mkPag('food-pay',d.length);
     const page=d.slice((PS['food-pay']-1)*PSZ,PS['food-pay']*PSZ);
     const body=document.getElementById('food-pay-body');
+    if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(7,'expenses');return;}
     body.innerHTML=page.map(p=>`<tr>
       <td><b style="font-size:11px">${esc(p.no)}</b></td>
@@ -695,6 +697,7 @@ const D={
     mkPag('diwan-rec',d.length);
     const page=d.slice((PS['diwan-rec']-1)*PSZ,PS['diwan-rec']*PSZ);
     const body=document.getElementById('diwan-rec-body');
+    if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'receipts');return;}
     body.innerHTML=page.map(r=>`<tr>
       <td><b style="font-size:11px">${esc(r.no)}</b></td>
@@ -722,6 +725,7 @@ const D={
     mkPag('diwan-pay',d.length);
     const page=d.slice((PS['diwan-pay']-1)*PSZ,PS['diwan-pay']*PSZ);
     const body=document.getElementById('diwan-pay-body');
+    if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'expenses');return;}
     body.innerHTML=page.map(p=>`<tr>
       <td><b style="font-size:11px">${esc(p.no)}</b></td>
@@ -747,6 +751,7 @@ const D={
     mkPag('don',d.length);
     const page=d.slice((PS['don']-1)*PSZ,PS['don']*PSZ);
     const body=document.getElementById('don-body');
+    if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'donations');return;}
     body.innerHTML=page.map(r=>`<tr>
       <td><b style="font-size:11px">${esc(r.no)}</b></td>
@@ -781,6 +786,7 @@ else if(st==='credit')
     mkPag('members',d.length);
     const page=d.slice((PS['members']-1)*PSZ,PS['members']*PSZ);
     const body=document.getElementById('members-body');
+    if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(6,'members');return;}
     body.innerHTML=page.map((m,i)=>{
       let cls='green';
