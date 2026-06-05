@@ -1,286 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Diwan Al Taha – Document Verification</title>
-<meta name="robots" content="noindex, nofollow">
-<style>
-  @media print { body > * { display:none!important; } body::before { content:"This verification page cannot be printed."; display:block; font-size:20px; text-align:center; padding:60px; color:#cc0000; } }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:Arial,sans-serif; background:#f0f4f8; min-height:100vh; -webkit-user-select:none; user-select:none; }
+const { createClient } = require('@supabase/supabase-js');
 
-  /* TOP BAR */
-  .topbar { background:#0A3D6B; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; position:sticky; top:0; z-index:100; }
-  .topbar-left { display:flex; align-items:center; gap:9px; }
-  .topbar-circle { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.15); border:1.5px solid rgba(255,255,255,.4); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; text-align:center; line-height:1.2; flex-shrink:0; }
-  .topbar-name { font-size:13px; font-weight:700; }
-  .topbar-sub { font-size:9px; opacity:.7; }
-  .topbar-secure { font-size:9px; opacity:.75; }
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'no-store');
 
-  /* URL BAR */
-  .urlbar { background:#f5f7fa; border-bottom:1px solid #dde3eb; padding:7px 14px; display:flex; align-items:center; gap:8px; }
-  .url-pill { background:#fff; border:1px solid #d0d8e4; border-radius:14px; padding:4px 12px; font-size:10px; color:#444; flex:1; display:flex; align-items:center; gap:5px; overflow:hidden; }
-  .url-pill span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ valid: false, error: 'Missing document ID' });
 
-  .container { max-width:480px; margin:0 auto; padding:20px 16px 40px; }
+  const docId = id.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-  /* LOADING */
-  #page-loading { text-align:center; padding:60px 20px; }
-  .spinner { font-size:36px; animation:spin 1s linear infinite; display:inline-block; }
-  @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-  @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
-  @keyframes slideUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
-
-  /* VALID */
-  .check-circle { width:72px; height:72px; border-radius:50%; border:4px solid #1a8a1a; display:flex; align-items:center; justify-content:center; margin:8px auto 14px; animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both; }
-  .verified-title { font-size:22px; font-weight:700; color:#1a8a1a; letter-spacing:.5px; text-align:center; }
-  .verified-ar { font-size:14px; color:#1a8a1a; text-align:center; direction:rtl; margin-top:3px; }
-  .verified-en { font-size:11px; color:#888; text-align:center; margin-top:4px; }
-
-  .doc-card { background:#fff; border:1px solid #dde3eb; border-radius:10px; margin:16px 0; overflow:hidden; animation:slideUp .35s .1s ease both; }
-  .doc-card-header { background:#0A3D6B; color:#fff; padding:9px 14px; font-size:11px; font-weight:700; display:flex; justify-content:space-between; align-items:center; }
-  .doc-card-header span { font-size:10px; opacity:.75; font-weight:400; }
-  .doc-row { display:flex; border-bottom:1px solid #f0f2f5; }
-  .doc-row:last-child { border:none; }
-  .doc-lbl { background:#f7f9fc; color:#778899; padding:8px 12px; width:42%; font-size:10px; flex-shrink:0; display:flex; align-items:center; }
-  .doc-val { padding:8px 12px; font-weight:600; color:#111; font-size:11px; }
-  .doc-val.green { color:#1a8a1a; }
-  .doc-val.amount { font-size:13px; font-weight:700; color:#0A3D6B; }
-
-  .shield-badge { background:#f0faf0; border:1.5px solid #2a8a2a; border-radius:10px; display:flex; align-items:center; gap:14px; padding:12px 15px; margin:12px 0; animation:slideUp .35s .2s ease both; }
-  .shield-info .t1 { font-size:13px; font-weight:700; color:#1a6a1a; }
-  .shield-info .t2 { font-size:9.5px; color:#2a7a2a; margin-top:2px; }
-  .shield-info .t3 { font-size:8.5px; color:#4a9a4a; margin-top:3px; font-family:monospace; }
-
-  .warn-box { background:#fffbf0; border:1px solid #e8b060; border-radius:10px; display:flex; align-items:flex-start; gap:10px; padding:11px 14px; margin:10px 0; animation:slideUp .35s .3s ease both; }
-  .warn-box .wicon { font-size:16px; flex-shrink:0; }
-  .warn-box .wt { font-size:10px; color:#804010; line-height:1.6; }
-  .warn-box .wt strong { display:block; font-size:11px; margin-bottom:2px; }
-
-  /* INVALID */
-  .x-circle { width:72px; height:72px; border-radius:50%; border:4px solid #cc2222; display:flex; align-items:center; justify-content:center; margin:8px auto 14px; animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both; }
-  .invalid-title { font-size:22px; font-weight:700; color:#cc2222; text-align:center; }
-  .invalid-ar { font-size:14px; color:#cc2222; text-align:center; direction:rtl; margin-top:3px; }
-  .invalid-sub { font-size:11px; color:#888; text-align:center; margin-top:4px; }
-
-  .reasons-card { background:#fff; border:1px solid #e8b0b0; border-radius:10px; padding:14px 16px; margin:16px 0; animation:slideUp .35s .1s ease both; }
-  .reasons-card h3 { font-size:11px; font-weight:700; color:#a02020; margin-bottom:8px; }
-  .reasons-card li { font-size:10.5px; color:#a03030; padding:4px 0; border-bottom:1px solid #fce8e8; list-style:none; display:flex; gap:7px; line-height:1.5; }
-  .reasons-card li:last-child { border:none; }
-  .reasons-card li::before { content:"•"; flex-shrink:0; }
-
-  .inv-shield { background:#fff5f5; border:1.5px solid #cc2222; border-radius:10px; display:flex; align-items:center; gap:14px; padding:12px 15px; margin:12px 0; animation:slideUp .35s .2s ease both; }
-  .inv-shield .t1 { font-size:13px; font-weight:700; color:#cc2222; }
-  .inv-shield .t2 { font-size:9.5px; color:#a03030; margin-top:2px; }
-  .inv-shield .t3 { font-size:8.5px; color:#cc4444; margin-top:3px; }
-
-  .security-notice { background:#fff8f0; border:1px solid #e8a060; border-radius:10px; padding:11px 14px; margin:10px 0; font-size:10px; color:#804020; line-height:1.65; animation:slideUp .35s .3s ease both; }
-  .security-notice strong { display:block; margin-bottom:4px; font-size:11px; }
-
-  .page-footer { text-align:center; font-size:9px; color:#bbb; padding:14px 0 4px; border-top:1px solid #eee; margin-top:12px; }
-</style>
-</head>
-<body>
-
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="topbar-circle">DT<br>ديوان</div>
-    <div>
-      <div class="topbar-name">Diwan Al Taha</div>
-      <div class="topbar-sub">Document Verification</div>
-    </div>
-  </div>
-  <div class="topbar-secure">🔒 Secure</div>
-</div>
-
-<!-- URL BAR -->
-<div class="urlbar">
-  <div class="url-pill">
-    <span style="color:#1a8a1a;font-size:12px;">🔒</span>
-    <span id="url-display">diwan-finance.com/verify/...</span>
-  </div>
-</div>
-
-<!-- LOADING -->
-<div id="page-loading">
-  <div class="container" style="text-align:center;padding-top:60px;">
-    <div class="spinner">⟳</div>
-    <div style="font-size:14px;color:#555;margin-top:14px;">Verifying document...</div>
-    <div style="font-size:11px;color:#aaa;margin-top:6px;">Please wait</div>
-  </div>
-</div>
-
-<!-- VALID PAGE -->
-<div id="page-valid" style="display:none;">
-  <div class="container">
-    <div style="text-align:center;">
-      <div class="check-circle">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <polyline points="7,19 15,27 29,11" stroke="#1a8a1a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="verified-title">VERIFIED</div>
-      <div class="verified-ar">مستند إلكتروني معتمد</div>
-      <div class="verified-en">Verified Financial Document</div>
-    </div>
-
-    <div class="doc-card">
-      <div class="doc-card-header">
-        Document Information
-        <span id="v-type-badge">—</span>
-      </div>
-      <div class="doc-row"><div class="doc-lbl">Document Number</div><div class="doc-val" id="v-id">—</div></div>
-      <div class="doc-row"><div class="doc-lbl">Document Type</div><div class="doc-val" id="v-type">—</div></div>
-      <div class="doc-row"><div class="doc-lbl">Fund</div><div class="doc-val" id="v-fund">—</div></div>
-      <div class="doc-row"><div class="doc-lbl">Date</div><div class="doc-val" id="v-date">—</div></div>
-      <div class="doc-row"><div class="doc-lbl">Amount</div><div class="doc-val amount" id="v-amount">—</div></div>
-      <div class="doc-row"><div class="doc-lbl">Description</div><div class="doc-val" id="v-desc">—</div></div>
-      <div class="doc-row"><div class="doc-lbl">Prepared By</div><div class="doc-val" id="v-prepby">—</div></div>
-      <div class="doc-row"><div class="doc-lbl">Verification</div><div class="doc-val green">✓ Authentic &amp; Valid</div></div>
-    </div>
-
-    <!-- SHIELD BADGE -->
-    <div class="shield-badge">
-      <svg width="46" height="54" viewBox="0 0 52 60" style="flex-shrink:0;">
-        <path d="M26 2L4 11V28C4 41 14 52 26 58C38 52 48 41 48 28V11L26 2Z" fill="#0A3D6B"/>
-        <path d="M26 6L8 14V28C8 39.5 16.5 49.5 26 54.5C35.5 49.5 44 39.5 44 28V14L26 6Z" fill="#1060A0"/>
-        <path d="M26 10L11 17V28C11 37.5 17.5 46 26 50.5C34.5 46 41 37.5 41 28V17L26 10Z" fill="#0A3D6B"/>
-        <circle cx="26" cy="28" r="11" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
-        <polyline points="19,28 24,34 34,21" fill="none" stroke="#2adc2a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <text x="26" y="55" text-anchor="middle" font-size="5" fill="rgba(255,255,255,.55)" font-family="Arial" font-weight="700">DIWAN AL TAHA</text>
-      </svg>
-      <div class="shield-info">
-        <div class="t1">Officially Verified</div>
-        <div class="t2">Diwan Al Taha Financial Management System</div>
-        <div class="t3" id="v-token">Token: —</div>
-      </div>
-    </div>
-
-    <div class="warn-box">
-      <div class="wicon">⚠</div>
-      <div class="wt">
-        <strong>This page is not printable.</strong>
-        This electronic verification page is for authenticity verification only and cannot be printed. Printing, downloading, and saving are disabled.
-      </div>
-    </div>
-
-    <div class="page-footer">© 2026 Diwan Al Taha Financial Management System. All Rights Reserved.</div>
-  </div>
-</div>
-
-<!-- INVALID PAGE -->
-<div id="page-invalid" style="display:none;">
-  <div class="container">
-    <div style="text-align:center;">
-      <div class="x-circle">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <line x1="8" y1="8" x2="24" y2="24" stroke="#cc2222" stroke-width="3.5" stroke-linecap="round"/>
-          <line x1="24" y1="8" x2="8" y2="24" stroke="#cc2222" stroke-width="3.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="invalid-title">INVALID DOCUMENT</div>
-      <div class="invalid-ar">مستند غير صالح</div>
-      <div class="invalid-sub">This document could not be verified.</div>
-    </div>
-
-    <div class="reasons-card">
-      <h3>Possible Reasons</h3>
-      <ul>
-        <li>The document does not exist in our system.</li>
-        <li>The document may have been deleted or cancelled.</li>
-        <li>The QR Code or link may have been tampered with.</li>
-        <li>The verification token has expired or is invalid.</li>
-      </ul>
-    </div>
-
-    <div class="inv-shield">
-      <svg width="46" height="54" viewBox="0 0 52 60" style="flex-shrink:0;">
-        <path d="M26 2L4 11V28C4 41 14 52 26 58C38 52 48 41 48 28V11L26 2Z" fill="#cc2222"/>
-        <path d="M26 6L8 14V28C8 39.5 16.5 49.5 26 54.5C35.5 49.5 44 39.5 44 28V14L26 6Z" fill="#e03030"/>
-        <path d="M26 10L11 17V28C11 37.5 17.5 46 26 50.5C34.5 46 41 37.5 41 28V17L26 10Z" fill="#cc2222"/>
-        <circle cx="26" cy="28" r="11" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
-        <line x1="20" y1="22" x2="32" y2="34" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>
-        <line x1="32" y1="22" x2="20" y2="34" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>
-        <text x="26" y="55" text-anchor="middle" font-size="5" fill="rgba(255,255,255,.55)" font-family="Arial" font-weight="700">DIWAN AL TAHA</text>
-      </svg>
-      <div>
-        <div class="t1">Verification Failed</div>
-        <div class="t2">Diwan Al Taha Financial Management System</div>
-        <div class="t3">Do not accept this document as valid proof.</div>
-      </div>
-    </div>
-
-    <div class="security-notice">
-      <strong>⚠ Security Notice</strong>
-      If you received a physical document with this QR Code, please report it to Diwan Al Taha immediately. Do not use or accept this document as proof of any financial transaction.
-    </div>
-
-    <div class="page-footer">© 2026 Diwan Al Taha Financial Management System. All Rights Reserved.</div>
-  </div>
-</div>
-
-<script>
-// ── BLOCK PRINTING ──
-window.print = function(){ alert('This verification page cannot be printed.\nهذه الصفحة لا يمكن طباعتها.'); return false; };
-document.addEventListener('keydown', function(e){
-  if((e.ctrlKey||e.metaKey)&&['p','P','s','S'].includes(e.key)){ e.preventDefault(); return false; }
-});
-document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-
-// ── GET DOC ID FROM URL ──
-// URL format: /verify/REC-000123
-function getDocId(){
-  const m = window.location.pathname.match(/\/verify\/([A-Z0-9\-]+)/i);
-  if(m) return m[1].toUpperCase();
-  return new URLSearchParams(window.location.search).get('id');
-}
-
-// ── RENDER ──
-async function init(){
-  const docId = getDocId();
-  if(docId) document.getElementById('url-display').textContent = 'diwan-finance.com/verify/' + docId;
-
-  if(!docId){ showInvalid(); return; }
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ valid: false, error: 'Server configuration error' });
+  }
 
   try {
-    // استدعاء API الخاص بنا
-    const res  = await fetch('/api/verify?id=' + encodeURIComponent(docId));
-    const data = await res.json();
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    document.getElementById('page-loading').style.display = 'none';
+    /* 1. Search receipts first */
+    const { data: receipt, error: recErr } = await supabase
+      .from('receipts')
+      .select('no, fund_type, receipt_date, amount_ils, amount, currency, notes, created_by, is_deleted')
+      .ilike('no', docId)
+      .maybeSingle();
 
-    if(data.valid && data.document){
-      showValid(data.document);
-    } else {
-      showInvalid();
+    if (recErr) return res.status(500).json({ valid: false, error: recErr.message });
+
+    if (receipt) {
+      if (receipt.is_deleted) {
+        return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
+      }
+      const fundLabel = receipt.fund_type === 'food' ? 'Food Fund'
+        : receipt.fund_type === 'diwan' ? 'Diwan Fund'
+        : receipt.fund_type === 'donation' ? 'Donations' : receipt.fund_type;
+      return res.status(200).json({
+        valid: true,
+        document: {
+          id: receipt.no,
+          type: 'Receipt Voucher',
+          typeAr: '\u0633\u0646\u062f \u0642\u0628\u0636',
+          fund: fundLabel,
+          date: receipt.receipt_date,
+          amount: receipt.amount_ils || receipt.amount,
+          currency: receipt.currency || 'ILS',
+          description: receipt.notes || '',
+          preparedBy: receipt.created_by || ''
+        }
+      });
     }
-  } catch(e){
-    document.getElementById('page-loading').style.display = 'none';
-    showInvalid();
+
+    /* 2. Search payments if not found in receipts */
+    const { data: payment, error: payErr } = await supabase
+      .from('payments')
+      .select('no, fund_type, payment_date, amount_ils, amount, currency, expense_type, notes, created_by, approved_by, is_deleted')
+      .ilike('no', docId)
+      .maybeSingle();
+
+    if (payErr) return res.status(500).json({ valid: false, error: payErr.message });
+
+    if (payment) {
+      if (payment.is_deleted) {
+        return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
+      }
+      const fundLabel = payment.fund_type === 'food' ? 'Food Fund'
+        : payment.fund_type === 'diwan' ? 'Diwan Fund' : payment.fund_type;
+      return res.status(200).json({
+        valid: true,
+        document: {
+          id: payment.no,
+          type: 'Payment Voucher',
+          typeAr: '\u0633\u0646\u062f \u0635\u0631\u0641',
+          fund: fundLabel,
+          date: payment.payment_date,
+          amount: payment.amount_ils || payment.amount,
+          currency: payment.currency || 'ILS',
+          description: payment.notes || payment.expense_type || '',
+          preparedBy: payment.created_by || '',
+          approvedBy: payment.approved_by || ''
+        }
+      });
+    }
+
+    /* 3. Not found in either table */
+    return res.status(404).json({ valid: false, error: 'Document not found' });
+
+  } catch (err) {
+    return res.status(500).json({ valid: false, error: err.message });
   }
-}
-
-function showValid(d){
-  document.getElementById('v-id').textContent       = d.id;
-  document.getElementById('v-type').textContent     = d.type;
-  document.getElementById('v-type-badge').textContent = d.type;
-  document.getElementById('v-fund').textContent     = d.fund;
-  document.getElementById('v-date').textContent     = d.date;
-  document.getElementById('v-amount').textContent   = d.amount;
-  document.getElementById('v-desc').textContent     = d.description || '—';
-  document.getElementById('v-prepby').textContent   = d.preparedBy  || '—';
-  document.getElementById('v-token').textContent    = 'Verified by Diwan Al Taha System';
-  document.getElementById('page-valid').style.display = 'block';
-}
-
-function showInvalid(){
-  document.getElementById('page-loading').style.display  = 'none';
-  document.getElementById('page-invalid').style.display  = 'block';
-}
-
-init();
-</script>
-</body>
-</html>
+};
