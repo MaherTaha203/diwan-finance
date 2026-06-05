@@ -466,12 +466,15 @@ if(typeof window.applyLang === 'function'){
   await fetchRates();
   await loadAll();
   startClock();
+  initSessionTimeout();
+  await logAction('login','تسجيل دخول','auth',null);
   initMobile();
   applyDataProtection();
   applyLoginLang();
 }
 
 window.logout=async function(){
+  try{await logAction('logout','تسجيل خروج','auth',null);}catch(e){}
   await SB.auth.signOut();CU=null;CUR=null;
   Object.keys(DB).forEach(k=>DB[k]=[]);
   document.getElementById('app').style.display='none';
@@ -1265,6 +1268,7 @@ async function logAction(action,desc,tableN,recordId){
 
 /* ═══ SAVE RECEIPT ═══ */
 window.saveRec=async function(print=false){
+  if(!guardSave('saveRec')){return;}
   if(!can.write()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
   const fund=document.getElementById('rec-fund').value;
   const payerType=document.getElementById('rec-payer-type').value;
@@ -1322,6 +1326,7 @@ window.saveRec=async function(print=false){
 
 /* ═══ SAVE PAYMENT ═══ */
 window.savePay=async function(print=false){
+  if(!guardSave('savePay')){return;}
   if(!can.write()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
   const fund=document.getElementById('pay-fund').value;
   const benType=document.getElementById('pay-beneficiary-type').value;
@@ -1365,6 +1370,7 @@ window.savePay=async function(print=false){
 
 /* ═══ SAVE MEMBER ═══ */
 window.saveMember=async function(){
+  if(!guardSave('saveMember')){return;}
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
   const name=document.getElementById('mem-name').value.trim();
   if(!vf('mem-name',v=>v.trim().length>1,'e-mem-name'))return;
@@ -1511,6 +1517,7 @@ window.deleteMember=async function(){
 
 /* ═══ ANNUAL DUES ═══ */
 window.applyAnnualDue=async function(){
+  if(!guardSave('applyDue')){return;}
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const year=parseInt(document.getElementById('due-year').value);
   const amount=parseFloat(document.getElementById('due-amount').value)||200;
@@ -2136,6 +2143,79 @@ window.doBackup=function(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='diwan_backup_'+today()+'.json';a.click();
   toast(window.t('messages.exported'),'ok');
 };
+/* ═══ BACKUP RESTORE ═══ */
+window.doRestore=async function(){
+  if(!can.admin()){toast('المدير فقط','err');return;}
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json';
+  input.onchange=async function(e){
+    const file=e.target.files[0];
+    if(!file){return;}
+    try{
+      const text=await file.text();
+      const backup=JSON.parse(text);
+      
+      /* Validate structure */
+      const requiredTables=['members','receipts','payments'];
+      const missingTables=requiredTables.filter(t=>!backup[t]||!Array.isArray(backup[t]));
+      if(missingTables.length>0){
+        toast('ملف غير صالح: جداول ناقصة ('+missingTables.join(', ')+')','err');
+        return;
+      }
+      
+      /* Show preview */
+      const stats='\nأعضاء: '+backup.members.length
+        +'\nإيصالات: '+(backup.receipts||[]).length
+        +'\nمدفوعات: '+(backup.payments||[]).length
+        +'\nاشتراكات: '+(backup.annual_dues||[]).length;
+      
+      const confirmed=confirm('هل تريد استعادة هذه النسخة؟\n\n⚠️ سيتم استبدال جميع البيانات الحالية!'+stats);
+      if(!confirmed){return;}
+      
+      /* Double confirm */
+      const doubleConfirm=confirm('تأكيد نهائي: هذا الإجراء لا يمكن التراجع عنه.\n\nاكتب "نعم" للمتابعة.');
+      if(!doubleConfirm){return;}
+      
+      toast('جاري الاستعادة...','info');
+      
+      /* Restore each table */
+      const tables=['members','receipts','payments','annual_dues','contacts','settings'];
+      let errors=[];
+      
+      for(const table of tables){
+        if(!backup[table]||!Array.isArray(backup[table]))continue;
+        
+        /* Delete existing */
+        const{error:delErr}=await SB.from(table).delete().neq('id','00000000-0000-0000-0000-000000000000');
+        if(delErr)errors.push(table+' delete: '+delErr.message);
+        
+        /* Insert from backup in batches */
+        const rows=backup[table];
+        const batchSize=100;
+        for(let i=0;i<rows.length;i+=batchSize){
+          const batch=rows.slice(i,i+batchSize);
+          const{error:insErr}=await SB.from(table).insert(batch);
+          if(insErr)errors.push(table+' insert: '+insErr.message);
+        }
+      }
+      
+      if(errors.length>0){
+        toast('استعادة جزئية مع أخطاء: '+errors.join('; '),'warn');
+      }else{
+        toast('✓ تم استعادة النسخة بنجاح','ok');
+      }
+      
+      await logAction('restore','استعادة نسخة احتياطية ('+file.name+')','system',null);
+      await loadAll();
+      
+    }catch(e){
+      toast('خطأ في الملف: '+e.message,'err');
+    }
+  };
+  input.click();
+};
+
+
 window.exportCSV=function(type){
   if(!can.export()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية التصدير','err');return;}
   let h,rows;
@@ -2419,6 +2499,75 @@ window.togglePageExport=function(e,menuId){
 };
 document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown-menu').forEach(m=>m.classList.remove('show'));});
 
+
+
+/* ═══ SESSION TIMEOUT — 45 min inactivity ═══ */
+const SESSION_TIMEOUT = 45 * 60 * 1000;
+const SESSION_WARNING = 2 * 60 * 1000;
+let sessionTimer = null;
+let warningTimer = null;
+let sessionWarningShown = false;
+
+function resetSessionTimer() {
+  if (sessionTimer) clearTimeout(sessionTimer);
+  if (warningTimer) clearTimeout(warningTimer);
+  sessionWarningShown = false;
+  hideSessionWarning();
+
+  warningTimer = setTimeout(() => {
+    showSessionWarning();
+  }, SESSION_TIMEOUT - SESSION_WARNING);
+
+  sessionTimer = setTimeout(() => {
+    window.logout();
+  }, SESSION_TIMEOUT);
+}
+
+function showSessionWarning() {
+  if (sessionWarningShown) return;
+  sessionWarningShown = true;
+  let overlay = document.getElementById('session-warn-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'session-warn-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;direction:rtl';
+    overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:380px;text-align:center;font-family:Cairo,sans-serif">'
+      + '<div style="font-size:40px;margin-bottom:12px">⏰</div>'
+      + '<div style="font-size:16px;font-weight:600;color:#1A1A2E;margin-bottom:8px">تنبيه انتهاء الجلسة</div>'
+      + '<div style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.7">ستنتهي الجلسة خلال دقيقتين بسبب عدم النشاط.</div>'
+      + '<div style="display:flex;gap:10px;justify-content:center">'
+      + '<button onclick="resetSessionTimer()" style="padding:10px 24px;background:#1A1A2E;color:#fff;border:none;border-radius:8px;font-family:Cairo;font-size:13px;font-weight:500;cursor:pointer">متابعة الجلسة</button>'
+      + '<button onclick="window.logout()" style="padding:10px 24px;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;font-family:Cairo;font-size:13px;cursor:pointer">تسجيل الخروج</button>'
+      + '</div></div>';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+}
+
+function hideSessionWarning() {
+  const overlay = document.getElementById('session-warn-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function initSessionTimeout() {
+  ['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      if (!sessionWarningShown) resetSessionTimer();
+    }, { passive: true });
+  });
+  resetSessionTimer();
+}
+
+
+/* ═══ DOUBLE SUBMISSION GUARD ═══ */
+const _saving = {};
+function guardSave(key) {
+  if (_saving[key]) return false;
+  _saving[key] = true;
+  setTimeout(() => { _saving[key] = false; }, 3000);
+  return true;
+}
+function releaseSave(key) { _saving[key] = false; }
 
 /* ═══ CLOCK ═══ */
 function startClock(){
