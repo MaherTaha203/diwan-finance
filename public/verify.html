@@ -1,113 +1,649 @@
-const { createClient } = require('@supabase/supabase-js');
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>التحقق من الوثيقة · ديوان آل طه</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+/* ═══ RESET ═══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'no-store');
+/* ═══ DESIGN TOKENS (matches app.css) ═══ */
+:root{
+  --navy:#1C2B3A;
+  --navy2:#243447;
+  --navy3:#2E4259;
+  --acc:#00C896;
+  --acc2:#059669;
+  --gold:#C4A450;
+  --food:#D97706;
+  --food-bg:rgba(217,119,6,.12);
+  --food-bd:rgba(217,119,6,.28);
+  --diwan:#38BDF8;
+  --diwan-bg:rgba(56,189,248,.1);
+  --diwan-bd:rgba(56,189,248,.28);
+  --don:#A78BFA;
+  --don-bg:rgba(167,139,250,.1);
+  --don-bd:rgba(167,139,250,.28);
+  --danger:#F87171;
+  --danger-bg:rgba(248,113,113,.1);
+  --danger-bd:rgba(248,113,113,.28);
+  --warn:#FCD34D;
+  --warn-bg:rgba(252,211,77,.1);
+  --warn-bd:rgba(252,211,77,.28);
+  --tx:#E8F2FF;
+  --tx2:#7A9AB8;
+  --tx3:#4A6A88;
+  --bd:rgba(255,255,255,.08);
+  --bd2:rgba(255,255,255,.14);
+  --card:#243447;
+  --fn:'Cairo','Segoe UI',Tahoma,sans-serif;
+  --r:8px;
+  --rl:14px;
+}
 
-  const { id } = req.query;
-  if (!id) return res.status(400).json({ valid: false, error: 'Missing document ID' });
+/* ═══ BASE ═══ */
+html{font-size:15px}
+body{
+  font-family:var(--fn);
+  direction:rtl;
+  background:var(--navy);
+  color:var(--tx);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
 
-  const docId = id.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
-  const supabaseUrl = process.env.SUPABASE_URL;
-  /* Service Role key — server-side ONLY, bypasses RLS for verification reads.
-     Never exposed to the browser (this is a serverless function).
-     Falls back to anon key if service role is not configured. */
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+/* ═══ HEADER ═══ */
+.hdr{
+  background:var(--navy2);
+  border-bottom:1px solid var(--bd2);
+  padding:0 24px;
+  height:62px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+  position:relative;
+}
+.hdr::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,150,.35),rgba(56,189,248,.2),transparent);
+}
+.hdr-logo{display:flex;align-items:center;gap:11px}
+.hdr-icon{
+  width:36px;height:36px;border-radius:8px;
+  background:rgba(0,200,150,.13);
+  border:1px solid rgba(0,200,150,.28);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--acc);flex-shrink:0;
+}
+.hdr-name{font-size:15px;font-weight:700;color:#E8F0F8;display:block;line-height:1.3}
+.hdr-sub{font-size:10.5px;color:var(--tx3);display:block}
+.lang-btn{
+  height:30px;padding:0 12px;border-radius:6px;
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--bd2);
+  color:rgba(255,255,255,.65);
+  font-family:var(--fn);font-size:11px;font-weight:500;
+  cursor:pointer;transition:background .15s,color .15s;
+  display:flex;align-items:center;gap:5px;
+}
+.lang-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.lang-btn i{font-size:13px}
 
-  if (!supabaseUrl || !supabaseKey) {
-    return res.status(500).json({ valid: false, error: 'Server configuration error' });
-  }
+/* ═══ MAIN CONTENT ═══ */
+.content{
+  flex:1;display:flex;
+  align-items:flex-start;justify-content:center;
+  padding:48px 20px 60px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--bd2);
+  border-radius:var(--rl);
+  width:100%;max-width:560px;
+  overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+}
 
-  try {
-    console.log('VERSION CHECK 999');
-    const supabase = createClient(supabaseUrl, supabaseKey);
+/* ═══ LOADING STATE ═══ */
+.state-loading{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:64px 32px;gap:18px;
+}
+.spinner{
+  width:52px;height:52px;border-radius:50%;
+  border:3px solid rgba(0,200,150,.15);
+  border-top-color:var(--acc);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:15px;color:var(--tx2);font-weight:500}
+.loading-id{font-size:12px;color:var(--tx3);font-family:monospace;letter-spacing:.05em}
 
-    /* ===== TEMP DIAGNOSTIC LOGGING ===== */
-    console.log('DOC ID=', docId);
-    console.log('SUPABASE URL=', process.env.SUPABASE_URL);
-    console.log('HAS SERVICE ROLE=', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+/* ═══ FUND STRIPE ═══ */
+.fund-stripe{height:4px;width:100%;background:var(--acc)}
+.fund-stripe.food{background:var(--food)}
+.fund-stripe.diwan{background:var(--diwan)}
+.fund-stripe.donation{background:var(--don)}
+.fund-stripe.invalid{background:var(--danger)}
+.fund-stripe.cancelled{background:var(--warn)}
+.fund-stripe.error{background:var(--tx3)}
 
-    const probe = await supabase
-      .from('receipts')
-      .select('no')
-      .limit(5);
-    console.log('PROBE DATA=', JSON.stringify(probe.data));
-    console.log('PROBE ERROR=', JSON.stringify(probe.error));
+/* ═══ STATUS BAR ═══ */
+.status-bar{
+  padding:30px 28px 24px;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  border-bottom:1px solid var(--bd);
+}
+.badge-icon{
+  width:68px;height:68px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;flex-shrink:0;
+}
+.badge-icon.valid    {background:rgba(0,200,150,.13);color:var(--acc);    border:2px solid rgba(0,200,150,.3)}
+.badge-icon.invalid  {background:var(--danger-bg);  color:var(--danger);  border:2px solid var(--danger-bd)}
+.badge-icon.cancelled{background:var(--warn-bg);    color:var(--warn);    border:2px solid var(--warn-bd)}
+.badge-icon.error    {background:rgba(255,255,255,.06);color:var(--tx3);  border:2px solid var(--bd2)}
 
-    /* 1. Search receipts first (TEMP: exact eq match + select * for diagnosis) */
-    const { data: receipt, error: recErr } = await supabase
-      .from('receipts')
-      .select('*')
-      .eq('no', docId)
-      .maybeSingle();
+.status-label{font-size:20px;font-weight:700;letter-spacing:-.2px}
+.status-label.valid    {color:var(--acc)}
+.status-label.invalid  {color:var(--danger)}
+.status-label.cancelled{color:var(--warn)}
+.status-label.error    {color:var(--tx2)}
 
-    console.log('RECEIPT=', JSON.stringify(receipt));
-    console.log('REC ERROR=', JSON.stringify(recErr));
+.status-sub{font-size:13px;color:var(--tx3);text-align:center;line-height:1.65;max-width:340px}
+.doc-id-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:20px;
+  background:rgba(255,255,255,.06);border:1px solid var(--bd2);
+  font-size:12.5px;font-weight:600;color:var(--tx2);
+  font-family:monospace;letter-spacing:.06em;
+}
 
-    if (recErr) return res.status(500).json({ valid: false, error: recErr.message });
+/* ═══ FIELDS ═══ */
+.fields{padding:22px 28px}
+.field-row{
+  display:grid;grid-template-columns:140px 1fr;
+  gap:8px;padding:12px 0;
+  border-bottom:1px solid var(--bd);align-items:baseline;
+}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em}
+.field-value{font-size:14px;color:var(--tx);font-weight:500;text-align:start;word-break:break-word}
+.field-value.mono{font-family:monospace;letter-spacing:.05em;font-size:13.5px}
+.field-value.amount{font-size:19px;font-weight:700;color:var(--acc);letter-spacing:-.3px}
 
-    if (receipt) {
-      if (receipt.is_deleted) {
-        return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
-      }
-      const fundLabel = receipt.fund_type === 'food' ? 'Food Fund'
-        : receipt.fund_type === 'diwan' ? 'Diwan Fund'
-        : receipt.fund_type === 'donation' ? 'Donations' : receipt.fund_type;
-      return res.status(200).json({
-        valid: true,
-        document: {
-          id: receipt.no,
-          type: 'Receipt Voucher',
-          typeAr: '\u0633\u0646\u062f \u0642\u0628\u0636',
-          fund: fundLabel,
-          date: receipt.receipt_date,
-          amount: receipt.amount_ils || receipt.amount,
-          currency: receipt.currency || 'ILS',
-          description: receipt.notes || '',
-          preparedBy: receipt.created_by || ''
-        }
-      });
-    }
+/* Fund badge */
+.fund-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;
+}
+.fund-badge.food    {background:var(--food-bg); color:var(--food); border:1px solid var(--food-bd)}
+.fund-badge.diwan   {background:var(--diwan-bg);color:var(--diwan);border:1px solid var(--diwan-bd)}
+.fund-badge.donation{background:var(--don-bg);  color:var(--don);  border:1px solid var(--don-bd)}
+.fund-badge.default {background:rgba(255,255,255,.07);color:var(--tx2);border:1px solid var(--bd2)}
 
-    /* 2. Search payments if not found in receipts */
-    const { data: payment, error: payErr } = await supabase
-      .from('payments')
-      .select('no, fund_type, payment_date, amount_ils, amount, currency, expense_type, notes, created_by, approved_by, is_deleted')
-      .ilike('no', docId)
-      .maybeSingle();
+/* ═══ CARD FOOTER ═══ */
+.card-footer{
+  padding:14px 28px;border-top:1px solid var(--bd);
+  background:rgba(0,0,0,.12);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;
+}
+.verified-ts{font-size:11px;color:var(--tx3)}
+.verified-ts span{color:var(--tx2)}
+.system-tag{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx3)}
+.system-tag i{font-size:12px;color:var(--acc);opacity:.6}
 
-    console.log('PAYMENT=', JSON.stringify(payment));
-    console.log('PAY ERROR=', JSON.stringify(payErr));
+/* ═══ PAGE FOOTER ═══ */
+.page-footer{
+  padding:18px 24px;text-align:center;
+  font-size:11px;color:var(--tx3);
+  border-top:1px solid var(--bd);background:var(--navy2);
+}
 
-    if (payErr) return res.status(500).json({ valid: false, error: payErr.message });
+/* ═══ LTR OVERRIDES ═══ */
+[dir="ltr"] .field-label{text-align:left}
+[dir="ltr"] .field-value{text-align:left}
+[dir="ltr"] .card-footer{direction:ltr}
 
-    if (payment) {
-      if (payment.is_deleted) {
-        return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
-      }
-      const fundLabel = payment.fund_type === 'food' ? 'Food Fund'
-        : payment.fund_type === 'diwan' ? 'Diwan Fund' : payment.fund_type;
-      return res.status(200).json({
-        valid: true,
-        document: {
-          id: payment.no,
-          type: 'Payment Voucher',
-          typeAr: '\u0633\u0646\u062f \u0635\u0631\u0641',
-          fund: fundLabel,
-          date: payment.payment_date,
-          amount: payment.amount_ils || payment.amount,
-          currency: payment.currency || 'ILS',
-          description: payment.notes || payment.expense_type || '',
-          preparedBy: payment.created_by || '',
-          approvedBy: payment.approved_by || ''
-        }
-      });
-    }
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:520px){
+  .content{padding:24px 12px 48px}
+  .status-bar{padding:24px 20px 20px}
+  .fields{padding:16px 20px}
+  .card-footer{padding:12px 20px}
+  .field-row{grid-template-columns:110px 1fr;gap:6px}
+  .hdr{padding:0 14px;height:56px}
+  .hdr-sub{display:none}
+  .badge-icon{width:58px;height:58px;font-size:26px}
+  .status-label{font-size:17px}
+}
+</style>
+</head>
+<body>
 
-    /* 3. Not found in either table */
-    return res.status(404).json({ valid: false, error: 'Document not found' });
+<!-- ── HEADER ─────────────────────────────── -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-icon"><i class="ti ti-shield-check"></i></div>
+    <div>
+      <span class="hdr-name"  id="hdr-name">ديوان آل طه</span>
+      <span class="hdr-sub"   id="hdr-sub">نظام التحقق من الوثائق المالية</span>
+    </div>
+  </div>
+  <button class="lang-btn" id="lang-btn" onclick="toggleLang()">
+    <i class="ti ti-world"></i>
+    <span id="lang-btn-label">English</span>
+  </button>
+</header>
 
-  } catch (err) {
-    return res.status(500).json({ valid: false, error: err.message });
+<!-- ── MAIN ───────────────────────────────── -->
+<main class="content">
+  <div class="card" id="card">
+
+    <!-- Loading state -->
+    <div class="state-loading" id="state-loading">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loading-text">جاري التحقق من الوثيقة…</div>
+      <div class="loading-id"   id="loading-id"></div>
+    </div>
+
+    <!-- Result state (hidden until API responds) -->
+    <div id="state-result" style="display:none">
+      <div id="fund-stripe" class="fund-stripe"></div>
+      <div class="status-bar">
+        <div class="badge-icon" id="badge-icon">
+          <i id="badge-icon-i" class="ti ti-shield-check"></i>
+        </div>
+        <div class="status-label" id="status-label"></div>
+        <div class="status-sub"   id="status-sub"></div>
+        <div class="doc-id-chip"  id="doc-id-chip"></div>
+      </div>
+      <div class="fields" id="fields"></div>
+      <div class="card-footer" id="card-footer" style="display:none">
+        <div class="verified-ts" id="verified-ts"></div>
+        <div class="system-tag">
+          <i class="ti ti-lock"></i>
+          <span id="system-tag-text"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── PAGE FOOTER ────────────────────────── -->
+<footer class="page-footer" id="page-footer">
+  ديوان آل طه · الإدارة المالية · جميع الحقوق محفوظة
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   TRANSLATIONS
+═══════════════════════════════════════════ */
+const T = {
+  ar: {
+    hdr_name:        'ديوان آل طه',
+    hdr_sub:         'نظام التحقق من الوثائق المالية',
+    loading:         'جاري التحقق من الوثيقة…',
+    lang_toggle:     'English',
+    valid_label:     'وثيقة صحيحة',
+    valid_sub:       'تم التحقق من هذه الوثيقة وهي سارية المفعول',
+    invalid_label:   'وثيقة غير موجودة',
+    invalid_sub:     'لم يتم العثور على وثيقة بهذا الرقم في النظام',
+    cancelled_label: 'وثيقة ملغاة',
+    cancelled_sub:   'هذه الوثيقة تم إلغاؤها ولا يُعتدّ بها',
+    error_label:     'خطأ في التحقق',
+    error_sub:       'تعذّر الاتصال بخادم التحقق، يرجى المحاولة لاحقاً',
+    no_id_label:     'رقم الوثيقة مفقود',
+    no_id_sub:       'الرابط المُستخدم لا يحتوي على رقم وثيقة صالح',
+    f_no:            'رقم الوثيقة',
+    f_type:          'نوع الوثيقة',
+    f_fund:          'الصندوق',
+    f_date:          'التاريخ',
+    f_amount:        'المبلغ',
+    f_desc:          'البيان',
+    f_prep:          'أعدّه',
+    f_approv:        'اعتمده',
+    fund_food:       'صندوق الطعام',
+    fund_diwan:      'صندوق الديوان',
+    fund_donation:   'التبرعات',
+    type_rec:        'سند قبض',
+    type_pay:        'سند صرف',
+    verified_at:     'تاريخ التحقق:',
+    system_tag:      'نظام مالي آمن · ديوان آل طه',
+    page_footer:     'ديوان آل طه · الإدارة المالية · جميع الحقوق محفوظة',
+    not_avail:       'غير متاح',
+  },
+  en: {
+    hdr_name:        'Diwan Al-Taha',
+    hdr_sub:         'Financial Document Verification System',
+    loading:         'Verifying document…',
+    lang_toggle:     'عربي',
+    valid_label:     'Valid Document',
+    valid_sub:       'This document has been verified and is authentic',
+    invalid_label:   'Document Not Found',
+    invalid_sub:     'No document with this number exists in the system',
+    cancelled_label: 'Cancelled Document',
+    cancelled_sub:   'This document has been cancelled and is void',
+    error_label:     'Verification Error',
+    error_sub:       'Could not reach the verification server. Please try again later.',
+    no_id_label:     'Missing Document ID',
+    no_id_sub:       'The link used does not contain a valid document number.',
+    f_no:            'Voucher No.',
+    f_type:          'Voucher Type',
+    f_fund:          'Fund',
+    f_date:          'Date',
+    f_amount:        'Amount',
+    f_desc:          'Description',
+    f_prep:          'Prepared By',
+    f_approv:        'Approved By',
+    fund_food:       'Food Fund',
+    fund_diwan:      'Diwan Fund',
+    fund_donation:   'Donations',
+    type_rec:        'Receipt Voucher',
+    type_pay:        'Payment Voucher',
+    verified_at:     'Verified at:',
+    system_tag:      'Secure Financial System · Diwan Al-Taha',
+    page_footer:     'Diwan Al-Taha · Financial Management · All Rights Reserved',
+    not_avail:       'N/A',
   }
 };
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let LANG = 'ar';
+let LAST_RESULT = null;  /* Cache for language re-render */
+
+/* ═══════════════════════════════════════════
+   STEP 1 — URL PARSING
+   ─────────────────────────────────────────
+   Input URL:   https://diwan-finance.com/verify/REC-00005
+   pathname:    /verify/REC-00005
+
+   Steps:
+     window.location.pathname          →  "/verify/REC-00005"
+     .split('/')                        →  ["", "verify", "REC-00005"]
+     .filter(Boolean)                   →  ["verify", "REC-00005"]
+     .pop()                             →  "REC-00005"
+     .toUpperCase()                     →  "REC-00005"
+     .replace(/[^A-Z0-9\-]/g, '')       →  "REC-00005"  (sanitise)
+
+   Edge cases handled:
+     /verify/              →  null  (no ID)
+     /verify/rec-00005     →  "REC-00005"  (lowercased input)
+     /verify/REC 00005     →  "REC00005"   (spaces stripped by sanitise)
+═══════════════════════════════════════════ */
+function getDocIdFromPath() {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const raw = segments.pop() || '';
+  const clean = raw.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+  /* Validate: must look like a voucher ID — letters, dash, digits.
+     e.g.  REC-00005 ✓   PAY-00012 ✓   VERIFY ✗   (empty) ✗     */
+  if (!clean || !/^[A-Z]+-\d+$/.test(clean)) return null;
+  return clean;
+}
+
+/* ═══════════════════════════════════════════
+   STEP 2 — API CALL
+   ─────────────────────────────────────────
+   Endpoint:  GET /api/verify?id=REC-00005
+   Handler:   api/verify.js  (Vercel serverless function)
+   Returns:   { valid: bool, document?: {...}, error?: string }
+
+   HTTP status codes returned by api/verify.js:
+     200  →  valid document found
+     200  →  valid:false + "Document has been cancelled"
+     400  →  missing id param
+     404  →  document not found in receipts OR payments
+     500  →  supabase env vars missing / DB error
+═══════════════════════════════════════════ */
+async function fetchVerification(docId) {
+  const url = '/api/verify?id=' + encodeURIComponent(docId);
+  const res  = await fetch(url, { cache: 'no-store' });
+  const json = await res.json();
+  return { httpStatus: res.status, ...json };
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS — FUND
+═══════════════════════════════════════════ */
+function fundClass(raw) {
+  if (!raw) return 'default';
+  const s = raw.toLowerCase();
+  if (s.includes('food')  || s.includes('طعام'))  return 'food';
+  if (s.includes('diwan') || s.includes('ديوان')) return 'diwan';
+  if (s.includes('donat') || s.includes('تبرع'))  return 'donation';
+  return 'default';
+}
+function fundLabel(raw, t) {
+  if (!raw) return t.not_avail;
+  const s = raw.toLowerCase();
+  if (s.includes('food')  || s.includes('طعام'))  return t.fund_food;
+  if (s.includes('diwan') || s.includes('ديوان')) return t.fund_diwan;
+  if (s.includes('donat') || s.includes('تبرع'))  return t.fund_donation;
+  return raw;
+}
+function voucherTypeLabel(raw, t) {
+  if (!raw) return t.not_avail;
+  const s = raw.toLowerCase();
+  if (s.includes('receipt') || s.includes('قبض')) return t.type_rec;
+  if (s.includes('payment') || s.includes('صرف')) return t.type_pay;
+  return raw;
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS — DATE & AMOUNT
+═══════════════════════════════════════════ */
+function formatDate(raw) {
+  if (!raw) return '';
+  try {
+    const d = new Date(raw);
+    if (isNaN(d)) return raw;
+    const ar = d.toLocaleDateString('ar-PS', { year:'numeric', month:'long', day:'numeric' });
+    const en = d.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+    return ar + '  /  ' + en;
+  } catch { return raw; }
+}
+function nowFormatted() {
+  return new Date().toLocaleString('ar-PS', {
+    year:'numeric', month:'short', day:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+function formatAmount(raw, currency) {
+  if (raw == null || raw === '') return '';
+  const n = parseFloat(raw);
+  if (isNaN(n)) return String(raw);
+  const cur = (currency || 'ILS').toUpperCase();
+  const sym = cur === 'ILS' ? '₪' : cur === 'USD' ? '$' : cur === 'JOD' ? 'د.أ' : cur;
+  return sym + '\u202F' + n.toLocaleString('en', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS — HTML BUILDERS
+═══════════════════════════════════════════ */
+function field(label, value, cls) {
+  if (value == null || value === '') return '';
+  return `<div class="field-row">
+    <div class="field-label">${label}</div>
+    <div class="field-value${cls ? ' '+cls : ''}">${value}</div>
+  </div>`;
+}
+function fundBadgeHtml(raw, t) {
+  const cls = fundClass(raw);
+  const lbl = fundLabel(raw, t);
+  return `<span class="fund-badge ${cls}">${lbl}</span>`;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER — LOADING
+═══════════════════════════════════════════ */
+function showLoading(docId) {
+  const t = T[LANG];
+  document.getElementById('state-loading').style.display = 'flex';
+  document.getElementById('state-result').style.display  = 'none';
+  document.getElementById('loading-text').textContent    = t.loading;
+  document.getElementById('loading-id').textContent      = docId || '';
+}
+
+/* ═══════════════════════════════════════════
+   RENDER — RESULT
+═══════════════════════════════════════════ */
+function showResult(apiResult, docId) {
+  const t = T[LANG];
+  const { httpStatus, valid, document: doc, error } = apiResult;
+
+  document.getElementById('state-loading').style.display = 'none';
+  document.getElementById('state-result').style.display  = 'block';
+
+  const elBadge  = document.getElementById('badge-icon');
+  const elIcon   = document.getElementById('badge-icon-i');
+  const elLabel  = document.getElementById('status-label');
+  const elSub    = document.getElementById('status-sub');
+  const elChip   = document.getElementById('doc-id-chip');
+  const elStripe = document.getElementById('fund-stripe');
+  const elFields = document.getElementById('fields');
+  const elFooter = document.getElementById('card-footer');
+  const elTs     = document.getElementById('verified-ts');
+  const elTag    = document.getElementById('system-tag-text');
+
+  elChip.textContent = docId || '';
+
+  /* ── Classify state ── */
+  let state;
+  if (!docId) {
+    state = 'no_id';
+  } else if (httpStatus >= 500) {
+    state = 'error';
+  } else if (!valid && error && error.toLowerCase().includes('cancel')) {
+    state = 'cancelled';
+  } else if (!valid) {
+    state = 'invalid';
+  } else {
+    state = 'valid';
+  }
+
+  /* State → badge / icon / copy map */
+  const MAP = {
+    valid:     { badge:'valid',     icon:'ti-shield-check',       labelKey:'valid_label',     subKey:'valid_sub'     },
+    invalid:   { badge:'invalid',   icon:'ti-shield-x',           labelKey:'invalid_label',   subKey:'invalid_sub'   },
+    cancelled: { badge:'cancelled', icon:'ti-shield-off',         labelKey:'cancelled_label', subKey:'cancelled_sub' },
+    error:     { badge:'error',     icon:'ti-shield-exclamation', labelKey:'error_label',     subKey:'error_sub'     },
+    no_id:     { badge:'invalid',   icon:'ti-shield-question',    labelKey:'no_id_label',     subKey:'no_id_sub'     },
+  };
+  const m = MAP[state];
+
+  /* Apply badge */
+  elBadge.className     = 'badge-icon ' + m.badge;
+  elIcon.className      = 'ti ' + m.icon;
+  elLabel.className     = 'status-label ' + m.badge;
+  elLabel.textContent   = t[m.labelKey];
+  elSub.textContent     = t[m.subKey];
+
+  /* Apply fund stripe */
+  elStripe.className = 'fund-stripe';
+  if (state === 'valid' && doc) {
+    const fc = fundClass(doc.fund);
+    if (fc !== 'default') elStripe.classList.add(fc);
+  } else {
+    elStripe.classList.add(state === 'cancelled' ? 'cancelled'
+      : (state === 'invalid' || state === 'no_id') ? 'invalid'
+      : 'error');
+  }
+
+  /* Render document fields (valid only) */
+  if (state === 'valid' && doc) {
+    elFields.innerHTML = [
+      field(t.f_no,     doc.id || docId, 'mono'),
+      field(t.f_type,   voucherTypeLabel(doc.type, t)),
+      field(t.f_fund,   fundBadgeHtml(doc.fund, t)),
+      field(t.f_date,   formatDate(doc.date)),
+      field(t.f_amount, formatAmount(doc.amount, doc.currency), 'amount'),
+      field(t.f_desc,   doc.description || t.not_avail),
+      field(t.f_prep,   doc.preparedBy  || t.not_avail),
+      doc.approvedBy ? field(t.f_approv, doc.approvedBy) : '',
+    ].join('');
+    elFooter.style.display = 'flex';
+    elTs.innerHTML  = `<span>${t.verified_at}</span> ${nowFormatted()}`;
+    elTag.textContent = t.system_tag;
+  } else {
+    elFields.innerHTML     = '';
+    elFooter.style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   LANGUAGE TOGGLE
+═══════════════════════════════════════════ */
+function applyLang() {
+  const t    = T[LANG];
+  const root = document.getElementById('html-root');
+  root.lang  = LANG;
+  root.dir   = LANG === 'ar' ? 'rtl' : 'ltr';
+
+  document.getElementById('hdr-name').textContent       = t.hdr_name;
+  document.getElementById('hdr-sub').textContent        = t.hdr_sub;
+  document.getElementById('lang-btn-label').textContent = t.lang_toggle;
+  document.getElementById('page-footer').textContent    = t.page_footer;
+
+  /* Re-render cached result in new language */
+  if (LAST_RESULT) {
+    showResult(LAST_RESULT.apiResult, LAST_RESULT.docId);
+  } else {
+    document.getElementById('loading-text').textContent = t.loading;
+  }
+}
+function toggleLang() {
+  LANG = LANG === 'ar' ? 'en' : 'ar';
+  applyLang();
+}
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+(async function boot() {
+  /* 1. Parse document ID from URL path */
+  const docId = getDocIdFromPath();
+
+  /* 2. Show loading spinner */
+  showLoading(docId);
+
+  /* 3. Guard: no ID in URL */
+  if (!docId) {
+    LAST_RESULT = { apiResult: { httpStatus:400, valid:false, error:'no id' }, docId:null };
+    showResult(LAST_RESULT.apiResult, null);
+    return;
+  }
+
+  /* 4. Call /api/verify?id=<docId> */
+  let apiResult;
+  try {
+    apiResult = await fetchVerification(docId);
+  } catch (err) {
+    /* Network failure (offline, DNS, etc.) */
+    apiResult = { httpStatus:503, valid:false, error: err.message || 'Network error' };
+  }
+
+  /* 5. Cache result for language re-render */
+  LAST_RESULT = { apiResult, docId };
+
+  /* 6. Render result */
+  showResult(apiResult, docId);
+})();
+</script>
+
+</body>
+</html>
