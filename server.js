@@ -25,7 +25,7 @@ app.get('/api/verify', async (req, res) => {
   if (!id) return res.status(400).json({ valid: false, error: 'Missing document ID' });
   const docId = id.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
   if (!supabaseUrl || !supabaseKey) {
     return res.status(500).json({ valid: false, error: 'Server configuration error' });
   }
