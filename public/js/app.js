@@ -1962,8 +1962,8 @@ font-weight:900;
 text-align:left;
 font-size:12pt;
 font-weight:900;
-background:${bal>=0?'#BBF7D0':'#FECACA'};
-color:${bal>=0?'#14532D':'#7F1D1D'};
+background:${bal>=0?'#DBEAFE':'#FEE2E2'};
+color:${bal>=0?'#1D4ED8':'#B91C1C'};
 border-radius:4px;
 ">
 ₪ ${fmt(bal)}
