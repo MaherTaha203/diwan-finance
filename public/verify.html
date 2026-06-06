@@ -21,12 +21,27 @@ module.exports = async function handler(req, res) {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    /* ===== TEMP DIAGNOSTIC LOGGING ===== */
+    console.log('DOC ID=', docId);
+    console.log('SUPABASE URL=', supabaseUrl);
+    console.log('PROJECT REF=', (supabaseUrl||'').replace('https://','').split('.')[0]);
+    console.log('USING SERVICE ROLE=', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('HAS ANON KEY=', !!process.env.SUPABASE_ANON_KEY);
+    console.log('KEY ROLE (decoded)=', (()=>{try{return JSON.parse(Buffer.from(supabaseKey.split('.')[1],'base64').toString()).role;}catch(e){return 'decode-failed';}})());
+
     /* 1. Search receipts first */
     const { data: receipt, error: recErr } = await supabase
       .from('receipts')
       .select('no, fund_type, receipt_date, amount_ils, amount, currency, notes, created_by, is_deleted')
       .ilike('no', docId)
       .maybeSingle();
+
+    console.log('RECEIPT=', JSON.stringify(receipt));
+    console.log('REC ERROR=', JSON.stringify(recErr));
+
+    /* Extra: raw count probe to see if RLS hides rows vs no-match */
+    const probe = await supabase.from('receipts').select('no').limit(3);
+    console.log('PROBE rows visible=', JSON.stringify(probe.data), 'probe err=', JSON.stringify(probe.error));
 
     if (recErr) return res.status(500).json({ valid: false, error: recErr.message });
 
@@ -59,6 +74,9 @@ module.exports = async function handler(req, res) {
       .select('no, fund_type, payment_date, amount_ils, amount, currency, expense_type, notes, created_by, approved_by, is_deleted')
       .ilike('no', docId)
       .maybeSingle();
+
+    console.log('PAYMENT=', JSON.stringify(payment));
+    console.log('PAY ERROR=', JSON.stringify(payErr));
 
     if (payErr) return res.status(500).json({ valid: false, error: payErr.message });
 
