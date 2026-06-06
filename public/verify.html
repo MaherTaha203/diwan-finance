@@ -12,7 +12,9 @@ module.exports = async function handler(req, res) {
   /* Service Role key — server-side ONLY, bypasses RLS for verification reads.
      Never exposed to the browser (this is a serverless function).
      Falls back to anon key if service role is not configured. */
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return res.status(500).json({ valid: false, error: 'Server configuration error' });
