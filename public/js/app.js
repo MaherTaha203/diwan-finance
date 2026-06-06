@@ -2099,7 +2099,14 @@ window.prtMemberStmt=function(){
       <thead><tr><th>التاريخ</th><th>رقم السند</th><th>البيان</th><th>دائن ₪</th><th>مدين ₪</th><th>الرصيد ₪</th></tr></thead>
       <tbody>${rowsHTML}
         <tr class="final-row">
-          <td colspan="5" style="text-align:right">الرصيد النهائي · Final Balance</td>
+         <td colspan="5" style="
+text-align:right;
+font-size:11pt;
+font-weight:900;
+color:#FBBF24;
+">
+الرصيد الجاري
+</td>
           <td style="text-align:left;color:${finalColor}">₪ ${fmt(finalBal)}</td>
         </tr>
       </tbody>
