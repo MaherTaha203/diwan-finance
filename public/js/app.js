@@ -1933,8 +1933,7 @@ function amountToWordsAr(n){
   return parts.join(' و')+' شيكل فقط لا غير';
 }
 /* ═══ PRINT STATEMENTS ═══ */
-window.prtStmt=function(fund){
-  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+window.buildFundStatementHTML=function(fund){
   const from=document.getElementById(fund+'-stmt-from')?.value||'';
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
@@ -1951,7 +1950,26 @@ window.prtStmt=function(fund){
   <div class="summ"><div class="scard"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0625\u064a\u0631\u0627\u062f\u0627\u062a</span><span class="sv" style="color:#059669">\u20aa ${fmt(totCr)}</span></div><div class="scard"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0635\u0627\u0631\u064a\u0641</span><span class="sv" style="color:#DC2626">\u20aa ${fmt(totDr)}</span></div><div class="scard"><span class="sl">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062e\u062a\u0627\u0645\u064a</span><span class="sv" style="color:${bal>=0?'#059669':'#DC2626'}">\u20aa ${fmt(bal)}</span></div></div>
   <table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u062f\u0627\u0626\u0646 \u20aa</th><th>\u0645\u062f\u064a\u0646 \u20aa</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u20aa</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>${rowsHTML}<tr class="final-row"><td colspan="5" style="text-align:right;color:#fff">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062c\u0627\u0631\u064a \u00b7 Current Balance</td><td style="text-align:left;font-weight:700;color:${bal>=0?'#059669':'#DC2626'}">\u20aa ${fmt(bal)}</td><td></td></tr></tbody></table>
   <div class="footer">\u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0642 \u0645\u062d\u0641\u0648\u0638\u0629 \u00a9 2026 | \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 | diwan-finance.com</div>`;
-  openPrintWin(css,body);
+  const title=(fund==='food'?'\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621':'\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646');
+  return {css:css, body:body, title:title};
+};
+window.prtStmt=function(fund){
+  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  const r=window.buildFundStatementHTML(fund);
+  openPrintWin(r.css,r.body);
+};
+window.downloadFundStatementPDF=function(fund){
+  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  const r=window.buildFundStatementHTML(fund);
+  const doPdf=()=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML='<style>'+r.css+'</style>'+r.body;
+    wrap.style.cssText='direction:rtl;background:#fff';
+    const opt={margin:[8,8,8,8],filename:r.title+'-'+today()+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}};
+    window.html2pdf().set(opt).from(wrap).save().then(()=>toast('\u2713 PDF','ok'));
+  };
+  if(window.html2pdf){doPdf();}
+  else{toast('\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644...','info');const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';s.onload=doPdf;document.head.appendChild(s);}
 };
 window.prtMemberStmt=function(){
   if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
@@ -2403,7 +2421,7 @@ window.exportPagePDF=function(type){
     tableHTML+=`<tr class="total-row"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0633\u0646\u062f)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
   else if(type==='food-stmt'||type==='diwan-stmt'){
-    return window.prtStmt(fund);
+    return window.downloadFundStatementPDF(fund);
   }
   else if(type==='don'){
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
