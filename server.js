@@ -18,8 +18,52 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// كل المسارات ترجع index.html
+// QR Verification API (نفس منطق api/verify.js لبيئة Express)
+app.get('/api/verify', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ valid: false, error: 'Missing document ID' });
+  const docId = id.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ valid: false, error: 'Server configuration error' });
+  }
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: receipt } = await supabase.from('receipts')
+      .select('no, fund_type, receipt_date, amount_ils, amount, currency, notes, created_by, is_deleted')
+      .ilike('no', docId).maybeSingle();
+    if (receipt) {
+      if (receipt.is_deleted) return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
+      const fund = receipt.fund_type === 'food' ? 'Food Fund' : receipt.fund_type === 'diwan' ? 'Diwan Fund' : receipt.fund_type === 'donation' ? 'Donations' : receipt.fund_type;
+      return res.status(200).json({ valid: true, document: { id: receipt.no, type: 'Receipt Voucher', fund, date: receipt.receipt_date, amount: receipt.amount_ils || receipt.amount, currency: receipt.currency || 'ILS', description: receipt.notes || '', preparedBy: receipt.created_by || '' } });
+    }
+    const { data: payment } = await supabase.from('payments')
+      .select('no, fund_type, payment_date, amount_ils, amount, currency, expense_type, notes, created_by, approved_by, is_deleted')
+      .ilike('no', docId).maybeSingle();
+    if (payment) {
+      if (payment.is_deleted) return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
+      const fund = payment.fund_type === 'food' ? 'Food Fund' : payment.fund_type === 'diwan' ? 'Diwan Fund' : payment.fund_type;
+      return res.status(200).json({ valid: true, document: { id: payment.no, type: 'Payment Voucher', fund, date: payment.payment_date, amount: payment.amount_ils || payment.amount, currency: payment.currency || 'ILS', description: payment.notes || payment.expense_type || '', preparedBy: payment.created_by || '', approvedBy: payment.approved_by || '' } });
+    }
+    return res.status(404).json({ valid: false, error: 'Document not found' });
+  } catch (err) {
+    return res.status(500).json({ valid: false, error: err.message });
+  }
+});
+
+// مسار التحقق من QR → verify.html
+app.get('/verify/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'verify.html'));
+});
+
+// كل المسارات الأخرى (عدا /api) ترجع index.html
 app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
