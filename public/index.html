@@ -173,7 +173,8 @@
 </style>
 </head>
 <body>
-<!-- Removed empty divs: #pra, #tc -->
+<div id="pra"></div>
+<div class="tc" id="tc"></div>
 
 <!-- ══ LOGIN ══ -->
 <div id="login-screen">
@@ -284,8 +285,11 @@
   </div>
 </div>
 
+<!-- ══ APP ══ -->  </div>
+</div>
+
 <!-- ══ APP ══ -->
-<div id="app" class="hidden"> <!-- Added 'hidden' class for initial display control -->
+<div id="app" style="display:none">
 <div class="top">
   <div class="top-logo">
     <div class="top-logo-ico"><i class="ti ti-building-bank"></i></div>
@@ -513,14 +517,17 @@
       تعديل الإيصال
     </span>
 
+```
 <button class="btn ghost" onclick="window.closeM()">
   <i class="ti ti-x"></i>
 </button>
+```
 
   </div>
 
   <div class="mbd">
 
+```
 <input type="hidden" id="edit-rec-id">
 
 <div class="ibox warn">
@@ -555,6 +562,7 @@
   </div>
 
 </div>
+```
 
   </div>
 
@@ -564,6 +572,7 @@
       حفظ
     </button>
 
+```
 <button class="btn danger" onclick="window.deleteRec()">
   <i class="ti ti-trash"></i>
   إلغاء السند
@@ -572,6 +581,7 @@
 <button class="btn" onclick="window.closeM()">
   إلغاء
 </button>
+```
 
   </div>
 </div>
@@ -594,7 +604,7 @@
   <!-- Change Password -->
   <div class="modal" id="m-change-pass" style="display:none;max-width:400px">
     <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><form onsubmit="event.preventDefault();window.changePassword();"><div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div><div class="fg"><div class="fi full"><label>كلمة المرور الجديدة <span class="req">*</span></label><input type="password" id="new-pass" placeholder="••••••••" minlength="6"><span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span></div><div class="fi full"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" id="confirm-pass" placeholder="••••••••"><span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span></form></div></div></div>
+    <div class="mbd"><form onsubmit="event.preventDefault();window.changePassword();"><div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div><div class="fg"><div class="fi full"><label>كلمة المرور الجديدة <span class="req">*</span></label><input type="password" id="new-pass" placeholder="••••••••" minlength="6" autocomplete="new-password"><span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span></div><div class="fi full"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" id="confirm-pass" placeholder="••••••••" autocomplete="new-password"><span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span></form></div></div></div>
     <div class="mft"><button class="btn primary" onclick="window.changePassword()"><i class="ti ti-lock-check"></i>حفظ كلمة المرور</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
   </div>
 </div>
@@ -654,7 +664,7 @@ function loginSetLang(l) {
     set('lp-auth-title', 'Authorized users');
     set('lp-admin-lbl', 'System Admin');
     set('lp-comm-lbl', 'Committee');
-    set('lp-foot-title', 'Version 2.0 \u2014 Diwan Al Taha Financial Management System \u00a9 2026\u20132027');
+    set('lp-foot-title', 'Version 2.0 — Diwan Al Taha Financial Management System © 2026–2027');
     set('lp-foot-text', 'This system serves as the official financial and administrative platform for Diwan Al Taha funds, providing a secure environment for financial operations, account review, and record management.');
 
     // RIGHT PANEL (form)
@@ -663,40 +673,40 @@ function loginSetLang(l) {
     set('lbl-email', 'Email Address');
     ph('l-email', 'Enter your email address');
     set('lbl-pass', 'Password');
-    ph('l-pass', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
+    ph('l-pass', '••••••••');
     set('lbl-remember', 'Remember this device');
     set('lbl-forgot', 'Forgot password?');
     set('btn-login-txt', 'Sign In');
     set('lp-card-footer', 'Support: support@diwantaha.com');
   } else {
     // LEFT PANEL
-    set('lp-org', '\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647');
-    set('lp-title', '\u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0645\u0627\u0644\u064a \u0648\u0627\u0644\u0625\u062f\u0627\u0631\u064a \u0627\u0644\u0631\u0633\u0645\u064a');
-    set('lp-inst-1', '\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0645\u0646 \u0642\u0628\u0644 \u0644\u062c\u0646\u0629 \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u0641\u064a \u0639\u0627\u0645 2026 \u0644\u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0645\u0627\u0644\u064a \u0627\u0644\u0631\u0626\u064a\u0633\u064a \u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a \u0648\u0627\u0644\u0645\u0635\u0627\u0631\u064a\u0641 \u0648\u0627\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629 \u0644\u0635\u0646\u0627\u062f\u064a\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646\u060c \u0648\u0644\u062a\u0633\u0647\u064a\u0644 \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a \u0648\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0645\u0646 \u0642\u0628\u0644 \u0623\u0639\u0636\u0627\u0621 \u0627\u0644\u0644\u062c\u0646\u0629.');
-    set('lp-inst-2', '\u062c\u0645\u064a\u0639 \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0648\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u0648\u062c\u0648\u062f\u0629 \u062f\u0627\u062e\u0644 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0647\u064a \u0645\u0644\u0643 \u062d\u0635\u0631\u064a \u0644\u0644\u062c\u0646\u0629 \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647\u060c \u0648\u0644\u0627 \u064a\u062d\u0642 \u0644\u0623\u064a \u0634\u062e\u0635 \u0623\u0648 \u062c\u0647\u0629 \u0627\u0644\u0627\u0637\u0644\u0627\u0639 \u0639\u0644\u064a\u0647\u0627 \u0623\u0648 \u0627\u0633\u062a\u062e\u062f\u0627\u0645\u0647\u0627 \u0623\u0648 \u062a\u062f\u0627\u0648\u0644\u0647\u0627 \u0625\u0644\u0627 \u0628\u0645\u0648\u0627\u0641\u0642\u0629 \u0643\u0627\u0645\u0644\u0629 \u0648\u0635\u0631\u064a\u062d\u0629 \u0645\u0646 \u0645\u0624\u0633\u0633\u064a \u0627\u0644\u0646\u0638\u0627\u0645 \u0648\u0627\u0644\u062c\u0647\u0627\u062a \u0627\u0644\u0645\u062e\u0648\u0644\u0629 \u0628\u0630\u0644\u0643.');
-    set('lp-f1', '\u062a\u0642\u0627\u0631\u064a\u0631 \u0645\u0627\u0644\u064a\u0629 \u062f\u0642\u064a\u0642\u0629');
-    set('lp-f2', '\u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0648\u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a');
-    set('lp-f3', '\u0633\u062c\u0644 \u0645\u0627\u0644\u064a \u0645\u062a\u0643\u0627\u0645\u0644 \u0648\u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a');
-    set('lp-notice', '\u0639\u0644\u0649 \u0643\u0644 \u0645\u0646 \u064a\u0635\u0644 \u0625\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645 \u0627\u0644\u0643\u0627\u0645\u0644 \u0628\u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062ت \u0648\u0627\u0644\u0633\u064a\u0627\u0633\u0627\u062ت \u0627\u0644\u0645\u0639\u062ت\u064م\u062f\u062ة \u0648\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u062ة \u0639\u0644\u0649 \u0633\u0631\u064a\u062ة \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062ت \u0648\u062ا\u0644\u0645\u0639\u0644\u0648\u0645\u062ا\u062ت\u060c \u0648\u064a\u064f\u0645\u0646\u0639 \u0627\u0633\u062ت\u062e\u062ا\u062د\u062ا\u0645 \u0623\u0648 \u0645\u0634\u062ا\u0631\u064ك\u062ة \u0623\u064a \u0645\u0639\u0644\u0648\u0645\u062ا\u062ت \u062f\u0648\u0646 \u0635\u0644\u062ا\u062ح\u064a\u062ة\u060c \u0648\u0630\u0644\u0643 \u062ت\u062d\u062ت \u0637\u062ا\u062ئ\u0644\u062ة \u0627\u0644\u0645\u0633\u062ا\u062ء\u0644\u062ة.');
-    set('lp-mem-lbl', '\u0639\u062f\u062د \u0627\u0644\u0623\u0639\u0636\u062ا\u062ء');
-    set('lp-fy-lbl', '\u0627\u0644\u0633\u0646\u062ة \u0627\u0644\u0645\u062ا\u0644\u064a\u062ة');
-    set('lp-auth-title', '\u0627\u0644\u0645\u0633\u062ت\u062e\u062f\u0645\u0648\u0646 \u0627\u0644\u0645\u0635\u0631\u062d \u0644\u0647\u0645 \u0628\u062ا\u062د\u062خ\u0648\u0644');
-    set('lp-admin-lbl', '\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u062ا\u0645');
-    set('lp-comm-lbl', '\u0623\u0639\u0636\u062ا\u062ء \u0627\u0644\u0644\u062c\u0646\u062ة');
-    set('lp-foot-title', '\u0627\u0644\u0625\u0635\u062دا\u0631 2.0 \u2014 \u0627\u0644\u0646\u0638\u062ا\u0645 \u0627\u0644\u0645\u062ا\u0644\u064a \u0644\u062f\u064a\u0648\u062ا\u0646 \u0622\u0644 \u0637\u0647 \u00a9 2026\u20132027');
-    set('lp-foot-text', '\u062ت\u0645 \u062ت\u0637\u0648\u064a\u0631 \u0647\u0630\u062ا \u0627\u0644\u0646\u0638\u062ا\u0645 \u0644\u064a\u0643\u0648\u0646 \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0645\u062ا\u0644\u064a \u0648\u062ا\u0644\u0625\u062f\u062ا\u0631\u064a \u0627\u0644\u0631\u0633\u0645\u064a \u0644\u0635\u0646\u062ا\u062د\u064a\u0642 \u062f\u064a\u0648\u062ا\u0646 \u0622\u0644 \u0637\u0647\u060c \u0645\u0639 \u062ت\u0648\u0641\u064a\u0631 \u0628\u064a\u0626\u062ة \u0622\u0645\u0646\u062ة \u0644\u0625\u062f\u062ا\u0631\u062ة \u0627\u0644\u0639\u0645\u0644\u064a\u062ا\u062ت \u0627\u0644\u0645\u062ا\u0644\u064a\u062ة \u0648\u0645\u0631\u062ا\u062c\u0639\u062ة \u0627\u0644\u062d\u0633\u062ا\u062ب\u062ا\u062ت \u0648\u062ح\u0641\u0638 \u0627\u0644\u0633\u062c\u0644\u062ا\u062ت.');
+    set('lp-org', 'ديوان آل طه');
+    set('lp-title', 'النظام المالي والإداري الرسمي');
+    set('lp-inst-1', 'تم إنشاء هذا النظام من قبل لجنة ديوان آل طه في عام 2026 ليكون المرجع المالي الرئيسي لإدارة المدفوعات والمصاريف والإدارة الإلكترونية لصناديق الديوان، ولتسهيل مراجعة الحسابات ومتابعة العمليات المالية من قبل أعضاء اللجنة.');
+    set('lp-inst-2', 'جميع المعلومات والبيانات الموجودة داخل هذا النظام هي ملك حصري للجنة ديوان آل طه، ولا يحق لأي شخص أو جهة الاطلاع عليها أو استخدامها أو تداولها إلا بموافقة كاملة وصريحة من مؤسسي النظام والجهات المخولة بذلك.');
+    set('lp-f1', 'تقارير مالية دقيقة');
+    set('lp-f2', 'حماية البيانات والمعلومات');
+    set('lp-f3', 'سجل مالي متكامل ومتعدد العمليات');
+    set('lp-notice', 'على كل من يصل إلى هذا النظام الالتزام الكامل بالتعليمات والسياسات المعتمدة والمحافظة على سرية البيانات والمعلومات، ويُمنع استخدام أو مشاركة أي معلومات دون صلاحية، وذلك تحت طائلة المساءلة.');
+    set('lp-mem-lbl', 'عدد الأعضاء');
+    set('lp-fy-lbl', 'السنة المالية');
+    set('lp-auth-title', 'المستخدمون المصرح لهم بالدخول');
+    set('lp-admin-lbl', 'مدير النظام');
+    set('lp-comm-lbl', 'أعضاء اللجنة');
+    set('lp-foot-title', 'الإصدار 2.0 — النظام المالي لديوان آل طه © 2026–2027');
+    set('lp-foot-text', 'تم تطوير هذا النظام ليكون المرجع المالي والإداري الرسمي لصناديق ديوان آل طه، مع توفير بيئة آمنة لإدارة العمليات المالية ومراجعة الحسابات وحفظ السجلات.');
 
     // RIGHT PANEL
-    set('lp-welcome', '\u062ت\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
-    set('lp-subtitle', '\u0623\u062f\u062e\u0644 \u0628\u064a\u062ا\u0646\u062ا\u062ت \u062d\u0633\u062ا\u062ب\u0643 \u0644\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0646\u0638\u062ا\u0645');
-    set('lbl-email', '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062ت\u0631\u0648\u0646\u064a');
-    ph('l-email', '\u0623\u062f\u062e\u0644 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062ت\u0631\u0648\u0646\u064a');
-    set('lbl-pass', '\u0643\u0644\u0645\u062ة \u0627\u0644\u0645\u0631\u0648\u0631');
-    ph('l-pass', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
-    set('lbl-remember', '\u062ت\u0630\u0643\u0631\u0646\u064a \u0639\u0644\u0649 \u0647\u0630\u062ا \u0627\u0644\u062c\u0647\u062ا\u0632');
-    set('lbl-forgot', '\u0646\u0633\u064a\u062ت \u0643\u0644\u0645\u062ة \u0627\u0644\u0645\u0631\u0648\u0631\u061f');
-    set('btn-login-txt', '\u062ت\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644');
-    set('lp-card-footer', '\u0644\u0644\u062f\u0639\u0645 \u0627\u0644\u0641\u0646\u064a: support@diwantaha.com');
+    set('lp-welcome', 'تسجيل الدخول');
+    set('lp-subtitle', 'أدخل بيانات حسابك للوصول إلى النظام');
+    set('lbl-email', 'البريد الإلكتروني');
+    ph('l-email', 'أدخل البريد الإلكتروني');
+    set('lbl-pass', 'كلمة المرور');
+    ph('l-pass', '••••••••');
+    set('lbl-remember', 'تذكرني على هذا الجهاز');
+    set('lbl-forgot', 'نسيت كلمة المرور؟');
+    set('btn-login-txt', 'تسجيل الدخول');
+    set('lp-card-footer', 'للدعم الفني: support@diwantaha.com');
   }
   localStorage.setItem('diwan_lang', l);
   window.LANG = l;
@@ -724,8 +734,7 @@ document.addEventListener('click', function(){ closeExportMenu(); });
 /* Dynamic member count on login */
 async function updateLoginMemberCount() {
   try {
-    // NOTE: Hardcoded API key is a security risk and should be managed securely.
-    var url = 'https://ralifvemgapmsgrjgrzgazh.supabase.co/rest/v1/members?select=id&is_active=eq.true&limit=1';
+    var url = 'https://ralifvemgapmsgrjgazh.supabase.co/rest/v1/members?select=id&is_active=eq.true&limit=1';
     var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4';
     var res = await fetch(url, {
       headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Prefer': 'count=exact' }
