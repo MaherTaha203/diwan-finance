@@ -1,9 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-console.log('URL=', process.env.SUPABASE_URL);
-console.log(
-  'USING SERVICE ROLE=',
-  !!process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
@@ -16,9 +12,7 @@ module.exports = async function handler(req, res) {
   /* Service Role key — server-side ONLY, bypasses RLS for verification reads.
      Never exposed to the browser (this is a serverless function).
      Falls back to anon key if service role is not configured. */
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return res.status(500).json({ valid: false, error: 'Server configuration error' });
@@ -29,31 +23,25 @@ const supabaseKey =
 
     /* ===== TEMP DIAGNOSTIC LOGGING ===== */
     console.log('DOC ID=', docId);
-    console.log('SUPABASE URL=', supabaseUrl);
-    console.log('PROJECT REF=', (supabaseUrl||'').replace('https://','').split('.')[0]);
-    console.log('USING SERVICE ROLE=', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    console.log('HAS ANON KEY=', !!process.env.SUPABASE_ANON_KEY);
-    console.log('KEY ROLE (decoded)=', (()=>{try{return JSON.parse(Buffer.from(supabaseKey.split('.')[1],'base64').toString()).role;}catch(e){return 'decode-failed';}})());
-const test = await supabase
-  .from('receipts')
-  .select('no')
-  .limit(5);
+    console.log('SUPABASE URL=', process.env.SUPABASE_URL);
+    console.log('HAS SERVICE ROLE=', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-console.log('VISIBLE RECEIPTS=', test.data);
-console.log('VISIBLE ERROR=', test.error);
-    /* 1. Search receipts first */
+    const probe = await supabase
+      .from('receipts')
+      .select('no')
+      .limit(5);
+    console.log('PROBE DATA=', JSON.stringify(probe.data));
+    console.log('PROBE ERROR=', JSON.stringify(probe.error));
+
+    /* 1. Search receipts first (TEMP: exact eq match + select * for diagnosis) */
     const { data: receipt, error: recErr } = await supabase
       .from('receipts')
-      .select('no, fund_type, receipt_date, amount_ils, amount, currency, notes, created_by, is_deleted')
-      .ilike('no', docId)
+      .select('*')
+      .eq('no', docId)
       .maybeSingle();
 
     console.log('RECEIPT=', JSON.stringify(receipt));
     console.log('REC ERROR=', JSON.stringify(recErr));
-
-    /* Extra: raw count probe to see if RLS hides rows vs no-match */
-    const probe = await supabase.from('receipts').select('no').limit(3);
-    console.log('PROBE rows visible=', JSON.stringify(probe.data), 'probe err=', JSON.stringify(probe.error));
 
     if (recErr) return res.status(500).json({ valid: false, error: recErr.message });
 
@@ -79,13 +67,7 @@ console.log('VISIBLE ERROR=', test.error);
         }
       });
     }
-const test = await supabase
-  .from('receipts')
-  .select('no')
-  .limit(5);
 
-console.log('VISIBLE RECEIPTS=', test.data);
-console.log('VISIBLE ERROR=', test.error);
     /* 2. Search payments if not found in receipts */
     const { data: payment, error: payErr } = await supabase
       .from('payments')
