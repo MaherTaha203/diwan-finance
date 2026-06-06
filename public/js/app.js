@@ -1965,7 +1965,7 @@ window.downloadFundStatementPDF=function(fund){
     const wrap=document.createElement('div');
     wrap.innerHTML='<style>'+r.css+'</style>'+r.body;
     wrap.style.cssText='direction:rtl;background:#fff';
-    const opt={margin:[8,8,8,8],filename:r.title+'-'+today()+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}};
+    const opt={margin:[8,8,8,8],filename:(fund==='food'?'Food-Statement':'Diwan-Statement')+'-'+today()+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}};
     window.html2pdf().set(opt).from(wrap).save().then(()=>toast('\u2713 PDF','ok'));
   };
   if(window.html2pdf){doPdf();}
