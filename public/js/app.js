@@ -1949,7 +1949,28 @@ window.prtStmt=function(fund){
   const css='@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:9.5pt}.hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0}.org{font-size:13pt;font-weight:700;color:#fff}.org-en{font-size:8pt;color:rgba(255,255,255,.4);display:block}.doc-type{font-size:12pt;font-weight:700;color:#00C896;text-align:center}.doc-sub{font-size:8pt;color:rgba(0,200,150,.5);text-align:center}.strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896)}.summ{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px;background:#f8fafc;border-bottom:1pt solid #e2e8f0}.scard{text-align:center;padding:6px;background:#fff;border:.5pt solid #e2e8f0;border-radius:3px}.sl{font-size:7.5pt;color:#64748b;display:block;margin-bottom:2px}.sv{font-size:12pt;font-weight:700}table{width:100%;border-collapse:collapse;font-size:9pt}thead th{background:#0F2B5B;color:#fff;padding:5px 8px;text-align:right;font-weight:500;font-size:8.5pt}tbody td{padding:4px 8px;border-bottom:.5pt solid #f1f5f9}tbody tr:nth-child(even){background:#f8fafc}.final-row{background:#0F2B5B}.final-row td{color:#fff;font-weight:700;padding:6px 8px}.footer{background:#0F2B5B;padding:4px 10px;text-align:center;font-size:7pt;color:rgba(255,255,255,.35);margin-top:8px;border-radius:0 0 4px 4px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
   const body=`<div class="hdr"><div><span class="org">ديوان آل طه</span><span class="org-en">DIWAN AL-TAHA</span></div><div><div class="doc-type">كشف ${fundLabel}</div><div class="doc-sub">${from&&to?fmtDate2(from)+' \u2014 '+fmtDate2(to):from?'\u0645\u0646 '+fmtDate2(from):to?'\u062d\u062a\u0649 '+fmtDate2(to):'\u0643\u0644 \u0627\u0644\u0641\u062a\u0631\u0627\u062a'}</div></div><div style="text-align:left"><div style="font-size:7pt;color:rgba(255,255,255,.35)">\u0637\u064f\u0628\u0639 \u0641\u064a</div><div style="font-size:9pt;font-weight:600;color:#fff">${new Date().toLocaleDateString('en-GB')}</div></div></div><div class="strip"></div>
   <div class="summ"><div class="scard"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0625\u064a\u0631\u0627\u062f\u0627\u062a</span><span class="sv" style="color:#059669">\u20aa ${fmt(totCr)}</span></div><div class="scard"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0635\u0627\u0631\u064a\u0641</span><span class="sv" style="color:#DC2626">\u20aa ${fmt(totDr)}</span></div><div class="scard"><span class="sl">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062e\u062a\u0627\u0645\u064a</span><span class="sv" style="color:${bal>=0?'#059669':'#DC2626'}">\u20aa ${fmt(bal)}</span></div></div>
-  <table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u062f\u0627\u0626\u0646 \u20aa</th><th>\u0645\u062f\u064a\u0646 \u20aa</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u20aa</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>${rowsHTML}<tr class="final-row"><td colspan="5" style="text-align:right">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062c\u0627\u0631\u064a \u00b7 Current Balance</td><td style="text-align:left;color:${bal>=0?'#00C896':'#FCA5A5'}">\u20aa ${fmt(bal)}</td><td></td></tr></tbody></table>
+  <table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u062f\u0627\u0626\u0646 \u20aa</th><th>\u0645\u062f\u064a\u0646 \u20aa</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u20aa</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>${rowsHTML}<tr class="final-row">
+<td colspan="5" style="
+text-align:right;
+font-size:11pt;
+font-weight:900;
+">
+الرصيد الجاري
+</td>
+
+<td style="
+text-align:left;
+font-size:12pt;
+font-weight:900;
+background:${bal>=0?'#DCFCE7':'#FEE2E2'};
+color:${bal>=0?'#166534':'#991B1B'};
+border-radius:4px;
+">
+₪ ${fmt(bal)}
+</td>
+
+<td></td>
+</tr>
   <div class="footer">\u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0642 \u0645\u062d\u0641\u0648\u0638\u0629 \u00a9 2026 | \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 | diwan-finance.com</div>`;
   openPrintWin(css,body);
 };
