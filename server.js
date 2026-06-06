@@ -32,9 +32,21 @@ app.get('/api/verify', async (req, res) => {
   try {
     const { createClient } = require('@supabase/supabase-js');
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    /* ===== TEMP QR DIAGNOSTIC LOGGING ===== */
+    console.log('SUPABASE URL=', supabaseUrl);
+    console.log('HAS SERVICE ROLE=', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const probe = await supabase
+      .from('receipts')
+      .select('no')
+      .limit(10);
+    console.log('PROBE DATA=', JSON.stringify(probe.data));
+    console.log('PROBE ERROR=', JSON.stringify(probe.error));
+
     const { data: receipt } = await supabase.from('receipts')
       .select('no, fund_type, receipt_date, amount_ils, amount, currency, notes, created_by, is_deleted')
       .ilike('no', docId).maybeSingle();
+    console.log('RECEIPT=', JSON.stringify(receipt));
     if (receipt) {
       if (receipt.is_deleted) return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
       const fund = receipt.fund_type === 'food' ? 'Food Fund' : receipt.fund_type === 'diwan' ? 'Diwan Fund' : receipt.fund_type === 'donation' ? 'Donations' : receipt.fund_type;
