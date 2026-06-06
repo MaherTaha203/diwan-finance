@@ -19,6 +19,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    console.log('VERSION CHECK 999');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     /* ===== TEMP DIAGNOSTIC LOGGING ===== */
