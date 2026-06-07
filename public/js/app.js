@@ -619,6 +619,7 @@ async function loadAll(){
     ]);
     DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
     DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];
+    await loadAttachCounts();
     renderAll();
   }catch(e){toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err');console.error(e);}
 }
@@ -657,6 +658,7 @@ const D={
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.notes||'—')}</td>
       <td class="tda">
+        ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
         ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')" title="طباعة"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
@@ -682,6 +684,7 @@ const D={
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
       <td class="tda">
+        ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
         ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')" title="طباعة"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
@@ -708,6 +711,7 @@ const D={
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
+        ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
         ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
@@ -736,6 +740,7 @@ const D={
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
       <td class="tda">
+        ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
         ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
@@ -762,6 +767,7 @@ const D={
       <td><span class="badge ${r.donation_display_fund==='food'?'food':'diwan'}">${r.donation_display_fund==='food'?L.fundLabel('food'):L.fundLabel('diwan')}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
+        ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
         ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
@@ -1267,6 +1273,231 @@ function fillContactDropdown(){
   const el=document.getElementById('rec-contact');if(el)el.innerHTML=opts;
 }
 
+
+/* ════════════════════════════════════════════════════════════════
+   ATTACHMENTS SYSTEM  (receipts + payments only)
+   Depends on app.js scope: SB, CUR, CU, can, toast, logAction, esc, fmt
+   ════════════════════════════════════════════════════════════════ */
+const ATTACH_BUCKET='attachments';
+const ATTACH_MAX=10, ATTACH_IMG_MAX=5*1024*1024, ATTACH_PDF_MAX=10*1024*1024;
+const ATTACH_MIME=['image/jpeg','image/png','application/pdf'];
+const ATTACH_COUNTS={receipt:{},payment:{}};
+const ATTACH_CATS={
+  receipt:{bank_receipt:'إيصال بنكي',bank_transfer:'إيصال تحويل بنكي',cheque:'صورة شيك',donation_proof:'إثبات تبرع',other:'أخرى'},
+  payment:{invoice:'فاتورة',quotation:'عرض سعر',execution_contract:'عقد تنفيذ',delivery_receipt:'محضر استلام',cheque:'صورة شيك',other:'أخرى'}
+};
+let ATTACH_CTX=null; // {type:'receipt'|'payment', id, no, fund}
+
+/* Load counts for all current vouchers (one query per type, counts only) */
+async function loadAttachCounts(){
+  try{
+    ATTACH_COUNTS.receipt={};ATTACH_COUNTS.payment={};
+    const{data,error}=await SB.from('attachments').select('receipt_id,payment_id');
+    if(error||!data)return;
+    data.forEach(a=>{
+      if(a.receipt_id)ATTACH_COUNTS.receipt[a.receipt_id]=(ATTACH_COUNTS.receipt[a.receipt_id]||0)+1;
+      if(a.payment_id)ATTACH_COUNTS.payment[a.payment_id]=(ATTACH_COUNTS.payment[a.payment_id]||0)+1;
+    });
+  }catch(e){/* table may not exist yet */}
+}
+function attachCount(type,id){return ATTACH_COUNTS[type]?.[id]||0;}
+
+/* Row button (paperclip + count) — visible to all roles */
+window.attachBtn=function(type,id,no,fund){
+  const n=attachCount(type,id);
+  const badge=n>0?`<span style="background:var(--acc2,#059669);color:#fff;border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
+  return `<button class="btn ghost sm" style="color:#0F2B5B" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="المرفقات"><i class="ti ti-paperclip"></i>${badge}</button>`;
+};
+
+/* Open attachments modal for a voucher */
+function attachRefreshTab(){const a=document.querySelector('.pg.on')?.id?.replace('pg-','');if(a&&typeof D!=='undefined'&&D[a])D[a].render();}
+window.openAttach=async function(type,id,no,fund){
+  ATTACH_CTX={type,id,no,fund};
+  ensureAttachModals();
+  // populate categories for this owner type
+  const sel=document.getElementById('attach-cat');
+  sel.innerHTML='<option value="">— اختر —</option>'+Object.entries(ATTACH_CATS[type]).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  document.getElementById('ov').classList.add('on');
+  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
+  document.getElementById('m-attach').style.display='block';
+  document.getElementById('attach-title').textContent=`المرفقات — ${no}`;
+  document.getElementById('attach-upload-wrap').style.display=can.admin()?'block':'none';
+  await renderAttachList();
+};
+
+async function renderAttachList(){
+  const box=document.getElementById('attach-list');
+  box.innerHTML='<div style="text-align:center;padding:18px;color:var(--tx3)"><div class="spin"></div></div>';
+  const col=ATTACH_CTX.type==='receipt'?'receipt_id':'payment_id';
+  const{data,error}=await SB.from('attachments').select('*').eq(col,ATTACH_CTX.id).order('created_at',{ascending:false});
+  if(error){box.innerHTML=`<div style="color:var(--danger);padding:12px">خطأ في التحميل: ${esc(error.message)}</div>`;return;}
+  if(!data?.length){box.innerHTML='<div style="text-align:center;padding:18px;color:var(--tx3)">لا توجد مرفقات</div>';return;}
+  const cats=ATTACH_CATS[ATTACH_CTX.type];
+  box.innerHTML=data.map(a=>{
+    const isImg=a.mime_type.startsWith('image/');
+    const icon=isImg?'ti-photo':'ti-file-type-pdf';
+    const kb=a.size_bytes<1048576?Math.round(a.size_bytes/1024)+' KB':(a.size_bytes/1048576).toFixed(1)+' MB';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--bd);border-radius:7px;margin-bottom:8px;background:var(--bg2)">
+      <i class="ti ${icon}" style="font-size:22px;color:#0F2B5B"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.file_name)}</div>
+        <div style="font-size:10.5px;color:var(--tx3)">${esc(cats[a.doc_category]||a.doc_category)} · ${kb} · ${(a.created_at||'').slice(0,10)}</div>
+      </div>
+      <button class="btn ghost sm" onclick="window.previewAttach('${a.id}','${esc(a.storage_path)}','${a.mime_type}','${esc(a.file_name)}')" title="معاينة"><i class="ti ti-eye"></i></button>
+      <button class="btn ghost sm" onclick="window.downloadAttach('${esc(a.storage_path)}','${esc(a.file_name)}')" title="تنزيل"><i class="ti ti-download"></i></button>
+      ${can.admin()?`<button class="btn ghost sm" style="color:var(--danger)" onclick="window.deleteAttach('${a.id}','${esc(a.storage_path)}','${esc(a.file_name)}')" title="حذف"><i class="ti ti-trash"></i></button>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* Image compression (canvas, max 1600px, q0.8) */
+function compressImage(file){
+  return new Promise((resolve)=>{
+    if(!file.type.startsWith('image/'))return resolve(file);
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{
+      let{width:w,height:h}=img; const max=1600;
+      if(w>max||h>max){const s=Math.min(max/w,max/h);w=Math.round(w*s);h=Math.round(h*s);}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      cv.toBlob(b=>resolve(b&&b.size<file.size?new File([b],file.name,{type:'image/jpeg'}):file),'image/jpeg',0.8);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(file);};
+    img.src=url;
+  });
+}
+
+function sanitizeName(n){return (n||'file').replace(/[^\w.\-]+/g,'_').slice(-80);}
+
+/* Upload handler */
+window.uploadAttach=async function(){
+  if(!can.admin()){toast('المدير فقط','err');return;}
+  const cat=document.getElementById('attach-cat').value;
+  const fileInput=document.getElementById('attach-file');
+  const file=fileInput.files[0];
+  const errBox=document.getElementById('attach-err');
+  errBox.style.display='none';errBox.innerHTML='';
+  const fail=(m)=>{errBox.style.display='block';errBox.innerHTML=esc(m);};
+  if(!cat){return fail('اختر نوع المستند');}
+  if(!file){return fail('اختر ملفاً');}
+  if(!ATTACH_MIME.includes(file.type)){return fail('نوع غير مدعوم — JPG أو PNG أو PDF فقط');}
+  const isImg=file.type.startsWith('image/');
+  if(isImg&&file.size>ATTACH_IMG_MAX){return fail('حجم الصورة يتجاوز 5MB');}
+  if(!isImg&&file.size>ATTACH_PDF_MAX){return fail('حجم الـ PDF يتجاوز 10MB');}
+  if(attachCount(ATTACH_CTX.type,ATTACH_CTX.id)>=ATTACH_MAX){return fail(`الحد الأقصى ${ATTACH_MAX} مرفقات لكل سند`);}
+
+  const btn=document.getElementById('attach-upload-btn');
+  btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
+  try{
+    const finalFile=isImg?await compressImage(file):file;
+    const path=`${ATTACH_CTX.type}/${ATTACH_CTX.id}/${crypto.randomUUID()}_${sanitizeName(file.name)}`;
+    const{error:upErr}=await SB.storage.from(ATTACH_BUCKET).upload(path,finalFile,{contentType:finalFile.type,upsert:false});
+    if(upErr)throw upErr;
+    const row={
+      [ATTACH_CTX.type==='receipt'?'receipt_id':'payment_id']:ATTACH_CTX.id,
+      owner_no:ATTACH_CTX.no, fund_type:ATTACH_CTX.fund, doc_category:cat,
+      file_name:file.name, storage_path:path, mime_type:finalFile.type,
+      size_bytes:finalFile.size, uploaded_by:CUR?.full_name||CU?.email
+    };
+    const{data:ins,error:insErr}=await SB.from('attachments').insert(row).select('id').single();
+    if(insErr){await SB.storage.from(ATTACH_BUCKET).remove([path]);throw insErr;}
+    await logAction('add',`إضافة مرفق (${ATTACH_CATS[ATTACH_CTX.type][cat]||cat}) إلى ${ATTACH_CTX.no}: ${file.name}`,'attachments',ins?.id||null);
+    ATTACH_COUNTS[ATTACH_CTX.type][ATTACH_CTX.id]=attachCount(ATTACH_CTX.type,ATTACH_CTX.id)+1;
+    fileInput.value='';document.getElementById('attach-cat').value='';
+    toast('✓ تم رفع المرفق','ok');
+    await renderAttachList();
+    attachRefreshTab();
+  }catch(e){fail('فشل الرفع: '+(e.message||e));}
+  finally{btn.disabled=false;btn.innerHTML='<i class="ti ti-upload"></i>رفع المرفق';}
+};
+
+/* Signed URL helper */
+async function attachSignedUrl(path){
+  const{data,error}=await SB.storage.from(ATTACH_BUCKET).createSignedUrl(path,300);
+  if(error)throw error;return data.signedUrl;
+}
+
+window.previewAttach=async function(id,path,mime,name){
+  try{
+    const url=await attachSignedUrl(path);
+    ensureAttachModals();
+    document.getElementById('ov').classList.add('on');
+    document.getElementById('m-attach-view').style.display='block';
+    document.getElementById('attach-view-title').textContent=name;
+    const body=document.getElementById('attach-view-body');
+    body.innerHTML=mime==='application/pdf'
+      ? `<iframe src="${url}" style="width:100%;height:60vh;border:none;border-radius:7px"></iframe>`
+      : `<img src="${url}" style="max-width:100%;max-height:60vh;display:block;margin:0 auto;border-radius:7px">`;
+    document.getElementById('attach-view-dl').onclick=()=>window.downloadAttach(path,name);
+  }catch(e){toast('تعذّر فتح المعاينة: '+(e.message||e),'err');}
+};
+
+window.downloadAttach=async function(path,name){
+  try{
+    const url=await attachSignedUrl(path);
+    const a=document.createElement('a');a.href=url;a.download=name||'attachment';
+    document.body.appendChild(a);a.click();a.remove();
+  }catch(e){toast('تعذّر التنزيل: '+(e.message||e),'err');}
+};
+
+/* Hard delete: storage file + row + audit */
+window.deleteAttach=async function(id,path,name){
+  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!confirm(`حذف المرفق "${name}" نهائياً؟ لا يمكن التراجع.`))return;
+  try{
+    const{error:rmErr}=await SB.storage.from(ATTACH_BUCKET).remove([path]);
+    if(rmErr)throw rmErr;
+    const{error:delErr}=await SB.from('attachments').delete().eq('id',id);
+    if(delErr)throw delErr;
+    await logAction('delete',`حذف مرفق من ${ATTACH_CTX.no}: ${name}`,'attachments',id);
+    if(ATTACH_CTX)ATTACH_COUNTS[ATTACH_CTX.type][ATTACH_CTX.id]=Math.max(0,attachCount(ATTACH_CTX.type,ATTACH_CTX.id)-1);
+    toast('✓ تم حذف المرفق','ok');
+    await renderAttachList();
+    attachRefreshTab();
+  }catch(e){toast('فشل الحذف: '+(e.message||e),'err');}
+};
+
+window.closeAttach=function(){
+  ['m-attach','m-attach-view'].forEach(idv=>{const el=document.getElementById(idv);if(el)el.style.display='none';});
+  document.getElementById('ov').classList.remove('on');
+};
+window.closeAttachView=function(){
+  document.getElementById('m-attach-view').style.display='none';
+  document.getElementById('m-attach').style.display='block'; // back to list
+};
+
+/* Build modals once (no index.html edits needed) */
+function ensureAttachModals(){
+  if(document.getElementById('m-attach'))return;
+  const cont=document.getElementById('ov')||document.body;
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`
+  <div class="modal" id="m-attach" style="display:none;max-width:520px">
+    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-paperclip"></i></span><span id="attach-title">المرفقات</span></span><button class="btn ghost" onclick="window.closeAttach()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <div id="attach-upload-wrap" style="border:1px dashed var(--bd2);border-radius:9px;padding:12px;margin-bottom:12px">
+        <div class="fi full"><label>نوع المستند <span class="req">*</span></label>
+          <select id="attach-cat"><option value="">— اختر —</option></select></div>
+        <div class="fi full" style="margin-top:8px"><label>الملف (JPG · PNG · PDF) <span class="req">*</span></label>
+          <input type="file" id="attach-file" accept="image/jpeg,image/png,application/pdf"></div>
+        <div id="attach-err" style="display:none;color:var(--danger);font-size:12px;margin:8px 0;padding:6px 8px;background:rgba(220,38,38,.08);border-radius:6px"></div>
+        <button class="btn primary" id="attach-upload-btn" style="width:100%;margin-top:8px" onclick="window.uploadAttach()"><i class="ti ti-upload"></i>رفع المرفق</button>
+        <div style="font-size:10.5px;color:var(--tx3);margin-top:6px">الحد الأقصى: 10 مرفقات · صور 5MB · PDF 10MB</div>
+      </div>
+      <div id="attach-list"></div>
+    </div>
+  </div>
+  <div class="modal" id="m-attach-view" style="display:none;max-width:640px">
+    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-eye"></i></span><span id="attach-view-title">معاينة</span></span><button class="btn ghost" onclick="window.closeAttachView()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div id="attach-view-body"></div>
+      <div style="text-align:center;margin-top:10px"><button class="btn primary" id="attach-view-dl"><i class="ti ti-download"></i>تنزيل</button></div>
+    </div>
+  </div>`;
+  cont.appendChild(wrap);
+}
+/* ═══ END ATTACHMENTS SYSTEM ═══ */
+
 /* ═══ AUDIT LOG ═══ */
 async function logAction(action,desc,tableN,recordId){
   await SB.from('audit_log').insert({user_name:CUR?.full_name||CU?.email,action,description:desc,table_name:tableN,record_id:recordId});
@@ -1384,9 +1615,9 @@ window.saveMember=async function(){
   const bal=parseFloat(document.getElementById('mem-balance').value)||0;
   const phone=document.getElementById('mem-phone').value;
   const notes=document.getElementById('mem-notes').value;
-  const{error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal});
+  const{data:mNew,error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal}).select('id').single();
   if(error){toast('خطأ: '+error.message,'err');return;}
-  await logAction('add',`إضافة عضو: ${name}`,'members',null);
+  await logAction('add',`إضافة عضو: ${name}`,'members',mNew?.id||null);
   window.closeM();await loadAll();toast(`✓ تمت إضافة ${name}`,'ok');
 };
 
@@ -1540,9 +1771,9 @@ window.applyAnnualDue=async function(){
   const btn=document.getElementById('btn-apply-due');
 if(!btn)return;
 btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
-  const{error}=await SB.from('annual_dues').insert({year,amount,applied_by:CUR?.full_name||CU?.email,member_count:members.length});
+  const{data:adNew,error}=await SB.from('annual_dues').insert({year,amount,applied_by:CUR?.full_name||CU?.email,member_count:members.length}).select('id').single();
   if(error){toast('خطأ: '+error.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
-  await logAction('add',`تطبيق اشتراك سنة ${year} — ${members.length} عضو — ₪${fmt(amount)} لكل عضو`,'annual_dues',null);
+  await logAction('add',`تطبيق اشتراك سنة ${year} — ${members.length} عضو — ₪${fmt(amount)} لكل عضو`,'annual_dues',adNew?.id||null);
   await loadAll();
   btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';
   toast(`✓ ${window.t('messages.annual_applied')} — ${year}`,'ok');
@@ -1580,7 +1811,9 @@ window.changeRole=async(uid,role)=>{
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   /* Enforce valid roles only */
   const safeRole=(role==='admin')?'admin':'viewer';
+  const{data:prevRole}=await SB.from('user_roles').select('role,full_name').eq('user_id',uid).maybeSingle();
   await SB.from('user_roles').update({role:safeRole}).eq('user_id',uid);
+  await logAction('edit',`تغيير دور ${prevRole?.full_name||uid}: من ${ROLES[prevRole?.role]||prevRole?.role||'—'} إلى ${ROLES[safeRole]}`,'user_roles',uid);
   toast(`تم تغيير الدور إلى ${ROLES[safeRole]}`,'ok');loadUsers();
 };
 window.inviteUser=async()=>{
@@ -1594,6 +1827,7 @@ window.inviteUser=async()=>{
   const{data,error}=await SB.auth.signUp({email,password:pass});
   if(error){toast('خطأ: '+error.message,'err');return;}
   await SB.from('user_roles').upsert({user_id:data.user.id,role:safeRole,full_name:name||email});
+  await logAction('add',`إنشاء مستخدم: ${email} — دور: ${ROLES[safeRole]}`,'user_roles',data.user.id);
   window.closeM();toast(`تم إنشاء حساب ${email}`,'ok');loadUsers();
 };
 
@@ -2927,7 +3161,8 @@ init();
   const EXPORT_FNS=['exportCSV','doBackup'];
   const WRITE_FNS =['saveRec','savePay','saveMember','updateRec','updatePay',
                     'deleteRec','deletePay','updateMember','deleteMember',
-                    'applyAnnualDue','saveSettings','inviteUser','changeRole'];
+                    'applyAnnualDue','saveSettings','inviteUser','changeRole',
+                    'uploadAttach','deleteAttach'];
 
   function seal(name, checkFn, labelAr, labelEn){
     const orig = window[name];
