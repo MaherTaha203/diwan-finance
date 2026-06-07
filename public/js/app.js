@@ -1869,14 +1869,48 @@ function amountToWords(n){
   return s.trim()+' New Israeli Shekels Only';
 }
 
+/* ═══ VIS-1: UNIFIED PRINT DESIGN TOKENS (single source of truth) ═══ */
+const PRINT_TOKENS=':root{--navy:#1C2B3A;--green:#00C896;--gold:#C4A450;--danger:#DC3545;--gray:#6B7280;--bg:#F8FAFC;--bd:#e2e8f0;--ink:#1C2B3A;--fa:"Cairo",Arial,sans-serif;--fe:"Inter",Arial,sans-serif}'
++'*{box-sizing:border-box;margin:0;padding:0}'
++'.dh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--gold);padding-bottom:10px}'
++'.dh .org{display:flex;gap:10px;align-items:center}'
++'.dh .logo{width:46px;height:46px;border-radius:9px;background:var(--navy);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}'
++'.dh h1{font-size:18px;color:var(--navy);font-weight:800;line-height:1.2}'
++'.dh .org p{font-size:10px;color:var(--gray)}'
++'.dh .meta{text-align:left}'
++'.dh .meta .tt{display:inline-block;background:var(--navy);color:#fff;font-size:13px;font-weight:700;padding:5px 14px;border-radius:6px}'
++'.dh .meta .no{font-size:13px;color:var(--navy);font-weight:700;margin-top:6px}'
++'.dh .meta .sub{font-size:11px;color:var(--gray);margin-top:4px}'
++'.period{text-align:center;margin:12px 0;font-size:12.5px;color:var(--navy);font-weight:600}'
++'.cards{display:flex;gap:10px;margin-bottom:12px}'
++'.card{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center}'
++'.card .k{font-size:10px;color:var(--gray)}.card .v{font-size:16px;font-weight:800;color:var(--navy);margin-top:4px}'
++'.card .v.pos{color:var(--green)}.card .v.neg{color:var(--danger)}'
++'table.dt{width:100%;border-collapse:collapse;font-size:10px}'
++'table.dt thead th{background:var(--navy);color:#fff;padding:7px 6px;font-weight:700;border:1px solid var(--navy)}'
++'table.dt tbody td{padding:6px;border:1px solid var(--bd);text-align:center}'
++'table.dt tbody tr:nth-child(even){background:var(--bg)}'
++'.cr{color:var(--green);font-weight:600}.dr{color:var(--danger);font-weight:600}.bal{font-weight:700;color:var(--navy)}'
++'table.dt tr.final td{background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;padding:9px}'
++'table.dt tr.final .pos{color:var(--green)}table.dt tr.final .neg{color:#ff9aa2}'
++'.dfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px}'
++'.qr-u{width:90px;text-align:center}'
++'.qr-u .box{width:62px;height:62px;border:1px solid var(--navy);border-radius:4px;margin:0 auto}'
++'.qr-u .box>div,.qr-u .box img,.qr-u .box canvas{width:56px!important;height:56px!important;margin:3px}'
++'.qr-u .cap{font-size:7px;color:var(--gray);margin-top:3px;word-break:break-all}'
++'.sigs{display:flex;gap:40px}'
++'.sig-u .line{width:120px;border-top:1px solid var(--navy);margin-top:34px;padding-top:4px;font-size:10px;color:var(--gray);text-align:center}'
++'.pgfoot{border-top:1px solid var(--bd);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;font-size:8.5px;color:var(--gray)}'
++'.page{background:#fff;position:relative;overflow:hidden}'+'.voucher{padding:14mm 12mm}'+'.rows{margin-top:14px}'+'.rows .row{display:flex;border-bottom:1px solid var(--bd);padding:8px 0}'+'.rows .lbl{width:34%;color:var(--gray);font-size:11px;font-weight:600}'+'.rows .val{flex:1;color:var(--navy);font-size:12.5px;font-weight:600}'+'.amount{display:flex;justify-content:space-between;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin-top:14px}'+'.amount .big{font-size:22px;font-weight:800}.amount .big.cr{color:var(--green)}.amount .big.dr{color:var(--danger)}'+'.amount .words{font-size:11px;color:var(--gray);max-width:58%;text-align:left}'+'.sigs{display:flex;gap:40px}.sig-u{text-align:center}'+'.wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}'+'.wm span{transform:rotate(-35deg);font-size:60px;font-weight:800;color:rgba(0,200,150,.06)}'+'@page{size:A4 portrait;margin:0}'+'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+
 function openPrintWin(css,body){
   const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
     +'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">'
     +'<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>'
-    +'<style>'+css+'</style></head><body>'+body
+    +'<style>'+PRINT_TOKENS+css+'</style></head><body>'+body
     +'<script>window.onload=function(){'
     +'document.querySelectorAll("[data-qr-url]").forEach(function(el){'
-    +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#1B3A6B",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
+    +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#1C2B3A",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
     +'});'
     +'setTimeout(function(){window.print();},900);'
     +'};<\/script></body></html>';
@@ -1885,257 +1919,63 @@ function openPrintWin(css,body){
   else toast(window.t?window.t('errors.no_print'):'يرجى السماح بالنوافذ المنبثقة','warn');
 }
 
-const REC_CSS='@page{size:A4 portrait;margin:0}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;background:#fff;width:210mm}'
-+'.half{width:210mm;height:148.5mm;padding:7mm 12mm;display:flex;flex-direction:column;justify-content:space-between;position:relative}'
-+'.half:first-child{border-bottom:2px dashed #ccc}'
-+'.cut{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);background:#fff;padding:0 8px;font-size:8pt;color:#aaa;white-space:nowrap}'
-+'.hdr{background:#1B3A6B;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-radius:4px 4px 0 0}'
-+'.org-ar{font-size:15pt;font-weight:700;color:#fff;display:block}'
-+'.org-en{font-size:10pt;color:rgba(255,255,255,.7);display:block}'
-+'.ttl-ar{font-size:13pt;font-weight:700;color:#00C896;display:block;text-align:center}'
-+'.ttl-en{font-size:13pt;font-weight:700;color:rgba(255,255,255,.8);display:block;text-align:center}'
-+'.verified-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(0,200,150,.15);border:1px solid rgba(0,200,150,.5);border-radius:8px;padding:2px 7px;margin-top:4px}'
-+'.verified-badge span{font-size:7.5pt;color:#00C896;font-weight:600}'
-+'.no-l{font-size:9pt;color:rgba(255,255,255,.5);text-align:left}'
-+'.no-v{font-size:14pt;font-weight:700;color:#fff;display:block;text-align:left;letter-spacing:.5px}'
-+'.strip{height:2.5px;background:linear-gradient(90deg,#00C896,#059669,#1B6CA8)}'
-+'.meta{display:grid;grid-template-columns:1fr 1fr;border-bottom:.5pt solid #e2e8f0}'
-+'.mi{padding:5px 12px}'
-+'.mi:first-child{border-left:.5pt solid #e2e8f0}'
-+'.ml{font-size:7pt;color:#94a3b8;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px}'
-+'.mv{font-size:10.5pt;font-weight:700;color:#0A1628;display:block}'
-+'.rows{flex:1}'
-+'.row{display:flex;padding:4px 12px;border-bottom:.5pt solid #f1f5f9;font-size:9pt}'
-+'.row:last-child{border-bottom:none}'
-+'.rk{color:#64748b;flex:0 0 130px}'
-+'.rv{font-weight:600;color:#0A1628;flex:1;text-align:right}'
-+'.amt{background:#1B3A6B;padding:10px 14px 10px 80px;text-align:center;position:relative;min-height:85px;display:flex;flex-direction:column;justify-content:center}'
-+'.al{font-size:7.5pt;color:rgba(255,255,255,.5);text-transform:uppercase;display:block;margin-bottom:2px}'
-+'.an{font-size:24pt;font-weight:700;color:#00C896;display:block;letter-spacing:-1px}'
-+'.aw-ar{font-size:9pt;color:rgba(255,255,255,.65);display:block;direction:rtl;margin-top:3px}'
-+'.aw{font-size:8pt;color:rgba(255,255,255,.5);font-style:italic;display:block;margin-top:2px}'
-+'.au{font-size:8.5pt;color:rgba(255,255,255,.6);display:block;margin-top:2px}'
-+'.qr-area{position:absolute;left:8px;top:8px;display:flex;flex-direction:column;align-items:center;gap:2px;width:65px}'
-+'.qr-area>div:first-child{background:#fff;border-radius:3px;padding:3px}'
-+'.qr-area img,.qr-area canvas{width:52px!important;height:52px!important}'
-+'.qr-cap{font-size:5.5pt;color:rgba(255,255,255,.5);text-align:center;line-height:1.3}'
-+'.qr-url{font-size:5pt;color:rgba(255,255,255,.35);text-align:center;max-width:65px;word-break:break-all;line-height:1.3}'
-+'.info{padding:4px 12px;background:#f8fafc;border-top:.5pt solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b}'
-+'.badge-orig{border:1.5px solid #15803d;color:#15803d;border-radius:3px;padding:1px 7px;font-size:7.5pt;font-weight:700;letter-spacing:.8px}'
-+'.badge-copy{border:1.5px solid #b45309;color:#b45309;border-radius:3px;padding:1px 7px;font-size:7.5pt;font-weight:700;letter-spacing:.8px}'
-+'.sig{padding:8px 12px 6px;border-top:.5pt solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end}'
-+'.sig-block{text-align:center;min-width:120px}'
-+'.sig-lbl{font-size:8pt;color:#64748b}'
-+'.sig-lbl-ar{font-size:7pt;color:#94a3b8;display:block;margin-top:1px}'
-+'.sig-line{border-top:.5pt solid #94a3b8;padding-top:16px;margin-bottom:3px;width:140px}'
-+'.stamp-circle{margin:0 auto;margin-top:2px}'
-+'.footer{background:#1B3A6B;padding:4px 12px;text-align:center;font-size:7pt;color:rgba(255,255,255,.4);border-radius:0 0 4px 4px}'
-+'.bb{padding:1px 6px;border-radius:7px;font-size:8pt;font-weight:600}'
-+'.b-food{background:#FFFBEB;color:#B45309}'
-+'.b-diwan{background:#EFF6FF;color:#1D4ED8}'
-+'.b-don{background:#F5F3FF;color:#6D28D9}'
-+'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-/* PAY_CSS: Navy professional (not purple) with red accent for payment distinction */
-const PAY_CSS=REC_CSS
-  .replace(/background:#1B3A6B/g,'background:#111827')
-  .replace(/.hdr\{background:#1B3A6B/g,'.hdr{background:#111827')
-  .replace(/color:#00C896/g,'color:#F87171')
-  .replace(/background:linear-gradient\(90deg,#00C896,#059669,#1B6CA8\)/,'background:linear-gradient(90deg,#F87171,#DC2626,#111827)')
-  .replace(/border:1px solid rgba\(0,200,150,.5\)/g,'border:1px solid rgba(248,113,113,.5)')
-  .replace(/background:rgba\(0,200,150,.15\)/g,'background:rgba(248,113,113,.12)')
-  .replace(/#1B3A6B/g,'#111827');
-function buildRecVoucher(r,label){
-  const fundLabel=r.fund_type==='food'?'صندوق الغداء':r.fund_type==='donation'?'تبرع':'صندوق الديوان';
-  const fundClass=r.fund_type==='food'?'b-food':r.fund_type==='donation'?'b-don':'b-diwan';
-  const now=new Date();
-  const pt=fmtDate2(now.toISOString())+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
-  const meth=r.payment_method||'cash';
-  const methAr=METHOD_LABELS[meth]||meth;
+function fundLabelAr(ft){return ft==='food'?'صندوق الغداء':ft==='donation'?'صندوق التبرعات':'صندوق الديوان';}
+
+/* VIS-2: single-voucher builders matching approved mockups (01 receipt / 03 payment) */
+function buildRecVoucher(r){
   const verifyUrl='https://www.diwan-finance.com/verify/'+esc(r.no);
-  const stampType='receipt';
- 
-  return '<div class="half">'
-    +'<div>'
- 
-    /* ── HEADER ── */
-    +'<div class="hdr">'
-      +'<div><span class="org-ar">ديوان آل طه</span><span class="org-en">Diwan Al-Taha Family</span></div>'
-      +'<div style="text-align:center">'
-        +'<span class="ttl-ar">سند قبض</span>'
-        +'<span class="ttl-en">Receipt Voucher</span>'
-        +'<div class="verified-badge"><span style="font-size:9pt;color:#00C896">✓</span><span>معتمد إلكترونياً · Verified</span></div>'
-      +'</div>'
-      +'<div><span class="no-l">Voucher No.</span><span class="no-v">'+esc(r.no)+'</span></div>'
-    +'</div>'
- 
-    /* ── STRIP ── */
-    +'<div class="strip"></div>'
- 
-    /* ── META ── */
-    +'<div class="meta">'
-      +'<div class="mi"><span class="ml">DATE / التاريخ</span><span class="mv">'+fmtDate2(r.receipt_date)+'</span></div>'
-      +'<div class="mi"><span class="ml">PAYER / الدافع</span><span class="mv">'+esc(r.payer_name||gmn(r.member_id))+'</span></div>'
-    +'</div>'
- 
-    /* ── FIELDS ── */
+  const meth=METHOD_LABELS[r.payment_method||'cash']||(r.payment_method||'');
+  const cur=(r.currency&&r.currency!=='ILS')?('<div class="row"><div class="lbl">العملة الأصلية</div><div class="val">'+fmtD(r.amount)+' '+esc(r.currency)+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</div></div>'):'';
+  const note=r.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(r.notes)+'</div></div>'):'';
+  return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
+    +'<div class="dh"><div class="org"><div class="logo">دط</div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
+    +'<div class="meta"><span class="tt">سند قبض</span><div class="no">'+esc(r.no)+'</div><div class="sub">معتمد إلكترونياً · Verified</div></div></div>'
     +'<div class="rows">'
-      +'<div class="row"><span class="rk">Fund / الصندوق</span><span class="rv"><span class="bb '+fundClass+'">'+fundLabel+'</span></span></div>'
-      +'<div class="row"><span class="rk">Method / طريقة الدفع</span><span class="rv">'+methAr+'</span></div>'
-      +(r.currency!=='ILS'?'<div class="row"><span class="rk">Currency / العملة</span><span class="rv">'+fmtD(r.amount)+' '+r.currency+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</span></div>':'')
-      +(r.notes?'<div class="row"><span class="rk">Notes / ملاحظات</span><span class="rv">'+esc(r.notes)+'</span></div>':'')
+    +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(r.receipt_date)+'</div></div>'
+    +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(r.fund_type)+'</div></div>'
+    +'<div class="row"><div class="lbl">استلمنا من</div><div class="val">'+esc(r.payer_name||gmn(r.member_id))+'</div></div>'
+    +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(meth)+'</div></div>'
+    +cur+note
     +'</div>'
- 
-    +'</div>'
- 
-    /* ── BOTTOM SECTION ── */
-    +'<div>'
- 
-    /* ── AMOUNT + QR ── */
-    +'<div class="amt">'
-      +'<div class="qr-area"><div data-qr-url="'+verifyUrl+'"></div>'
-      +'<span class="qr-cap">Scan To Verify<br>امسح للتحقق</span>'
-      +'<span class="qr-url">diwan-finance.com/verify/'+esc(r.no)+'</span></div>'
-      +'<span class="al">AMOUNT / المبلغ</span>'
-      +'<span class="an">₪ '+fmt(r.amount_ils||r.amount)+'</span>'
-      +'<span class="aw-ar">'+amountToWordsAr(r.amount_ils||r.amount)+'</span>'
-      +'<span class="aw">'+amountToWords(r.amount_ils||r.amount)+'</span>'
-    +'</div>'
- 
-    /* ── INFO BAR ── */
-    +'<div class="info">'
-      +'<span>Created By: '+firstName(r.created_by)+' · '+pt+'</span>'
-      +'<span class="'+( label==='ORIGINAL'?'badge-orig':'badge-copy')+'">'+label+'</span>'
-    +'</div>'
- 
-    /* ── SIGNATURES + STAMP ── */
-    +'<div class="sig">'
-      +'<div class="sig-block"><div class="sig-lbl">Prepared By · أعدّه</div>'
-        +'<svg class="stamp-circle" width="70" height="70" viewBox="0 0 70 70">'
-          +'<circle cx="35" cy="35" r="33" fill="none" stroke="#1B3A6B" stroke-width="1.5"/>'
-          +'<circle cx="35" cy="35" r="26" fill="none" stroke="#1B3A6B" stroke-width="0.6" stroke-dasharray="2,2"/>'
-          +'<path id="rtop'+r.no+'" d="M12,35 a23,23 0 0,1 46,0" fill="none"/>'
-          +'<text font-size="5" font-weight="700" fill="#1B3A6B" font-family="Cairo,Arial"><textPath href="#rtop'+r.no+'" startOffset="50%" text-anchor="middle">DIWAN AL TAHA</textPath></text>'
-          +'<text x="35" y="31" text-anchor="middle" font-size="3.8" fill="#1B3A6B" font-family="Cairo,Arial" opacity="0.7">التوقيع · Signature</text>'
-          +'<line x1="20" y1="36" x2="50" y2="36" stroke="#1B3A6B" stroke-width="0.6"/>'
-          +'<path id="rbot'+r.no+'" d="M12,35 a23,23 0 0,0 46,0" fill="none"/>'
-          +'<text font-size="4.5" fill="#1B3A6B" font-family="Arial"><textPath href="#rbot'+r.no+'" startOffset="50%" text-anchor="middle">diwan-finance.com / receipt</textPath></text>'
-        +'</svg>'
-      +'</div>'
-      +'<div class="sig-block">'
-        +'<div class="sig-lbl">Receiver Signature</div>'
-        +'<div class="sig-lbl-ar">توقيع المستلم</div>'
-        +'<div class="sig-line"></div>'
-      +'</div>'
-    +'</div>'
- 
-    /* ── FOOTER ── */
-    +'<div class="footer">جميع الحقوق محفوظة © 2026 | ديوان آل طه | All rights reserved | diwan-finance.com</div>'
- 
-    +'</div>'
-    +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
-    +'</div>';
+    +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsAr(r.amount_ils||r.amount)+'</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify/'+esc(r.no)+'</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>'
+    +'</div></div>';
 }
-function buildPayVoucher(p,label){
-  const expLabel=L.expense(p.expense_type);
-  const fundLabel=p.fund_type==='food'?'صندوق الغداء':'صندوق الديوان';
-  const now=new Date();
-  const pt=fmtDate2(now.toISOString())+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+function buildPayVoucher(p){
   const verifyUrl='https://www.diwan-finance.com/verify/'+esc(p.no);
- 
-  return '<div class="half">'
-    +'<div>'
- 
-    /* ── HEADER ── */
-    +'<div class="hdr">'
-      +'<div><span class="org-ar">ديوان آل طه</span><span class="org-en">Diwan Al-Taha Family</span></div>'
-      +'<div style="text-align:center">'
-        +'<span class="ttl-ar">سند صرف</span>'
-        +'<span class="ttl-en">Payment Voucher</span>'
-        +'<div class="verified-badge"><span style="font-size:9pt;color:#FCA5A5">✓</span><span>معتمد إلكترونياً · Verified</span></div>'
-      +'</div>'
-      +'<div><span class="no-l">Voucher No.</span><span class="no-v">'+esc(p.no)+'</span></div>'
-    +'</div>'
- 
-    /* ── STRIP ── */
-    +'<div class="strip"></div>'
- 
-    /* ── META ── */
-    +'<div class="meta">'
-      +'<div class="mi"><span class="ml">DATE / التاريخ</span><span class="mv">'+fmtDate2(p.payment_date)+'</span></div>'
-      +'<div class="mi"><span class="ml">BENEFICIARY / المستفيد</span><span class="mv">'+esc(p.beneficiary_name||gmn(p.member_id))+'</span></div>'
-    +'</div>'
- 
-    /* ── FIELDS ── */
+  const cur=(p.currency&&p.currency!=='ILS')?('<div class="row"><div class="lbl">العملة الأصلية</div><div class="val">'+fmtD(p.amount)+' '+esc(p.currency)+' × ₪'+Number(p.exchange_rate||1).toFixed(2)+'</div></div>'):'';
+  const note=p.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(p.notes)+'</div></div>'):'';
+  const appr=p.approved_by?('<div class="row"><div class="lbl">معتمد من</div><div class="val">'+esc(p.approved_by)+'</div></div>'):'';
+  return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
+    +'<div class="dh"><div class="org"><div class="logo">دط</div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
+    +'<div class="meta"><span class="tt">سند صرف</span><div class="no">'+esc(p.no)+'</div><div class="sub">معتمد إلكترونياً · Verified</div></div></div>'
     +'<div class="rows">'
-      +'<div class="row"><span class="rk">Fund / الصندوق</span><span class="rv">'+fundLabel+'</span></div>'
-      +'<div class="row"><span class="rk">Category / الفئة</span><span class="rv">'+expLabel+'</span></div>'
-      +'<div class="row"><span class="rk">Method / طريقة الصرف</span><span class="rv">'+(L.method(p.payment_method))+'</span></div>'
-      +(p.currency!=='ILS'?'<div class="row"><span class="rk">Currency / العملة</span><span class="rv">'+fmtD(p.amount)+' '+p.currency+' × ₪'+Number(p.exchange_rate||1).toFixed(2)+'</span></div>':'')
-      +(p.notes?'<div class="row"><span class="rk">Notes / ملاحظات</span><span class="rv">'+esc(p.notes)+'</span></div>':'')
-      +(p.approved_by?'<div class="row"><span class="rk">Approved / معتمد</span><span class="rv">'+esc(p.approved_by)+'</span></div>':'')
+    +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(p.payment_date)+'</div></div>'
+    +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(p.fund_type)+'</div></div>'
+    +'<div class="row"><div class="lbl">صُرف إلى</div><div class="val">'+esc(p.beneficiary_name||gmn(p.member_id))+'</div></div>'
+    +'<div class="row"><div class="lbl">نوع المصروف</div><div class="val">'+esc(L.expense(p.expense_type))+'</div></div>'
+    +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(L.method(p.payment_method))+'</div></div>'
+    +cur+note+appr
     +'</div>'
- 
-    +'</div>'
- 
-    /* ── BOTTOM SECTION ── */
-    +'<div>'
- 
-    /* ── AMOUNT + QR ── */
-    +'<div class="amt">'
-      +'<div class="qr-area"><div data-qr-url="'+verifyUrl+'"></div>'
-      +'<span class="qr-cap">Scan To Verify<br>امسح للتحقق</span>'
-      +'<span class="qr-url">diwan-finance.com/verify/'+esc(p.no)+'</span></div>'
-      +'<span class="al">AMOUNT / المبلغ</span>'
-      +'<span class="an">₪ '+fmt(p.amount_ils||p.amount)+'</span>'
-      +'<span class="aw-ar">'+amountToWordsAr(p.amount_ils||p.amount)+'</span>'
-      +'<span class="aw">'+amountToWords(p.amount_ils||p.amount)+'</span>'
-    +'</div>'
- 
-    /* ── INFO BAR ── */
-    +'<div class="info">'
-      +'<span>Created By: '+firstName(p.created_by)+' · '+pt+'</span>'
-      +'<span class="'+( label==='ORIGINAL'?'badge-orig':'badge-copy')+'">'+label+'</span>'
-    +'</div>'
- 
-    /* ── SIGNATURES + STAMP ── */
-    +'<div class="sig">'
-      +'<div class="sig-block"><div class="sig-lbl">Prepared By · أعدّه</div>'
-        +'<svg class="stamp-circle" width="70" height="70" viewBox="0 0 70 70">'
-          +'<circle cx="35" cy="35" r="33" fill="none" stroke="#2d1b69" stroke-width="1.5"/>'
-          +'<circle cx="35" cy="35" r="26" fill="none" stroke="#2d1b69" stroke-width="0.6" stroke-dasharray="2,2"/>'
-          +'<path id="ptop'+p.no+'" d="M12,35 a23,23 0 0,1 46,0" fill="none"/>'
-          +'<text font-size="5" font-weight="700" fill="#2d1b69" font-family="Cairo,Arial"><textPath href="#ptop'+p.no+'" startOffset="50%" text-anchor="middle">DIWAN AL TAHA</textPath></text>'
-          +'<text x="35" y="31" text-anchor="middle" font-size="3.8" fill="#2d1b69" font-family="Cairo,Arial" opacity="0.7">التوقيع · Signature</text>'
-          +'<line x1="20" y1="36" x2="50" y2="36" stroke="#2d1b69" stroke-width="0.6"/>'
-          +'<path id="pbot'+p.no+'" d="M12,35 a23,23 0 0,0 46,0" fill="none"/>'
-          +'<text font-size="4.5" fill="#2d1b69" font-family="Arial"><textPath href="#pbot'+p.no+'" startOffset="50%" text-anchor="middle">diwan-finance.com / payment</textPath></text>'
-        +'</svg>'
-      +'</div>'
-      +'<div class="sig-block">'
-        +'<div class="sig-lbl">Payer Signature</div>'
-        +'<div class="sig-lbl-ar">توقيع الدافع</div>'
-        +'<div class="sig-line"></div>'
-      +'</div>'
-    +'</div>'
- 
-    /* ── FOOTER ── */
-    +'<div class="footer">جميع الحقوق محفوظة © 2026 | ديوان آل طه | All rights reserved | diwan-finance.com</div>'
- 
-    +'</div>'
-    +(label==='ORIGINAL'?'<div class="cut">✂  قص هنا — Cut Here  ✂</div>':'')
-    +'</div>';
+    +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsAr(p.amount_ils||p.amount)+'</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify/'+esc(p.no)+'</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>'
+    +'</div></div>';
 }
 
 /* ── Print functions: all guarded by can.print() ── */
 window.prtRec=function(id){
   if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
   const r=DB.receipts.find(x=>x.id===id);if(!r)return;
-  openPrintWin(REC_CSS,buildRecVoucher(r,'ORIGINAL')+buildRecVoucher(r,'COPY'));
+  openPrintWin('',buildRecVoucher(r));
 };
 window.prtPay=function(id){
   if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
-  openPrintWin(PAY_CSS,buildPayVoucher(p,'ORIGINAL')+buildPayVoucher(p,'COPY'));
+  openPrintWin('',buildPayVoucher(p));
 };
 function amountToWordsAr(n){
   n=Math.round(Number(n||0));
@@ -2171,20 +2011,34 @@ window.buildFundStatementHTML=function(fund){
   const from=document.getElementById(fund+'-stmt-from')?.value||'';
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
-  const rows=FIN.fundLedger(fund,from,to,type);
+  const rows=FIN.fundLedger(fund,from,to,type);   /* FIN logic unchanged */
   const fundLabel=fund==='food'?'صندوق الغداء':'صندوق الديوان';
-  const fundColor=fund==='food'?'#B45309':'#1D4ED8';
-  let bal=0,totCr=0,totDr=0;
-  const rowsHTML=rows.map(r=>{
+  let bal=0,totCr=0,totDr=0,openBal=0;
+  const rowsHTML=rows.map((r,i)=>{
     bal+=r.cr-r.dr;totCr+=r.cr;totDr+=r.dr;
-    return`<tr><td>${fmtDate2(r.date)}</td><td>${esc(r.name)}</td><td>${esc(r.desc)}</td><td style="color:green;text-align:left">${r.cr>0?'₪ '+fmt(r.cr):'—'}</td><td style="color:red;text-align:left">${r.dr>0?'₪ '+fmt(r.dr):r.type==='don'?'تبرع':'—'}</td><td style="text-align:left;font-weight:600;color:${bal>=0?'green':'red'}">₪ ${fmt(bal)}</td><td style="font-size:8pt;color:#666">${esc(r.note||'')}</td></tr>`;
+    if(i===0&&r.type==='open')openBal=r.cr-r.dr;
+    const crCell=r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':(r.type==='don'?'<span class="cr">تبرع</span>':'—');
+    const drCell=r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—';
+    return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(bal)+'</td></tr>';
   }).join('');
-  const css='@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:9.5pt}.hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0}.org{font-size:13pt;font-weight:700;color:#fff}.org-en{font-size:8pt;color:rgba(255,255,255,.4);display:block}.doc-type{font-size:12pt;font-weight:700;color:#00C896;text-align:center}.doc-sub{font-size:8pt;color:rgba(0,200,150,.5);text-align:center}.strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896)}.summ{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px;background:#f8fafc;border-bottom:1pt solid #e2e8f0}.scard{text-align:center;padding:6px;background:#fff;border:.5pt solid #e2e8f0;border-radius:3px}.sl{font-size:7.5pt;color:#64748b;display:block;margin-bottom:2px}.sv{font-size:12pt;font-weight:700}table{width:100%;border-collapse:collapse;font-size:9pt}thead th{background:#0F2B5B;color:#fff;padding:5px 8px;text-align:right;font-weight:500;font-size:8.5pt}tbody td{padding:7px 10px;border-bottom:.5pt solid #e8eef5}tbody tr:nth-child(even){background:#f8fafc}.final-row{background:#0F2B5B}.final-row td{color:#fff;font-weight:700;padding:9px 10px;font-size:10pt}.footer{background:#0F2B5B;padding:4px 10px;text-align:center;font-size:7pt;color:rgba(255,255,255,.35);margin-top:8px;border-radius:0 0 4px 4px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-  const body=`<div class="hdr"><div><span class="org">ديوان آل طه</span><span class="org-en">DIWAN AL-TAHA</span></div><div><div class="doc-type">كشف ${fundLabel}</div><div class="doc-sub">${from&&to?fmtDate2(from)+' \u2014 '+fmtDate2(to):from?'\u0645\u0646 '+fmtDate2(from):to?'\u062d\u062a\u0649 '+fmtDate2(to):'\u0643\u0644 \u0627\u0644\u0641\u062a\u0631\u0627\u062a'}</div></div><div style="text-align:left"><div style="font-size:7pt;color:rgba(255,255,255,.35)">\u0637\u064f\u0628\u0639 \u0641\u064a</div><div style="font-size:9pt;font-weight:600;color:#fff">${new Date().toLocaleDateString('en-GB')}</div></div></div><div class="strip"></div>
-  <div class="summ"><div class="scard"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0625\u064a\u0631\u0627\u062f\u0627\u062a</span><span class="sv" style="color:#059669">\u20aa ${fmt(totCr)}</span></div><div class="scard"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0635\u0627\u0631\u064a\u0641</span><span class="sv" style="color:#DC2626">\u20aa ${fmt(totDr)}</span></div><div class="scard"><span class="sl">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062e\u062a\u0627\u0645\u064a</span><span class="sv" style="color:${bal>=0?'#059669':'#DC2626'}">\u20aa ${fmt(bal)}</span></div></div>
-  <table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u062f\u0627\u0626\u0646 \u20aa</th><th>\u0645\u062f\u064a\u0646 \u20aa</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u20aa</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>${rowsHTML}<tr class="final-row"><td colspan="5" style="text-align:right;color:#fff">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062c\u0627\u0631\u064a \u00b7 Current Balance</td><td style="text-align:left;font-weight:700;color:${bal>=0?'#059669':'#DC2626'}">\u20aa ${fmt(bal)}</td><td></td></tr></tbody></table>
-  <div class="footer">\u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0642 \u0645\u062d\u0641\u0648\u0638\u0629 \u00a9 2026 | \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 | diwan-finance.com</div>`;
-  const title=(fund==='food'?'\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621':'\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646');
+  const period=(from&&to?fmtDate2(from)+' — '+fmtDate2(to):from?'من '+fmtDate2(from):to?'حتى '+fmtDate2(to):'كل الفترات');
+  const balCls=bal>=0?'pos':'neg';
+  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
+  const body='<div class="dh"><div class="org"><div class="logo">دط</div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
+    +'<div class="meta"><span class="tt">كشف '+fundLabel+'</span><div class="sub">عملة الكشف: شيكل (₪)</div></div></div>'
+    +'<div class="period">الفترة: '+period+'</div>'
+    +'<div class="cards">'
+    +'<div class="card"><div class="k">رصيد افتتاحي</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
+    +'<div class="card"><div class="k">إجمالي الوارد</div><div class="v pos">₪ '+fmt(totCr)+'</div></div>'
+    +'<div class="card"><div class="k">إجمالي المنصرف</div><div class="v neg">₪ '+fmt(totDr)+'</div></div>'
+    +'<div class="card"><div class="k">الرصيد الجاري</div><div class="v '+balCls+'">₪ '+fmt(bal)+'</div></div></div>'
+    +'<table class="dt"><thead><tr><th>التاريخ</th><th>الاسم</th><th>البيان</th><th>وارد</th><th>منصرف</th><th>الرصيد</th></tr></thead>'
+    +'<tbody>'+rowsHTML
+    +'<tr class="final"><td colspan="5">الرصيد الجاري · Current Balance</td><td class="'+balCls+'">₪ '+fmt(bal)+'</td></tr></tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">رئيس الديوان</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>';
+  const title=(fund==='food'?'كشف صندوق الغداء':'كشف صندوق الديوان');
   return {css:css, body:body, title:title};
 };
 window.prtStmt=function(fund){
@@ -2248,113 +2102,81 @@ window.prtMemberStmt=function(){
   let bal=0;
   const rowsHTML=rows.map(r=>{
     bal+=r.dr-r.cr;
-    const rowBg=r.cls==='due'?'background:#fff8f0':r.cls==='paid'?'background:#f0fdf4':r.cls==='opening'?'background:#f0f4ff':'';
-    const balColor=bal>0?'#DC2626':bal<0?'#059669':'#374151';
-    return`<tr style="${rowBg}">
-      <td style="white-space:nowrap">${r.date==='—'?'—':fmtDate2(r.date)}</td>
-      <td style="font-family:monospace;font-size:8pt">${esc(r.no)}</td>
-      <td>${esc(r.desc)}</td>
-      <td style="color:#059669;text-align:left;font-weight:600">${r.cr>0?'₪ '+fmt(r.cr):'—'}</td>
-      <td style="color:#DC2626;text-align:left;font-weight:600">${r.dr>0?'₪ '+fmt(r.dr):'—'}</td>
-      <td style="text-align:left;font-weight:700;color:${balColor}">₪ ${fmt(bal)}</td>
-    </tr>`;
+    const balTxt='₪ '+fmt(Math.abs(bal))+(bal>0?' (مدين)':bal<0?' (دائن)':'');
+    return '<tr>'
+      +'<td>'+(r.date==='—'?'—':fmtDate2(r.date))+'</td>'
+      +'<td>'+esc(r.no)+'</td>'
+      +'<td>'+esc(r.desc)+'</td>'
+      +'<td>'+(r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—')+'</td>'
+      +'<td>'+(r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':'—')+'</td>'
+      +'<td class="bal">'+balTxt+'</td></tr>';
   }).join('');
 
   const finalBal=openBal+totalDues-totalPaid;
-  const finalColor=finalBal>0?'#DC2626':finalBal<0?'#059669':'#374151';
   const printDate=new Date().toLocaleDateString('en-GB').replace(/\//g,'/');
   const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`من ${fmtDate2(from)}`:to?`حتى ${fmtDate2(to)}`:'كل الفترات';
 
-  const css=`@page{size:A4 portrait;margin:12mm 14mm}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:10pt}
-    .hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0}
-    .hdr-left .org{font-size:13pt;font-weight:700;color:#fff;display:block}
-    .hdr-left .org-en{font-size:8pt;color:rgba(255,255,255,.45);display:block;letter-spacing:.5px}
-    .hdr-center .doc-type{font-size:12pt;font-weight:700;color:#00C896;display:block;text-align:center}
-    .hdr-center .doc-type-en{font-size:8pt;color:rgba(0,200,150,.6);display:block;text-align:center}
-    .hdr-right{text-align:left}
-    .hdr-right .lbl{font-size:7pt;color:rgba(255,255,255,.4)}
-    .hdr-right .val{font-size:10pt;font-weight:700;color:#fff;font-family:monospace}
-    .strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896)}
-    .member-info{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:.5pt solid #e2e8f0}
-    .mi{padding:6px 10px;border-left:.5pt solid #e2e8f0}
-    .mi .lbl{font-size:7pt;color:#94a3b8;text-transform:uppercase;display:block;margin-bottom:1px;letter-spacing:.05em}
-    .mi .val{font-size:10pt;font-weight:600;color:#0A1628}
-    .summary{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;background:#f8fafc;border-bottom:1pt solid #e2e8f0;padding:8px 10px;gap:8px}
-    .sum-cell{text-align:center;padding:6px;background:#fff;border:.5pt solid #e2e8f0;border-radius:3px}
-    .sum-lbl{font-size:7pt;color:#64748b;display:block;margin-bottom:2px}
-    .sum-val{font-size:11pt;font-weight:700}
-    table{width:100%;border-collapse:collapse;font-size:9pt;margin-top:0}
-    thead th{background:#0F2B5B;color:#fff;padding:6px 8px;text-align:right;font-weight:500;font-size:8.5pt}
-    tbody td{padding:5px 8px;border-bottom:.5pt solid #f1f5f9;vertical-align:middle}
-    .final-row{background:#0F2B5B;color:#fff;font-weight:700;font-size:10pt}
-    .final-row td{padding:7px 8px;color:#fff}
-    .sig-area{display:flex;justify-content:space-between;padding:10px 10px 6px;border-top:.5pt solid #e2e8f0;margin-top:8px}
-    .sig-block{text-align:center;min-width:100px}
-    .sig-lbl{font-size:7.5pt;color:#64748b;display:block}
-    .sig-lbl-ar{font-size:7pt;color:#94a3b8;display:block;margin-top:1px}
-    .sig-line{border-top:.5pt solid #94a3b8;margin:10px auto 3px;width:90px}
-    .stamp{width:50px;height:50px;border-radius:50%;border:1pt solid #0F2B5B;margin:2px auto;display:flex;align-items:center;justify-content:center;font-size:6pt;color:#0F2B5B;text-align:center;line-height:1.3;font-family:Arial}
-    .footer{background:#0F2B5B;padding:4px 10px;text-align:center;font-size:7pt;color:rgba(255,255,255,.4);margin-top:6px;border-radius:0 0 4px 4px}
-    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
-
-  const body=`
-    <div class="hdr">
-      <div class="hdr-left">
-        <span class="org">ديوان آل طه</span>
-        <span class="org-en">DIWAN AL-TAHA FAMILY</span>
-      </div>
-      <div class="hdr-center">
-        <span class="doc-type">كشف حساب العضو</span>
-        <span class="doc-type-en">MEMBER ACCOUNT STATEMENT</span>
-      </div>
-      <div class="hdr-right">
-        <div class="lbl">طُبع في</div>
-        <div class="val">${printDate}</div>
-      </div>
-    </div>
-    <div class="strip"></div>
-    <div class="member-info">
-      <div class="mi"><span class="lbl">الاسم · Name</span><span class="val">${esc(member.name)}</span></div>
-      <div class="mi"><span class="lbl">عضو منذ · Since</span><span class="val">${member.active_from_year||'—'}</span></div>
-      <div class="mi"><span class="lbl">الفترة · Period</span><span class="val">${periodLabel}</span></div>
-    </div>
-    <div class="summary">
-      <div class="sum-cell"><span class="sum-lbl">رصيد افتتاحي</span><span class="sum-val" style="color:#1D4ED8">₪ ${fmt(openBal)}</span></div>
-      <div class="sum-cell"><span class="sum-lbl">إجمالي الاشتراكات</span><span class="sum-val" style="color:#DC2626">₪ ${fmt(totalDues)}</span></div>
-      <div class="sum-cell"><span class="sum-lbl">إجمالي المدفوعات</span><span class="sum-val" style="color:#059669">₪ ${fmt(totalPaid)}</span></div>
-      <div class="sum-cell"><span class="sum-lbl">الرصيد الحالي</span><span class="sum-val" style="color:${finalColor}">₪ ${fmt(finalBal)}</span></div>
-    </div>
-    <table>
-      <thead><tr><th>التاريخ</th><th>رقم السند</th><th>البيان</th><th>دائن ₪</th><th>مدين ₪</th><th>الرصيد ₪</th></tr></thead>
-      <tbody>${rowsHTML}
-        <tr class="final-row">
-          <td colspan="5" style="text-align:right">الرصيد النهائي · Final Balance</td>
-          <td style="text-align:left;color:${finalColor}">₪ ${fmt(finalBal)}</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="sig-area">
-      <div class="sig-block">
-        <div class="stamp">DIWAN<br>AL TAHA</div>
-        <span class="sig-lbl">Prepared By</span>
-        <span class="sig-lbl-ar">أعدّه</span>
-      </div>
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <span class="sig-lbl">Member Signature</span>
-        <span class="sig-lbl-ar">توقيع العضو</span>
-      </div>
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <span class="sig-lbl">Manager Approval</span>
-        <span class="sig-lbl-ar">اعتماد المسؤول</span>
-      </div>
-    </div>
-    <div class="footer">جميع الحقوق محفوظة © 2026 | ديوان آل طه | All rights reserved | diwan-finance.com</div>`;
+  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
+  const finalCls=finalBal>0?'neg':finalBal<0?'pos':'';  /* mo, positive bal = credit(green) */
+  const body='<div class="dh"><div class="org"><div class="logo">دط</div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
+    +'<div class="meta"><span class="tt">كشف حساب عضو</span><div class="sub">العضو: '+esc(member.name)+'</div></div></div>'
+    +'<div class="period">الفترة: '+periodLabel+' · ناشط من سنة '+(member.active_from_year||'—')+'</div>'
+    +'<div class="cards">'
+    +'<div class="card"><div class="k">رصيد افتتاحي</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
+    +'<div class="card"><div class="k">إجمالي المستحق</div><div class="v neg">₪ '+fmt(totalDues)+'</div></div>'
+    +'<div class="card"><div class="k">إجمالي المدفوع</div><div class="v pos">₪ '+fmt(totalPaid)+'</div></div>'
+    +'<div class="card"><div class="k">الرصيد النهائي</div><div class="v '+(finalBal<=0?'pos':'neg')+'">₪ '+fmt(Math.abs(finalBal))+(finalBal>0?' (مدين)':finalBal<0?' (دائن)':'')+'</div></div></div>'
+    +'<table class="dt"><thead><tr><th>التاريخ</th><th>المرجع</th><th>البيان</th><th>مستحق (مدين)</th><th>مدفوع (دائن)</th><th>الرصيد</th></tr></thead>'
+    +'<tbody>'+rowsHTML
+    +'<tr class="final"><td colspan="5">الرصيد النهائي · Final Balance</td><td class="'+(finalBal<=0?'pos':'neg')+'">₪ '+fmt(Math.abs(finalBal))+(finalBal>0?' (مدين)':finalBal<0?' (دائن)':'')+'</td></tr></tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع العضو</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+printDate+'</span><span>صفحة 1 / 1</span></div>';
   openPrintWin(css,body);
 };
+
+/* ═══ VIS-7: UNIFIED EXCEL STYLING (xlsx-js-style) ═══ */
+const XLSX_STYLE_CDN='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+function loadStyledXLSX(cb){
+  if(window.XLSX&&window.XLSX.__styled){cb();return;}
+  const s=document.createElement('script');s.src=XLSX_STYLE_CDN;
+  s.onload=function(){if(window.XLSX)window.XLSX.__styled=true;cb();};
+  s.onerror=function(){toast('تعذّر تحميل مكتبة Excel','err');};
+  document.head.appendChild(s);
+}
+/* Apply the Diwan design standard to a worksheet.
+   opts: {headerRow:int (0-based), money:[colIdx...], totalRows:[rowIdx...], cols:int} */
+function styleDiwanSheet(XLSX, ws, opts){
+  opts=opts||{};
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  const NAVY='1C2B3A', WHITE='FFFFFF', BG='F8FAFC';
+  const thin={style:'thin',color:{rgb:'E2E8F0'}};
+  const border={top:thin,bottom:thin,left:thin,right:thin};
+  const hr=(opts.headerRow!=null)?opts.headerRow:0;
+  const money=opts.money||[];
+  const totals=opts.totalRows||[];
+  for(let R=range.s.r;R<=range.e.r;R++){
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const ref=XLSX.utils.encode_cell({r:R,c:C});
+      const cell=ws[ref]; if(!cell)continue;
+      cell.s=cell.s||{};
+      cell.s.border=border;
+      cell.s.alignment={horizontal:'center',vertical:'center',readingOrder:2};
+      if(R===hr){
+        cell.s.fill={fgColor:{rgb:NAVY}}; cell.s.font={color:{rgb:WHITE},bold:true,sz:11};
+      }else if(totals.indexOf(R)>=0){
+        cell.s.fill={fgColor:{rgb:NAVY}}; cell.s.font={color:{rgb:WHITE},bold:true};
+      }else if((R-hr)%2===0){
+        cell.s.fill={fgColor:{rgb:BG}};
+      }
+      if(money.indexOf(C)>=0 && typeof cell.v==='number'){ cell.z='₪#,##0.00'; }
+    }
+  }
+  // autofilter over header row
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:hr,c:range.s.c},e:{r:hr,c:range.e.c}})};
+  // freeze panes below header (best-effort)
+  ws['!freeze']={xSplit:0,ySplit:hr+1,topLeftCell:XLSX.utils.encode_cell({r:hr+1,c:0}),activePane:'bottomLeft',state:'frozen'};
+}
 
 /* ═══ PDF & EXPORT ═══ */
 window.exportPDF=function(type){
@@ -2369,28 +2191,31 @@ window.prtDonStmt=function(){
   if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
   const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
   const tot=rows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-  const rowsHTML=rows.map(r=>`<tr>
-    <td>${fmtDate2(r.receipt_date)}</td>
-    <td>${esc(r.payer_name||gmn(r.member_id)||'—')}</td>
-    <td style="text-align:left;color:#1B3A6B;font-weight:600">₪ ${fmtEN(r.amount_ils||r.amount)}</td>
-    <td>${r.currency!=='ILS'?fmtD(r.amount)+' '+r.currency:'-'}</td>
-    <td>${r.donation_display_fund==='food'?'صندوق الغداء':'صندوق الديوان'}</td>
-    <td>${esc(r.notes||'—')}</td>
-  </tr>`).join('');
-  const css=`@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Cairo',Arial,sans-serif;direction:rtl;color:#000}
-    h1{font-size:14pt;color:#7C3AED;margin-bottom:4px}p{font-size:9pt;color:#666;margin-bottom:12px}
-    table{width:100%;border-collapse:collapse;font-size:9.5pt}
-    thead th{background:#1B3A6B;color:#fff;padding:6px 10px;text-align:right;font-weight:500}
-    tbody td{padding:5px 10px;border-bottom:.5pt solid #f0f0f0}
-    tbody tr:nth-child(even){background:#f9f9f9}
-    tfoot td{font-weight:700;background:#f0f0f0;border-top:1pt solid #ccc;padding:6px 10px}
-    .footer{text-align:center;font-size:7.5pt;color:#aaa;margin-top:16px;border-top:1pt solid #eee;padding-top:8px}
-    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
-  const body=`<h1>سجل التبرعات</h1><p>طُبع: ${fmtDate2(new Date().toISOString())} | بواسطة: ${firstName(CUR?.full_name||CU?.email)}</p>
-  <table><thead><tr><th>التاريخ</th><th>المتبرع</th><th>المبلغ ₪</th><th>العملة</th><th>يُظهر في</th><th>ملاحظات</th></tr></thead>
-  <tbody>${rowsHTML}</tbody>
-  <tfoot><tr><td colspan="2">الإجمالي</td><td style="text-align:left">₪ ${fmtEN(tot)}</td><td colspan="3"></td></tr></tfoot></table>
-  <div class="footer"><strong>All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</strong></div>`;
+  const toFood=rows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+  const toDiwan=tot-toFood;
+  const rowsHTML=rows.map(r=>'<tr>'
+    +'<td>'+fmtDate2(r.receipt_date)+'</td>'
+    +'<td>'+esc(r.no)+'</td>'
+    +'<td>'+esc(r.payer_name||gmn(r.member_id)||'—')+'</td>'
+    +'<td><span class="cr">₪ '+fmt(r.amount_ils||r.amount)+'</span></td>'
+    +'<td>'+(r.currency!=='ILS'?esc(r.currency):'ILS')+'</td>'
+    +'<td>'+(r.donation_display_fund==='food'?'صندوق الغداء':'صندوق الديوان')+'</td>'
+    +'<td>'+esc(r.notes||'—')+'</td></tr>').join('');
+  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
+  const body='<div class="dh"><div class="org"><div class="logo">دط</div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
+    +'<div class="meta"><span class="tt">تقرير التبرعات</span><div class="sub">عملة الكشف: شيكل (₪)</div></div></div>'
+    +'<div class="period">عدد التبرعات: '+rows.length+'</div>'
+    +'<div class="cards">'
+    +'<div class="card"><div class="k">عدد التبرعات</div><div class="v">'+rows.length+'</div></div>'
+    +'<div class="card"><div class="k">إجمالي التبرعات</div><div class="v pos">₪ '+fmt(tot)+'</div></div>'
+    +'<div class="card"><div class="k">موجّه للغداء</div><div class="v">₪ '+fmt(toFood)+'</div></div>'
+    +'<div class="card"><div class="k">موجّه للديوان</div><div class="v">₪ '+fmt(toDiwan)+'</div></div></div>'
+    +'<table class="dt"><thead><tr><th>التاريخ</th><th>المرجع</th><th>المتبرع</th><th>المبلغ</th><th>العملة</th><th>التوجيه</th><th>ملاحظات</th></tr></thead>'
+    +'<tbody>'+rowsHTML
+    +'<tr class="final"><td colspan="3">الإجمالي · Total</td><td class="pos">₪ '+fmt(tot)+'</td><td colspan="3"></td></tr></tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">رئيس الديوان</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>';
   openPrintWin(css,body);
 };
 
@@ -2584,18 +2409,19 @@ window.exportMemberStmt=function(format){
     const doExcel=()=>{
       const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064f \u062a\u062d\u0645\u064a\u0644 \u0645\u0643\u062a\u0628\u0629 Excel...','info');return;}
       const wsData=[['\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 \u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648'],[`\u0627\u0644\u0639\u0636\u0648: ${member.name}  |  \u0627\u0644\u0641\u062a\u0631\u0629: ${periodLabel}`],[],['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f','\u0627\u0644\u0628\u064a\u0627\u0646','\u062f\u0627\u0626\u0646 \u20aa','\u0645\u062f\u064a\u0646 \u20aa','\u0627\u0644\u0631\u0635\u064a\u062f \u20aa'],...computed.map(r=>[r.date==='—'?'—':r.date,r.no,r.desc,r.cr>0?r.cr:'',r.dr>0?r.dr:'',r.bal]),[],['\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a','','',openBal,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a','','',totalDues,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a','','','',totalPaid,''],['\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a','','','','',finalBal]];
-      const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!cols']=[{wch:12},{wch:14},{wch:30},{wch:12},{wch:12},{wch:14}];ws['!rtl']=true;
-      const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'\u0643\u0634\u0641 \u0627\u0644\u062d\u0633\u0627\u0628');XLSX.writeFile(wb,fname+'.xlsx');
+      const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!cols']=[{wch:12},{wch:14},{wch:30},{wch:14},{wch:14},{wch:16}];ws['!rtl']=true;styleDiwanSheet(XLSX,ws,{headerRow:3,money:[3,4,5]});
+      const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'\u0643\u0634\u0641 \u0627\u0644\u062d\u0633\u0627\u0628');XLSX.writeFile(wb,fname+'.xlsx');
       toast('\u2713 Excel exported','ok');
     };
-    if(window.XLSX){doExcel();}else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=doExcel;document.head.appendChild(s);}
+    loadStyledXLSX(doExcel);
     return;
   }
 
   /* Shared HTML template */
-  const bc=finalBal>0?'#DC2626':finalBal<0?'#059669':'#374151';
-  const rowsHtml=computed.map(r=>{const bg=r.cls==='due'?'background:#fff8f0':r.cls==='paid'?'background:#f0fdf4':r.cls==='opening'?'background:#eef2ff':'';const rc=r.bal>0?'#DC2626':r.bal<0?'#059669':'#374151';return`<tr style="${bg}"><td>${r.date==='—'?'—':r.date}</td><td style="font-family:monospace">${esc(r.no)}</td><td>${esc(r.desc)}</td><td style="color:#059669;text-align:left;font-weight:600">${r.cr>0?'\u20aa '+fmt(r.cr):'—'}</td><td style="color:#DC2626;text-align:left;font-weight:600">${r.dr>0?'\u20aa '+fmt(r.dr):'—'}</td><td style="text-align:left;font-weight:700;color:${rc}">\u20aa ${fmt(r.bal)}</td></tr>`;}).join('');
-  const htmlDoc=`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u2014 ${esc(member.name)}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:10pt;padding:14mm}.hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0}.org{font-size:13pt;font-weight:700;color:#fff}.org-en{font-size:8pt;color:rgba(255,255,255,.4);display:block}.strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896)}.summary{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:8px;background:#f8fafc;border-bottom:1pt solid #e2e8f0}.sc{text-align:center;padding:5px;background:#fff;border:.5pt solid #e2e8f0;border-radius:3px}.sl{font-size:7pt;color:#64748b;display:block;margin-bottom:2px}.sv{font-size:11pt;font-weight:700}table{width:100%;border-collapse:collapse;font-size:9pt;margin-top:0}thead th{background:#0F2B5B;color:#fff;padding:5px 8px;text-align:right;font-weight:500}tbody td{padding:4px 8px;border-bottom:.5pt solid #f1f5f9}.final{background:#0F2B5B}.final td{color:#fff;font-weight:700;padding:6px 8px}.footer{background:#0F2B5B;padding:3px;text-align:center;font-size:7pt;color:rgba(255,255,255,.3);margin-top:6px}@media print{body{padding:0}@page{size:A4 portrait;margin:12mm 14mm}}</style></head><body><div class="hdr"><div><span class="org">\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</span><span class="org-en">DIWAN AL-TAHA</span></div><div style="text-align:center"><div style="font-size:12pt;font-weight:700;color:#00C896">\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0639\u0636\u0648</div></div><div style="text-align:left;font-size:9pt;font-weight:600;color:#fff">${printDate}</div></div><div class="strip"></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:.5pt solid #e2e8f0"><div style="padding:5px 10px;border-left:.5pt solid #e2e8f0"><span style="font-size:7pt;color:#94a3b8;display:block">\u0627\u0644\u0627\u0633\u0645</span><span style="font-size:9.5pt;font-weight:600">${esc(member.name)}</span></div><div style="padding:5px 10px;border-left:.5pt solid #e2e8f0"><span style="font-size:7pt;color:#94a3b8;display:block">\u0639\u0636\u0648 \u0645\u0646\u0630</span><span style="font-size:9.5pt;font-weight:600">${member.active_from_year||'—'}</span></div><div style="padding:5px 10px"><span style="font-size:7pt;color:#94a3b8;display:block">\u0627\u0644\u0641\u062a\u0631\u0629</span><span style="font-size:9.5pt;font-weight:600">${periodLabel}</span></div></div><div class="summary"><div class="sc"><span class="sl">\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a</span><span class="sv" style="color:#1D4ED8">\u20aa ${fmt(openBal)}</span></div><div class="sc"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a</span><span class="sv" style="color:#DC2626">\u20aa ${fmt(totalDues)}</span></div><div class="sc"><span class="sl">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a</span><span class="sv" style="color:#059669">\u20aa ${fmt(totalPaid)}</span></div><div class="sc"><span class="sl">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</span><span class="sv" style="color:${bc}">\u20aa ${fmt(finalBal)}</span></div></div><table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u062f\u0627\u0626\u0646 \u20aa</th><th>\u0645\u062f\u064a\u0646 \u20aa</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u20aa</th></tr></thead><tbody>${rowsHtml}<tr class="final"><td colspan="5" style="text-align:right">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a</td><td style="text-align:left;color:${bc}">\u20aa ${fmt(finalBal)}</td></tr></tbody></table><div class="footer">\u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0642 \u0645\u062d\u0641\u0648\u0638\u0629 \u00a9 2026 | \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 | diwan-finance.com</div></body></html>`;
+  const rowsHtml=computed.map(r=>{const balTxt='\u20aa '+fmt(Math.abs(r.bal))+(r.bal>0?' (\u0645\u062f\u064a\u0646)':r.bal<0?' (\u062f\u0627\u0626\u0646)':'');return '<tr><td>'+(r.date==='\u2014'?'\u2014':r.date)+'</td><td>'+esc(r.no)+'</td><td>'+esc(r.desc)+'</td>'+'<td>'+(r.dr>0?'<span class="dr">\u20aa '+fmt(r.dr)+'</span>':'\u2014')+'</td>'+'<td>'+(r.cr>0?'<span class="cr">\u20aa '+fmt(r.cr)+'</span>':'\u2014')+'</td>'+'<td class="bal">'+balTxt+'</td></tr>';}).join('');
+  const finalTxt='\u20aa '+fmt(Math.abs(finalBal))+(finalBal>0?' (\u0645\u062f\u064a\u0646)':finalBal<0?' (\u062f\u0627\u0626\u0646)':'');
+  const balCls=finalBal<=0?'pos':'neg';
+  const htmlDoc='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">'+'<style>'+PRINT_TOKENS+'@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff;padding:10mm}</style></head><body>'+'<div class="dh"><div class="org"><div class="logo">\u062f\u0637</div><div><h1>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</h1><p>\u0646\u0638\u0627\u0645 \u0627\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u00b7 diwan-finance.com</p></div></div>'+'<div class="meta"><span class="tt">\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648</span><div class="sub">\u0627\u0644\u0639\u0636\u0648: '+esc(member.name)+'</div></div></div>'+'<div class="period">\u0627\u0644\u0641\u062a\u0631\u0629: '+periodLabel+' \u00b7 \u0646\u0627\u0634\u0637 \u0645\u0646 \u0633\u0646\u0629 '+(member.active_from_year||'\u2014')+'</div>'+'<div class="cards"><div class="card"><div class="k">\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a</div><div class="v">\u20aa '+fmt(openBal)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0633\u062a\u062d\u0642</div><div class="v neg">\u20aa '+fmt(totalDues)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639</div><div class="v pos">\u20aa '+fmt(totalPaid)+'</div></div>'+'<div class="card"><div class="k">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a</div><div class="v '+balCls+'">'+finalTxt+'</div></div></div>'+'<table class="dt"><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0631\u062c\u0639</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u0645\u0633\u062a\u062d\u0642 (\u0645\u062f\u064a\u0646)</th><th>\u0645\u062f\u0641\u0648\u0639 (\u062f\u0627\u0626\u0646)</th><th>\u0627\u0644\u0631\u0635\u064a\u062f</th></tr></thead><tbody>'+rowsHtml+'<tr class="final"><td colspan="5">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a \u00b7 Final Balance</td><td class="'+balCls+'">'+finalTxt+'</td></tr></tbody></table>'+'<div class="dfoot"><div class="qr-u"><div class="box"></div><div class="cap">diwan-finance.com</div></div>'+'<div class="sigs"><div class="sig-u"><div class="line">\u0627\u0644\u0645\u064f\u062d\u0627\u0633\u0628</div></div><div class="sig-u"><div class="line">\u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0639\u0636\u0648</div></div></div></div>'+'<div class="pgfoot"><span>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 diwan-finance.com</span><span>\u0637\u064f\u0628\u0639: '+printDate+'</span><span>\u0635\u0641\u062d\u0629 1 / 1</span></div>'+'</body></html>';
 
   if(format==='html'){
     const a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(htmlDoc);a.download=fname+'.html';a.click();
@@ -2615,7 +2441,7 @@ window.exportMemberStmt=function(format){
 
 /* ═══ UNIVERSAL PDF + EXCEL EXPORT ═══ */
 window.exportPagePDF=function(type){
-  const css='@page{size:A4 portrait;margin:12mm 14mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Cairo",Arial,sans-serif;direction:rtl;color:#000;font-size:9.5pt}.hdr{background:#0F2B5B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0;margin-bottom:0}.org{font-size:13pt;font-weight:700;color:#fff}.org-en{font-size:8pt;color:rgba(255,255,255,.4);display:block}.doc-type{font-size:12pt;font-weight:700;color:#00C896;text-align:center}.doc-sub{font-size:8pt;color:rgba(0,200,150,.5);text-align:center}.strip{height:2.5px;background:linear-gradient(to left,#0F2B5B,#059669,#00C896);margin-bottom:8px}table{width:100%;border-collapse:collapse;font-size:9pt}thead th{background:#0F2B5B;color:#fff;padding:5px 8px;text-align:right;font-weight:500;font-size:8.5pt}tbody td{padding:4px 8px;border-bottom:.5pt solid #f1f5f9}tbody tr:nth-child(even){background:#f8fafc}.total-row{background:#0F2B5B;color:#fff;font-weight:600}.total-row td{padding:6px 8px;color:#fff}.footer{background:#0F2B5B;padding:4px 10px;text-align:center;font-size:7pt;color:rgba(255,255,255,.35);margin-top:8px;border-radius:0 0 4px 4px}.meta{font-size:8pt;color:#64748b;margin-bottom:6px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
   const printDate=new Date().toLocaleDateString('en-GB');
   const titles={
     'food-rec':['\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621','Food Fund Receipts'],
@@ -2637,22 +2463,22 @@ window.exportPagePDF=function(type){
   if(type==='food-rec'||type==='diwan-rec'){
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund);
     let total=0;
-    tableHTML='<table><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u062f\u0627\u0641\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0637\u0631\u064a\u0642\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u062f\u0627\u0641\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0637\u0631\u064a\u0642\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
     d.sort((a,b)=>new Date(a.receipt_date)-new Date(b.receipt_date)).forEach(r=>{
       const amt=Number(r.amount_ils||r.amount||0);total+=amt;
       tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.member_id?gmn(r.member_id):r.payer_name||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.method(r.payment_method)}</td><td>${esc(r.notes||'')}</td></tr>`;
     });
-    tableHTML+=`<tr class="total-row"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0625\u064a\u0635\u0627\u0644)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+    tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0625\u064a\u0635\u0627\u0644)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
   else if(type==='food-pay'||type==='diwan-pay'){
     const d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund);
     let total=0;
-    tableHTML='<table><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0641\u0626\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0641\u0626\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
     d.sort((a,b)=>new Date(a.payment_date)-new Date(b.payment_date)).forEach(p=>{
       const amt=Number(p.amount_ils||p.amount||0);total+=amt;
       tableHTML+=`<tr><td>${esc(p.no)}</td><td>${p.payment_date}</td><td>${esc(p.beneficiary_name||gmn(p.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.expense(p.expense_type)}</td><td>${esc(p.notes||'')}</td></tr>`;
     });
-    tableHTML+=`<tr class="total-row"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0633\u0646\u062f)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+    tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0633\u0646\u062f)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
   else if(type==='food-stmt'||type==='diwan-stmt'){
     return window.downloadFundStatementPDF(fund);
@@ -2660,44 +2486,44 @@ window.exportPagePDF=function(type){
   else if(type==='don'){
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     let total=0;
-    tableHTML='<table><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
     d.forEach(r=>{
       const amt=Number(r.amount_ils||r.amount||0);total+=amt;
       tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${r.donation_display_fund||''}</td><td>${esc(r.notes||'')}</td></tr>`;
     });
-    tableHTML+=`<tr class="total-row"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length})</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+    tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length})</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
   else if(type==='members'){
-    tableHTML='<table><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0639\u0636\u0648 \u0645\u0646\u0630</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0627\u0641\u062a\u062a\u0627\u062d\u064a</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th><th>\u0627\u0644\u062d\u0627\u0644\u0629</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0639\u0636\u0648 \u0645\u0646\u0630</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0627\u0641\u062a\u062a\u0627\u062d\u064a</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th><th>\u0627\u0644\u062d\u0627\u0644\u0629</th></tr></thead><tbody>';
     DB.members.filter(m=>m.is_active!==false).forEach(m=>{
       const bal=FIN.memberBalance(m.id);
-      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>${m.active_from_year||'—'}</td><td>\u20aa ${fmt(m.opening_balance||0)}</td><td style="color:${bal>0?'#DC2626':'#059669'}">\u20aa ${fmt(bal)}</td><td>${m.is_active!==false?'\u0646\u0634\u0637':'\u063a\u064a\u0631 \u0646\u0634\u0637'}</td></tr>`;
+      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>${m.active_from_year||'—'}</td><td>\u20aa ${fmt(m.opening_balance||0)}</td><td class="bal">\u20aa ${fmt(bal)}</td><td>${m.is_active!==false?'\u0646\u0634\u0637':'\u063a\u064a\u0631 \u0646\u0634\u0637'}</td></tr>`;
     });
     tableHTML+='</tbody></table>';
   }
   else if(type==='annual'){
-    tableHTML='<table><thead><tr><th>\u0627\u0644\u0633\u0646\u0629</th><th>\u0627\u0644\u0645\u0628\u0644\u063a</th><th>\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621</th><th>\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629</th><th>\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062a\u0637\u0628\u064a\u0642</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0633\u0646\u0629</th><th>\u0627\u0644\u0645\u0628\u0644\u063a</th><th>\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621</th><th>\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629</th><th>\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062a\u0637\u0628\u064a\u0642</th></tr></thead><tbody>';
     DB.annual.forEach(a=>{
       tableHTML+=`<tr><td>${a.year}</td><td>\u20aa ${fmt(a.amount)}</td><td>${a.member_count}</td><td>${esc(a.applied_by||'')}</td><td>${a.applied_at?.slice(0,10)||''}</td></tr>`;
     });
     tableHTML+='</tbody></table>';
   }
   else if(type==='audit'){
-    tableHTML='<table><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0625\u062c\u0631\u0627\u0621</th><th>\u0627\u0644\u0648\u0635\u0641</th><th>\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645</th><th>\u0627\u0644\u062c\u062f\u0648\u0644</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0625\u062c\u0631\u0627\u0621</th><th>\u0627\u0644\u0648\u0635\u0641</th><th>\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645</th><th>\u0627\u0644\u062c\u062f\u0648\u0644</th></tr></thead><tbody>';
     DB.audit.slice(0,200).forEach(a=>{
       tableHTML+=`<tr><td style="white-space:nowrap">${a.created_at?.slice(0,10)||''}</td><td>${esc(a.action)}</td><td>${esc(a.description||'')}</td><td>${esc(a.user_name||'')}</td><td>${esc(a.table_name||'')}</td></tr>`;
     });
     tableHTML+='</tbody></table>';
   }
   else if(type==='users'){
-    tableHTML='<table><thead><tr><th>\u0627\u0644\u0628\u0631\u064a\u062f</th><th>\u0627\u0644\u062f\u0648\u0631</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0628\u0631\u064a\u062f</th><th>\u0627\u0644\u062f\u0648\u0631</th></tr></thead><tbody>';
     (DB.users||[]).forEach(u=>{
       tableHTML+=`<tr><td>${esc(u.email)}</td><td>${u.role==='admin'?'\u0645\u062f\u064a\u0631':'\u0645\u0634\u0627\u0647\u062f'}</td></tr>`;
     });
     tableHTML+='</tbody></table>';
   }
 
-  const body=`<div class="hdr"><div><span class="org">\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</span><span class="org-en">DIWAN AL-TAHA</span></div><div><div class="doc-type">${t[0]}</div><div class="doc-sub">${t[1]}</div></div><div style="text-align:left"><div style="font-size:7pt;color:rgba(255,255,255,.35)">\u0637\u064f\u0628\u0639 \u0641\u064a</div><div style="font-size:9pt;font-weight:600;color:#fff">${printDate}</div></div></div><div class="strip"></div>${tableHTML}<div class="footer">\u062c\u0645\u064a\u0639 \u0627\u0644\u062d\u0642\u0648\u0642 \u0645\u062d\u0641\u0648\u0638\u0629 \u00a9 2026 | \u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 | diwan-finance.com</div>`;
+  const body='<div class="dh"><div class="org"><div class="logo">\u062f\u0637</div><div><h1>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</h1><p>\u0646\u0638\u0627\u0645 \u0627\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u00b7 diwan-finance.com</p></div></div>'+'<div class="meta"><span class="tt">'+t[0]+'</span><div class="sub">'+t[1]+'</div></div></div>'+'<div class="period">\u0637\u064f\u0628\u0639: '+printDate+'</div>'+tableHTML+'<div class="pgfoot"><span>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 diwan-finance.com</span><span>\u0637\u064f\u0628\u0639: '+printDate+'</span><span>\u0635\u0641\u062d\u0629 1</span></div>';
   openPrintWin(css,body);
 };
 
@@ -2739,12 +2565,15 @@ window.exportPageExcel=function(type){
   const doExcel=()=>{
     const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644...','info');return;}
     const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
-    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a');
+    const moneyMap={receipts:[3],payments:[3],donation:[3],members:[3,4],annual:[1],audit:[],users:[]};
+    const colW={receipts:[10,12,26,14,16,24],payments:[10,12,26,14,16,24],donation:[10,12,26,14,16,24],members:[26,16,12,14,16],annual:[10,14,16,18,14],audit:[14,12,30,18,14],users:[26,14,14]};
+    if(colW[type])ws['!cols']=colW[type].map(w=>({wch:w}));
+    styleDiwanSheet(XLSX,ws,{headerRow:0,money:(moneyMap[type]||[])});
+    const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a');
     XLSX.writeFile(wb,fname+'.xlsx');
     toast('\u2713 Excel','ok');
   };
-  if(window.XLSX){doExcel();}
-  else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=doExcel;document.head.appendChild(s);}
+  loadStyledXLSX(doExcel);
 };
 
 /* Toggle export dropdown */
