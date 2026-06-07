@@ -43,18 +43,30 @@ app.get('/api/verify', async (req, res) => {
     console.log('PROBE DATA=', JSON.stringify(probe.data));
     console.log('PROBE ERROR=', JSON.stringify(probe.error));
 
-    const { data: receipt } = await supabase.from('receipts')
-      .select('no, fund_type, receipt_date, amount_ils, amount, currency, notes, created_by, is_deleted')
-      .ilike('no', docId).maybeSingle();
+    const { data: payment, error: payErr } = await supabase
+  .from('payments')
+  .select('*')
+  .ilike('no', docId)
+  .maybeSingle();
+
+console.log('PAYMENT DATA=', JSON.stringify(payment));
+console.log('PAYMENT ERROR=', JSON.stringify(payErr));
+    
     console.log('RECEIPT=', JSON.stringify(receipt));
     if (receipt) {
       if (receipt.is_deleted) return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
       const fund = receipt.fund_type === 'food' ? 'Food Fund' : receipt.fund_type === 'diwan' ? 'Diwan Fund' : receipt.fund_type === 'donation' ? 'Donations' : receipt.fund_type;
       return res.status(200).json({ valid: true, document: { id: receipt.no, type: 'Receipt Voucher', fund, date: receipt.receipt_date, amount: receipt.amount_ils || receipt.amount, currency: receipt.currency || 'ILS', description: receipt.notes || '', preparedBy: receipt.created_by || '' } });
     }
-    const { data: payment } = await supabase.from('payments')
-      .select('no, fund_type, payment_date, amount_ils, amount, currency, expense_type, notes, created_by, approved_by, is_deleted')
-      .ilike('no', docId).maybeSingle();
+   const { data: payment, error: payErr } = await supabase
+  .from('payments')
+  .select('*')
+  .ilike('no', docId)
+  .maybeSingle();
+
+console.log('PAYMENT DATA=', JSON.stringify(payment));
+console.log('PAYMENT ERROR=', JSON.stringify(payErr));
+    
     if (payment) {
       if (payment.is_deleted) return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
       const fund = payment.fund_type === 'food' ? 'Food Fund' : payment.fund_type === 'diwan' ? 'Diwan Fund' : payment.fund_type;
