@@ -36,19 +36,7 @@ module.exports = async function handler(req, res) {
   const anonKey        = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
   const supabaseKey    = serviceRoleKey || anonKey;
 
-  /* ── DIAGNOSTIC LOGGING ──────────────────────────────────────────
-   * Read at: Vercel Dashboard → Deployments → Functions → Logs
-   * Remove this block once the fix is confirmed in production.
-   * ──────────────────────────────────────────────────────────────── */
-  console.log('[verify] ── RUNTIME DIAGNOSTICS ──────────────────────');
-  console.log('[verify] raw id                :', id);
-  console.log('[verify] docId (normalised)    :', docId);
-  console.log('[verify] SUPABASE_URL          :', supabaseUrl   || 'MISSING');
-  console.log('[verify] key type              :', serviceRoleKey ? 'SERVICE_ROLE' : anonKey ? 'ANON' : 'MISSING');
-  console.log('[verify] key prefix            :', supabaseKey ? supabaseKey.slice(0, 20) + '...' : 'n/a');
-
   if (!supabaseUrl || !supabaseKey) {
-    console.log('[verify] ABORT: env vars missing');
     return res.status(500).json({
       valid: false,
       error: 'Server configuration error',
@@ -75,9 +63,6 @@ module.exports = async function handler(req, res) {
       .eq('no', docId)
       .maybeSingle();
 
-    console.log('[verify] receipts result       :', JSON.stringify(receipt));
-    console.log('[verify] receipts error        :', JSON.stringify(recErr));
-
     if (recErr) {
       console.log('[verify] receipts query FAILED :', recErr.code, recErr.message);
       return res.status(500).json({ valid: false, error: recErr.message, code: recErr.code });
@@ -86,7 +71,6 @@ module.exports = async function handler(req, res) {
     if (receipt) {
       /* Issue C: is_deleted = NULL is treated as not deleted */
       if (receipt.is_deleted === true) {
-        console.log('[verify] receipt is CANCELLED');
         return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
       }
       const fund =
@@ -94,7 +78,6 @@ module.exports = async function handler(req, res) {
         receipt.fund_type === 'diwan'    ? 'Diwan Fund' :
         receipt.fund_type === 'donation' ? 'Donations'  :
         receipt.fund_type                || '';
-      console.log('[verify] receipt FOUND, returning valid');
       return res.status(200).json({
         valid: true,
         document: {
@@ -120,9 +103,6 @@ module.exports = async function handler(req, res) {
       .eq('no', docId)
       .maybeSingle();
 
-    console.log('[verify] payments result       :', JSON.stringify(payment));
-    console.log('[verify] payments error        :', JSON.stringify(payErr));
-
     if (payErr) {
       console.log('[verify] payments query FAILED :', payErr.code, payErr.message);
       return res.status(500).json({ valid: false, error: payErr.message, code: payErr.code });
@@ -130,14 +110,12 @@ module.exports = async function handler(req, res) {
 
     if (payment) {
       if (payment.is_deleted === true) {
-        console.log('[verify] payment is CANCELLED');
         return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
       }
       const fund =
         payment.fund_type === 'food'     ? 'Food Fund'  :
         payment.fund_type === 'diwan'    ? 'Diwan Fund' :
         payment.fund_type                || '';
-      console.log('[verify] payment FOUND, returning valid');
       return res.status(200).json({
         valid: true,
         document: {
@@ -154,7 +132,6 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    console.log('[verify] NOT FOUND for docId:', docId);
     return res.status(404).json({ valid: false, error: 'Document not found' });
 
   } catch (err) {
