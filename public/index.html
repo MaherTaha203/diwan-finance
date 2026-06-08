@@ -345,6 +345,8 @@
     </div>
   </div>
   <div class="fund-grid" id="fund-cards"></div>
+  <div class="tp-tabs" id="treasury-tabs"></div>
+  <div id="treasury-panel"></div>
   <div class="kgrid" id="kpis"></div>
   <div style="display:grid;grid-template-columns:1fr 300px;gap:14px">
     <div>
@@ -431,7 +433,7 @@
   </div>
   <div class="pg" id="pg-settings">
     <div class="ph"><div><div class="ph-t">الإعدادات</div><div class="ph-s">الرصيد الافتتاحي وإعدادات النظام</div></div></div>
-    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-wallet"></i>الرصيد الافتتاحي للصناديق</span></div><div class="ibox warn"><i class="ti ti-alert-triangle"></i>الرصيد الافتتاحي يُحسب أولاً قبل أي عملية</div><div class="fg" style="max-width:500px"><div class="fi"><label>الرصيد الافتتاحي لصندوق الغداء ₪</label><div class="iw"><span class="ipx" style="color:var(--food)">₪</span><input type="number" id="set-food-opening" placeholder="0.00" step="0.01"></div></div><div class="fi"><label>الرصيد الافتتاحي لصندوق الديوان ₪</label><div class="iw"><span class="ipx" style="color:var(--diwan)">₪</span><input type="number" id="set-diwan-opening" placeholder="0.00" step="0.01"></div></div></div><div style="margin-top:16px"><button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ الإعدادات</button></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-wallet"></i>الرصيد الافتتاحي للصناديق</span></div><div class="ibox warn"><i class="ti ti-alert-triangle"></i>الديوان: الافتتاحي يُحسب ضمن الرصيد. الغداء: الرصيد السابق للمعلومية فقط ولا يُجمع</div><div class="fg" style="max-width:500px"><div class="fi"><label>رصيد صندوق الغداء السابق (للمعلومية فقط — لا يدخل في الحساب) ₪</label><div class="iw"><span class="ipx" style="color:var(--food)">₪</span><input type="number" id="set-food-opening" placeholder="0.00" step="0.01"></div></div><div class="fi"><label>الرصيد الافتتاحي لصندوق الديوان ₪</label><div class="iw"><span class="ipx" style="color:var(--diwan)">₪</span><input type="number" id="set-diwan-opening" placeholder="0.00" step="0.01"></div></div></div><div style="margin-top:16px"><button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ الإعدادات</button></div></div>
     <div class="card"><div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i>أسعار الصرف الاحتياطية</span></div><div class="fg" style="max-width:500px"><div class="fi"><label>سعر الدولار USD ₪</label><div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" placeholder="3.70" step="0.01" min="0.01"></div></div><div class="fi"><label>سعر الدينار JOD ₪</label><div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" placeholder="5.00" step="0.01" min="0.01"></div></div></div><div style="margin-top:16px"><button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i>حفظ</button></div></div>
     <div class="card" id="settings-summary" style="display:none"><div class="ch"><span class="ct"><i class="ti ti-chart-pie"></i>ملخص الأرصدة مع الافتتاحي</span></div><div id="settings-bal-summary"></div></div>
   </div>
