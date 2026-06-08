@@ -5,6 +5,8 @@ const DB={receipts:[],payments:[],members:[],contacts:[],annual:[],audit:[]};
 const RATES={ILS:1,USD:3.7,JOD:5.0};
 window.FOOD_OPENING=0;
 window.DIWAN_OPENING=0;
+window.FOOD_OPENING_USD=0;window.FOOD_OPENING_JOD=0;
+window.DIWAN_OPENING_USD=0;window.DIWAN_OPENING_JOD=0;
 const PSZ=20,PS={};
 
 /* ── ROLE MODEL: admin | viewer ONLY ── */
@@ -837,10 +839,14 @@ function emptyRow(cols,msgKey){const msg=L.noData(msgKey)||msgKey;return`<tr><td
 
 /* ═══ TREASURY OVERVIEW PANEL ═══ */
 let TP_FUND='diwan';
+let TP_CUR_OPEN=false; /* currency panel default collapsed (Section 2) */
 window.selectTreasuryFund=function(f){TP_FUND=f;renderTreasuryTabs();renderTreasuryPanel();};
 function tpCurrency(fund){
-  /* operational native balances per currency from transactions */
+  /* native currency holdings = opening(native, display-only per option A) + receipts - payments.
+     Food ILS holding excludes the historical reference (reference-only, never a holding). */
   const out={ILS:0,USD:0,JOD:0};
+  if(fund==='diwan'){ out.ILS+=Number(window.DIWAN_OPENING||0); out.USD+=Number(window.DIWAN_OPENING_USD||0); out.JOD+=Number(window.DIWAN_OPENING_JOD||0); }
+  else if(fund==='food'){ out.USD+=Number(window.FOOD_OPENING_USD||0); out.JOD+=Number(window.FOOD_OPENING_JOD||0); }
   DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund).forEach(r=>{out[r.currency||'ILS']+=Number(r.amount);});
   DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund).forEach(p=>{out[p.currency||'ILS']-=Number(p.amount);});
   return out;
@@ -851,58 +857,63 @@ function renderTreasuryTabs(){
   const tabs=[['diwan','صندوق الديوان'],['food','صندوق الغداء'],['donation','التبرعات']];
   el.innerHTML=tabs.map(([k,l])=>`<div class="tp-tab ${TP_FUND===k?'on':''}" onclick="window.selectTreasuryFund('${k}')">${l}</div>`).join('');
 }
+window.toggleTreasuryCurrency=function(){
+  TP_CUR_OPEN=!TP_CUR_OPEN;
+  const cs=document.querySelector('#treasury-panel .tp-cs');
+  if(cs){cs.classList.toggle('open',TP_CUR_OPEN);const a=cs.querySelector('.tp-cs-ar');if(a)a.textContent=TP_CUR_OPEN?'▲':'▼';}
+};
 function tpCurrencyRows(fund,nat){
   const rows=[['ILS','₪','شيكل',1],['USD','$','دولار',RATES.USD],['JOD','JD','دينار',RATES.JOD]];
-  return rows.map(([cur,sy,nm,rate])=>{
-    let bal=nat[cur]||0; if(cur==='ILS'&&fund==='diwan')bal+=Number(window.DIWAN_OPENING||0);
-    const eqv=cur==='ILS'?bal:bal*rate;
+  let sumToday=0;
+  const body=rows.map(([cur,sy,nm,rate])=>{
+    const bal=nat[cur]||0; const eqv=cur==='ILS'?bal:bal*rate; sumToday+=eqv;
     const mut=Math.abs(bal)<0.005?'mut':''; const z=Math.abs(eqv)<0.005?'z':'';
     const eqTxt=cur==='ILS'?'':'≈ ₪ '+fmt(Math.round(eqv*100)/100);
     return `<div class="tp-cr"><div class="lf"><span class="sy">${sy}</span><span class="nm">${nm}<small>${cur}</small></span></div>`
       +`<div class="bl ${mut}">${tpFmtCur(bal,cur)}</div><div class="eq ${z}">${eqTxt}</div></div>`;
   }).join('');
+  return body+`<div class="tp-cr-sum"><span>≈ المجموع بأسعار اليوم (تقديري)</span><span>₪ ${fmt(Math.round(sumToday*100)/100)}</span></div>`;
 }
 function renderTreasuryPanel(){
   const el=document.getElementById('treasury-panel');if(!el)return;
   const fund=TP_FUND;
   const fundName=fund==='food'?'صندوق الغداء':fund==='diwan'?'صندوق الديوان':'صندوق التبرعات';
   const nat=tpCurrency(fund);
-  const upd='محدث وفق أسعار الصرف الحالية';
+  const upd='محدث وفق أسعار الصرف اليومية';
   const ratesLine=`USD ${RATES.USD.toFixed(3)} · JOD ${RATES.JOD.toFixed(3)} · ${today()}`;
-  let middle='', total=0, neg=false, cap='الرصيد الكلي للصندوق', rule='';
+  let middle='', total=0, neg=false, cap='الرصيد الإجمالي الكلي', rule='';
 
   if(fund==='diwan'){
     const opening=Number(window.DIWAN_OPENING||0);
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     total=opening+income-expense; neg=total<0;
-    rule='القاعدة: الكلي = الافتتاحي + المقبوضات − المدفوعات';
+    rule='القاعدة: الكلي = الرصيد الأولي السابق + إجمالي المقبوضات − إجمالي المصروفات';
     middle=`<div class="tp-flow">
-      <div class="nd prev"><div class="t">القيمة السابقة (افتتاحي)</div><div class="v">₪ ${fmt(opening)}</div><div class="s">تشارك في الحساب</div></div>
-      <div class="ar"><div class="op up">+ مقبوضات ₪ ${fmt(income)}</div><div class="ln"></div><div class="op dn">− مدفوعات ₪ ${fmt(expense)}</div></div>
-      <div class="nd cur"><div class="t">الرصيد الحالي = الكلي</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
+      <div class="nd prev"><div class="t">الرصيد الأولي السابق</div><div class="v">₪ ${fmt(opening)}</div><div class="s">يشارك في الحساب</div></div>
+      <div class="ar"><div class="op up">+ إجمالي المقبوضات ₪ ${fmt(income)}</div><div class="ln"></div><div class="op dn">− إجمالي المصروفات ₪ ${fmt(expense)}</div></div>
+      <div class="nd cur"><div class="t">رصيد الصندوق الحالي = الكلي</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
   } else if(fund==='food'){
     const hist=FIN.foodHistorical();
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     total=income-expense; neg=total<0;
-    cap='إجمالي الرصيد المعروض (تشغيلي)';
-    rule='القاعدة: الإجمالي = التشغيلي فقط · «رصيد سابق» للمعلومية ولا يُجمع';
+    cap='الرصيد الإجمالي الكلي (تشغيلي)';
+    rule='القاعدة: الإجمالي = رصيد الصندوق الحالي فقط · «الرصيد الأولي السابق» مرجعي ولا يُجمع';
     middle=`<div class="tp-food">
-      <div class="tp-prev"><div class="lk">🔒 للمعلومية فقط</div><div class="t">رصيد سابق (للمعلومية فقط)</div><div class="v${hist<0?' neg':''}">₪ ${fmt(hist)}</div><div class="ro">لا يتأثر بالعمليات · لا يدخل في أي حساب</div></div>
-      <div class="tp-op"><div class="t">الرصيد التشغيلي الحالي</div>
+      <div class="tp-prev"><div class="lk">🔒 للملاحظة فقط</div><div class="t">الرصيد الأولي السابق</div><div class="v${hist<0?' neg':''}">₪ ${fmt(hist)}</div><div class="ro">رصيد مرجعي للملاحظة فقط · لا يدخل في أي حساب أو تقرير</div></div>
+      <div class="tp-op"><div class="t">رصيد الصندوق الحالي</div>
         <div class="of"><div class="sg"><div class="l">البداية</div><div class="n">₪ 0</div></div><span class="x">+</span>
-        <div class="sg"><div class="l">مقبوضات</div><div class="n up">₪ ${fmt(income)}</div></div><span class="x">−</span>
-        <div class="sg"><div class="l">مدفوعات</div><div class="n dn">₪ ${fmt(expense)}</div></div></div>
-        <div class="rs"><div class="l">الرصيد التشغيلي = الإجمالي المعروض</div><div class="n">₪ ${fmt(total)}</div></div></div>
+        <div class="sg"><div class="l">إجمالي المقبوضات</div><div class="n up">₪ ${fmt(income)}</div></div><span class="x">−</span>
+        <div class="sg"><div class="l">إجمالي المصروفات</div><div class="n dn">₪ ${fmt(expense)}</div></div></div>
+        <div class="rs"><div class="l">رصيد الصندوق الحالي = الإجمالي</div><div class="n">₪ ${fmt(total)}</div></div></div>
     </div>`;
   } else {
-    /* donation: simple operational, no opening */
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    total=income; neg=false; cap='إجمالي التبرعات';
+    total=income; neg=false; cap='الرصيد الإجمالي الكلي';
     rule='القاعدة: إجمالي التبرعات المستلمة';
-    middle=`<div class="tp-flow"><div class="nd cur" style="flex:1"><div class="t">إجمالي التبرعات</div><div class="v">₪ ${fmt(total)}</div><div class="s">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').length} تبرع</div></div></div>`;
+    middle=`<div class="tp-flow"><div class="nd cur" style="flex:1"><div class="t">رصيد الصندوق الحالي</div><div class="v">₪ ${fmt(total)}</div><div class="s">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').length} تبرعات</div></div></div>`;
   }
 
   el.innerHTML=`<div class="tp">
@@ -910,12 +921,13 @@ function renderTreasuryPanel(){
       <div class="tp-cap">${cap}</div><div class="tp-total${neg?' neg':''}">₪ ${fmt(total)}</div>
       <div class="tp-rule">${rule}</div><div class="tp-upd">${upd}</div></div>
     ${middle}
-    <div class="tp-cs"><div class="h"><div class="ht">تفصيل العملات${fund==='food'?' (تشغيلي)':''}</div><div class="rt">${ratesLine}</div></div>
-      ${tpCurrencyRows(fund,nat)}</div>
+    <div class="tp-cs${TP_CUR_OPEN?' open':''}">
+      <div class="tp-cs-h" onclick="window.toggleTreasuryCurrency()"><div class="ht">أرصدة العملات</div><div class="tp-cs-ar">${TP_CUR_OPEN?'▲':'▼'}</div></div>
+      <div class="tp-cs-body"><div class="tp-cs-rates">${ratesLine}</div>${tpCurrencyRows(fund,nat)}</div>
+    </div>
     <div class="tp-ft"><span>ديوان آل طه — diwan-finance.com</span><span>الأسعار من إعدادات النظام (يدوية)</span></div>
   </div>`;
 }
-
 function renderDash(){
   const fb=FIN.foodBalance(),db=FIN.diwanBalance(),donb=FIN.donBalance();
   const dd=document.getElementById('dash-date');
@@ -2958,12 +2970,20 @@ async function loadSettings(){
     const jodEl=document.getElementById('set-jod-rate');
     if(foodEl)  foodEl.value  = map['food_opening_balance']  || '0';
     if(diwanEl) diwanEl.value = map['diwan_opening_balance'] || '0';
+    const fU=document.getElementById('set-food-opening-usd'),fJ=document.getElementById('set-food-opening-jod');
+    const dU=document.getElementById('set-diwan-opening-usd'),dJ=document.getElementById('set-diwan-opening-jod');
+    if(fU)fU.value=map['food_opening_usd']||'0'; if(fJ)fJ.value=map['food_opening_jod']||'0';
+    if(dU)dU.value=map['diwan_opening_usd']||'0'; if(dJ)dJ.value=map['diwan_opening_jod']||'0';
     if(usdEl)   usdEl.value   = map['usd_rate']  || '3.70';
     if(jodEl)   jodEl.value   = map['jod_rate']  || '5.00';
     if(map['usd_rate'])  RATES.USD = parseFloat(map['usd_rate']);
     if(map['jod_rate'])  RATES.JOD = parseFloat(map['jod_rate']);
     window.FOOD_OPENING  = parseFloat(map['food_opening_balance']  || '0');
     window.DIWAN_OPENING = parseFloat(map['diwan_opening_balance'] || '0');
+    window.FOOD_OPENING_USD  = parseFloat(map['food_opening_usd']  || '0');
+    window.FOOD_OPENING_JOD  = parseFloat(map['food_opening_jod']  || '0');
+    window.DIWAN_OPENING_USD = parseFloat(map['diwan_opening_usd'] || '0');
+    window.DIWAN_OPENING_JOD = parseFloat(map['diwan_opening_jod'] || '0');
   }catch(e){ console.error('loadSettings error',e); }
 }
 
@@ -2973,9 +2993,17 @@ window.saveSettings = async function(){
   const diwanOpening = parseFloat(document.getElementById('set-diwan-opening')?.value) || 0;
   const usdRate      = parseFloat(document.getElementById('set-usd-rate')?.value)      || 3.70;
   const jodRate      = parseFloat(document.getElementById('set-jod-rate')?.value)      || 5.00;
+  const fOpUsd=parseFloat(document.getElementById('set-food-opening-usd')?.value)||0;
+  const fOpJod=parseFloat(document.getElementById('set-food-opening-jod')?.value)||0;
+  const dOpUsd=parseFloat(document.getElementById('set-diwan-opening-usd')?.value)||0;
+  const dOpJod=parseFloat(document.getElementById('set-diwan-opening-jod')?.value)||0;
   const updates = [
     {key:'food_opening_balance',  value: String(foodOpening)},
     {key:'diwan_opening_balance', value: String(diwanOpening)},
+    {key:'food_opening_usd', value: String(fOpUsd)},
+    {key:'food_opening_jod', value: String(fOpJod)},
+    {key:'diwan_opening_usd', value: String(dOpUsd)},
+    {key:'diwan_opening_jod', value: String(dOpJod)},
     {key:'usd_rate',  value: String(usdRate)},
     {key:'jod_rate',  value: String(jodRate)},
   ];
@@ -2984,6 +3012,8 @@ window.saveSettings = async function(){
   }
   window.FOOD_OPENING  = foodOpening;
   window.DIWAN_OPENING = diwanOpening;
+  window.FOOD_OPENING_USD=fOpUsd;window.FOOD_OPENING_JOD=fOpJod;
+  window.DIWAN_OPENING_USD=dOpUsd;window.DIWAN_OPENING_JOD=dOpJod;
   RATES.USD = usdRate;
   RATES.JOD = jodRate;
   await logAction('edit',`تحديث الإعدادات — رصيد الغداء: ₪${fmt(foodOpening)} | رصيد الديوان: ₪${fmt(diwanOpening)}`,'settings',null);
