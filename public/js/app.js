@@ -933,25 +933,17 @@ function renderDash(){
   const dd=document.getElementById('dash-date');
   if(dd)dd.textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
-  const recLbl=window.LANG==='en'?'Receipt':'إيصال';const donLbl=window.LANG==='en'?'Donation':'تبرع';
-  document.getElementById('fund-cards').innerHTML=`
-    <div class="fund-card food"><div class="fund-label">${L.fundLabel('food')}</div><div class="fund-balance">₪ ${fmt(fb)}</div><div class="fund-sub">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').length} ${recLbl}</div></div>
-    <div class="fund-card diwan"><div class="fund-label">${L.fundLabel('diwan')}</div><div class="fund-balance">₪ ${fmt(db)}</div><div class="fund-sub">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').length} ${recLbl}</div></div>
-    <div class="fund-card don"><div class="fund-label">${L.fundLabel('donation')}</div><div class="fund-balance">₪ ${fmt(donb)}</div><div class="fund-sub">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').length} ${donLbl}</div></div>
+  const _isEn=window.LANG==='en';
+  document.getElementById('fund-summary').innerHTML=`
+    <div class="fsum-brand"><i class="ti ti-building-bank"></i><span>${_isEn?'Treasury':'الخزينة'}</span></div>
+    <div class="fsum-seg food"><span class="fsum-k">${L.fundLabel('food')}</span><span class="fsum-v">₪ ${fmt(fb)}</span></div>
+    <div class="fsum-seg diwan"><span class="fsum-k">${L.fundLabel('diwan')}</span><span class="fsum-v">₪ ${fmt(db)}</span></div>
+    <div class="fsum-seg don"><span class="fsum-k">${L.fundLabel('donation')}</span><span class="fsum-v">₪ ${fmt(donb)}</span></div>
+    <div class="fsum-seg members"><span class="fsum-k">${_isEn?'Members':'الأعضاء'}</span><span class="fsum-v">${DB.members.filter(m=>m.is_active).length}</span></div>
   `;
   renderTreasuryTabs();renderTreasuryPanel();
 
- const lateMembers=DB.members
- .filter(m=>m.is_active)
- .map(m=>({...m,bal:FIN.memberBalance(m.id)}))
- .filter(m=>m.bal>0);
-  const isEn=window.LANG==='en';
-  document.getElementById('kpis').innerHTML=`
-    <div class="kpi food"><i class="ti ti-users kpi-ico"></i><div class="kpi-lbl">${isEn?'Family Members':'أعضاء العائلة'}</div><div class="kpi-val">${DB.members.filter(m=>m.is_active).length}</div></div>
-    <div class="kpi red"><i class="ti ti-clock kpi-ico"></i><div class="kpi-lbl">${isEn?'Late Members':'متأخرون'}</div><div class="kpi-val">${lateMembers.length}</div><div class="kpi-sub">${isEn?'Unpaid':'لم يسددوا'}</div></div>
-    <div class="kpi green"><i class="ti ti-trending-up kpi-ico"></i><div class="kpi-lbl">${isEn?'Total Receipts':'إجمالي الإيصالات'}</div><div class="kpi-val">₪ ${fmt(DB.receipts.filter(r=>!r.is_deleted&&r.fund_type!=='donation').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0))}</div></div>
-    <div class="kpi red"><i class="ti ti-trending-down kpi-ico"></i><div class="kpi-lbl">${isEn?'Total Expenses':'إجمالي المصاريف'}</div><div class="kpi-val">₪ ${fmt(DB.payments.filter(p=>!p.is_deleted).reduce((s,p)=>s+Number(p.amount_ils||p.amount),0))}</div></div>
-  `;
+
 
   const now=new Date();const months=[];
   for(let i=5;i>=0;i--){
@@ -965,9 +957,9 @@ function renderDash(){
   document.getElementById('month-chart').innerHTML=months.map(m=>`
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
       <div style="font-size:9px;color:var(--tx3)">${m.food+m.diwan?'₪'+fmt(m.food+m.diwan):''}</div>
-      <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:110px;gap:1px">
-        <div style="width:100%;height:${Math.max(3,Math.round(m.food/maxV*90))}px;background:var(--food);border-radius:3px 3px 0 0;opacity:.8"></div>
-        <div style="width:100%;height:${Math.max(3,Math.round(m.diwan/maxV*90))}px;background:var(--diwan);border-radius:3px 3px 0 0;opacity:.8"></div>
+      <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:72px;gap:1px">
+        <div style="width:100%;height:${Math.max(3,Math.round(m.food/maxV*58))}px;background:var(--food);border-radius:3px 3px 0 0;opacity:.8"></div>
+        <div style="width:100%;height:${Math.max(3,Math.round(m.diwan/maxV*58))}px;background:var(--diwan);border-radius:3px 3px 0 0;opacity:.8"></div>
       </div>
       <div style="font-size:9.5px;color:var(--tx3)">${m.lbl}</div>
     </div>`).join('');
@@ -983,22 +975,40 @@ function renderDash(){
     </div>`).join('')
     :`<div class="empty" style="padding:14px"><div class="empty-t">${L.noData('ops')}</div></div>`;
 
-  document.getElementById('late-members').innerHTML=lateMembers.slice(0,6).length?lateMembers.slice(0,6).map(m=>`
-    <div class="sr">
-      <span class="sr-l">${esc(m.name)}</span>
-      <span class="sr-v" style="color:var(--danger)">₪ ${fmt(m.bal)}</span>
-    </div>`).join('')
-    :`<div style="text-align:center;padding:12px;color:var(--tx3);font-size:12px">${window.LANG==='en'?'✅ All members are up to date':'✅ كل الأعضاء ملتزمون'}</div>`;
-
   const _en=window.LANG==='en';
   document.getElementById('quick-actions').innerHTML=`
-    ${can.write()?`<button class="btn food" style="width:100%;margin-bottom:6px" onclick="window.openRec('food')"><i class="ti ti-receipt"></i>${_en?'Food Receipt':'إيصال غداء'}</button>`:''}
-    ${can.write()?`<button class="btn diwan" style="width:100%;margin-bottom:6px" onclick="window.openRec('diwan')"><i class="ti ti-receipt"></i>${_en?'Diwan Receipt':'إيصال ديوان'}</button>`:''}
-    ${can.write()?`<button class="btn don" style="width:100%;margin-bottom:6px" onclick="window.openRec('donation')"><i class="ti ti-heart"></i>${_en?'New Donation':'تسجيل تبرع'}</button>`:''}
-    <button class="btn" style="width:100%;margin-bottom:6px" onclick="window.nav('food-stmt')"><i class="ti ti-file-description"></i>${_en?'Food Statement':'كشف الغداء'}</button>
-    <button class="btn" style="width:100%" onclick="window.nav('diwan-stmt')"><i class="ti ti-file-description"></i>${_en?'Diwan Statement':'كشف الديوان'}</button>
+    ${can.write()?`<button class="qa-btn rec" onclick="window.openRec()"><i class="ti ti-plus"></i><span>${_en?'Receipt Voucher':'سند قبض'}</span></button>`:''}
+    ${can.write()?`<button class="qa-btn pay" onclick="window.openPay()"><i class="ti ti-minus"></i><span>${_en?'Payment Voucher':'سند صرف'}</span></button>`:''}
+    ${can.write()?`<button class="qa-btn diwan" onclick="window.openRec('diwan')"><i class="ti ti-receipt"></i><span>${_en?'Diwan Receipt':'إيصال ديوان'}</span></button>`:''}
+    ${can.write()?`<button class="qa-btn food" onclick="window.openRec('food')"><i class="ti ti-receipt"></i><span>${_en?'Food Receipt':'إيصال غداء'}</span></button>`:''}
+    ${can.write()?`<button class="qa-btn member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i><span>${_en?'New Member':'عضو جديد'}</span></button>`:''}
+    <button class="qa-btn stmt" onclick="window.openStmtSelector()"><i class="ti ti-file-description"></i><span>${_en?'Account Statement':'كشف حساب'}</span></button>
   `;
 }
+
+/* Account Statement selector (visual nav only — opens existing statement pages) */
+window.openStmtSelector=function(){
+  let ov=document.getElementById('stmt-sel-ov');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='stmt-sel-ov'; ov.className='ov';
+    const en=window.LANG==='en';
+    const opt=(p,ar,eng,ic)=>`<button class="ssel-item" onclick="window.closeStmtSelector();window.nav('${p}')"><i class="ti ${ic}"></i><span>${en?eng:ar}</span></button>`;
+    ov.innerHTML=`<div class="modal ssel" style="max-width:460px">
+      <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-file-description"></i></span>${en?'Account Statement':'اختر نوع الكشف'}</span><button class="btn ghost" onclick="window.closeStmtSelector()"><i class="ti ti-x"></i></button></div>
+      <div class="ssel-grid">
+        ${opt('member-stmt','كشف حساب عضو','Member Statement','ti-user')}
+        ${opt('diwan-stmt','كشف صندوق الديوان','Diwan Fund Statement','ti-building-bank')}
+        ${opt('food-stmt','كشف صندوق الغداء','Food Fund Statement','ti-tools-kitchen-2')}
+        ${opt('don','كشف التبرعات','Donations Statement','ti-heart')}
+        ${opt('diwan-rec','كشف المقبوضات','Receipts Statement','ti-circle-arrow-down')}
+        ${opt('diwan-pay','كشف المصروفات','Payments Statement','ti-circle-arrow-up')}
+      </div></div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{ if(e.target===ov) window.closeStmtSelector(); });
+  } else { ov.querySelectorAll('.ssel-item span').forEach(()=>{}); }
+  ov.style.display='flex';
+};
+window.closeStmtSelector=function(){ const ov=document.getElementById('stmt-sel-ov'); if(ov) ov.style.display='none'; };
 
 /* ═══ STATEMENTS ═══ */
 window.renderStmt=function(fund){
