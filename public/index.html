@@ -340,23 +340,18 @@
     <div><div class="ph-t" data-i18n="dashboard.title">لوحة التحكم</div><div class="ph-s" id="dash-date"></div></div>
     <div class="ph-a">
       <button class="btn sm" onclick="window.loadAll()"><i class="ti ti-refresh"></i>تحديث</button>
-      <button class="btn primary sm" id="dash-btn-rec" onclick="window.openRec()"><i class="ti ti-plus"></i>سند قبض</button>
-      <button class="btn danger sm" id="dash-btn-pay" onclick="window.openPay()"><i class="ti ti-minus"></i>سند صرف</button>
     </div>
   </div>
-  <div class="fund-grid" id="fund-cards"></div>
+  <div id="fund-summary" class="fsum"></div>
+  <div class="qa-wrap">
+    <div class="qa-title"><i class="ti ti-bolt"></i>إجراءات سريعة</div>
+    <div id="quick-actions" class="qa-bar"></div>
+  </div>
   <div class="tp-tabs" id="treasury-tabs"></div>
   <div id="treasury-panel"></div>
-  <div class="kgrid" id="kpis"></div>
-  <div style="display:grid;grid-template-columns:1fr 300px;gap:14px">
-    <div>
-      <div class="card"><div class="ch"><span class="ct"><i class="ti ti-chart-histogram"></i>الحركات الشهرية</span></div><div id="month-chart" style="height:130px;display:flex;align-items:flex-end;gap:6px;padding-top:10px"></div></div>
-      <div class="card"><div class="ch"><span class="ct"><i class="ti ti-clock"></i>آخر الحركات</span></div><div id="recent-ops"></div></div>
-    </div>
-    <div>
-      <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-bolt"></i>إجراءات سريعة</div><div id="quick-actions"></div></div>
-      <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i>أعضاء متأخرون</div><div id="late-members" class="scroll"></div></div>
-    </div>
+  <div class="dash-bottom">
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-chart-histogram"></i>الحركات الشهرية</span></div><div id="month-chart" style="height:96px;display:flex;align-items:flex-end;gap:6px;padding-top:8px"></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-clock"></i>آخر الحركات</span></div><div id="recent-ops"></div></div>
   </div>
 </div>
   <div class="pg" id="pg-food-rec">
