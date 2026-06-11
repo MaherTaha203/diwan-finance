@@ -146,6 +146,11 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .ferr{font-size:10.5px;color:#FCA5A5;display:none;align-items:center;gap:3px} .ferr.on{display:flex}
 .iw{position:relative} .iw input{width:100%;padding-right:34px !important}
 .ipx{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:#00C896;pointer-events:none}
+/* 8C: combined currency+amount control */
+.iw.cur{display:flex;align-items:stretch;gap:0}
+.iw.cur .cur-sel{flex:0 0 auto;width:auto;min-width:94px;font-weight:600;font-size:11.5px;color:var(--tx2);padding-inline:9px;border-inline-end:none;border-start-end-radius:0;border-end-end-radius:0}
+.iw.cur input{flex:1 1 auto;width:auto;border-start-start-radius:0;border-end-start-radius:0;padding-right:11px !important}
+.iw.cur .cur-sel:focus,.iw.cur input:focus{position:relative;z-index:1}
 .sdiv{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.09em;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
 .sdiv::after{content:'';flex:1;height:1px;background:var(--bd)}
 .pills{display:flex;gap:5px;flex-wrap:wrap}
