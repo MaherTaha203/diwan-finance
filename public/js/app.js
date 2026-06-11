@@ -188,21 +188,7 @@ const FIN={
       )
       .reduce((s,a)=>s + Number(a.amount || 0),0);
 
-    /* PHASE 11 — اشتراكات مسددة قبل تشغيل النظام (prepaid_subscription_ils):
-       تغطّي 2025/2026 فقط (مسقوفة برسوم هاتين السنتين المستحقّتين للعضو)؛
-       لا تغطّي 2027+، ولا تُرحَّل للمستقبل. الإشارة كما هي: موجب = مستحق على العضو. */
-    const dues2526 = DB.annual
-      .filter(a =>
-        (a.year === 2025 || a.year === 2026) &&
-        (!member.active_from_year || a.year >= member.active_from_year)
-      )
-      .reduce((s,a)=>s + Number(a.amount || 0),0);
-
-    const prepaid = Number(member.prepaid_subscription_ils || 0);
-
-    const prepaidEffective = Math.min(prepaid, dues2526);
-
-    return openingBalance + dues - paid - prepaidEffective;
+    return openingBalance + dues - paid;
   },
 
   foodBalance(){
@@ -629,7 +615,7 @@ async function loadAll(){
       SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
       SB.from('members').select(
-'id,name,phone,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year'
+'id,name,phone,notes,opening_balance,is_active,created_at,active_from_year'
 ).order('name'),
       SB.from('contacts').select('*').order('name'),
       SB.from('annual_dues').select('*').order('year',{ascending:false}),
@@ -1677,7 +1663,7 @@ window.saveRec=async function(print=false){
   await logAction('add',`إضافة إيصال ${no} — ${payerName} — ₪${fmt(amountILS)}${currency!=='ILS'?` (${fmtD(amount)} ${currency})`:''}`, 'receipts', data.id);
   window.closeM();
   await loadAll();
-  toast(`✓ تم حفظ ${no}`,'ok');
+  toast(`✓ تم حفظ الإيصال ${no}`,'ok');
   await SB.from('vouchers').upsert({id:no,type:fund==='food'?'Receipt Voucher — Food Fund':fund==='diwan'?'Receipt Voucher — Diwan Fund':'Donation Voucher',fund:fund==='food'?'Food Fund':fund==='diwan'?'Diwan Fund':'Food Fund',date:fmtDate2(date),amount:fmtD(amountILS)+' ILS',description:notes||'Receipt Voucher',prepared_by:CUR?.full_name||CU?.email});
   if(print) setTimeout(()=>window.prtRec(data.id),300);
 };
@@ -1721,7 +1707,7 @@ window.savePay=async function(print=false){
   await logAction('add',`إضافة سند ${no} — ${benName} — ₪${fmt(amountILS)}`,'payments',data.id);
   window.closeM();
   await loadAll();
-  toast(`✓ تم حفظ ${no}`,'ok');
+  toast(`✓ تم حفظ السند ${no}`,'ok');
   await SB.from('vouchers').upsert({id:no,type:fund==='food'?'Payment Voucher — Food Fund':'Payment Voucher — Diwan Fund',fund:fund==='food'?'Food Fund':'Diwan Fund',date:fmtDate2(date),amount:fmtD(amountILS)+' ILS',description:notes||L.expense(expense),prepared_by:CUR?.full_name||CU?.email});
   if(print) setTimeout(()=>window.prtPay(data.id),300);
 };
