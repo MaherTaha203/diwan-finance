@@ -165,30 +165,64 @@ const can={
 /* ═══ FINANCIAL ENGINE ═══ */
 const FIN={
 
+  /* ── SINGLE SOURCE OF TRUTH for member balances (Phase 11.5) ──
+     memberBalance delegates to memberStatement; no balance formula is duplicated. */
   memberBalance(memberId){
+    return FIN.memberStatement(memberId).finalBalance;
+  },
 
+  /* Authoritative member ledger. Returns the ledger rows AND the final balance.
+     prepaid_subscription_ils is represented as a capped credit row:
+     covers 2025/2026 only, never 2027+, never carried forward, never a standalone
+     credit (capped by eligible 2025/2026 dues). Sign convention unchanged:
+     positive = على العضو مستحقات. */
+  memberStatement(memberId, from, to){
     const member = DB.members.find(m => m.id === memberId);
-
-    if(!member) return 0;
+    if(!member) return {member:null, rows:[], openingBalance:0, totalDues:0, totalPaid:0, prepaidEffective:0, finalBalance:0};
 
     const openingBalance = Number(member.opening_balance || 0);
+    const fd = from ? new Date(from) : null;
+    const td = to   ? new Date(to)   : null;
+    const inRange = d => { if(!d || d==='—') return true; const dt=new Date(d); if(fd&&dt<fd) return false; if(td&&dt>td) return false; return true; };
 
-    const paid = DB.receipts
-      .filter(r =>
-        !r.is_deleted &&
-        r.fund_type === 'food' &&
-        r.member_id === memberId
-      )
-      .reduce((s,r)=>s + Number(r.amount_ils || r.amount || 0),0);
+    const rows = [];
+    if(openingBalance !== 0)
+      rows.push({date:'—', no:'—', desc:'رصيد افتتاحي · Opening Balance', cr:0, dr:openingBalance, cls:'opening'});
 
-    const dues = DB.annual
-      .filter(a =>
-        !member.active_from_year ||
-        a.year >= member.active_from_year
-      )
-      .reduce((s,a)=>s + Number(a.amount || 0),0);
+    DB.annual
+      .filter(a => !member.active_from_year || a.year >= member.active_from_year)
+      .forEach(a => rows.push({date:a.applied_at?.slice(0,10) || a.year+'-01-01', no:'—', desc:`اشتراك سنة ${a.year}`, cr:0, dr:Number(a.amount||0), cls:'due'}));
 
-    return openingBalance + dues - paid;
+    DB.receipts
+      .filter(r => !r.is_deleted && r.fund_type==='food' && r.member_id===memberId && inRange(r.receipt_date))
+      .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:r.notes||'مساهمة', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'paid'}));
+
+    const dues2526 = DB.annual
+      .filter(a => (a.year===2025 || a.year===2026) && (!member.active_from_year || a.year >= member.active_from_year))
+      .reduce((s,a)=>s + Number(a.amount||0),0);
+    const prepaidEffective = Math.min(Number(member.prepaid_subscription_ils||0), dues2526);
+    if(prepaidEffective > 0)
+      rows.push({date:'2026-12-31', no:'—', desc:'اشتراك مدفوع مسبقاً (2025–2026)', cr:prepaidEffective, dr:0, cls:'prepaid'});
+
+    rows.sort((a,b)=> a.date==='—' ? -1 : b.date==='—' ? 1 : new Date(a.date)-new Date(b.date));
+
+    let bal = 0;
+    rows.forEach(r => { bal += r.dr - r.cr; r.bal = bal; });
+
+    const totalDues = rows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
+    const totalPaid = rows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
+    const finalBalance = openingBalance + totalDues - totalPaid - prepaidEffective;
+
+    return {member, rows, openingBalance, totalDues, totalPaid, prepaidEffective, finalBalance};
+  },
+
+  /* Approved balance terminology (Phase 11.5). Sign unchanged. */
+  balanceLabel(bal, withAmount=true){
+    bal = Number(bal)||0;
+    const amt = withAmount ? ' ₪ '+fmt(Math.abs(bal)) : '';
+    if(bal > 0) return 'على العضو مستحقات'+amt;
+    if(bal < 0) return 'للعضو رصيد'+amt;
+    return 'الحساب مسدد بالكامل';
   },
 
   foodBalance(){
@@ -615,7 +649,7 @@ async function loadAll(){
       SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
       SB.from('members').select(
-'id,name,phone,notes,opening_balance,is_active,created_at,active_from_year'
+'id,name,phone,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year'
 ).order('name'),
       SB.from('contacts').select('*').order('name'),
       SB.from('annual_dues').select('*').order('year',{ascending:false}),
@@ -799,17 +833,8 @@ else if(st==='credit')
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(6,'members');return;}
     body.innerHTML=page.map((m,i)=>{
-      let cls='green';
-let lbl='مسدد';
-
-if(m.bal > 0){
-  cls='red';
-  lbl='متأخر';
-}
-else if(m.bal < 0){
-  cls='blue';
-  lbl='رصيد دائن';
-}
+      let cls = m.bal > 0 ? 'red' : m.bal < 0 ? 'blue' : 'green';
+      const lbl = FIN.balanceLabel(m.bal, false);
       return`<tr>
         <td style="color:var(--tx3)">${(PS['members']-1)*PSZ+i+1}</td>
         <td><b>${esc(m.name)}</b></td>
@@ -820,9 +845,7 @@ else if(m.bal < 0){
   '#00C896'
 }">
 ${
-  m.bal < 0
-    ? `رصيد دائن ₪ ${fmt(Math.abs(m.bal))}`
-    : `₪ ${fmt(m.bal)}`
+  `₪ ${fmt(Math.abs(m.bal))}`
 }
 </td>
         <td><span class="badge ${cls}">${lbl}</span></td>
@@ -1095,19 +1118,6 @@ window.renderMemberStmt=function(){
     return true;
   };
 
-  const recs=DB.receipts.filter(r=>
-    !r.is_deleted &&
-    r.fund_type==='food' &&
-    r.member_id===mid &&
-    inRange(r.receipt_date)
-  );
-
-  const dues=DB.annual
-    .filter(d =>
-      !member.active_from_year ||
-      d.year >= member.active_from_year
-    );
-
   const dons=DB.receipts.filter(r=>
     !r.is_deleted &&
     r.fund_type==='donation' &&
@@ -1115,48 +1125,13 @@ window.renderMemberStmt=function(){
     inRange(r.receipt_date)
   );
 
-  const rows=[];
-
-  const openBal=Number(member.opening_balance||0);
-
-  if(openBal!==0){
-    rows.push({
-      date:'1900-01-01',
-      desc:'رصيد افتتاحي',
-      cr:0,
-      dr:openBal,
-      type:'opening'
-    });
-  }
-
-  dues.forEach(d=>{
-    rows.push({
-      date:d.applied_at?.slice(0,10) || `${d.year}-01-01`,
-      desc:`اشتراك سنة ${d.year}`,
-      cr:0,
-      dr:Number(d.amount||0),
-      type:'due'
-    });
-  });
-
-  recs.forEach(r=>{
-    rows.push({
-      date:r.receipt_date,
-      desc:r.notes || 'دفعة مساهمة',
-      cr:Number(r.amount_ils||r.amount||0),
-      dr:0,
-      type:'receipt',
-      no:r.no
-    });
-  });
-
-  rows.sort((a,b)=>new Date(a.date)-new Date(b.date));
-
-  let bal=0;
+  /* PHASE 11.5 — single balance engine (incl. capped prepaid credit row) */
+  const st=FIN.memberStatement(mid,from,to);
+  const rows=st.rows;
 
   const rowsHTML=rows.map(r=>{
 
-    bal += r.dr - r.cr;
+    const bal=r.bal;
 
     let balColor='#00C896';
 
@@ -1169,10 +1144,10 @@ window.renderMemberStmt=function(){
     return `
       <div class="lr">
         <span class="lr-date">
-          ${r.type==='opening'?'—':fdate(r.date)}
+          ${(r.cls==='opening'||r.date==='—')?'—':fdate(r.date)}
         </span>
         <span class="lr-name">
-          ${r.no?esc(r.no):'—'}
+          ${r.no&&r.no!=='—'?esc(r.no):'—'}
         </span>
         <span class="lr-desc">
           ${esc(r.desc)}
@@ -1184,11 +1159,7 @@ window.renderMemberStmt=function(){
           ${r.dr>0 ? '₪ '+fmt(r.dr) : '—'}
         </span>
         <span class="lr-bal" style="color:${balColor}">
-          ${
-            bal<0
-              ? `رصيد دائن ₪ ${fmt(Math.abs(bal))}`
-              : `₪ ${fmt(bal)}`
-          }
+          ₪ ${fmt(Math.abs(bal))}
         </span>
         <span class="lr-note"></span>
       </div>
@@ -2185,31 +2156,12 @@ window.prtMemberStmt=function(){
     return true;
   };
 
-  const rows=[];
-  const openBal=Number(member.opening_balance||0);
-
-  /* opening balance — موجب = مدين على العضو (متطابق مع الشاشة) */
-  if(openBal!==0) rows.push({date:'—',no:'—',desc:'رصيد افتتاحي · Opening Balance',cr:0,dr:openBal,cls:'opening'});
-
-  /* annual dues — مفلتر بـ active_from_year (إصلاح BUG 1) */
-  DB.annual
-    .filter(a=>!member.active_from_year||a.year>=member.active_from_year)
-    .forEach(a=>rows.push({date:a.applied_at?.slice(0,10)||a.year+'-01-01',no:'—',desc:`اشتراك سنة ${a.year}`,cr:0,dr:Number(a.amount),cls:'due'}));
-
-  /* receipts — مفلترة بالتاريخ */
-  DB.receipts
-    .filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date))
-    .forEach(r=>rows.push({date:r.receipt_date,no:r.no,desc:r.notes||'مساهمة',cr:Number(r.amount_ils||r.amount),dr:0,cls:'paid'}));
-
-  rows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
-
-  /* summary */
-  const totalDues=rows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
-  const totalPaid=rows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
-  let bal=0;
-  const rowsHTML=rows.map(r=>{
-    bal+=r.dr-r.cr;
-    const balTxt='₪ '+fmt(Math.abs(bal))+(bal>0?' (مدين)':bal<0?' (دائن)':'');
+  /* PHASE 11.5 — single source of truth (engine includes capped prepaid credit row) */
+  const st=FIN.memberStatement(mid,from,to);
+  const openBal=st.openingBalance, totalDues=st.totalDues, totalPaid=st.totalPaid;
+  const finalBal=st.finalBalance;
+  const rowsHTML=st.rows.map(r=>{
+    const balTxt='₪ '+fmt(Math.abs(r.bal))+(r.bal>0?' (مدين)':r.bal<0?' (دائن)':'');
     return '<tr>'
       +'<td>'+(r.date==='—'?'—':fmtDate2(r.date))+'</td>'
       +'<td>'+esc(r.no)+'</td>'
@@ -2218,8 +2170,6 @@ window.prtMemberStmt=function(){
       +'<td>'+(r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':'—')+'</td>'
       +'<td class="bal">'+balTxt+'</td></tr>';
   }).join('');
-
-  const finalBal=openBal+totalDues-totalPaid;
   const printDate=new Date().toLocaleDateString('en-GB').replace(/\//g,'/');
   const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`من ${fmtDate2(from)}`:to?`حتى ${fmtDate2(to)}`:'كل الفترات';
 
@@ -2232,10 +2182,10 @@ window.prtMemberStmt=function(){
     +'<div class="card"><div class="k">رصيد افتتاحي</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
     +'<div class="card"><div class="k">إجمالي المستحق</div><div class="v neg">₪ '+fmt(totalDues)+'</div></div>'
     +'<div class="card"><div class="k">إجمالي المدفوع</div><div class="v pos">₪ '+fmt(totalPaid)+'</div></div>'
-    +'<div class="card"><div class="k">الرصيد النهائي</div><div class="v '+(finalBal<=0?'pos':'neg')+'">₪ '+fmt(Math.abs(finalBal))+(finalBal>0?' (مدين)':finalBal<0?' (دائن)':'')+'</div></div></div>'
+    +'<div class="card"><div class="k">الرصيد النهائي</div><div class="v '+(finalBal<=0?'pos':'neg')+'">'+FIN.balanceLabel(finalBal,true)+'</div></div></div>'
     +'<table class="dt"><thead><tr><th>التاريخ</th><th>المرجع</th><th>البيان</th><th>مستحق (مدين)</th><th>مدفوع (دائن)</th><th>الرصيد</th></tr></thead>'
     +'<tbody>'+rowsHTML
-    +'<tr class="final"><td colspan="5">الرصيد النهائي · Final Balance</td><td class="'+(finalBal<=0?'pos':'neg')+'">₪ '+fmt(Math.abs(finalBal))+(finalBal>0?' (مدين)':finalBal<0?' (دائن)':'')+'</td></tr></tbody></table>'
+    +'<tr class="final"><td colspan="5">الرصيد النهائي · Final Balance</td><td class="'+(finalBal<=0?'pos':'neg')+'">'+FIN.balanceLabel(finalBal,true)+'</td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع العضو</div></div></div></div>'
     +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+printDate+'</span><span>صفحة 1 / 1</span></div>';
@@ -2473,24 +2423,10 @@ window.exportMemberStmt=function(format){
   const fd=from?new Date(from):null;
   const td=to?new Date(to):null;
   const inRange=d=>{if(!d||d==='—')return true;const dt=new Date(d);if(fd&&dt<fd)return false;if(td&&dt>td)return false;return true;};
-  const openBal=Number(member.opening_balance||0);
-  const stmtRows=[];
-  if(openBal!==0) stmtRows.push({date:'—',no:'—',desc:'\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a \u00b7 Opening Balance',cr:0,dr:openBal,cls:'opening'});
-  DB.annual
-    .filter(a=>!member.active_from_year||a.year>=member.active_from_year)
-    .forEach(a=>stmtRows.push({date:a.applied_at?.slice(0,10)||a.year+'-01-01',no:'—',desc:`\u0627\u0634\u062a\u0631\u0627\u0643 \u0633\u0646\u0629 ${a.year}`,cr:0,dr:Number(a.amount),cls:'due'}));
-  DB.receipts
-    .filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date))
-    .forEach(r=>stmtRows.push({date:r.receipt_date,no:r.no,desc:r.notes||'\u062f\u0641\u0639\u0629 \u0645\u0633\u0627\u0647\u0645\u0629',cr:Number(r.amount_ils||r.amount),dr:0,cls:'paid'}));
-  stmtRows.sort((a,b)=>a.date==='—'?-1:b.date==='—'?1:new Date(a.date)-new Date(b.date));
-
-  /* running balance: dr-cr (dues+, payments-) */
-  let runBal=0;
-  const computed=stmtRows.map(r=>{runBal+=r.dr-r.cr;return{...r,bal:runBal};});
-
-  const totalDues=stmtRows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
-  const totalPaid=stmtRows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
-  const finalBal=openBal+totalDues-totalPaid;
+  /* PHASE 11.5 — single balance engine (incl. capped prepaid credit row) */
+  const _st=FIN.memberStatement(mid,from,to);
+  const computed=_st.rows;
+  const openBal=_st.openingBalance, totalDues=_st.totalDues, totalPaid=_st.totalPaid, finalBal=_st.finalBalance;
   const periodLabel=from&&to?`${from} - ${to}`:from?`\u0645\u0646 ${from}`:to?`\u062d\u062a\u0649 ${to}`:'\u0643\u0644 \u0627\u0644\u0641\u062a\u0631\u0627\u062a';
   const printDate=new Date().toLocaleDateString('en-GB');
   const fname=`member-stmt_${today()}`;
@@ -2526,7 +2462,7 @@ window.exportMemberStmt=function(format){
 
   /* Shared HTML template */
   const rowsHtml=computed.map(r=>{const balTxt='\u20aa '+fmt(Math.abs(r.bal))+(r.bal>0?' (\u0645\u062f\u064a\u0646)':r.bal<0?' (\u062f\u0627\u0626\u0646)':'');return '<tr><td>'+(r.date==='\u2014'?'\u2014':r.date)+'</td><td>'+esc(r.no)+'</td><td>'+esc(r.desc)+'</td>'+'<td>'+(r.dr>0?'<span class="dr">\u20aa '+fmt(r.dr)+'</span>':'\u2014')+'</td>'+'<td>'+(r.cr>0?'<span class="cr">\u20aa '+fmt(r.cr)+'</span>':'\u2014')+'</td>'+'<td class="bal">'+balTxt+'</td></tr>';}).join('');
-  const finalTxt='\u20aa '+fmt(Math.abs(finalBal))+(finalBal>0?' (\u0645\u062f\u064a\u0646)':finalBal<0?' (\u062f\u0627\u0626\u0646)':'');
+  const finalTxt=FIN.balanceLabel(finalBal,true);
   const balCls=finalBal<=0?'pos':'neg';
   const htmlDoc='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">'+'<style>'+PRINT_TOKENS+'@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff;padding:10mm}</style></head><body>'+'<div class="dh"><div class="org"><div class="logo">\u062f\u0637</div><div><h1>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</h1><p>\u0646\u0638\u0627\u0645 \u0627\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u00b7 diwan-finance.com</p></div></div>'+'<div class="meta"><span class="tt">\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648</span><div class="sub">\u0627\u0644\u0639\u0636\u0648: '+esc(member.name)+'</div></div></div>'+'<div class="period">\u0627\u0644\u0641\u062a\u0631\u0629: '+periodLabel+' \u00b7 \u0646\u0627\u0634\u0637 \u0645\u0646 \u0633\u0646\u0629 '+(member.active_from_year||'\u2014')+'</div>'+'<div class="cards"><div class="card"><div class="k">\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a</div><div class="v">\u20aa '+fmt(openBal)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0633\u062a\u062d\u0642</div><div class="v neg">\u20aa '+fmt(totalDues)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639</div><div class="v pos">\u20aa '+fmt(totalPaid)+'</div></div>'+'<div class="card"><div class="k">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a</div><div class="v '+balCls+'">'+finalTxt+'</div></div></div>'+'<table class="dt"><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0631\u062c\u0639</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u0645\u0633\u062a\u062d\u0642 (\u0645\u062f\u064a\u0646)</th><th>\u0645\u062f\u0641\u0648\u0639 (\u062f\u0627\u0626\u0646)</th><th>\u0627\u0644\u0631\u0635\u064a\u062f</th></tr></thead><tbody>'+rowsHtml+'<tr class="final"><td colspan="5">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a \u00b7 Final Balance</td><td class="'+balCls+'">'+finalTxt+'</td></tr></tbody></table>'+'<div class="dfoot"><div class="qr-u"><div class="box"></div><div class="cap">diwan-finance.com</div></div>'+'<div class="sigs"><div class="sig-u"><div class="line">\u0627\u0644\u0645\u064f\u062d\u0627\u0633\u0628</div></div><div class="sig-u"><div class="line">\u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0639\u0636\u0648</div></div></div></div>'+'<div class="pgfoot"><span>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 diwan-finance.com</span><span>\u0637\u064f\u0628\u0639: '+printDate+'</span><span>\u0635\u0641\u062d\u0629 1 / 1</span></div>'+'</body></html>';
 
