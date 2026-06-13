@@ -553,28 +553,23 @@ function showResult(apiResult, docId) {
   elLabel.textContent   = t[m.labelKey];
   elSub.textContent     = t[m.subKey];
 
-  /* Apply fund stripe */
+  /* Apply status stripe — fund is no longer exposed publicly (Phase 14.3-B);
+     valid documents use the default accent stripe. */
   elStripe.className = 'fund-stripe';
-  if (state === 'valid' && doc) {
-    const fc = fundClass(doc.fund);
-    if (fc !== 'default') elStripe.classList.add(fc);
-  } else {
+  if (state !== 'valid') {
     elStripe.classList.add(state === 'cancelled' ? 'cancelled'
       : (state === 'invalid' || state === 'no_id') ? 'invalid'
       : 'error');
   }
 
-  /* Render document fields (valid only) */
+  /* Render document fields (valid only) — minimal public set (Phase 14.3-B):
+     document number, type, issue date ONLY.
+     Amount, description, fund, preparedBy, approvedBy are intentionally NOT shown. */
   if (state === 'valid' && doc) {
     elFields.innerHTML = [
-      field(t.f_no,     doc.id || docId, 'mono'),
-      field(t.f_type,   voucherTypeLabel(doc.type, t)),
-      field(t.f_fund,   fundBadgeHtml(doc.fund, t)),
-      field(t.f_date,   formatDate(doc.date)),
-      field(t.f_amount, formatAmount(doc.amount, doc.currency), 'amount'),
-      field(t.f_desc,   doc.description || t.not_avail),
-      field(t.f_prep,   doc.preparedBy  || t.not_avail),
-      doc.approvedBy ? field(t.f_approv, doc.approvedBy) : '',
+      field(t.f_no,   doc.id || docId, 'mono'),
+      field(t.f_type, voucherTypeLabel(doc.type, t)),
+      field(t.f_date, formatDate(doc.date)),
     ].join('');
     elFooter.style.display = 'flex';
     elTs.innerHTML  = `<span>${t.verified_at}</span> ${nowFormatted()}`;
