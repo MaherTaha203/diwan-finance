@@ -59,7 +59,7 @@ module.exports = async function handler(req, res) {
      * ──────────────────────────────────────────────────────────────── */
     const { data: receipt, error: recErr } = await supabase
       .from('receipts')
-      .select('no, receipt_date, is_deleted')
+      .select('no, fund_type, receipt_date, amount_ils, amount, currency, notes, created_by, is_deleted')
       .eq('no', docId)
       .maybeSingle();
 
@@ -73,14 +73,22 @@ module.exports = async function handler(req, res) {
       if (receipt.is_deleted === true) {
         return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
       }
-      /* Phase 14.3-B: public verification exposes ONLY non-sensitive fields.
-       * No amount / currency / description / fund / preparedBy. */
+      const fund =
+        receipt.fund_type === 'food'     ? 'Food Fund'  :
+        receipt.fund_type === 'diwan'    ? 'Diwan Fund' :
+        receipt.fund_type === 'donation' ? 'Donations'  :
+        receipt.fund_type                || '';
       return res.status(200).json({
         valid: true,
         document: {
-          id:   receipt.no,
-          type: 'Receipt Voucher',
-          date: receipt.receipt_date,
+          id:          receipt.no,
+          type:        'Receipt Voucher',
+          fund,
+          date:        receipt.receipt_date,
+          amount:      receipt.amount_ils || receipt.amount,
+          currency:    receipt.currency   || 'ILS',
+          description: receipt.notes      || '',
+          preparedBy:  receipt.created_by || '',
         },
       });
     }
@@ -91,7 +99,7 @@ module.exports = async function handler(req, res) {
      * ──────────────────────────────────────────────────────────────── */
     const { data: payment, error: payErr } = await supabase
       .from('payments')
-      .select('no, payment_date, is_deleted')
+      .select('no, fund_type, payment_date, amount_ils, amount, currency, expense_type, notes, created_by, approved_by, is_deleted')
       .eq('no', docId)
       .maybeSingle();
 
@@ -104,14 +112,22 @@ module.exports = async function handler(req, res) {
       if (payment.is_deleted === true) {
         return res.status(200).json({ valid: false, error: 'Document has been cancelled' });
       }
-      /* Phase 14.3-B: public verification exposes ONLY non-sensitive fields.
-       * No amount / currency / description / fund / preparedBy / approvedBy. */
+      const fund =
+        payment.fund_type === 'food'     ? 'Food Fund'  :
+        payment.fund_type === 'diwan'    ? 'Diwan Fund' :
+        payment.fund_type                || '';
       return res.status(200).json({
         valid: true,
         document: {
-          id:   payment.no,
-          type: 'Payment Voucher',
-          date: payment.payment_date,
+          id:          payment.no,
+          type:        'Payment Voucher',
+          fund,
+          date:        payment.payment_date,
+          amount:      payment.amount_ils    || payment.amount,
+          currency:    payment.currency      || 'ILS',
+          description: payment.notes         || payment.expense_type || '',
+          preparedBy:  payment.created_by    || '',
+          approvedBy:  payment.approved_by   || '',
         },
       });
     }
