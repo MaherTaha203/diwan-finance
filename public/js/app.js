@@ -202,7 +202,7 @@ const FIN={
       .reduce((s,a)=>s + Number(a.amount||0),0);
     const prepaidEffective = Math.min(Number(member.prepaid_subscription_ils||0), dues2526);
     if(prepaidEffective > 0)
-      rows.push({date:'2026-12-31', no:'—', desc:'اشتراك مدفوع مسبقاً (2025–2026)', cr:prepaidEffective, dr:0, cls:'prepaid'});
+      rows.push({date:'2026-12-31', no:'—', desc:'مدفوعات قبل تطبيق النظام (2025–2026)', cr:prepaidEffective, dr:0, cls:'prepaid'});
 
     rows.sort((a,b)=> a.date==='—' ? -1 : b.date==='—' ? 1 : new Date(a.date)-new Date(b.date));
 
@@ -954,7 +954,7 @@ function renderTreasuryPanel(){
 function renderDash(){
   const fb=FIN.foodBalance(),db=FIN.diwanBalance(),donb=FIN.donBalance();
   const dd=document.getElementById('dash-date');
-  if(dd)dd.textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if(dd)dd.textContent=new Date().toLocaleDateString('en-CA');
 
   const _isEn=window.LANG==='en';
   document.getElementById('fund-summary').innerHTML=`
@@ -1088,6 +1088,7 @@ function fillMemberSelect(){
   const cur=sel.value;
   sel.innerHTML='<option value="">-- اختر عضواً --</option>'+DB.members.filter(m=>m.is_active).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   if(cur)sel.value=cur;
+  enhanceMemberSelect('ms-member'); syncComboInput('ms-member');
 }
 window.renderMemberStmt=function(){
 
@@ -1190,6 +1191,7 @@ window.renderMemberStmt=function(){
         <div style="font-size:18px;font-weight:700">
           ${esc(member.name)}
         </div>
+        ${member.active_from_year?`<div style="font-size:12px;color:var(--tx3);margin-top:3px">سنة بدء الاشتراك: ${member.active_from_year}</div>`:''}
       </div>
       <div class="ledger-hdr">
         <span style="flex:0 0 90px">التاريخ</span>
@@ -1215,6 +1217,10 @@ window.openM=function(type){
   document.getElementById('ov').classList.add('on');
   document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
   document.getElementById('m-'+type).style.display='block';
+  if(type==='member'){
+    const fy=document.getElementById('mem-from-year');
+    if(fy && !fy.value) fy.value=new Date().getFullYear();
+  }
 };
 window.closeM=function(){
   document.getElementById('ov').classList.remove('on');
@@ -1264,8 +1270,7 @@ window.onRecFundChange=function(){
     if(mico){mico.className='mico food';} if(title)title.textContent='إيصال صندوق الغداء';
     if(donWrap)donWrap.style.display='none';
     if(optContact)optContact.style.display='none';
-    if(optManual)optManual.style.display='none';
-    if(ptSel)ptSel.value='member';
+    if(optManual)optManual.style.display='';
   } else if(fund==='diwan'){
     if(mico){mico.className='mico diwan';} if(title)title.textContent='إيصال صندوق الديوان';
     if(donWrap)donWrap.style.display='none';
@@ -1345,11 +1350,71 @@ window.setPill=function(prefix,el){
 function fillMemberDropdowns(){
   const opts='<option value="">-- اختر عضواً --</option>'+DB.members.filter(m=>m.is_active).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   ['rec-member','pay-member','don-mem-sel'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  ['rec-member','pay-member'].forEach(id=>{ if(document.getElementById(id)){ enhanceMemberSelect(id); syncComboInput(id); } });
 }
 function fillContactDropdown(){
   const opts='<option value="">-- اختر --</option>'+DB.contacts.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
   const el=document.getElementById('rec-contact');if(el)el.innerHTML=opts;
 }
+
+/* ═══ Note 6 — Hybrid searchable member select ═══
+   يُبقي <select> الأصلي مصدراً للقيمة (لا يكسر منطق الحفظ)،
+   ويضيف فوقه حقل بحث: قائمة منسدلة عادية، وتتحوّل لفلترة فور الكتابة. */
+function enhanceMemberSelect(selectId){
+  const sel=document.getElementById(selectId);
+  if(!sel || sel.dataset.enhanced==='1') { if(sel) syncComboInput(selectId); return; }
+  sel.dataset.enhanced='1';
+  sel.style.display='none';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:relative';
+  const input=document.createElement('input');
+  input.type='text';
+  input.id=selectId+'-combo';
+  input.autocomplete='off';
+  input.placeholder='اكتب للبحث أو اختر عضواً...';
+  input.setAttribute('role','combobox');
+  const list=document.createElement('div');
+  list.id=selectId+'-combo-list';
+  list.className='combo-list';
+  list.style.display='none';
+  sel.parentNode.insertBefore(wrap,sel);
+  wrap.appendChild(sel);
+  wrap.appendChild(input);
+  wrap.appendChild(list);
+
+  const buildList=(filter)=>{
+    const f=(filter||'').toLowerCase().trim();
+    const opts=Array.from(sel.options).filter(o=>o.value);
+    const matched=opts.filter(o=>!f || o.text.toLowerCase().includes(f));
+    if(!matched.length){ list.innerHTML='<div class="combo-empty">لا نتائج</div>'; return; }
+    list.innerHTML=matched.map(o=>{
+      const t=esc(o.text);
+      const hl=f? t.replace(new RegExp('('+f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>') : t;
+      return `<div class="combo-item" data-val="${o.value}">${hl}</div>`;
+    }).join('');
+  };
+  const open=()=>{ buildList(input.value && input.value!==selectedText()?input.value:''); list.style.display='block'; };
+  const close=()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
+  function selectedText(){ const o=sel.options[sel.selectedIndex]; return o&&o.value?o.text:''; }
+
+  input.addEventListener('focus',open);
+  input.addEventListener('blur',close);
+  input.addEventListener('input',()=>{ buildList(input.value); list.style.display='block'; });
+  list.addEventListener('mousedown',(e)=>{
+    const item=e.target.closest('.combo-item'); if(!item) return;
+    sel.value=item.dataset.val;
+    input.value=sel.options[sel.selectedIndex].text;
+    sel.dispatchEvent(new Event('change',{bubbles:true}));
+    list.style.display='none';
+  });
+  syncComboInput(selectId);
+}
+function syncComboInput(selectId){
+  const sel=document.getElementById(selectId);
+  const input=document.getElementById(selectId+'-combo');
+  if(sel&&input){ const o=sel.options[sel.selectedIndex]; input.value=(o&&o.value)?o.text:''; }
+}
+function enhanceAllMemberSelects(){ ['rec-member','pay-member','ms-member'].forEach(enhanceMemberSelect); }
 
 
 /* ════════════════════════════════════════════════════════════════
@@ -1600,7 +1665,8 @@ window.saveRec=async function(print=false){
   const donDisplay=document.getElementById('rec-don-display')?.value||null;
   const saveContact=document.getElementById('rec-save-contact')?.checked||false;
 
-  const v1=fund==='food'||fund==='donation'?vf('rec-member',v=>!!v,'e-rec-member'):
+  const v1=fund==='donation'?vf('rec-member',v=>!!v,'e-rec-member'):
+    payerType==='member'?vf('rec-member',v=>!!v,'e-rec-member'):
     payerType==='manual'?vf('rec-payer-name',v=>v.trim().length>0,'e-rec-member'):true;
   const v2=vf('rec-amount',v=>parseFloat(v)>0,'e-rec-amount');
   const v3=vf('rec-date',v=>!!v,'e-rec-date');
@@ -1693,7 +1759,9 @@ window.saveMember=async function(){
   const bal=parseFloat(document.getElementById('mem-balance').value)||0;
   const phone=document.getElementById('mem-phone').value;
   const notes=document.getElementById('mem-notes').value;
-  const{data:mNew,error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal}).select('id').single();
+  const fromYearRaw=document.getElementById('mem-from-year')?.value;
+  const fromYear=fromYearRaw?parseInt(fromYearRaw,10):new Date().getFullYear();
+  const{data:mNew,error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal,active_from_year:fromYear}).select('id').single();
   if(error){toast('خطأ: '+error.message,'err');return;}
   await logAction('add',`إضافة عضو: ${name}`,'members',mNew?.id||null);
   window.closeM();await loadAll();toast(`✓ تمت إضافة ${name}`,'ok');
@@ -1805,6 +1873,8 @@ window.editMember=function(id){
   document.getElementById('edit-mem-phone').value=m.phone||'';
   document.getElementById('edit-mem-balance').value=m.opening_balance||0;
   document.getElementById('edit-mem-notes').value=m.notes||'';
+  const efy=document.getElementById('edit-mem-from-year');
+  if(efy) efy.value=m.active_from_year||'';
   window.openM('edit-member');
 };
 window.updateMember=async function(){
@@ -1815,7 +1885,9 @@ window.updateMember=async function(){
   const phone=document.getElementById('edit-mem-phone').value;
   const bal=parseFloat(document.getElementById('edit-mem-balance').value)||0;
   const notes=document.getElementById('edit-mem-notes').value;
-  const{error}=await SB.from('members').update({name,phone,opening_balance:bal,notes,updated_at:new Date().toISOString()}).eq('id',id);
+  const efyRaw=document.getElementById('edit-mem-from-year')?.value;
+  const efy=efyRaw?parseInt(efyRaw,10):null;
+  const{error}=await SB.from('members').update({name,phone,opening_balance:bal,notes,active_from_year:efy,updated_at:new Date().toISOString()}).eq('id',id);
   if(error){toast('خطأ: '+error.message,'err');return;}
   await logAction('edit',`تعديل بيانات عضو: ${name}`,'members',id);
   window.closeM();await loadAll();toast('✓ تم التعديل','ok');
@@ -1909,15 +1981,62 @@ window.inviteUser=async()=>{
   window.closeM();toast(`تم إنشاء حساب ${email}`,'ok');loadUsers();
 };
 
-/* ═══ AUDIT ═══ */
+/* ═══ AUDIT — Data Grid (Note 9) ═══ */
+window.AUDIT_FILTER={q:'',action:'',page:1,pageSize:25};
+function auditActionLabel(a){return a==='add'?'إضافة':a==='delete'?'حذف':a==='edit'?'تعديل':a||'—';}
+window.onAuditFilter=function(){
+  AUDIT_FILTER.q=(document.getElementById('audit-q')?.value||'').toLowerCase();
+  AUDIT_FILTER.action=document.getElementById('audit-action')?.value||'';
+  AUDIT_FILTER.page=1;
+  renderAuditGrid();
+};
+window.auditPage=function(dir){
+  AUDIT_FILTER.page=Math.max(1,AUDIT_FILTER.page+dir);
+  renderAuditGrid();
+};
 function renderAudit(){
   const list=document.getElementById('audit-list');if(!list)return;
-  if(!DB.audit.length){list.innerHTML='<div class="empty"><i class="ti ti-clipboard-list"></i><div class="empty-t">السجل فارغ</div></div>';return;}
-  list.innerHTML=DB.audit.map(a=>`
-    <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)">
-      <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba(${a.action==='add'?'0,200,150':a.action==='delete'?'220,38,38':'27,108,168'},.12);color:${a.action==='add'?'#00C896':a.action==='delete'?'var(--danger)':'#60A5FA'}"><i class="ti ti-${a.action==='add'?'plus':a.action==='delete'?'trash':'edit'}"></i></div>
-      <div style="flex:1"><div style="font-size:12.5px;font-weight:500">${esc(a.description)}</div><div style="font-size:10.5px;color:var(--tx3);margin-top:2px">${esc(a.user_name||'—')} · ${fdate(a.created_at?.slice(0,10))}</div></div>
-    </div>`).join('');
+  list.innerHTML=`
+    <div class="tb" style="margin-bottom:10px">
+      <div class="sw"><i class="ti ti-search"></i><input class="si" id="audit-q" placeholder="بحث في الوصف أو المستخدم..." oninput="window.onAuditFilter()"></div>
+      <select class="fs" id="audit-action" onchange="window.onAuditFilter()">
+        <option value="">كل الأنواع</option>
+        <option value="add">إضافة</option>
+        <option value="edit">تعديل</option>
+        <option value="delete">حذف</option>
+      </select>
+    </div>
+    <div class="tw"><table class="dt"><thead><tr>
+      <th style="width:95px">التاريخ</th><th style="width:75px">النوع</th><th>الوصف</th><th style="width:120px">المستخدم</th><th style="width:90px">الجدول</th>
+    </tr></thead><tbody id="audit-grid-body"></tbody></table></div>
+    <div id="audit-pager" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:10px"></div>`;
+  renderAuditGrid();
+}
+function renderAuditGrid(){
+  const body=document.getElementById('audit-grid-body');if(!body)return;
+  const f=AUDIT_FILTER;
+  let rows=DB.audit.slice();
+  if(f.action) rows=rows.filter(a=>a.action===f.action);
+  if(f.q) rows=rows.filter(a=>((a.description||'')+' '+(a.user_name||'')).toLowerCase().includes(f.q));
+  const total=rows.length;
+  if(!total){ body.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:18px">لا توجد عمليات مطابقة</td></tr>'; const pg=document.getElementById('audit-pager'); if(pg)pg.innerHTML=''; return; }
+  const pages=Math.ceil(total/f.pageSize);
+  if(f.page>pages) f.page=pages;
+  const start=(f.page-1)*f.pageSize;
+  const page=rows.slice(start,start+f.pageSize);
+  const badge=a=>{const c=a==='add'?'green':a==='delete'?'red':'blue';return `<span class="badge ${c}" style="font-size:10px">${auditActionLabel(a)}</span>`;};
+  body.innerHTML=page.map(a=>`<tr>
+    <td style="white-space:nowrap;color:var(--tx3);font-size:11px">${fdate(a.created_at?.slice(0,10))}</td>
+    <td>${badge(a.action)}</td>
+    <td style="font-size:12px">${esc(a.description||'—')}</td>
+    <td style="font-size:11px;color:var(--tx2)">${esc(a.user_name||'—')}</td>
+    <td style="font-size:11px;color:var(--tx3)">${esc(a.table_name||'—')}</td>
+  </tr>`).join('');
+  const pg=document.getElementById('audit-pager');
+  if(pg) pg.innerHTML=`
+    <button class="btn ghost sm" ${f.page<=1?'disabled':''} onclick="window.auditPage(-1)"><i class="ti ti-chevron-right"></i></button>
+    <span style="font-size:12px;color:var(--tx2)">صفحة ${f.page} من ${pages} · ${total} عملية</span>
+    <button class="btn ghost sm" ${f.page>=pages?'disabled':''} onclick="window.auditPage(1)"><i class="ti ti-chevron-left"></i></button>`;
 }
 function renderSysInfo(){
   const el=document.getElementById('sys-info');if(!el)return;
@@ -2097,7 +2216,7 @@ window.buildFundStatementHTML=function(fund){
     if(i===0&&r.type==='open')openBal=r.cr-r.dr;
     const crCell=r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':(r.type==='don'?'<span class="cr">تبرع</span>':'—');
     const drCell=r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—';
-    return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(bal)+'</td></tr>';
+    return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(bal)+'</td><td>'+esc(r.note||'')+'</td></tr>';
   }).join('');
   const period=(from&&to?fmtDate2(from)+' — '+fmtDate2(to):from?'من '+fmtDate2(from):to?'حتى '+fmtDate2(to):'كل الفترات');
   const balCls=bal>=0?'pos':'neg';
@@ -2110,9 +2229,9 @@ window.buildFundStatementHTML=function(fund){
     +'<div class="card"><div class="k">إجمالي الوارد</div><div class="v pos">₪ '+fmt(totCr)+'</div></div>'
     +'<div class="card"><div class="k">إجمالي المنصرف</div><div class="v neg">₪ '+fmt(totDr)+'</div></div>'
     +'<div class="card"><div class="k">الرصيد الجاري</div><div class="v '+balCls+'">₪ '+fmt(bal)+'</div></div></div>'
-    +'<table class="dt"><thead><tr><th>التاريخ</th><th>الاسم</th><th>البيان</th><th>وارد</th><th>منصرف</th><th>الرصيد</th></tr></thead>'
+    +'<table class="dt"><thead><tr><th>التاريخ</th><th>الاسم</th><th>البيان</th><th>وارد</th><th>منصرف</th><th>الرصيد</th><th>ملاحظات</th></tr></thead>'
     +'<tbody>'+rowsHTML
-    +'<tr class="final"><td colspan="5">الرصيد الجاري · Current Balance</td><td class="'+balCls+'">₪ '+fmt(bal)+'</td></tr></tbody></table>'
+    +'<tr class="final"><td colspan="5">الرصيد الجاري · Current Balance</td><td class="'+balCls+'">₪ '+fmt(bal)+'</td><td></td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">رئيس الديوان</div></div></div></div>'
     +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>';
@@ -2537,10 +2656,10 @@ window.exportPagePDF=function(type){
     tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length})</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
   else if(type==='members'){
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0639\u0636\u0648 \u0645\u0646\u0630</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0627\u0641\u062a\u062a\u0627\u062d\u064a</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th><th>\u0627\u0644\u062d\u0627\u0644\u0629</th></tr></thead><tbody>';
+    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th></tr></thead><tbody>';
     DB.members.filter(m=>m.is_active!==false).forEach(m=>{
       const bal=FIN.memberBalance(m.id);
-      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>${m.active_from_year||'—'}</td><td>\u20aa ${fmt(m.opening_balance||0)}</td><td class="bal">\u20aa ${fmt(bal)}</td><td>${m.is_active!==false?'\u0646\u0634\u0637':'\u063a\u064a\u0631 \u0646\u0634\u0637'}</td></tr>`;
+      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>\u20aa ${fmt(m.opening_balance||0)}</td><td class="bal">\u20aa ${fmt(bal)}</td></tr>`;
     });
     tableHTML+='</tbody></table>';
   }
@@ -2593,8 +2712,8 @@ window.exportPageExcel=function(type){
     d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),r.donation_display_fund||'',r.notes||'']));
   }
   else if(type==='members'){
-    wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0639\u0636\u0648 \u0645\u0646\u0630','\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
-    DB.members.filter(m=>m.is_active!==false).forEach(m=>wsData.push([m.name,m.phone||'',m.active_from_year||'',m.opening_balance||0,FIN.memberBalance(m.id)]));
+    wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
+    DB.members.filter(m=>m.is_active!==false).forEach(m=>wsData.push([m.name,m.phone||'',m.opening_balance||0,FIN.memberBalance(m.id)]));
   }
   else if(type==='annual'){
     wsData=[['\u0627\u0644\u0633\u0646\u0629','\u0627\u0644\u0645\u0628\u0644\u063a','\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621','\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629','\u0627\u0644\u062a\u0627\u0631\u064a\u062e']];
