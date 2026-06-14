@@ -2736,7 +2736,7 @@ function setupAllForms(){
 
 /* ═══ FORGOT PASSWORD ═══ */
 window.forgotPassword = async function(){
-  const emailEl = document.getElementById('login-email');
+  const emailEl = document.getElementById('l-email');
   const email = emailEl ? emailEl.value.trim() : '';
   const msg = document.getElementById('forgot-msg');
 
