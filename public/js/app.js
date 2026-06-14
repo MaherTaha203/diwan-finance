@@ -2735,26 +2735,28 @@ function setupAllForms(){
 }
 
 /* ═══ FORGOT PASSWORD ═══ */
-window.forgotPassword=async function(){
-  const emailEl=document.getElementById('l-email');
-  const email=(emailEl?.value||'').trim();
-  const msg=document.getElementById('forgot-msg');
+window.forgotPassword = async function(){
+  const emailEl = document.getElementById('login-email');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const msg = document.getElementById('forgot-msg');
+
+  const neutral = 'إذا كان البريد مسجلاً لدينا فستصلك رسالة إعادة التعيين.';
+
   if(!email){
-    if(msg){msg.textContent=window.LANG==='en'?'Enter your email first.':'أدخل بريدك الإلكتروني أولاً.';msg.style.display='block';setTimeout(()=>msg.style.display='none',5000);}
+    if(msg){ msg.textContent = 'يرجى إدخال البريد الإلكتروني أولاً.'; msg.style.display='block'; }
     return;
   }
-  const {error}=await SB.auth.resetPasswordForEmail(email,{
-    redirectTo:'https://www.diwan-finance.com/reset-password'
-  });
-  if(msg){
-    if(error){
-      msg.textContent=window.LANG==='en'?'Error: '+error.message:'خطأ: '+error.message;
-    } else {
-      msg.textContent=window.LANG==='en'?'Reset link sent to '+email:'تم إرسال رابط إعادة تعيين كلمة المرور إلى '+email+'. تحقق من بريدك.';
-    }
-    msg.style.display='block';
-    setTimeout(()=>msg.style.display='none',8000);
+
+  try{
+    await SB.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://www.diwan-finance.com/reset-password.html'
+    });
+  }catch(_){
+    // لا نكشف أي خطأ — منع User Enumeration
   }
+
+  // رسالة محايدة دائماً بصرف النظر عن وجود البريد أو عدمه
+  if(msg){ msg.textContent = neutral; msg.style.display='block'; }
 };
 
 /* ═══ TOPBAR STYLE FIXES ═══
