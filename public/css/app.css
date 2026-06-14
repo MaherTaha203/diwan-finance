@@ -40,7 +40,8 @@ body {
 }
 .top::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(0,200,150,.3),rgba(27,108,168,.2),transparent); }
 .top-logo { display:flex; align-items:center; gap:9px; }
-.top-logo-ico { width:30px; height:30px; border-radius:6px; background:rgba(0,200,150,.15); border:1px solid rgba(0,200,150,.25); display:flex; align-items:center; justify-content:center; font-size:15px; color:#00C896; }
+.top-logo-ico { width:30px; height:30px; border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.top-logo-ico img { width:30px; height:30px; object-fit:contain; display:block; }
 .top-logo-text { font-size:14px; font-weight:600; color:#E8F0F8; }
 .top-logo-sub { font-size:10px; color:#4A6480; }
 .top-actions { display:flex; align-items:center; gap:7px; }
