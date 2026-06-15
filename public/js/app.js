@@ -418,7 +418,7 @@ window.nav=function(p){
   /* Block viewer from accessing restricted pages — even via DevTools console */
   const ADMIN_PAGES=['audit','bk','users','settings','annual'];
   if(ADMIN_PAGES.includes(p)&&!can.admin()){
-    toast(window.LANG==='ar'?'ليس لديك صلاحية الوصول لهذه الصفحة':'Access denied','err');
+    toast(window.t('messages.access_denied'),'err');
     return;
   }
   document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
@@ -1515,7 +1515,7 @@ function sanitizeName(n){return (n||'file').replace(/[^\w.\-]+/g,'_').slice(-80)
 
 /* Upload handler */
 window.uploadAttach=async function(){
-  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!can.admin()){toast(window.t('errors.admin_only'),'err');return;}
   const cat=document.getElementById('attach-cat').value;
   const fileInput=document.getElementById('attach-file');
   const file=fileInput.files[0];
@@ -1548,7 +1548,7 @@ window.uploadAttach=async function(){
     await logAction('add',`إضافة مرفق (${ATTACH_CATS[ATTACH_CTX.type][cat]||cat}) إلى ${ATTACH_CTX.no}: ${file.name}`,'attachments',ins?.id||null);
     ATTACH_COUNTS[ATTACH_CTX.type][ATTACH_CTX.id]=attachCount(ATTACH_CTX.type,ATTACH_CTX.id)+1;
     fileInput.value='';document.getElementById('attach-cat').value='';
-    toast('✓ تم رفع المرفق','ok');
+    toast(window.t('messages.attach_uploaded'),'ok');
     await renderAttachList();
     attachRefreshTab();
   }catch(e){fail('فشل الرفع: '+(e.message||e));}
@@ -1573,7 +1573,7 @@ window.previewAttach=async function(id,path,mime,name){
       ? `<iframe src="${url}" style="width:100%;height:60vh;border:none;border-radius:7px"></iframe>`
       : `<img src="${url}" style="max-width:100%;max-height:60vh;display:block;margin:0 auto;border-radius:7px">`;
     document.getElementById('attach-view-dl').onclick=()=>window.downloadAttach(path,name);
-  }catch(e){toast('تعذّر فتح المعاينة: '+(e.message||e),'err');}
+  }catch(e){toast(window.t('errors.preview_failed')+': '+(e.message||e),'err');}
 };
 
 window.downloadAttach=async function(path,name){
@@ -1581,12 +1581,12 @@ window.downloadAttach=async function(path,name){
     const url=await attachSignedUrl(path);
     const a=document.createElement('a');a.href=url;a.download=name||'attachment';
     document.body.appendChild(a);a.click();a.remove();
-  }catch(e){toast('تعذّر التنزيل: '+(e.message||e),'err');}
+  }catch(e){toast(window.t('errors.download_failed')+': '+(e.message||e),'err');}
 };
 
 /* Hard delete: storage file + row + audit */
 window.deleteAttach=async function(id,path,name){
-  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!can.admin()){toast(window.t('errors.admin_only'),'err');return;}
   if(!confirm(`حذف المرفق "${name}" نهائياً؟ لا يمكن التراجع.`))return;
   try{
     const{error:rmErr}=await SB.storage.from(ATTACH_BUCKET).remove([path]);
@@ -1595,10 +1595,10 @@ window.deleteAttach=async function(id,path,name){
     if(delErr)throw delErr;
     await logAction('delete',`حذف مرفق من ${ATTACH_CTX.no}: ${name}`,'attachments',id);
     if(ATTACH_CTX)ATTACH_COUNTS[ATTACH_CTX.type][ATTACH_CTX.id]=Math.max(0,attachCount(ATTACH_CTX.type,ATTACH_CTX.id)-1);
-    toast('✓ تم حذف المرفق','ok');
+    toast(window.t('messages.attach_deleted'),'ok');
     await renderAttachList();
     attachRefreshTab();
-  }catch(e){toast('فشل الحذف: '+(e.message||e),'err');}
+  }catch(e){toast(window.t('errors.delete_failed')+': '+(e.message||e),'err');}
 };
 
 window.closeAttach=function(){
@@ -1696,11 +1696,11 @@ window.saveRec=async function(print=false){
     donation_display_fund:fund==='donation'?donDisplay:null,
     created_by:CUR?.full_name||CU?.email,
   }).select().single();
-  if(error){toast('خطأ في الحفظ: '+error.message,'err');return;}
+  if(error){toast(window.t('errors.save_error')+': '+error.message,'err');return;}
   await logAction('add',`إضافة إيصال ${no} — ${payerName} — ₪${fmt(amountILS)}${currency!=='ILS'?` (${fmtD(amount)} ${currency})`:''}`, 'receipts', data.id);
   window.closeM();
   await loadAll();
-  toast(`✓ تم حفظ الإيصال ${no}`,'ok');
+  toast(window.t('messages.receipt_saved')+' '+no,'ok');
   await SB.from('vouchers').upsert({id:no,type:fund==='food'?'Receipt Voucher — Food Fund':fund==='diwan'?'Receipt Voucher — Diwan Fund':'Donation Voucher',fund:fund==='food'?'Food Fund':fund==='diwan'?'Diwan Fund':'Food Fund',date:fmtDate2(date),amount:fmtD(amountILS)+' ILS',description:notes||'Receipt Voucher',prepared_by:CUR?.full_name||CU?.email});
   if(print) setTimeout(()=>window.prtRec(data.id),300);
 };
@@ -1740,11 +1740,11 @@ window.savePay=async function(print=false){
     approved_by:approved,
     created_by:CUR?.full_name||CU?.email,
   }).select().single();
-  if(error){toast('خطأ في الحفظ: '+error.message,'err');return;}
+  if(error){toast(window.t('errors.save_error')+': '+error.message,'err');return;}
   await logAction('add',`إضافة سند ${no} — ${benName} — ₪${fmt(amountILS)}`,'payments',data.id);
   window.closeM();
   await loadAll();
-  toast(`✓ تم حفظ السند ${no}`,'ok');
+  toast(window.t('messages.payment_saved')+' '+no,'ok');
   await SB.from('vouchers').upsert({id:no,type:fund==='food'?'Payment Voucher — Food Fund':'Payment Voucher — Diwan Fund',fund:fund==='food'?'Food Fund':'Diwan Fund',date:fmtDate2(date),amount:fmtD(amountILS)+' ILS',description:notes||L.expense(expense),prepared_by:CUR?.full_name||CU?.email});
   if(print) setTimeout(()=>window.prtPay(data.id),300);
 };
@@ -1755,16 +1755,16 @@ window.saveMember=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
   const name=document.getElementById('mem-name').value.trim();
   if(!vf('mem-name',v=>v.trim().length>1,'e-mem-name'))return;
-  if(DB.members.find(m=>m.name.trim()===name)){toast('يوجد عضو بنفس الاسم','warn');return;}
+  if(DB.members.find(m=>m.name.trim()===name)){toast(window.t('errors.duplicate_member'),'warn');return;}
   const bal=parseFloat(document.getElementById('mem-balance').value)||0;
   const phone=document.getElementById('mem-phone').value;
   const notes=document.getElementById('mem-notes').value;
   const fromYearRaw=document.getElementById('mem-from-year')?.value;
   const fromYear=fromYearRaw?parseInt(fromYearRaw,10):new Date().getFullYear();
   const{data:mNew,error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal,active_from_year:fromYear}).select('id').single();
-  if(error){toast('خطأ: '+error.message,'err');return;}
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
   await logAction('add',`إضافة عضو: ${name}`,'members',mNew?.id||null);
-  window.closeM();await loadAll();toast(`✓ تمت إضافة ${name}`,'ok');
+  window.closeM();await loadAll();toast(window.t('messages.member_added')+' '+name,'ok');
 };
 
 /* ═══ EDIT RECORDS (admin only) ═══ */
@@ -1802,7 +1802,7 @@ const date = document.getElementById('edit-rec-date')?.value || null;
 const notes = document.getElementById('edit-rec-notes').value || '';
 
 if (amount <= 0) {
-  toast('أدخل مبلغاً صحيحاً', 'warn');
+  toast(window.t('errors.invalid_amount'),'warn');
   return;
 }
 
@@ -1820,14 +1820,14 @@ const { error } = await SB
   .eq('id', id);
 
 if (error) {
-  toast('خطأ: ' + error.message, 'err');
+  toast(window.t('errors.generic_error')+': '+error.message,'err');
   return;
 }
 
 await logAction('edit',`تعديل إيصال — ₪${fmt(amount)} | تاريخ: ${date||'—'}`, 'receipts', id);
 window.closeM();
 await loadAll();
-toast('✓ تم التعديل', 'ok');
+toast(window.t('messages.updated'),'ok');
 
 };
 window.deleteRec=async function(){
@@ -1851,11 +1851,11 @@ window.updatePay=async function(){
   const id=document.getElementById('edit-pay-id').value;
   const amount=parseFloat(document.getElementById('edit-pay-amount').value)||0;
   const notes=document.getElementById('edit-pay-notes').value;
-  if(amount<=0){toast('أدخل مبلغاً صحيحاً','warn');return;}
+  if(amount<=0){toast(window.t('errors.invalid_amount'),'warn');return;}
   const{error}=await SB.from('payments').update({amount_ils:amount,amount,notes,updated_at:new Date().toISOString()}).eq('id',id);
-  if(error){toast('خطأ: '+error.message,'err');return;}
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
   await logAction('edit',`تعديل سند صرف — ₪${fmt(amount)}`,'payments',id);
-  window.closeM();await loadAll();toast('✓ تم التعديل','ok');
+  window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
 };
 window.deletePay=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
@@ -1881,16 +1881,16 @@ window.updateMember=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-mem-id').value;
   const name=document.getElementById('edit-mem-name').value.trim();
-  if(!name){toast('الاسم مطلوب','warn');return;}
+  if(!name){toast(window.t('errors.name_required'),'warn');return;}
   const phone=document.getElementById('edit-mem-phone').value;
   const bal=parseFloat(document.getElementById('edit-mem-balance').value)||0;
   const notes=document.getElementById('edit-mem-notes').value;
   const efyRaw=document.getElementById('edit-mem-from-year')?.value;
   const efy=efyRaw?parseInt(efyRaw,10):null;
   const{error}=await SB.from('members').update({name,phone,opening_balance:bal,notes,active_from_year:efy,updated_at:new Date().toISOString()}).eq('id',id);
-  if(error){toast('خطأ: '+error.message,'err');return;}
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
   await logAction('edit',`تعديل بيانات عضو: ${name}`,'members',id);
-  window.closeM();await loadAll();toast('✓ تم التعديل','ok');
+  window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
 };
 window.deleteMember=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
@@ -1899,7 +1899,7 @@ window.deleteMember=async function(){
   if(!confirm(`حذف العضو ${m?.name}؟ لا يمكن التراجع.`))return;
   await SB.from('members').update({is_active:false}).eq('id',id);
   await logAction('delete',`حذف عضو: ${m?.name}`,'members',id);
-  window.closeM();await loadAll();toast('تم الحذف','warn');
+  window.closeM();await loadAll();toast(window.t('messages.deleted'),'warn');
 };
 
 /* ═══ ANNUAL DUES ═══ */
@@ -1909,12 +1909,12 @@ window.applyAnnualDue=async function(){
   const year=parseInt(document.getElementById('due-year').value);
   const amount=parseFloat(document.getElementById('due-amount').value)||200;
   if(!year||year<2020||year>2040){toast(window.t('errors.invalid_year'),'warn');return;}
-  if(DB.annual.find(a=>a.year===year)){toast(`تم تطبيق اشتراك ${year} مسبقاً`,'warn');return;}
+  if(DB.annual.find(a=>a.year===year)){toast(window.t('errors.duplicate_year'),'warn');return;}
  const members=DB.members.filter(m =>
   m.is_active &&
   (!m.active_from_year || m.active_from_year <= year)
 );
-  if(!members.length){toast('لا يوجد أعضاء','warn');return;}
+  if(!members.length){toast(window.t('errors.no_members'),'warn');return;}
   if(!confirm(
   `سيُضاف ${fmt(amount)} ₪ كاشتراك سنة ${year} على ${members.length} عضو مستحق. هل تريد المتابعة؟`
 )) return;
@@ -1922,7 +1922,7 @@ window.applyAnnualDue=async function(){
 if(!btn)return;
 btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   const{data:adNew,error}=await SB.from('annual_dues').insert({year,amount,applied_by:CUR?.full_name||CU?.email,member_count:members.length}).select('id').single();
-  if(error){toast('خطأ: '+error.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
   await logAction('add',`تطبيق اشتراك سنة ${year} — ${members.length} عضو — ₪${fmt(amount)} لكل عضو`,'annual_dues',adNew?.id||null);
   await loadAll();
   btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';
@@ -1964,7 +1964,7 @@ window.changeRole=async(uid,role)=>{
   const{data:prevRole}=await SB.from('user_roles').select('role,full_name').eq('user_id',uid).maybeSingle();
   await SB.from('user_roles').update({role:safeRole}).eq('user_id',uid);
   await logAction('edit',`تغيير دور ${prevRole?.full_name||uid}: من ${ROLES[prevRole?.role]||prevRole?.role||'—'} إلى ${ROLES[safeRole]}`,'user_roles',uid);
-  toast(`تم تغيير الدور إلى ${ROLES[safeRole]}`,'ok');loadUsers();
+  toast(window.t('messages.role_changed')+': '+ROLES[safeRole],'ok');loadUsers();
 };
 window.inviteUser=async()=>{
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
@@ -1975,10 +1975,10 @@ window.inviteUser=async()=>{
   const name=document.getElementById('inv-name').value.trim();
   if(!email||!pass){toast(window.t('errors.required'),'warn');return;}
   const{data,error}=await SB.auth.signUp({email,password:pass});
-  if(error){toast('خطأ: '+error.message,'err');return;}
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
   await SB.from('user_roles').upsert({user_id:data.user.id,role:safeRole,full_name:name||email});
   await logAction('add',`إنشاء مستخدم: ${email} — دور: ${ROLES[safeRole]}`,'user_roles',data.user.id);
-  window.closeM();toast(`تم إنشاء حساب ${email}`,'ok');loadUsers();
+  window.closeM();toast(window.t('messages.account_created')+': '+email,'ok');loadUsers();
 };
 
 /* ═══ AUDIT — Data Grid (Note 9) ═══ */
@@ -2259,7 +2259,7 @@ window.downloadFundStatementPDF=function(fund){
 window.prtMemberStmt=function(){
   if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
   const mid=document.getElementById('ms-member')?.value;
-  if(!mid){toast('اختر عضواً أولاً','warn');return;}
+  if(!mid){toast(window.t('errors.select_member'),'warn');return;}
   const member=gm(mid);if(!member)return;
   const from=document.getElementById('ms-from')?.value||'';
   const to=document.getElementById('ms-to')?.value||'';
@@ -2317,7 +2317,7 @@ function loadStyledXLSX(cb){
   if(window.XLSX&&window.XLSX.__styled){cb();return;}
   const s=document.createElement('script');s.src=XLSX_STYLE_CDN;
   s.onload=function(){if(window.XLSX)window.XLSX.__styled=true;cb();};
-  s.onerror=function(){toast('تعذّر تحميل مكتبة Excel','err');};
+  s.onerror=function(){toast(window.t('errors.excel_load_failed'),'err');};
   document.head.appendChild(s);
 }
 /* Apply the Diwan design standard to a worksheet.
@@ -2404,7 +2404,7 @@ window.doBackup=function(){
 };
 /* ═══ BACKUP RESTORE ═══ */
 window.doRestore=async function(){
-  if(!can.admin()){toast('المدير فقط','err');return;}
+  if(!can.admin()){toast(window.t('errors.admin_only'),'err');return;}
   const input=document.createElement('input');
   input.type='file';input.accept='.json';
   input.onchange=async function(e){
@@ -2418,7 +2418,7 @@ window.doRestore=async function(){
       const requiredTables=['members','receipts','payments'];
       const missingTables=requiredTables.filter(t=>!backup[t]||!Array.isArray(backup[t]));
       if(missingTables.length>0){
-        toast('ملف غير صالح: جداول ناقصة ('+missingTables.join(', ')+')','err');
+        toast(window.t('errors.invalid_file_tables')+' ('+missingTables.join(', ')+')','err');
         return;
       }
       
@@ -2435,7 +2435,7 @@ window.doRestore=async function(){
       const doubleConfirm=confirm('تأكيد نهائي: هذا الإجراء لا يمكن التراجع عنه.\n\nاكتب "نعم" للمتابعة.');
       if(!doubleConfirm){return;}
       
-      toast('جاري الاستعادة...','info');
+      toast(window.t('messages.restoring'),'info');
       
       /* Restore each table */
       const tables=['members','receipts','payments','annual_dues','contacts','settings'];
@@ -2459,16 +2459,16 @@ window.doRestore=async function(){
       }
       
       if(errors.length>0){
-        toast('استعادة جزئية مع أخطاء: '+errors.join('; '),'warn');
+        toast(window.t('messages.restore_partial')+': '+errors.join('; '),'warn');
       }else{
-        toast('✓ تم استعادة النسخة بنجاح','ok');
+        toast('✓ '+window.t('messages.restore_success'),'ok');
       }
       
       await logAction('restore','استعادة نسخة احتياطية ('+file.name+')','system',null);
       await loadAll();
       
     }catch(e){
-      toast('خطأ في الملف: '+e.message,'err');
+      toast(window.t('errors.file_error')+': '+e.message,'err');
     }
   };
   input.click();
@@ -2495,7 +2495,7 @@ window.exportCSV=function(type){
   }else if(type==='member-stmt'){
     const mid=document.getElementById('ms-member')?.value;
     const member=gm(mid);
-    if(!member){toast('اختر عضواً أولاً','warn');return;}
+    if(!member){toast(window.t('errors.select_member'),'warn');return;}
     h=['التاريخ','رقم السند','البيان','دائن ₪','مدين ₪','الرصيد ₪'];
     const csvRows=[];
     const openBal=Number(member.opening_balance||0);
@@ -2536,7 +2536,7 @@ window.exportMemberStmt=function(format){
   if(!can.export()&&format!=='pdf'){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
   const mid=document.getElementById('ms-member')?.value;
   const member=gm(mid);
-  if(!member){toast('اختر عضواً أولاً','warn');return;}
+  if(!member){toast(window.t('errors.select_member'),'warn');return;}
   const from=document.getElementById('ms-from')?.value||'';
   const to=document.getElementById('ms-to')?.value||'';
   const fd=from?new Date(from):null;
@@ -2969,12 +2969,12 @@ window.changePassword = async function(){
   const { error } = await SB.auth.updateUser({ password: newPass });
   btn.disabled = false;
   btn.innerHTML = '<i class="ti ti-lock-check"></i>حفظ كلمة المرور';
-  if(error){toast('خطأ: ' + error.message, 'err');return;}
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
   await logAction('edit', 'تغيير كلمة المرور', 'auth', null);
   window.closeM();
   document.getElementById('new-pass').value = '';
   document.getElementById('confirm-pass').value = '';
-  toast('✓ تم تغيير كلمة المرور بنجاح', 'ok');
+  toast('✓ '+window.t('messages.pass_changed'), 'ok');
 };
 
 /* ═══ MOBILE NAVIGATION ═══ */
@@ -3087,7 +3087,7 @@ window.saveSettings = async function(){
   renderSettingsSummary();
   updateRateDisplay();
   renderDash();
-  toast('✓ تم حفظ الإعدادات','ok');
+  toast('✓ '+window.t('messages.settings_saved'),'ok');
 };
 
 function renderSettingsSummary(){
