@@ -18,7 +18,7 @@ const translations = {
       amount:'المبلغ', currency:'العملة', method:'طريقة الدفع',
       status:'الحالة', name:'الاسم', phone:'الهاتف',
       all:'الكل', yes:'نعم', no:'لا',
-      export_dd:'تصدير ▼',
+      export_dd:'تصدير ▼', number:'الرقم', amount_ils:'المبلغ ₪', view:'عرض', print:'طباعة',
       from_date:'من تاريخ', to_date:'إلى تاريخ',
       opening_balance:'الرصيد الافتتاحي',
     },
@@ -69,6 +69,8 @@ const translations = {
       don_display:'يُظهر في كشف أي صندوق؟',
       no_data:'لا توجد إيصالات',
       receipt_no:'رقم الإيصال',
+      info_food:'مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء',
+      info_diwan:'مدفوعات للديوان من الأعضاء أو من خارج العائلة',
     },
     payments: {
       title_food:'مصاريف صندوق الغداء',
@@ -83,6 +85,8 @@ const translations = {
       payment_no:'رقم السند',
       method:'طريقة الدفع',
       cash:'نقد', check:'شيك', transfer:'تحويل', online:'أونلاين',
+      info_food:'مصاريف إطعام أهل المتوفى في حالات العزاء — تُدفع من صندوق الغداء',
+      cat_all:'كل الفئات', category:'الفئة',
     },
     donations: {
       title:'سجل التبرعات', new:'تبرع جديد',
@@ -119,6 +123,8 @@ const translations = {
       no_data:'لا توجد حركات في هذه الفترة',
       credit:'دائن', debit:'مدين', balance:'الرصيد',
       desc:'البيان', donor_name:'الاسم', note:'ملاحظات',
+      title_food:'كشف حساب صندوق الغداء', title_diwan:'كشف حساب صندوق الديوان',
+      movement_type:'نوع الحركة',
     },
     annual: {
       title:'الاشتراكات السنوية',
@@ -273,7 +279,7 @@ const translations = {
       amount:'Amount', currency:'Currency', method:'Payment Method',
       status:'Status', name:'Name', phone:'Phone',
       all:'All', yes:'Yes', no:'No',
-      export_dd:'Export ▼',
+      export_dd:'Export ▼', number:'No.', amount_ils:'Amount ₪', view:'View', print:'Print',
       from_date:'From Date', to_date:'To Date',
       opening_balance:'Opening Balance',
     },
@@ -324,6 +330,8 @@ const translations = {
       don_display:'Show in which fund statement?',
       no_data:'No receipts found',
       receipt_no:'Receipt No.',
+      info_food:'Family members payments to contribute to the food fund',
+      info_diwan:'Payments to the Diwan from members or outside the family',
     },
    payments: {
    title_food:'Food Fund Expenses',
@@ -384,6 +392,8 @@ const translations = {
       no_data:'No transactions in this period',
       credit:'Credit', debit:'Debit', balance:'Balance',
       desc:'Description', donor_name:'Name', note:'Notes',
+      title_food:'Food Fund Statement', title_diwan:'Diwan Fund Statement',
+      movement_type:'Movement Type',
     },
     annual: {
       title:'Annual Dues',
