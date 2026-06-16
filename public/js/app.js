@@ -825,7 +825,7 @@ else if(st==='due')
 else if(st==='credit')
   d=d.filter(m=>m.bal<0);
     const sub=document.getElementById('members-sub');
-    if(sub)sub.textContent=`${d.length} عضو`;
+    if(sub)sub.textContent=`${d.length} ${window.t('members.count')}`;
     if(!PS['members'])PS['members']=1;
     mkPag('members',d.length);
     const page=d.slice((PS['members']-1)*PSZ,PS['members']*PSZ);
@@ -1983,7 +1983,7 @@ window.inviteUser=async()=>{
 
 /* ═══ AUDIT — Data Grid (Note 9) ═══ */
 window.AUDIT_FILTER={q:'',action:'',page:1,pageSize:25};
-function auditActionLabel(a){return a==='add'?'إضافة':a==='delete'?'حذف':a==='edit'?'تعديل':a||'—';}
+function auditActionLabel(a){return a==='add'?window.t('audit.act_add'):a==='delete'?window.t('audit.act_delete'):a==='edit'?window.t('audit.act_edit'):a||'—';}
 window.onAuditFilter=function(){
   AUDIT_FILTER.q=(document.getElementById('audit-q')?.value||'').toLowerCase();
   AUDIT_FILTER.action=document.getElementById('audit-action')?.value||'';
