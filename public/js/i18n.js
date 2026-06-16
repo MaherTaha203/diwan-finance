@@ -130,6 +130,7 @@ const translations = {
       filter_all:'الكل', filter_paid:'مسدَّد', filter_late:'عليه رصيد',
       search_ph:'بحث بالاسم...',
       col_name:'الاسم', col_phone:'الهاتف', col_status:'الحالة', col_actions:'إجراءات',
+      count:'عضو',
     },
     stmt: {
       type_all:'الكل', type_cr:'إيصالات فقط',
@@ -186,6 +187,7 @@ const translations = {
     },
     audit: {
       title:'سجل العمليات', empty:'السجل فارغ',
+      act_add:'إضافة', act_edit:'تعديل', act_delete:'حذف',
     },
     backup: {
       title:'النسخ الاحتياطي',
@@ -420,6 +422,7 @@ const translations = {
       filter_all:'All', filter_paid:'Paid', filter_late:'Has Balance',
       search_ph:'Search by name...',
       col_name:'Name', col_phone:'Phone', col_status:'Status', col_actions:'Actions',
+      count:'members',
     },
     stmt: {
       type_all:'All', type_cr:'Receipts Only',
@@ -476,6 +479,7 @@ const translations = {
     },
     audit: {
       title:'Audit Log', empty:'Log is empty',
+      act_add:'Add', act_edit:'Edit', act_delete:'Delete',
     },
     backup: {
       title:'Backup',
