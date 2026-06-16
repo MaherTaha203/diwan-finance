@@ -697,8 +697,8 @@ const D={
       <td style="color:var(--tx3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
-        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')" title="طباعة"><i class="ti ti-printer"></i></button>`:''}
-        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
+        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')" title="${window.t('common.edit')}"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
   'food-pay':{render(){
@@ -723,8 +723,8 @@ const D={
       <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
-        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')" title="طباعة"><i class="ti ti-printer"></i></button>`:''}
-        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
+        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')" title="${window.t('common.edit')}"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
   'diwan-rec':{render(){
@@ -850,8 +850,8 @@ ${
 </td>
         <td><span class="badge ${cls}">${lbl}</span></td>
         <td class="tda">
-          <button class="btn ghost sm" style="color:#60A5FA" onclick="window.nav('member-stmt');setTimeout(()=>{document.getElementById('ms-member').value='${m.id}';window.renderMemberStmt();},80)" title="كشف الحساب"><i class="ti ti-file-description"></i></button>
-          ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editMember('${m.id}')" title="تعديل"><i class="ti ti-edit"></i></button>`:''}
+          <button class="btn ghost sm" style="color:#60A5FA" onclick="window.nav('member-stmt');setTimeout(()=>{document.getElementById('ms-member').value='${m.id}';window.renderMemberStmt();},80)" title="${window.t('members.member_stmt')}"><i class="ti ti-file-description"></i></button>
+          ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editMember('${m.id}')" title="${window.t('common.edit')}"><i class="ti ti-edit"></i></button>`:''}
         </td></tr>`;
     }).join('');
   }},
@@ -1449,7 +1449,7 @@ function attachCount(type,id){return ATTACH_COUNTS[type]?.[id]||0;}
 window.attachBtn=function(type,id,no,fund){
   const n=attachCount(type,id);
   const badge=n>0?`<span style="background:var(--acc2,#059669);color:#fff;border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
-  return `<button class="btn ghost sm" style="color:#0F2B5B" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="المرفقات"><i class="ti ti-paperclip"></i>${badge}</button>`;
+  return `<button class="btn ghost sm" style="color:#0F2B5B" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="${window.t('common.attachments')}"><i class="ti ti-paperclip"></i>${badge}</button>`;
 };
 
 /* Open attachments modal for a voucher */
@@ -1486,9 +1486,9 @@ async function renderAttachList(){
         <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.file_name)}</div>
         <div style="font-size:10.5px;color:var(--tx3)">${esc(cats[a.doc_category]||a.doc_category)} · ${kb} · ${(a.created_at||'').slice(0,10)}</div>
       </div>
-      <button class="btn ghost sm" onclick="window.previewAttach('${a.id}','${esc(a.storage_path)}','${a.mime_type}','${esc(a.file_name)}')" title="معاينة"><i class="ti ti-eye"></i></button>
-      <button class="btn ghost sm" onclick="window.downloadAttach('${esc(a.storage_path)}','${esc(a.file_name)}')" title="تنزيل"><i class="ti ti-download"></i></button>
-      ${can.admin()?`<button class="btn ghost sm" style="color:var(--danger)" onclick="window.deleteAttach('${a.id}','${esc(a.storage_path)}','${esc(a.file_name)}')" title="حذف"><i class="ti ti-trash"></i></button>`:''}
+      <button class="btn ghost sm" onclick="window.previewAttach('${a.id}','${esc(a.storage_path)}','${a.mime_type}','${esc(a.file_name)}')" title="${window.t('common.preview')}"><i class="ti ti-eye"></i></button>
+      <button class="btn ghost sm" onclick="window.downloadAttach('${esc(a.storage_path)}','${esc(a.file_name)}')" title="${window.t('common.download')}"><i class="ti ti-download"></i></button>
+      ${can.admin()?`<button class="btn ghost sm" style="color:var(--danger)" onclick="window.deleteAttach('${a.id}','${esc(a.storage_path)}','${esc(a.file_name)}')" title="${window.t('common.delete')}"><i class="ti ti-trash"></i></button>`:''}
     </div>`;
   }).join('');
 }
