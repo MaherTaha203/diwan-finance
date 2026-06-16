@@ -1242,7 +1242,7 @@ function resetForms(){
 }
 
 window.openRec=function(fund='food'){
-  if(!can.write()){toast(window.LANG==='en'?'No permission to add':'ليس لديك صلاحية الإضافة','err');return;}
+  if(!can.write()){toast(window.t('errors.no_permission_add'),'err');return;}
   fillMemberDropdowns();
   window.openM('rec');
   const funSel=document.getElementById('rec-fund');
@@ -1250,7 +1250,7 @@ window.openRec=function(fund='food'){
   document.getElementById('rec-date').value=today();
 };
 window.openPay=function(fund='food'){
-  if(!can.write()){toast(window.LANG==='en'?'No permission to add':'ليس لديك صلاحية الإضافة','err');return;}
+  if(!can.write()){toast(window.t('errors.no_permission_add'),'err');return;}
   fillMemberDropdowns();
   window.openM('pay');
   const funSel=document.getElementById('pay-fund');
@@ -2165,12 +2165,12 @@ function buildPayVoucher(p){
 
 /* ── Print functions: all guarded by can.print() ── */
 window.prtRec=function(id){
-  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const r=DB.receipts.find(x=>x.id===id);if(!r)return;
   openPrintWin('',buildRecVoucher(r));
 };
 window.prtPay=function(id){
-  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
   openPrintWin('',buildPayVoucher(p));
 };
@@ -2239,12 +2239,12 @@ window.buildFundStatementHTML=function(fund){
   return {css:css, body:body, title:title};
 };
 window.prtStmt=function(fund){
-  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const r=window.buildFundStatementHTML(fund);
   openPrintWin(r.css,r.body);
 };
 window.downloadFundStatementPDF=function(fund){
-  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const r=window.buildFundStatementHTML(fund);
   const doPdf=()=>{
     const wrap=document.createElement('div');
@@ -2257,7 +2257,7 @@ window.downloadFundStatementPDF=function(fund){
   else{toast('\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644...','info');const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';s.onload=doPdf;document.head.appendChild(s);}
 };
 window.prtMemberStmt=function(){
-  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const mid=document.getElementById('ms-member')?.value;
   if(!mid){toast(window.t('errors.select_member'),'warn');return;}
   const member=gm(mid);if(!member)return;
@@ -2364,7 +2364,7 @@ window.exportPDF=function(type){
 };
 
 window.prtDonStmt=function(){
-  if(!can.print()){toast(window.LANG==='ar'?'ليس لديك صلاحية الطباعة':'No print permission','err');return;}
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
   const tot=rows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   const toFood=rows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
