@@ -1267,17 +1267,17 @@ window.onRecFundChange=function(){
   const optContact=document.getElementById('opt-contact');
   const optManual=document.getElementById('opt-manual');
   if(fund==='food'){
-    if(mico){mico.className='mico food';} if(title)title.textContent='إيصال صندوق الغداء';
+    if(mico){mico.className='mico food';} if(title)title.textContent=window.t('receipts.modal_food');
     if(donWrap)donWrap.style.display='none';
     if(optContact)optContact.style.display='none';
     if(optManual)optManual.style.display='';
   } else if(fund==='diwan'){
-    if(mico){mico.className='mico diwan';} if(title)title.textContent='إيصال صندوق الديوان';
+    if(mico){mico.className='mico diwan';} if(title)title.textContent=window.t('receipts.modal_diwan');
     if(donWrap)donWrap.style.display='none';
     if(optContact)optContact.style.display='';
     if(optManual)optManual.style.display='';
   } else if(fund==='donation'){
-    if(mico){mico.className='mico don';} if(title)title.textContent='تسجيل تبرع';
+    if(mico){mico.className='mico don';} if(title)title.textContent=window.t('dashboard.new_donation');
     if(donWrap)donWrap.style.display='';
     if(optContact)optContact.style.display='none';
     if(optManual)optManual.style.display='none';
@@ -1314,7 +1314,7 @@ window.onPayFundChange=function(){
       benTypeSel.innerHTML=`<option value="member">عضو من العائلة</option><option value="manual">إدخال يدوي</option>`;
     }
   }
-  document.getElementById('pay-mtitle').textContent=fund==='food'?'سند صرف الغداء':'سند صرف الديوان';
+  document.getElementById('pay-mtitle').textContent=fund==='food'?window.t('payments.modal_food'):window.t('payments.modal_diwan');
 };
 
 window.onDonPayerChange=function(){
