@@ -57,6 +57,8 @@ const translations = {
     receipts: {
       title_food:'إيصالات صندوق الغداء',
       title_diwan:'إيصالات صندوق الديوان',
+      modal_food:'إيصال صندوق الغداء',
+      modal_diwan:'إيصال صندوق الديوان',
       new:'إيصال جديد', type:'نوع الإيصال',
       payer:'الدافع', payer_type:'نوع الدافع',
       member_payer:'عضو من العائلة',
@@ -88,6 +90,8 @@ const translations = {
     payments: {
       title_food:'مصاريف صندوق الغداء',
       title_diwan:'مصاريف صندوق الديوان',
+      modal_food:'سند صرف الغداء',
+      modal_diwan:'سند صرف الديوان',
       new:'مصروف جديد', beneficiary:'المستفيد',
       ben_type:'نوع المستفيد', expense_type:'فئة المصروف',
       approved_by:'معتمد من',
@@ -339,6 +343,8 @@ const translations = {
     receipts: {
       title_food:'Food Fund Receipts',
       title_diwan:'Diwan Fund Receipts',
+      modal_food:'Food Fund Receipt',
+      modal_diwan:'Diwan Fund Receipt',
       new:'New Receipt', type:'Receipt Type',
       payer:'Payer', payer_type:'Payer Type',
       member_payer:'Family Member',
@@ -370,6 +376,8 @@ const translations = {
    payments: {
    title_food:'Food Fund Expenses',
    title_diwan:'Diwan Fund Expenses',
+   modal_food:'Food Fund Payment Voucher',
+   modal_diwan:'Diwan Fund Payment Voucher',
    new:'New Expense',
    beneficiary:'Beneficiary',
    ben_type:'Beneficiary Type',
