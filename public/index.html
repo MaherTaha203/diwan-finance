@@ -1,1394 +1,764 @@
-'use strict';
-/* ===================================================
-   DIWAN FINANCE — i18n System
-   Bilingual: Arabic (RTL) + English (LTR)
-   Persistent via localStorage
-=== ... === */
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ديوان آل طه · الإدارة المالية</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-/* == TRANSLATIONS == */
-const translations = {
-  ar: {
-    common: {
-      save:'حفظ', cancel:'إلغاء', edit:'تعديل', delete:'حذف',
-      print:'طباعة', export:'تصدير', search:'بحث...', refresh:'تحديث',
-      apply:'تطبيق', view:'عرض', close:'إغلاق', confirm:'تأكيد',
-      save_print:'حفظ وطباعة', save_only:'حفظ فقط',
-      no_data:'لا توجد بيانات', loading:'جاري التحميل...',
-      actions:'إجراءات', notes:'ملاحظات', date:'التاريخ',
-      amount:'المبلغ', currency:'العملة', method:'طريقة الدفع',
-      status:'الحالة', name:'الاسم', phone:'الهاتف',
-      all:'الكل', yes:'نعم', no:'لا',
-      export_dd:'تصدير ▼', number:'الرقم', amount_ils:'المبلغ ₪', view:'عرض', print:'طباعة',
-      from_date:'من تاريخ', to_date:'إلى تاريخ',
-      opening_balance:'الرصيد الافتتاحي',
-    },
-    nav: {
-      dashboard:'لوحة التحكم',
-      food_receipts:'إيصالات الغداء', food_expenses:'مصاريف الغداء', food_stmt:'كشف الغداء',
-      diwan_receipts:'إيصالات الديوان', diwan_expenses:'مصاريف الديوان', diwan_stmt:'كشف الديوان',
-      donations:'سجل التبرعات', members:'أعضاء العائلة',
-      member_stmt:'كشف حساب عضو', annual:'الاشتراكات السنوية',
-      users:'المستخدمون', audit:'سجل العمليات',
-      backup:'النسخ الاحتياطي', settings:'الإعدادات',
-      home:'الرئيسية', operations:'العمليات',
-      food_fund:'صندوق الغداء', diwan_fund:'صندوق الديوان',
-      donations_sec:'التبرعات', members_sec:'الأعضاء',
-      reports_sec:'التقارير', system_sec:'النظام', more:'المزيد',
-    },
-    topbar: {
-      backup:'نسخ احتياطي', light:'فاتح', dark:'داكن',
-      logout:'خروج', password:'كلمة المرور',
-    },
-    dashboard: {
-      title:'لوحة التحكم', subtitle:'ملخص مالي شامل',
-      food_fund:'صندوق الغداء', diwan_fund:'صندوق الديوان',
-      don_fund:'صندوق التبرعات', total_members:'أعضاء العائلة',
-      late_members:'متأخرون', unpaid:'لم يسددوا',
-      total_income:'إجمالي الإيصالات', total_expenses:'إجمالي المصاريف',
-      monthly:'الحركات الشهرية', last6:'آخر 6 أشهر',
-      recent:'آخر الحركات', quick:'إجراءات سريعة',
-      late_title:'أعضاء متأخرون', all_good:'✅ كل الأعضاء ملتزمون',
-      new_receipt:'سند قبض', new_payment:'سند صرف',
-      food_receipt:'إيصال غداء', diwan_receipt:'إيصال ديوان',
-      new_donation:'تسجيل تبرع', food_stmt:'كشف الغداء',
-      diwan_stmt:'كشف الديوان',
-    },
-    receipts: {
-      title_food:'إيصالات صندوق الغداء',
-      title_diwan:'إيصالات صندوق الديوان',
-      new:'إيصال جديد', type:'نوع الإيصال',
-      payer:'الدافع', payer_type:'نوع الدافع',
-      member_payer:'عضو من العائلة',
-      contact_payer:'جهة اتصال مسجلة',
-      manual_payer:'إدخال يدوي',
-      payer_name:'اسم الدافع',
-      save_contact:'حفظ كجهة اتصال',
-      fund:'الصندوق', fund_food:'صندوق الغداء',
-      fund_diwan:'صندوق الديوان', fund_don:'تبرع',
-      don_direction:'توجيه التبرع',
-      don_display:'يُظهر في كشف أي صندوق؟',
-      no_data:'لا توجد إيصالات',
-      receipt_no:'رقم الإيصال',
-      info_food:'مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء',
-      info_diwan:'مدفوعات للديوان من الأعضاء أو من خارج العائلة',
-      opt_food_long:'صندوق الغداء — مساهمة عضو',
-      opt_diwan_long:'صندوق الديوان — دفعة للديوان',
-      opt_don_long:'تبرع — يُسجَّل في صندوق التبرعات',
-      payer_section:'بيانات الدافع', member_name:'اسم العضو',
-      contact:'جهة الاتصال', payer_ph:'اكتب الاسم',
-      don_disp_food:'كشف صندوق الغداء', don_disp_diwan:'كشف صندوق الديوان',
-      amount_date:'المبلغ والتاريخ', amount_cur:'المبلغ والعملة',
-      cur_ils:'₪ شيكل إسرائيلي', cur_usd:'$ دولار أمريكي', cur_jod:'د.أ دينار أردني',
-      ils_amount:'المبلغ بالشيكل: ', notes_opt_ph:'ملاحظات اختيارية...', amount_err:'أدخل مبلغاً',
-      cheque_info:'معلومات الشيك', cheque_no:'رقم الشيك', cheque_date:'تاريخ الشيك',
-      cheque_bank:'البنك المسحوب عليه', cheque_no_ph:'مثال: 123456', bank_ph:'اسم البنك',
-      save_print:'حفظ وطباعة', save_only:'حفظ فقط',
-    },
-    payments: {
-      title_food:'مصاريف صندوق الغداء',
-      title_diwan:'مصاريف صندوق الديوان',
-      new:'مصروف جديد', beneficiary:'المستفيد',
-      ben_type:'نوع المستفيد', expense_type:'فئة المصروف',
-      approved_by:'معتمد من',
-      food_expense:'مصاريف إطعام عزاء',
-      electricity:'كهرباء', water:'ماء',
-      cleaning:'تنظيف', maintenance:'صيانة', other:'أخرى',
-      no_data:'لا توجد مصاريف',
-      payment_no:'رقم السند',
-      method:'طريقة الدفع',
-      cash:'نقد', check:'شيك', transfer:'تحويل', online:'أونلاين',
-      info_food:'مصاريف إطعام أهل المتوفى في حالات العزاء — تُدفع من صندوق الغداء',
-      cat_all:'كل الفئات', category:'الفئة',
-      opt_food_long:'صندوق الغداء — مصاريف الإطعام',
-      opt_diwan_long:'صندوق الديوان — مصاريف الديوان',
-      member_name:'اسم العضو', ben_name:'اسم المستفيد', ben_name_ph:'اسم المستفيد',
-      method_pay:'طريقة الصرف', approved_ph:'اسم المعتمد', desc_ph:'وصف تفصيلي...',
-    },
-    donations: {
-      title:'سجل التبرعات', new:'تبرع جديد',
-      donor:'المتبرع', show_in:'يُظهر في',
-      no_data:'لا توجد تبرعات',
-      info:'التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة',
-    },
-    members: {
-      title:'أعضاء العائلة', new:'عضو جديد',
-      food_balance:'رصيد الغداء ₪',
-      paid:'مسدَّد', late:'متأخر',
-      opening_hint:'سالب = دين على العضو',
-      no_data:'لا يوجد أعضاء',
-      member_stmt:'كشف حساب عضو',
-      choose:'-- اختر عضواً --',
-      current_bal:'الرصيد الحالي',
-      total_donations:'إجمالي التبرعات',
-      food_stmt_title:'كشف حساب صندوق الغداء',
-      opening_bal:'رصيد افتتاحي',
-      annual_due:'اشتراك سنة',
-      contribution:'مساهمة',
-      don_section:'التبرعات (لا تؤثر على الرصيد)',
-      receipt_no:'رقم السند',
-      filter_all:'الكل', filter_paid:'مسدَّد', filter_late:'عليه رصيد',
-      search_ph:'بحث بالاسم...',
-      col_name:'الاسم', col_phone:'الهاتف', col_status:'الحالة', col_actions:'إجراءات',
-    },
-    stmt: {
-      type_all:'الكل', type_cr:'إيصالات فقط',
-      type_dr:'مصاريف فقط', type_don:'تبرعات فقط',
-      total_income:'إجمالي الإيرادات',
-      total_expenses:'إجمالي المصاريف',
-      closing_bal:'الرصيد الختامي',
-      no_data:'لا توجد حركات في هذه الفترة',
-      credit:'دائن', debit:'مدين', balance:'الرصيد',
-      desc:'البيان', donor_name:'الاسم', note:'ملاحظات',
-      title_food:'كشف حساب صندوق الغداء', title_diwan:'كشف حساب صندوق الديوان',
-      movement_type:'نوع الحركة',
-    },
-    annual: {
-      title:'الاشتراكات السنوية',
-      desc:'200 ₪ على كل عضو بداية كل سنة',
-      year:'السنة', amount:'المبلغ ₪',
-      apply:'تطبيق الاشتراك السنوي',
-      history:'سجل الاشتراكات المطبقة',
-      no_data:'لا توجد اشتراكات مطبقة',
-      warning:'عند الضغط على تطبيق سيُضاف المبلغ كدين على كل الأعضاء. لا يمكن التراجع.',
-    },
-    settings: {
-      title:'الإعدادات', subtitle:'الرصيد الافتتاحي وإعدادات النظام',
-      opening_title:'الرصيد الافتتاحي للصناديق',
-      food_opening:'الرصيد الافتتاحي لصندوق الغداء ₪',
-      diwan_opening:'الرصيد الافتتاحي لصندوق الديوان ₪',
-      food_hint:'المبلغ الموجود في الصندوق قبل بدء النظام',
-      diwan_hint:'المبلغ الموجود في الصندوق قبل بدء النظام',
-      rates_title:'أسعار الصرف الاحتياطية',
-      rates_hint:'تُستخدم فقط إذا تعذّر جلب السعر التلقائي',
-      usd_rate:'سعر الدولار الأمريكي USD ₪',
-      jod_rate:'سعر الدينار الأردني JOD ₪',
-      summary:'ملخص الأرصدة مع الافتتاحي',
-      save:'حفظ الإعدادات',
-      opening_warn:'الديوان: الافتتاحي يُحسب ضمن الرصيد. الغداء: الرصيد السابق للمعلومية فقط ولا يُجمع',
-      food_opening_long:'رصيد صندوق الغداء السابق (للمعلومية فقط — لا يدخل في الحساب) ₪',
-      diwan_usd:'رصيد الديوان السابق $ (للعملات فقط)',
-      diwan_jod:'رصيد الديوان السابق JD (للعملات فقط)',
-      food_usd:'رصيد الغداء السابق $ (للعملات فقط)',
-      food_jod:'رصيد الغداء السابق JD (للعملات فقط)',
-      usd_rate_short:'سعر الدولار USD ₪', jod_rate_short:'سعر الدينار JOD ₪',
-      save_short:'حفظ',
-    },
-    users: {
-      title:'إدارة المستخدمين', invite:'دعوة مستخدم',
-      full_name:'الاسم الكامل', email:'البريد الإلكتروني',
-      temp_pass:'كلمة المرور المؤقتة', role:'الدور',
-      admin:'مدير — كامل الصلاحيات',
-      accountant:'محاسب — إضافة سندات',
-      viewer:'عارض — عرض فقط',
-      role_admin:'مدير', role_accountant:'محاسب', role_viewer:'عارض',
-      you:'(أنت)', create:'إنشاء الحساب',
-    },
-    audit: {
-      title:'سجل العمليات', empty:'السجل فارغ',
-    },
-    backup: {
-      title:'النسخ الاحتياطي',
-      json_desc:'تصدير كامل بصيغة JSON',
-      download:'تحميل النسخة',
-      sys_info:'معلومات النظام',
-    },
-    edit: {
-      rec_title:'تعديل الإيصال',
-      pay_title:'تعديل سند الصرف',
-      mem_title:'تعديل بيانات العضو',
-      warning:'يمكن تعديل المبلغ بالشيكل والملاحظات فقط',
-      cancel_voucher:'إلغاء السند',
-      amount_ils:'المبلغ بالشيكل ₪',
-    },
+<style>
+/* == CONCEPT B — PREMIUM FINANCIAL INSTITUTION — REVISION 3 == */
+:root {
+  --b-navy:#1A1A2E; --b-navy2:#252538; --b-gold:#C4A450;
+  --b-cream:#F5F3EE; --b-white:#fff; --b-border:#EDE9E0;
+  --b-input-border:#DDD9D0; --b-input-bg:#FAFAF8;
+  --b-text:#1A1A2E; --b-text2:#555; --b-text3:#888; --b-placeholder:#B8B4AC;
+}
 
-    login: {
-      title:'تسجيل الدخول',
-      email:'البريد الإلكتروني',
-      password:'كلمة المرور',
-      login_btn:'تسجيل الدخول',
-      forgot:'نسيت كلمة المرور؟',
-      fill_all:'يرجى إدخال البريد وكلمة المرور',
-      wrong_credentials:'بريد إلكتروني أو كلمة مرور غير صحيحة',
-      contact_admin:'تواصل مع المدير',
-    },
-    password: {
-      title:'تغيير كلمة المرور',
-      new_pass:'كلمة المرور الجديدة',
-      confirm_pass:'تأكيد كلمة المرور',
-      hint:'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
-      min_length:'6 أحرف على الأقل',
-      mismatch:'كلمات المرور غير متطابقة',
-      save:'حفظ كلمة المرور',
-    },
-    errors: {
-      no_permission:'ليس لديك صلاحية',
-      no_print:'ليس لديك صلاحية الطباعة',
-      required:'مطلوب',
-      invalid_amount:'أدخل مبلغاً صحيحاً',
-      duplicate_member:'يوجد عضو بنفس الاسم',
-      load_error:'خطأ في تحميل البيانات',
-      save_error:'خطأ في الحفظ',
-      invalid_year:'سنة غير صحيحة',
-      already_applied:'تم تطبيق هذا الاشتراك مسبقاً',
-      no_members:'لا يوجد أعضاء نشطون',
-      confirm_apply:'هل أنت متأكد؟ لا يمكن التراجع.',
-      session_expired:'انتهت الجلسة، يرجى إعادة تسجيل الدخول',
-      network_error:'خطأ في الاتصال بالخادم',
-      min_6_chars:'يجب أن تكون 6 أحرف على الأقل',
-      passwords_mismatch:'كلمات المرور غير متطابقة',
-      email_required:'البريد الإلكتروني مطلوب',
-      password_required:'كلمة المرور مطلوبة',
-      generic_error:'خطأ',
-      invalid_file_tables:'ملف غير صالح: جداول ناقصة',
-      file_error:'خطأ في الملف',
-      duplicate_year:'تم تطبيق هذا الاشتراك مسبقاً',
-      delete_confirm:'هل أنت متأكد من الحذف؟',
-      cancel_confirm:'إلغاء هذا السند نهائياً؟',
-      login_error:'بريد إلكتروني أو كلمة مرور غير صحيحة',
-      min_pass:'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
-      pass_mismatch:'كلمات المرور غير متطابقة',
-      popup_blocked:'يرجى السماح بالنوافذ المنبثقة',
-      admin_only:'المدير فقط',
-      preview_failed:'تعذّر فتح المعاينة',
-      download_failed:'تعذّر التنزيل',
-      delete_failed:'فشل الحذف',
-      name_required:'الاسم مطلوب',
-      select_member:'اختر عضواً أولاً',
-      excel_load_failed:'تعذّر تحميل مكتبة Excel',
-    },
-    messages: {
-      saved:'تم الحفظ بنجاح',
-      deleted:'تم الحذف',
-      cancelled:'تم الإلغاء',
-      updated:'تم التحديث بنجاح',
-      logged_out:'تم تسجيل الخروج',
-      annual_applied:'تم تطبيق الاشتراك السنوي بنجاح',
-      contact_saved:'تم حفظ جهة الاتصال',
-      exported:'تم التصدير بنجاح',
-      printed:'جاهز للطباعة',
-      contact_admin:'يرجى التواصل مع المدير لإعادة تعيين كلمة المرور',
-      pass_changed:'تم تغيير كلمة المرور بنجاح',
-      settings_saved:'تم حفظ الإعدادات',
-      restoring:'جاري الاستعادة...',
-      restore_partial:'استعادة جزئية مع أخطاء',
-      restore_success:'تم استعادة النسخة بنجاح',
-      backup_done:'تم تصدير النسخة الاحتياطية',
-      forgot_contact:'يرجى التواصل مع المدير لإعادة تعيين كلمة المرور',
-      attach_uploaded:'✓ تم رفع المرفق',
-      attach_deleted:'✓ تم حذف المرفق',
-      receipt_saved:'✓ تم حفظ الإيصال',
-      payment_saved:'✓ تم حفظ السند',
-      member_added:'✓ تمت إضافة العضو',
-      role_changed:'تم تغيير الدور',
-      account_created:'تم إنشاء الحساب',
-      access_denied:'ليس لديك صلاحية الوصول لهذه الصفحة',
-    },
-  },
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;overflow:hidden}
+#login-page{display:flex;width:100%;min-height:100vh;direction:rtl}
 
-  en: {
-    common: {
-      save:'Save', cancel:'Cancel', edit:'Edit', delete:'Delete',
-      print:'Print', export:'Export', search:'Search...', refresh:'Refresh',
-      apply:'Apply', view:'View', close:'Close', confirm:'Confirm',
-      save_print:'Save & Print', save_only:'Save Only',
-      no_data:'No data available', loading:'Loading...',
-      actions:'Actions', notes:'Notes', date:'Date',
-      amount:'Amount', currency:'Currency', method:'Payment Method',
-      status:'Status', name:'Name', phone:'Phone',
-      all:'All', yes:'Yes', no:'No',
-      export_dd:'Export ▼', number:'No.', amount_ils:'Amount ₪', view:'View', print:'Print',
-      from_date:'From Date', to_date:'To Date',
-      opening_balance:'Opening Balance',
-    },
-    nav: {
-      dashboard:'Dashboard',
-      food_receipts:'Food Receipts', food_expenses:'Food Expenses', food_stmt:'Food Statement',
-      diwan_receipts:'Diwan Receipts', diwan_expenses:'Diwan Expenses', diwan_stmt:'Diwan Statement',
-      donations:'Donations', members:'Family Members',
-      member_stmt:'Member Statement', annual:'Annual Dues',
-      users:'Users', audit:'Audit Log',
-      backup:'Backup', settings:'Settings',
-      home:'Home', operations:'Operations',
-      food_fund:'Food Fund', diwan_fund:'Diwan Fund',
-      donations_sec:'Donations', members_sec:'Members',
-      reports_sec:'Reports', system_sec:'System', more:'More',
-    },
-    topbar: {
-      backup:'Backup', light:'Light', dark:'Dark',
-      logout:'Logout', password:'Password',
-    },
-    dashboard: {
-      title:'Dashboard', subtitle:'Financial Overview',
-      food_fund:'Food Fund', diwan_fund:'Diwan Fund',
-      don_fund:'Donations Fund', total_members:'Family Members',
-      late_members:'Late', unpaid:'Unpaid',
-      total_income:'Total Receipts', total_expenses:'Total Expenses',
-      monthly:'Monthly Activity', last6:'Last 6 months',
-      recent:'Recent Operations', quick:'Quick Actions',
-      late_title:'Late Members', all_good:'✅ All members are up to date',
-      new_receipt:'Receipt', new_payment:'Payment',
-      food_receipt:'Food Receipt', diwan_receipt:'Diwan Receipt',
-      new_donation:'New Donation', food_stmt:'Food Statement',
-      diwan_stmt:'Diwan Statement',
-    },
-    receipts: {
-      title_food:'Food Fund Receipts',
-      title_diwan:'Diwan Fund Receipts',
-      new:'New Receipt', type:'Receipt Type',
-      payer:'Payer', payer_type:'Payer Type',
-      member_payer:'Family Member',
-      contact_payer:'Saved Contact',
-      manual_payer:'Manual Entry',
-      payer_name:'Payer Name',
-      save_contact:'Save as Contact',
-      fund:'Fund', fund_food:'Food Fund',
-      fund_diwan:'Diwan Fund', fund_don:'Donation',
-      don_direction:'Donation Direction',
-      don_display:'Show in which fund statement?',
-      no_data:'No receipts found',
-      receipt_no:'Receipt No.',
-      info_food:'Family members payments to contribute to the food fund',
-      info_diwan:'Payments to the Diwan from members or outside the family',
-      opt_food_long:'Food Fund — Member Contribution',
-      opt_diwan_long:'Diwan Fund — Diwan Payment',
-      opt_don_long:'Donation — Recorded in Donations Fund',
-      payer_section:'Payer Information', member_name:'Member Name',
-      contact:'Contact', payer_ph:'Enter name',
-      don_disp_food:'Food Fund Statement', don_disp_diwan:'Diwan Fund Statement',
-      amount_date:'Amount & Date', amount_cur:'Amount & Currency',
-      cur_ils:'₪ Israeli Shekel', cur_usd:'$ US Dollar', cur_jod:'JD Jordanian Dinar',
-      ils_amount:'Amount in ILS: ', notes_opt_ph:'Optional notes...', amount_err:'Enter amount',
-      cheque_info:'Cheque Information', cheque_no:'Cheque No.', cheque_date:'Cheque Date',
-      cheque_bank:'Drawee Bank', cheque_no_ph:'e.g. 123456', bank_ph:'Bank name',
-      save_print:'Save & Print', save_only:'Save Only',
-    },
-   payments: {
-   title_food:'Food Fund Expenses',
-   title_diwan:'Diwan Fund Expenses',
-   new:'New Expense',
-   beneficiary:'Beneficiary',
-   ben_type:'Beneficiary Type',
-   expense_type:'Expense Type',
-   approved_by:'Approved By',
-   food_expense:'Funeral Food Expenses',
-   electricity:'Electricity',
-   water:'Water',
-   cleaning:'Cleaning',
-   maintenance:'Maintenance',
-   other:'Other',
-   no_data:'No expenses found',
-   payment_no:'Payment No.',
-   method:'Payment Method',
-   cash:'Cash',
-   check:'Cheque',
-   transfer:'Transfer',
-   online:'Online',
-   info_food:'Funeral catering expenses for the deceased family — paid from the food fund',
-   cat_all:'All Categories', category:'Category',
-   opt_food_long:'Food Fund — Catering Expenses',
-   opt_diwan_long:'Diwan Fund — Diwan Expenses',
-   member_name:'Member Name', ben_name:'Beneficiary Name', ben_name_ph:'Beneficiary name',
-   method_pay:'Disbursement Method', approved_ph:'Approver name', desc_ph:'Detailed description...',
-},
+/* ── LEFT PANEL — 60% Navy institutional ── */
+.lp{width:55%;min-height:100vh;background:var(--b-navy);position:relative;display:flex;flex-direction:column;padding:26px 36px 20px;overflow-y:auto;transition:background .3s}
+.lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(196,164,80,.05) 0%,transparent 60%);pointer-events:none}
 
+/* Logo emblem */
+.lp-logo{display:flex;align-items:center;gap:0;margin-bottom:20px;position:relative;z-index:2}
+.lp-emblem{display:none}
+.lp-emblem-inner{display:none}
+.lp-org{font-size:26px;font-weight:600;color:#fff;font-family:'Cairo',sans-serif;display:block}
+.lp-org-en{font-size:13px;color:rgba(255,255,255,.28);letter-spacing:3px;display:block;margin-top:1px}
 
-    donations: {
-      title:'Donations Registry', new:'New Donation',
-      donor:'Donor', show_in:'Show In',
-      no_data:'No donations found',
-      info:'Donations appear in the directed fund statement as zero — they do not affect balances',
-    },
-    members: {
-      title:'Family Members', new:'New Member',
-      food_balance:'Food Balance ₪',
-      paid:'Paid', late:'Late',
-      opening_hint:'Negative = debt on member',
-      no_data:'No members found',
-      member_stmt:'Member Statement',
-      choose:'-- Select Member --',
-      current_bal:'Current Balance',
-      total_donations:'Total Donations',
-      food_stmt_title:'Food Fund Statement',
-      opening_bal:'Opening Balance',
-      annual_due:'Annual Due',
-      contribution:'Contribution',
-      don_section:'Donations (do not affect balance)',
-      receipt_no:'Receipt No.',
-      filter_all:'All', filter_paid:'Paid', filter_late:'Has Balance',
-      search_ph:'Search by name...',
-      col_name:'Name', col_phone:'Phone', col_status:'Status', col_actions:'Actions',
-    },
-    stmt: {
-      type_all:'All', type_cr:'Receipts Only',
-      type_dr:'Expenses Only', type_don:'Donations Only',
-      total_income:'Total Income',
-      total_expenses:'Total Expenses',
-      closing_bal:'Closing Balance',
-      no_data:'No transactions in this period',
-      credit:'Credit', debit:'Debit', balance:'Balance',
-      desc:'Description', donor_name:'Name', note:'Notes',
-      title_food:'Food Fund Statement', title_diwan:'Diwan Fund Statement',
-      movement_type:'Movement Type',
-    },
-    annual: {
-      title:'Annual Dues',
-      desc:'₪200 per member at start of each year',
-      year:'Year', amount:'Amount ₪',
-      apply:'Apply Annual Due',
-      history:'Applied Dues History',
-      no_data:'No dues applied yet',
-      warning:'Pressing apply will add the amount as debt on all members. Cannot be undone.',
-    },
-    settings: {
-      title:'Settings', subtitle:'Opening Balances & System Settings',
-      opening_title:'Fund Opening Balances',
-      food_opening:'Food Fund Opening Balance ₪',
-      diwan_opening:'Diwan Fund Opening Balance ₪',
-      food_hint:'Amount in the fund before system start',
-      diwan_hint:'Amount in the fund before system start',
-      rates_title:'Fallback Exchange Rates',
-      rates_hint:'Used only if automatic rate fetch fails',
-      usd_rate:'US Dollar Rate USD ₪',
-      jod_rate:'Jordanian Dinar Rate JOD ₪',
-      summary:'Balance Summary with Opening',
-      save:'Save Settings',
-      opening_warn:'Diwan: opening balance is included in the balance. Food: previous balance is for reference only and not added.',
-      food_opening_long:'Food Fund Previous Balance (reference only — not included in calculation) ₪',
-      diwan_usd:'Diwan Previous Balance $ (currencies only)',
-      diwan_jod:'Diwan Previous Balance JD (currencies only)',
-      food_usd:'Food Previous Balance $ (currencies only)',
-      food_jod:'Food Previous Balance JD (currencies only)',
-      usd_rate_short:'USD Rate ₪', jod_rate_short:'JOD Rate ₪',
-      save_short:'Save',
-    },
-    users: {
-      title:'User Management', invite:'Invite User',
-      full_name:'Full Name', email:'Email Address',
-      temp_pass:'Temporary Password', role:'Role',
-      admin:'Admin — Full access',
-      accountant:'Accountant — Add vouchers',
-      viewer:'Viewer — Read only',
-      role_admin:'Admin', role_accountant:'Accountant', role_viewer:'Viewer',
-      you:'(You)', create:'Create Account',
-    },
-    audit: {
-      title:'Audit Log', empty:'Log is empty',
-    },
-    backup: {
-      title:'Backup',
-      json_desc:'Full export in JSON format',
-      download:'Download Backup',
-      sys_info:'System Information',
-    },
-    edit: {
-      rec_title:'Edit Receipt',
-      pay_title:'Edit Payment',
-      mem_title:'Edit Member',
-      warning:'Only amount in ILS and notes can be edited',
-      cancel_voucher:'Cancel Voucher',
-      amount_ils:'Amount in ILS ₪',
-    },
+/* Institutional content */
+.lp-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;padding:8px 0;max-width:none}
+.lp-gold-bar{width:56px;height:3px;background:#C4A450;border-radius:1px;margin-bottom:14px}
+.lp-title{font-size:30px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:22px;font-family:'Cairo',sans-serif}
+.lp-inst{font-size:15.5px;color:rgba(255,255,255,.52);line-height:2;margin-bottom:18px;font-family:'Cairo',sans-serif;text-align:justify}
 
-    login: {
-      title:'Sign In',
-      email:'Email Address',
-      password:'Password',
-      login_btn:'Sign In',
-      forgot:'Forgot password?',
-      fill_all:'Please enter email and password',
-      wrong_credentials:'Invalid email or password',
-      contact_admin:'Contact your administrator',
-    },
-    password: {
-      title:'Change Password',
-      new_pass:'New Password',
-      confirm_pass:'Confirm Password',
-      hint:'Password must be at least 6 characters',
-      min_length:'At least 6 characters',
-      mismatch:'Passwords do not match',
-      save:'Save Password',
-    },
-    login: {
-      title:'Sign In',
-      email:'Email Address',
-      password:'Password',
-      login_btn:'Sign In',
-      forgot:'Forgot password?',
-      fill_all:'Please enter email and password',
-      wrong_credentials:'Invalid email or password',
-      contact_admin:'Contact your administrator',
-    },
-    errors: {
-      no_permission:'Permission denied',
-      no_print:'No print permission',
-      required:'Required',
-      invalid_amount:'Enter a valid amount',
-      duplicate_member:'A member with this name already exists',
-      load_error:'Error loading data',
-      save_error:'Error saving data',
-      invalid_year:'Invalid year',
-      already_applied:'This due has already been applied',
-      no_members:'No active members found',
-      confirm_apply:'Are you sure? This cannot be undone.',
-      session_expired:'Session expired, please login again',
-      network_error:'Network connection error',
-      min_6_chars:'Must be at least 6 characters',
-      passwords_mismatch:'Passwords do not match',
-      email_required:'Email is required',
-      password_required:'Password is required',
-      generic_error:'Error',
-      invalid_file_tables:'Invalid file: missing tables',
-      file_error:'File error',
-      duplicate_year:'Annual due already applied for this year',
-      delete_confirm:'Are you sure you want to delete?',
-      cancel_confirm:'Cancel this voucher permanently?',
-      login_error:'Invalid email or password',
-      min_pass:'Password must be at least 6 characters',
-      pass_mismatch:'Passwords do not match',
-      popup_blocked:'Please allow popups in your browser',
-      admin_only:'Admin only',
-      preview_failed:'Failed to open preview',
-      download_failed:'Download failed',
-      delete_failed:'Delete failed',
-      name_required:'Name is required',
-      select_member:'Select a member first',
-      excel_load_failed:'Failed to load Excel library',
-    },
-    messages: {
-      saved:'Saved successfully',
-      deleted:'Deleted successfully',
-      cancelled:'Cancelled',
-      updated:'Updated successfully',
-      logged_out:'Logged out successfully',
-      annual_applied:'Annual due applied successfully',
-      contact_saved:'Contact saved',
-      exported:'Exported successfully',
-      printed:'Ready to print',
-      contact_admin:'Please contact the admin to reset your password',
-      pass_changed:'Password changed successfully',
-      settings_saved:'Settings saved',
-      restoring:'Restoring...',
-      restore_partial:'Partial restore with errors',
-      restore_success:'Backup restored successfully',
-      backup_done:'Backup exported',
-      forgot_contact:'Please contact the admin to reset your password',
-   attach_uploaded:'✓ Attachment uploaded',
-   attach_deleted:'✓ Attachment deleted',
-   receipt_saved:'✓ Receipt saved',
-   payment_saved:'✓ Payment saved',
-   member_added:'✓ Member added',
-   role_changed:'Role changed',
-   account_created:'Account created',
-   access_denied:'You do not have access to this page',
-    },
-  },
-};
+/* Features */
+.lp-feats{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.lp-feat{display:flex;align-items:center;gap:9px}
+.lp-feat-icon{width:30px;height:30px;border-radius:5px;background:rgba(196,164,80,.08);border:.5px solid rgba(196,164,80,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#C4A450}
+.lp-feat-text{font-size:16px;color:rgba(255,255,255,.58);font-family:'Cairo',sans-serif}
+
+/* Compliance notice */
+.lp-notice{font-size:14px;color:rgba(196,164,80,.58);line-height:1.9;padding:16px 20px;background:rgba(196,164,80,.03);border:.5px solid rgba(196,164,80,.12);border-radius:6px;margin-bottom:20px;font-family:'Cairo',sans-serif;text-align:justify}
+
+/* System info */
+.lp-sys{display:flex;gap:14px;margin-bottom:16px}
+.lp-sys-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;text-align:center}
+.lp-sys-lbl{font-size:13px;color:rgba(255,255,255,.32);font-family:'Cairo',sans-serif;display:block;margin-bottom:2px}
+.lp-sys-val{font-size:28px;font-weight:600;color:#C4A450;display:block}
+
+/* Authorized users */
+.lp-auth-title{font-size:13px;color:rgba(255,255,255,.28);margin-bottom:8px;font-family:'Cairo',sans-serif}
+.lp-auth{display:flex;gap:14px;margin-bottom:16px}
+.lp-auth-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;display:flex;align-items:center;gap:8px}
+.lp-auth-icon{width:32px;height:32px;border-radius:4px;background:rgba(196,164,80,.06);border:.5px solid rgba(196,164,80,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lp-auth-lbl{font-size:13px;color:rgba(255,255,255,.3);display:block;font-family:'Cairo',sans-serif}
+.lp-auth-val{font-size:18px;font-weight:500;color:rgba(255,255,255,.7);font-family:'Cairo',sans-serif}
+
+/* Footer */
+.lp-foot{position:relative;z-index:2;padding-top:12px;border-top:.5px solid rgba(255,255,255,.05)}
+.lp-foot-title{font-size:12px;color:rgba(196,164,80,.45);font-family:'Cairo',sans-serif;margin-bottom:4px}
+.lp-foot-text{font-size:11px;color:rgba(255,255,255,.24);line-height:1.75;font-family:'Cairo',sans-serif}
+
+/* ── RIGHT PANEL — 40% Cream form ── */
+.rp{width:45%;min-height:100vh;background:var(--b-cream);display:flex;align-items:center;justify-content:center;padding:30px 28px;position:relative}
+
+/* Login card — wider + more padding */
+.login-card{width:100%;max-width:520px;background:var(--b-white);border:.5px solid var(--b-border);border-radius:14px;padding:36px 38px;position:relative;box-shadow:0 2px 16px rgba(0,0,0,.04)}
+
+/* Language switch */
+.lc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.lc-pills{display:flex;border-radius:6px;border:.5px solid var(--b-border);overflow:hidden}
+.lc-pill{padding:9px 22px;font-size:15px;font-family:'Cairo',sans-serif;color:var(--b-text3);background:#F9F7F3;cursor:pointer;transition:all .15s;border:none;font-weight:500}
+.lc-pill.on{background:var(--b-navy);color:#fff;font-weight:600}
+
+/* Form elements */
+.lc-gold{width:40px;height:3px;background:var(--b-gold);border-radius:1px;margin-bottom:16px}
+.login-card-title{font-family:'Cairo',sans-serif;font-size:28px;font-weight:600;color:var(--b-text);margin-bottom:4px}
+.login-card-sub{font-family:'Cairo',sans-serif;font-size:15px;color:var(--b-text3);margin-bottom:28px}
+
+.login-form-group{margin-bottom:20px}
+.login-form-label{display:block;font-family:'Cairo',sans-serif;font-size:14px;font-weight:500;color:var(--b-text2);margin-bottom:6px}
+.iw-login{position:relative}
+.login-input{width:100%;height:52px;background:var(--b-input-bg);border:1px solid var(--b-input-border);border-radius:8px;padding:0 48px 0 48px;font-family:'Cairo',sans-serif;font-size:15px;color:var(--b-text);direction:rtl;text-align:right;outline:none;transition:border-color .2s,background .2s}
+.login-input::placeholder{color:var(--b-placeholder);font-size:13px}
+.login-input:focus{border-color:var(--b-navy);background:var(--b-white);box-shadow:0 0 0 3px rgba(26,26,46,.06)}
+.ii-r-login{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--b-gold);pointer-events:none}
+.ii-l-login{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;color:#9CA3AF;cursor:pointer;background:none;border:none;padding:0;transition:color .15s}
+.ii-l-login:hover{color:var(--b-text2)}
+
+/* Remember + forgot */
+.rem-row-login{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.rem-right{display:flex;align-items:center;gap:6px}
+.cchk-login{width:18px;height:18px;border-radius:3px;border:1px solid var(--b-input-border);background:var(--b-white);appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;transition:all .15s;position:relative}
+.cchk-login:checked{background:#E8E4DC;border-color:#C4A450}
+.cchk-login:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:var(--b-navy);font-weight:700}
+.rem-lbl-login{font-family:'Cairo',sans-serif;font-size:14px;color:#666;cursor:pointer}
+.forgot-link{font-family:'Cairo',sans-serif;font-size:14px;color:var(--b-navy);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0}
+
+/* Login button */
+.login-btn-main{width:100%;height:56px;background:var(--b-navy);border:none;border-radius:9px;font-family:'Cairo',sans-serif;font-size:17px;font-weight:600;color:#fff;cursor:pointer;transition:background .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.login-btn-main:hover{background:var(--b-navy2)}
+.login-btn-main:active{transform:scale(0.985)}
+
+/* Error + forgot msg */
+.login-err-box{background:rgba(220,38,38,.06);color:#DC2626;border:1px solid rgba(220,38,38,.15);border-radius:8px;padding:12px 16px;font-size:13px;margin-top:10px;display:none;text-align:center;font-family:'Cairo',sans-serif}
+.login-err-box.show{display:block}
+.forgot-msg{display:none;background:rgba(196,164,80,.06);border:1px solid rgba(196,164,80,.15);border-radius:8px;padding:12px 16px;font-size:13px;color:#92700C;margin-top:10px;text-align:center;font-family:'Cairo',sans-serif}
+
+/* Card footer */
+.login-card-footer{text-align:center;margin-top:22px;padding-top:16px;border-top:.5px solid var(--b-border);font-size:13px;color:#aaa;font-family:'Cairo',sans-serif}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  #login-page{flex-direction:column}
+  .lp,.rp{width:100%;min-height:auto}
+  .lp{padding:16px 20px}
+  .lp-body{padding:4px 0}
+  .lp-title{font-size:15px}
+  .lp-inst{font-size:11px}
+  .lp-notice{margin-bottom:12px;font-size:10px}
+  .lp-feat-text{font-size:11px}
+  .rp{padding:14px 16px}
+  .login-card{max-width:100%;padding:22px 20px}
+  .login-card-title{font-size:18px}
+}
+@media(max-width:480px){
+  .lp{padding:14px 16px}
+  .lp-inst,.lp-notice,.lp-auth,.lp-auth-title,.lp-feats,.lp-foot-text{display:none}
+  .lp-title{font-size:14px;margin-bottom:10px}
+  .lp-gold-bar{margin-bottom:8px}
+  .lp-sys{margin-bottom:6px}
+  .lp-sys-card{padding:8px 12px}
+  .lp-sys-val{font-size:20px}
+  .lp-sys-lbl{font-size:10px}
+  .lp-foot{padding-top:6px}
+  .lp-foot-title{font-size:9px}
+  .rp{padding:12px 14px}
+  .login-card{padding:18px 16px}
+  .login-card-title{font-size:16px}
+  .login-card-sub{font-size:12px;margin-bottom:16px}
+  .login-input{height:44px;font-size:14px}
+  .login-btn-main{height:46px;font-size:14px}
+  .lc-pill{padding:6px 14px;font-size:12px}
+}
+
+/* ── Mobile touch targets ── */
+@media(max-width:768px){
+  .btn.ghost.sm{min-width:36px;min-height:36px;padding:6px}
+  .tda .btn{min-width:36px;min-height:36px}
+}
+
+/* ── Export dropdown ── */
+.export-dropdown{position:relative;display:inline-block}
+.export-dropdown-btn{display:flex;align-items:center;gap:4px}
+.export-dropdown-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card,#fff);border:1px solid var(--bd,#e2e8f0);border-radius:8px;padding:4px;min-width:150px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.export-dropdown-menu.show{display:block}
+.export-dropdown-item{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:6px;font-size:13px;color:var(--tx1,#333);cursor:pointer;font-family:'Cairo',sans-serif;border:none;background:none;width:100%;text-align:right}
+.export-dropdown-item:hover{background:var(--bg2,#f5f5f5)}
+.export-dropdown-item i{font-size:17px;color:var(--tx2,#666)}
+@media(max-width:768px){
+  .btn.ghost.sm{min-width:36px;min-height:36px;padding:6px;display:inline-flex;align-items:center;justify-content:center}
+  .btn.ghost.sm i{font-size:16px}
+  .tda{gap:4px}
+}
+</style>
+</head>
+<body>
+<div id="pra"></div>
+<div class="tc" id="tc"></div>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div id="login-page">
+
+    <!-- LEFT PANEL — Institutional -->
+    <div class="lp">
+      <div class="lp-logo">
+        <div class="lp-emblem"><div class="lp-emblem-inner">د</div></div>
+        <div><span class="lp-org" id="lp-org">ديوان آل طه</span><span class="lp-org-en">DIWAN AL-TAHA</span></div>
+      </div>
+
+      <div class="lp-body">
+        <div class="lp-gold-bar"></div>
+        <div class="lp-title" id="lp-title">النظام المالي والإداري الرسمي</div>
+        <div class="lp-inst" id="lp-inst-1">تم إنشاء هذا النظام من قبل لجنة ديوان آل طه في عام 2026 ليكون المرجع المالي الرئيسي لإدارة المدفوعات والمصاريف والإدارة الإلكترونية لصناديق الديوان، ولتسهيل مراجعة الحسابات ومتابعة العمليات المالية من قبل أعضاء اللجنة.</div>
+        <div class="lp-inst" id="lp-inst-2">جميع المعلومات والبيانات الموجودة داخل هذا النظام هي ملك حصري للجنة ديوان آل طه، ولا يحق لأي شخص أو جهة الاطلاع عليها أو استخدامها أو تداولها إلا بموافقة كاملة وصريحة من مؤسسي النظام والجهات المخولة بذلك.</div>
+
+        <div class="lp-feats">
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f1">تقارير مالية دقيقة</span></div>
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f2">حماية البيانات والمعلومات</span></div>
+          <div class="lp-feat"><div class="lp-feat-icon">✓</div><span class="lp-feat-text" id="lp-f3">سجل مالي متكامل ومتعدد العمليات</span></div>
+        </div>
+
+        <div class="lp-notice" id="lp-notice">على كل من يصل إلى هذا النظام الالتزام الكامل بالتعليمات والسياسات المعتمدة والمحافظة على سرية البيانات والمعلومات، ويُمنع استخدام أو مشاركة أي معلومات دون صلاحية، وذلك تحت طائلة المساءلة.</div>
+
+        <div class="lp-sys">
+          <div class="lp-sys-card"><span class="lp-sys-lbl" id="lp-mem-lbl">عدد الأعضاء</span><span class="lp-sys-val" id="lp-mem-count">149</span></div>
+          <div class="lp-sys-card"><span class="lp-sys-lbl" id="lp-fy-lbl">السنة المالية</span><span class="lp-sys-val" style="font-size:10px">2026 – 2027</span></div>
+        </div>
+
+        <div class="lp-auth-title" id="lp-auth-title">المستخدمون المصرح لهم بالدخول</div>
+        <div class="lp-auth">
+          <div class="lp-auth-card">
+            <div class="lp-auth-icon"><i class="ti ti-shield-check" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div><span class="lp-auth-lbl" id="lp-admin-lbl">مدير النظام</span><span class="lp-auth-val">1</span></div>
+          </div>
+          <div class="lp-auth-card">
+            <div class="lp-auth-icon"><i class="ti ti-users" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div><span class="lp-auth-lbl" id="lp-comm-lbl">أعضاء اللجنة</span><span class="lp-auth-val">6</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-foot">
+        <div class="lp-foot-title" id="lp-foot-title">الإصدار 2.0 — النظام المالي لديوان آل طه © 2026–2027</div>
+        <div class="lp-foot-text" id="lp-foot-text">تم تطوير هذا النظام ليكون المرجع المالي والإداري الرسمي لصناديق ديوان آل طه، مع توفير بيئة آمنة لإدارة العمليات المالية ومراجعة الحسابات وحفظ السجلات.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — Login Form -->
+    <div class="rp">
+      <div class="login-card">
+        <div class="lc-row">
+          <div class="lc-pills">
+            <button class="lc-pill on" id="lp-btn-ar" onclick="loginSetLang('ar')">AR</button>
+            <button class="lc-pill" id="lp-btn-en" onclick="loginSetLang('en')">EN</button>
+          </div>
+        </div>
+
+        <form onsubmit="event.preventDefault();window.login();" autocomplete="on">
+        <div class="lc-gold"></div>
+        <div class="login-card-title" id="lp-welcome">تسجيل الدخول</div>
+        <div class="login-card-sub" id="lp-subtitle">أدخل بيانات حسابك للوصول إلى النظام</div>
+
+        <div class="login-form-group">
+          <label class="login-form-label" id="lbl-email">البريد الإلكتروني</label>
+          <div class="iw-login">
+            <input class="login-input" type="text" id="l-email" autocomplete="username" inputmode="email"
+              placeholder="أدخل البريد الإلكتروني" dir="rtl"
+              onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+            <span class="ii-r-login"><i class="ti ti-mail" aria-hidden="true"></i></span>
+          </div>
+        </div>
+
+        <div class="login-form-group">
+          <label class="login-form-label" id="lbl-pass">كلمة المرور</label>
+          <div class="iw-login">
+            <input class="login-input" type="password" id="l-pass" autocomplete="current-password"
+              placeholder="••••••••" dir="rtl"
+              onkeydown="if(event.key==='Enter')window.login()">
+            <span class="ii-r-login"><i class="ti ti-lock" aria-hidden="true"></i></span>
+            <button class="ii-l-login" onclick="loginTogglePw()"><i class="ti ti-eye" id="lp-eye" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+        <div class="rem-row-login">
+          <div class="rem-right">
+            <input type="checkbox" class="cchk-login" id="l-remember">
+            <label class="rem-lbl-login" for="l-remember" id="lbl-remember">تذكرني على هذا الجهاز</label>
+          </div>
+          <button class="forgot-link" onclick="window.forgotPassword()" id="lbl-forgot">نسيت كلمة المرور؟</button>
+        </div>
+
+        <button class="login-btn-main" id="login-btn" onclick="window.login()">
+          <i class="ti ti-login"></i>
+          <span id="btn-login-txt">تسجيل الدخول</span>
+        </button>
+
+        <div class="login-err-box" id="login-err"></div>
+        <div class="forgot-msg" id="forgot-msg"></div>
+        </form>
+
+        <div class="login-card-footer" id="lp-card-footer">للدعم الفني: 00972562666612</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ APP ══ -->  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app" style="display:none">
+<div class="top">
+  <div class="top-logo">
+    <div class="top-logo-ico"><img src="/logo-dark.svg" alt="ديوان آل طه" width="32" height="32"></div>
+    <div><div class="top-logo-text">ديوان آل طه</div><div class="top-logo-sub">نظام الإدارة المالية</div></div>
+  </div>
+  <div class="top-actions">
+    <span id="clock"></span>
+    <div class="rate-chip" id="rate-chip"><i class="ti ti-currency-dollar"></i><span id="rate-txt">جاري التحديث...</span></div>
+    <button class="tbtn" id="theme-btn" onclick="window.toggleTheme()"><i class="ti ti-sun"></i>فاتح</button>
+    <button class="tbtn" id="lang-btn" onclick="window.toggleLang()"><i class="ti ti-language"></i>EN</button>
+    <div class="uchip">
+      <div class="uav" id="uav">م</div>
+      <div><span class="uname" id="uname">...</span><span class="urole" id="urole">...</span></div>
+    </div>
+    <button class="tbtn" onclick="window.openM('change-pass')"><i class="ti ti-lock"></i>كلمة المرور</button>
+    <button class="tbtn red" onclick="window.logout()"><i class="ti ti-logout"></i>خروج</button>
+  </div>
+</div>
+
+<div class="layout">
+<div class="sb">
+  <div class="sb-sec" data-i18n="nav.home">الرئيسية</div>
+  <div class="nb on" data-p="dash"><i class="ti ti-layout-dashboard"></i>لوحة التحكم</div>
+  <div class="sb-sec" data-i18n="nav.food_fund">صندوق الغداء</div>
+  <div class="nb" data-p="food-rec"><i class="ti ti-receipt"></i>إيصالات الغداء</div>
+  <div class="nb" data-p="food-pay"><i class="ti ti-cash"></i>مصاريف الغداء</div>
+  <div class="nb" data-p="food-stmt"><i class="ti ti-file-description"></i>كشف الغداء</div>
+  <div class="sb-sec" data-i18n="nav.diwan_fund">صندوق الديوان</div>
+  <div class="nb" data-p="diwan-rec"><i class="ti ti-receipt"></i>إيصالات الديوان</div>
+  <div class="nb" data-p="diwan-pay"><i class="ti ti-cash"></i>مصاريف الديوان</div>
+  <div class="nb" data-p="diwan-stmt"><i class="ti ti-file-description"></i>كشف الديوان</div>
+  <div class="sb-sec" data-i18n="nav.donations_sec">التبرعات</div>
+  <div class="nb" data-p="don"><i class="ti ti-heart"></i>سجل التبرعات</div>
+  <div class="sb-sec" data-i18n="nav.members_sec">الأعضاء</div>
+  <div class="nb" data-p="members"><i class="ti ti-users"></i>أعضاء العائلة</div>
+  <div class="nb" data-p="member-stmt"><i class="ti ti-user"></i>كشف حساب عضو</div>
+  <div class="nb" data-p="annual"><i class="ti ti-calendar"></i>الاشتراكات السنوية</div>
+  <div class="sb-sec" data-i18n="nav.system_sec">النظام</div>
+  <div class="nb" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i>المستخدمون</div>
+  <div class="nb" data-p="audit"><i class="ti ti-list-check"></i>سجل العمليات</div>
+  <div class="nb" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i>الإعدادات</div>
+  <div class="nb" data-p="bk"><i class="ti ti-database"></i>النسخ الاحتياطي</div>
+</div>
+
+<div class="main">
+  <div class="pg on" id="pg-dash">
+  <div class="ph">
+    <div><div class="ph-t" data-i18n="dashboard.title">لوحة التحكم</div><div class="ph-s" id="dash-date"></div></div>
+    <div class="ph-a">
+      <button class="btn sm" onclick="window.loadAll()"><i class="ti ti-refresh"></i>تحديث</button>
+    </div>
+  </div>
+  <div id="fund-summary" class="fsum"></div>
+  <div class="qa-wrap">
+    <div class="qa-title"><i class="ti ti-bolt"></i>إجراءات سريعة</div>
+    <div id="quick-actions" class="qa-bar"></div>
+  </div>
+  <div class="tp-tabs" id="treasury-tabs"></div>
+  <div id="treasury-panel"></div>
+  <div class="dash-bottom">
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-chart-histogram"></i>الحركات الشهرية</span></div><div id="month-chart" style="height:96px;display:flex;align-items:flex-end;gap:6px;padding-top:8px"></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-clock"></i>آخر الحركات</span></div><div id="recent-ops"></div></div>
+  </div>
+</div>
+  <div class="pg" id="pg-food-rec">
+    <div class="ph"><div><div class="ph-t" data-i18n="receipts.title_food">إيصالات صندوق الغداء</div><div class="ph-s" id="food-rec-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-food-rec" onclick="window.openRec('food')"><i class="ti ti-plus"></i><span data-i18n="receipts.new">إيصال جديد</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-food-rec')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-food-rec"><button class="export-dropdown-item" onclick="window.exportPageExcel('food-rec')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('food-rec')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div class="ibox food"><i class="ti ti-info-circle"></i><span data-i18n="receipts.info_food">مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء</span></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-food-rec" placeholder="بحث..." data-i18n-placeholder="common.search" oninput="D['food-rec'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th data-i18n="common.number">الرقم</th><th data-i18n="common.date">التاريخ</th><th data-i18n="receipts.payer">الدافع</th><th data-i18n="common.amount_ils">المبلغ ₪</th><th data-i18n="common.method">طريقة الدفع</th><th data-i18n="common.notes">ملاحظات</th><th data-i18n="common.actions">إجراءات</th></tr></thead><tbody id="food-rec-body"></tbody></table></div>
+    <div class="pag" id="food-rec-pag"></div>
+  </div>
+  <div class="pg" id="pg-food-pay">
+    <div class="ph"><div><div class="ph-t" data-i18n="payments.title_food">مصاريف صندوق الغداء</div><div class="ph-s" id="food-pay-sub"></div></div><div class="ph-a"><button class="btn sm food" id="btn-food-pay" onclick="window.openPay('food')"><i class="ti ti-plus"></i><span data-i18n="payments.new">مصروف جديد</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-food-pay')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-food-pay"><button class="export-dropdown-item" onclick="window.exportPageExcel('food-pay')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('food-pay')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div class="ibox food"><i class="ti ti-info-circle"></i><span data-i18n="payments.info_food">مصاريف إطعام أهل المتوفى في حالات العزاء — تُدفع من صندوق الغداء</span></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-food-pay" placeholder="بحث..." data-i18n-placeholder="common.search" oninput="D['food-pay'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th data-i18n="common.number">الرقم</th><th data-i18n="common.date">التاريخ</th><th data-i18n="payments.beneficiary">المستفيد</th><th data-i18n="common.amount_ils">المبلغ ₪</th><th data-i18n="common.method">طريقة الدفع</th><th data-i18n="common.notes">ملاحظات</th><th data-i18n="common.actions">إجراءات</th></tr></thead><tbody id="food-pay-body"></tbody></table></div>
+    <div class="pag" id="food-pay-pag"></div>
+  </div>
+  <div class="pg" id="pg-food-stmt">
+    <div class="ph"><div><div class="ph-t" data-i18n="stmt.title_food">كشف حساب صندوق الغداء</div></div></div>
+    <div class="ftb"><div class="ftb-grp"><div class="ftb-ci"><label data-i18n="common.from_date">من تاريخ</label><input type="date" id="food-stmt-from"></div><div class="ftb-ci"><label data-i18n="common.to_date">إلى تاريخ</label><input type="date" id="food-stmt-to"></div></div><div class="ftb-grp"><div class="ftb-ci"><label data-i18n="stmt.movement_type">نوع الحركة</label><select id="food-stmt-type"><option value="" data-i18n="stmt.type_all">الكل</option><option value="cr" data-i18n="stmt.type_cr">إيصالات فقط</option><option value="dr" data-i18n="stmt.type_dr">مصاريف فقط</option><option value="don" data-i18n="stmt.type_don">تبرعات فقط</option></select></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderStmt('food')"><i class="ti ti-search"></i><span data-i18n="common.view">عرض</span></button><button class="btn" onclick="window.prtStmt('food')"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><button class="btn" onclick="window.exportPagePDF('food-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button><button class="btn" onclick="window.exportPageExcel('food-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button></div></div>
+    <div id="food-stmt-out"></div>
+  </div>
+  <div class="pg" id="pg-diwan-rec">
+    <div class="ph"><div><div class="ph-t" data-i18n="receipts.title_diwan">إيصالات صندوق الديوان</div><div class="ph-s" id="diwan-rec-sub"></div></div><div class="ph-a"><button class="btn sm primary" id="btn-diwan-rec" onclick="window.openRec('diwan')"><i class="ti ti-plus"></i><span data-i18n="receipts.new">إيصال جديد</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-diwan-rec')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-diwan-rec"><button class="export-dropdown-item" onclick="window.exportPageExcel('diwan-rec')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('diwan-rec')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div class="ibox diwan"><i class="ti ti-info-circle"></i><span data-i18n="receipts.info_diwan">مدفوعات للديوان من الأعضاء أو من خارج العائلة</span></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-diwan-rec" placeholder="بحث..." data-i18n-placeholder="common.search" oninput="D['diwan-rec'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th data-i18n="common.number">الرقم</th><th data-i18n="common.date">التاريخ</th><th data-i18n="receipts.payer">الدافع</th><th data-i18n="common.amount_ils">المبلغ ₪</th><th data-i18n="common.currency">العملة</th><th data-i18n="common.method">طريقة الدفع</th><th data-i18n="common.notes">ملاحظات</th><th data-i18n="common.actions">إجراءات</th></tr></thead><tbody id="diwan-rec-body"></tbody></table></div>
+    <div class="pag" id="diwan-rec-pag"></div>
+  </div>
+  <div class="pg" id="pg-diwan-pay">
+    <div class="ph"><div><div class="ph-t" data-i18n="payments.title_diwan">مصاريف صندوق الديوان</div><div class="ph-s" id="diwan-pay-sub"></div></div><div class="ph-a"><button class="btn sm diwan" id="btn-diwan-pay" onclick="window.openPay('diwan')"><i class="ti ti-plus"></i><span data-i18n="payments.new">مصروف جديد</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-diwan-pay')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-diwan-pay"><button class="export-dropdown-item" onclick="window.exportPageExcel('diwan-pay')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('diwan-pay')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-diwan-pay" placeholder="بحث..." data-i18n-placeholder="common.search" oninput="D['diwan-pay'].render()"></div><select class="fs" id="f-diwan-pay-type" onchange="D['diwan-pay'].render()"><option value="" data-i18n="payments.cat_all">كل الفئات</option><option value="electricity" data-i18n="payments.electricity">كهرباء</option><option value="water" data-i18n="payments.water">ماء</option><option value="cleaning" data-i18n="payments.cleaning">تنظيف</option><option value="maintenance" data-i18n="payments.maintenance">صيانة</option><option value="other" data-i18n="payments.other">أخرى</option></select></div>
+    <div class="tw"><table><thead><tr><th data-i18n="common.number">الرقم</th><th data-i18n="common.date">التاريخ</th><th data-i18n="payments.beneficiary">المستفيد</th><th data-i18n="common.amount_ils">المبلغ ₪</th><th data-i18n="payments.category">الفئة</th><th data-i18n="common.method">طريقة الدفع</th><th data-i18n="common.notes">ملاحظات</th><th data-i18n="common.actions">إجراءات</th></tr></thead><tbody id="diwan-pay-body"></tbody></table></div>
+    <div class="pag" id="diwan-pay-pag"></div>
+  </div>
+  <div class="pg" id="pg-diwan-stmt">
+    <div class="ph"><div><div class="ph-t" data-i18n="stmt.title_diwan">كشف حساب صندوق الديوان</div></div></div>
+    <div class="ftb"><div class="ftb-grp"><div class="ftb-ci"><label data-i18n="common.from_date">من تاريخ</label><input type="date" id="diwan-stmt-from"></div><div class="ftb-ci"><label data-i18n="common.to_date">إلى تاريخ</label><input type="date" id="diwan-stmt-to"></div></div><div class="ftb-grp"><div class="ftb-ci"><label data-i18n="stmt.movement_type">نوع الحركة</label><select id="diwan-stmt-type"><option value="" data-i18n="stmt.type_all">الكل</option><option value="cr" data-i18n="stmt.type_cr">إيصالات فقط</option><option value="dr" data-i18n="stmt.type_dr">مصاريف فقط</option><option value="don" data-i18n="stmt.type_don">تبرعات فقط</option></select></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderStmt('diwan')"><i class="ti ti-search"></i><span data-i18n="common.view">عرض</span></button><button class="btn" onclick="window.prtStmt('diwan')"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><button class="btn" onclick="window.exportPagePDF('diwan-stmt')"><i class="ti ti-file-type-pdf"></i>PDF</button><button class="btn" onclick="window.exportPageExcel('diwan-stmt')"><i class="ti ti-file-spreadsheet"></i>Excel</button></div></div>
+    <div id="diwan-stmt-out"></div>
+  </div>
+  <div class="pg" id="pg-don">
+    <div class="ph"><div><div class="ph-t" data-i18n="donations.title">سجل التبرعات</div><div class="ph-s" id="don-sub"></div></div><div class="ph-a"><button class="btn sm don" id="btn-don" onclick="window.openRec('donation')"><i class="ti ti-heart"></i><span data-i18n="donations.new">تبرع جديد</span></button><button class="btn sm" onclick="window.prtDonStmt()"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-don')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-don"><button class="export-dropdown-item" onclick="window.exportPageExcel('don')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('don')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div class="ibox don"><i class="ti ti-info-circle"></i><span data-i18n="donations.info">التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة</span></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-don" placeholder="بحث..." data-i18n-placeholder="common.search" oninput="D['don'].render()"></div></div>
+    <div class="tw"><table><thead><tr><th data-i18n="common.number">الرقم</th><th data-i18n="common.date">التاريخ</th><th data-i18n="donations.donor">المتبرع</th><th data-i18n="common.amount_ils">المبلغ ₪</th><th data-i18n="common.currency">العملة</th><th data-i18n="donations.show_in">يُظهر في</th><th data-i18n="common.notes">ملاحظات</th><th data-i18n="common.actions">إجراءات</th></tr></thead><tbody id="don-body"></tbody></table></div>
+    <div class="pag" id="don-pag"></div>
+  </div>
+  <div class="pg" id="pg-members">
+    <div class="ph"><div><div class="ph-t" data-i18n="members.title">أعضاء العائلة</div><div class="ph-s" id="members-sub"></div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-members')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-members"><button class="export-dropdown-item" onclick="window.exportPageExcel('members')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('members')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><button class="btn sm primary" id="btn-add-member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i><span data-i18n="members.new">عضو جديد</span></button></div></div>
+    <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-members" placeholder="بحث بالاسم..." data-i18n-placeholder="members.search_ph" oninput="D['members'].render()"></div><select class="fs" id="f-member-status" onchange="D['members'].render()"><option value="" data-i18n="members.filter_all">الكل</option><option value="paid" data-i18n="members.filter_paid">مسدَّد</option><option value="due" data-i18n="members.filter_late">عليه رصيد</option></select></div>
+    <div class="tw"><table><thead><tr><th>#</th><th data-i18n="members.col_name">الاسم</th><th data-i18n="members.col_phone">الهاتف</th><th data-i18n="members.food_balance">رصيد الغداء ₪</th><th data-i18n="members.col_status">الحالة</th><th data-i18n="members.col_actions">إجراءات</th></tr></thead><tbody id="members-body"></tbody></table></div>
+    <div class="pag" id="members-pag"></div>
+  </div>
+  <div class="pg" id="pg-member-stmt">
+    <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div></div>
+    <div class="ftb"><div class="ftb-grp"><div class="ftb-ci wide"><label>العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div></div><div class="ftb-grp"><div class="ftb-ci"><label>من تاريخ</label><input type="date" id="ms-from"></div><div class="ftb-ci"><label>إلى تاريخ</label><input type="date" id="ms-to"></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض</button><button class="btn" onclick="window.prtMemberStmt()"><i class="ti ti-printer"></i>طباعة</button><button class="btn" onclick="window.exportMemberStmt('pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button><button class="btn" onclick="window.exportMemberStmt('excel')"><i class="ti ti-file-spreadsheet"></i>Excel</button></div></div>
+    <div id="ms-out"></div>
+  </div>
+  <div class="pg" id="pg-annual">
+    <div class="ph"><div><div class="ph-t" data-i18n="annual.title">الاشتراكات السنوية</div><div class="ph-s" data-i18n="annual.desc">200 ₪ على كل عضو بداية كل سنة</div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-annual')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-annual"><button class="export-dropdown-item" onclick="window.exportPageExcel('annual')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('annual')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div class="card"><div class="ibox warn"><i class="ti ti-alert-triangle"></i><span data-i18n="annual.warning">عند الضغط على "تطبيق" سيُضاف 200 ₪ كدين على كل الأعضاء للسنة المحددة. لا يمكن التراجع.</span></div><div class="fg" style="max-width:400px;margin-bottom:16px"><div class="fi"><label data-i18n="annual.year">السنة</label><input type="number" id="due-year" min="2020" max="2040" value="2026"></div><div class="fi"><label data-i18n="annual.amount">المبلغ ₪</label><input type="number" id="due-amount" value="200" min="1"></div></div><button class="btn primary" id="btn-apply-due" onclick="window.applyAnnualDue()"><i class="ti ti-calendar-plus"></i><span data-i18n="annual.apply">تطبيق الاشتراك السنوي</span></button></div>
+    <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-history"></i><span data-i18n="annual.history">سجل الاشتراكات المطبقة</span></div><div id="annual-list"></div></div>
+  </div>
+  <div class="pg" id="pg-users">
+    <div class="ph"><div><div class="ph-t">إدارة المستخدمين</div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-users')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-users"><button class="export-dropdown-item" onclick="window.exportPageExcel('users')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('users')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><button class="btn sm primary" onclick="window.openM('invite')"><i class="ti ti-user-plus"></i>دعوة مستخدم</button></div></div>
+    <div class="card"><div id="users-list"></div></div>
+  </div>
+  <div class="pg" id="pg-audit">
+    <div class="ph"><div><div class="ph-t" data-i18n="audit.title">سجل العمليات</div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-audit')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-audit"><button class="export-dropdown-item" onclick="window.exportPageExcel('audit')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('audit')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div class="card"><div id="audit-list"></div></div>
+  </div>
+  <div class="pg" id="pg-bk">
+    <div class="ph"><div><div class="ph-t">النسخ الاحتياطي</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="card" style="text-align:center;padding:28px"><i class="ti ti-database-export" style="font-size:40px;color:var(--diwan);display:block;margin-bottom:12px"></i><p style="font-size:12px;color:var(--tx2);margin-bottom:12px">تصدير كامل بصيغة JSON</p><button class="btn primary" onclick="window.doBackup()"><i class="ti ti-download"></i>تحميل النسخة</button><button class="btn" onclick="window.doRestore()" style="margin-top:8px"><i class="ti ti-upload"></i>استعادة نسخة</button></div><div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>معلومات النظام</div><div id="sys-info"></div></div></div>
+  </div>
+  <div class="pg" id="pg-settings">
+    <div class="ph"><div><div class="ph-t" data-i18n="settings.title">الإعدادات</div><div class="ph-s" data-i18n="settings.subtitle">الرصيد الافتتاحي وإعدادات النظام</div></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-wallet"></i><span data-i18n="settings.opening_title">الرصيد الافتتاحي للصناديق</span></span></div><div class="ibox warn"><i class="ti ti-alert-triangle"></i><span data-i18n="settings.opening_warn">الديوان: الافتتاحي يُحسب ضمن الرصيد. الغداء: الرصيد السابق للمعلومية فقط ولا يُجمع</span></div><div class="fg" style="max-width:500px"><div class="fi"><label data-i18n="settings.food_opening_long">رصيد صندوق الغداء السابق (للمعلومية فقط — لا يدخل في الحساب) ₪</label><div class="iw"><span class="ipx" style="color:var(--food)">₪</span><input type="number" id="set-food-opening" placeholder="0.00" step="0.01"></div></div><div class="fi"><label data-i18n="settings.diwan_opening">الرصيد الافتتاحي لصندوق الديوان ₪</label><div class="iw"><span class="ipx" style="color:var(--diwan)">₪</span><input type="number" id="set-diwan-opening" placeholder="0.00" step="0.01"></div></div>
+      <div class="fi"><label data-i18n="settings.diwan_usd">رصيد الديوان السابق $ (للعملات فقط)</label><input type="number" step="0.01" id="set-diwan-opening-usd" placeholder="0"></div>
+      <div class="fi"><label data-i18n="settings.diwan_jod">رصيد الديوان السابق JD (للعملات فقط)</label><input type="number" step="0.01" id="set-diwan-opening-jod" placeholder="0"></div>
+      <div class="fi"><label data-i18n="settings.food_usd">رصيد الغداء السابق $ (للعملات فقط)</label><input type="number" step="0.01" id="set-food-opening-usd" placeholder="0"></div>
+      <div class="fi"><label data-i18n="settings.food_jod">رصيد الغداء السابق JD (للعملات فقط)</label><input type="number" step="0.01" id="set-food-opening-jod" placeholder="0"></div></div><div style="margin-top:16px"><button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i><span data-i18n="settings.save">حفظ الإعدادات</span></button></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i><span data-i18n="settings.rates_title">أسعار الصرف الاحتياطية</span></span></div><div class="fg" style="max-width:500px"><div class="fi"><label data-i18n="settings.usd_rate_short">سعر الدولار USD ₪</label><div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" placeholder="3.70" step="0.01" min="0.01"></div></div><div class="fi"><label data-i18n="settings.jod_rate_short">سعر الدينار JOD ₪</label><div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" placeholder="5.00" step="0.01" min="0.01"></div></div></div><div style="margin-top:16px"><button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i><span data-i18n="settings.save_short">حفظ</span></button></div></div>
+    <div class="card" id="settings-summary" style="display:none"><div class="ch"><span class="ct"><i class="ti ti-chart-pie"></i><span data-i18n="settings.summary">ملخص الأرصدة مع الافتتاحي</span></span></div><div id="settings-bal-summary"></div></div>
+  </div>
+</div>
+</div>
+
+<div id="copyright-bar">All rights reserved © 2026-2027 | Diwan Al-Taha Financial Management System</div>
+
+<!-- MODALS -->
+<div class="ov" id="ov">
+  <!-- Receipt Modal -->
+  <div class="modal" id="m-rec" style="display:none;max-width:580px">
+    <div class="mhd"><span class="mtt"><span class="mico green" id="rec-mico"><i class="ti ti-receipt"></i></span><span id="rec-mtitle">سند قبض جديد</span></span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <div class="fi full" style="margin-bottom:14px"><label><span data-i18n="receipts.type">نوع الإيصال</span> <span class="req">*</span></label><select id="rec-fund" onchange="window.onRecFundChange()"><option value="food" data-i18n="receipts.opt_food_long">صندوق الغداء — مساهمة عضو</option><option value="diwan" data-i18n="receipts.opt_diwan_long">صندوق الديوان — دفعة للديوان</option><option value="donation" data-i18n="receipts.opt_don_long">تبرع — يُسجَّل في صندوق التبرعات</option></select></div>
+      <div class="sdiv" data-i18n="receipts.payer_section">بيانات الدافع</div>
+      <div class="fg">
+        <div class="fi" id="rec-payer-type-wrap"><label data-i18n="receipts.payer_type">نوع الدافع</label><select id="rec-payer-type" onchange="window.onPayerTypeChange()"><option value="member" data-i18n="receipts.member_payer">عضو من العائلة</option><option value="contact" id="opt-contact" style="display:none" data-i18n="receipts.contact_payer">جهة اتصال مسجلة</option><option value="manual" id="opt-manual" style="display:none" data-i18n="receipts.manual_payer">إدخال يدوي</option></select></div>
+        <div class="fi" id="rec-member-wrap"><label><span data-i18n="receipts.member_name">اسم العضو</span> <span class="req">*</span></label><select id="rec-member"><option value="">-- اختر عضواً --</option></select><span class="ferr" id="e-rec-member"><i class="ti ti-alert-circle"></i><span data-i18n="common.required">مطلوب</span></span></div>
+        <div class="fi" id="rec-contact-wrap" style="display:none"><label data-i18n="receipts.contact">جهة الاتصال</label><select id="rec-contact"><option value="">-- اختر --</option></select></div>
+        <div class="fi" id="rec-manual-wrap" style="display:none"><label><span data-i18n="receipts.payer_name">اسم الدافع</span> <span class="req">*</span></label><input type="text" id="rec-payer-name" placeholder="اكتب الاسم" data-i18n-placeholder="receipts.payer_ph"><div style="margin-top:4px"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="rec-save-contact" style="width:auto;padding:0"><span data-i18n="receipts.save_contact">حفظ كجهة اتصال</span></label></div></div>
+      </div>
+      <div id="rec-don-fund-wrap" style="display:none"><div class="sdiv" data-i18n="receipts.don_direction">توجيه التبرع</div><div class="fi full"><label data-i18n="receipts.don_display">يُظهر في كشف أي صندوق؟</label><select id="rec-don-display"><option value="food" data-i18n="receipts.don_disp_food">كشف صندوق الغداء</option><option value="diwan" data-i18n="receipts.don_disp_diwan">كشف صندوق الديوان</option></select></div></div>
+      <div class="sdiv" data-i18n="receipts.amount_date">المبلغ والتاريخ</div>
+      <div class="fg">
+        <div class="fi"><label><span data-i18n="receipts.amount_cur">المبلغ والعملة</span> <span class="req">*</span></label><div class="iw cur"><select id="rec-currency" class="cur-sel" onchange="window.onCurrencyChange('rec')"><option value="ILS" data-i18n="receipts.cur_ils">₪ شيكل إسرائيلي</option><option value="USD" data-i18n="receipts.cur_usd">$ دولار أمريكي</option><option value="JOD" data-i18n="receipts.cur_jod">د.أ دينار أردني</option></select><input type="number" id="rec-amount" min="0.01" step="0.01" placeholder="0.00" oninput="window.calcILS('rec')"><span class="ipx" id="rec-currency-sym" style="display:none">₪</span></div><span class="ferr" id="e-rec-amount"><i class="ti ti-alert-circle"></i><span data-i18n="receipts.amount_err">أدخل مبلغاً</span></span></div>
+        <div class="fi full" id="rec-ils-row" style="display:none"><div class="ils-row show"><i class="ti ti-calculator"></i><span data-i18n="receipts.ils_amount">المبلغ بالشيكل: </span><span class="ils-val" id="rec-ils-val">—</span><span style="color:var(--tx3);font-size:11px;margin-right:auto" id="rec-rate-label"></span></div></div>
+        <div class="fi"><label><span data-i18n="common.date">التاريخ</span> <span class="req">*</span></label><input type="date" id="rec-date"><span class="ferr" id="e-rec-date"><i class="ti ti-alert-circle"></i><span data-i18n="common.required">مطلوب</span></span></div>
+        <div class="fi"><label data-i18n="common.method">طريقة الدفع</label><div class="pills" id="rec-pills"><span class="pill on" data-val="cash" onclick="window.setPill('rec',this)"><i class="ti ti-cash"></i><span data-i18n="payments.cash">نقد</span></span><span class="pill" data-val="check" onclick="window.setPill('rec',this)"><i class="ti ti-file-dollar"></i><span data-i18n="payments.check">شيك</span></span><span class="pill" data-val="transfer" onclick="window.setPill('rec',this)"><i class="ti ti-building-bank"></i><span data-i18n="payments.transfer">تحويل</span></span><span class="pill" data-val="online" onclick="window.setPill('rec',this)"><i class="ti ti-device-mobile"></i><span data-i18n="payments.online">أونلاين</span></span></div><input type="hidden" id="rec-method" value="cash"></div>
+        <div class="fi full" id="rec-cheque-wrap" style="display:none"><div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> <span data-i18n="receipts.cheque_info">معلومات الشيك</span></div><div class="fg"><div class="fi"><label data-i18n="receipts.cheque_no">رقم الشيك</label><input type="text" id="rec-cheque-no" placeholder="مثال: 123456" data-i18n-placeholder="receipts.cheque_no_ph"></div><div class="fi"><label data-i18n="receipts.cheque_date">تاريخ الشيك</label><input type="date" id="rec-cheque-date"></div><div class="fi full"><label data-i18n="receipts.cheque_bank">البنك المسحوب عليه</label><input type="text" id="rec-cheque-bank" placeholder="اسم البنك" data-i18n-placeholder="receipts.bank_ph"></div></div></div></div>
+        <div class="fi full"><label data-i18n="common.notes">ملاحظات</label><textarea id="rec-notes" placeholder="ملاحظات اختيارية..." data-i18n-placeholder="receipts.notes_opt_ph"></textarea></div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn primary" onclick="window.saveRec(true)"><i class="ti ti-printer"></i><span data-i18n="receipts.save_print">حفظ وطباعة</span></button><button class="btn green" onclick="window.saveRec(false)"><i class="ti ti-device-floppy"></i><span data-i18n="receipts.save_only">حفظ فقط</span></button><button class="btn" onclick="window.closeM()"><span data-i18n="common.cancel">إلغاء</span></button></div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal" id="m-pay" style="display:none;max-width:580px">
+    <div class="mhd"><span class="mtt"><span class="mico red"><i class="ti ti-cash"></i></span><span id="pay-mtitle">سند صرف جديد</span></span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <div class="fi full" style="margin-bottom:14px"><label><span data-i18n="payments.fund">الصندوق</span> <span class="req">*</span></label><select id="pay-fund" onchange="window.onPayFundChange()"><option value="food" data-i18n="payments.opt_food_long">صندوق الغداء — مصاريف الإطعام</option><option value="diwan" data-i18n="payments.opt_diwan_long">صندوق الديوان — مصاريف الديوان</option></select></div>
+      <div class="fg">
+        <div class="fi" id="pay-expense-wrap"><label><span data-i18n="payments.expense_type">فئة المصروف</span> <span class="req">*</span></label><select id="pay-expense"><option value="food_expense" data-i18n="payments.food_expense">مصاريف إطعام عزاء</option></select></div>
+        <div class="fi"><label><span data-i18n="payments.beneficiary">المستفيد</span> <span class="req">*</span></label><select id="pay-beneficiary-type" onchange="window.onPayBenChange()"><option value="member" data-i18n="receipts.member_payer">عضو من العائلة</option><option value="manual" data-i18n="receipts.manual_payer">إدخال يدوي</option></select></div>
+        <div class="fi" id="pay-member-wrap"><label data-i18n="payments.member_name">اسم العضو</label><select id="pay-member"><option value="">-- اختر عضواً --</option></select></div>
+        <div class="fi" id="pay-manual-wrap" style="display:none"><label><span data-i18n="payments.ben_name">اسم المستفيد</span> <span class="req">*</span></label><input type="text" id="pay-ben-name" placeholder="اسم المستفيد" data-i18n-placeholder="payments.ben_name_ph"><span class="ferr" id="e-pay-ben"><i class="ti ti-alert-circle"></i><span data-i18n="common.required">مطلوب</span></span></div>
+        <div class="fi"><label><span data-i18n="receipts.amount_cur">المبلغ والعملة</span> <span class="req">*</span></label><div class="iw cur"><select id="pay-currency" class="cur-sel" onchange="window.onCurrencyChange('pay')"><option value="ILS" data-i18n="receipts.cur_ils">₪ شيكل</option><option value="USD" data-i18n="receipts.cur_usd">$ دولار</option><option value="JOD" data-i18n="receipts.cur_jod">د.أ دينار أردني</option></select><input type="number" id="pay-amount" min="0.01" step="0.01" placeholder="0.00" oninput="window.calcILS('pay')"><span class="ipx" id="pay-currency-sym" style="display:none">₪</span></div><span class="ferr" id="e-pay-amount"><i class="ti ti-alert-circle"></i><span data-i18n="common.required">مطلوب</span></span></div>
+        <div class="fi full" id="pay-ils-row" style="display:none"><div class="ils-row show"><i class="ti ti-calculator"></i><span data-i18n="receipts.ils_amount">المبلغ بالشيكل: </span><span class="ils-val" id="pay-ils-val">—</span><span style="color:var(--tx3);font-size:11px;margin-right:auto" id="pay-rate-label"></span></div></div>
+        <div class="fi"><label><span data-i18n="common.date">التاريخ</span> <span class="req">*</span></label><input type="date" id="pay-date"><span class="ferr" id="e-pay-date"><i class="ti ti-alert-circle"></i><span data-i18n="common.required">مطلوب</span></span></div>
+        <div class="fi"><label data-i18n="payments.method_pay">طريقة الصرف</label><div class="pills" id="pay-pills"><span class="pill on" data-val="cash" onclick="window.setPill('pay',this)"><i class="ti ti-cash"></i><span data-i18n="payments.cash">نقد</span></span><span class="pill" data-val="check" onclick="window.setPill('pay',this)"><i class="ti ti-file-dollar"></i><span data-i18n="payments.check">شيك</span></span><span class="pill" data-val="transfer" onclick="window.setPill('pay',this)"><i class="ti ti-building-bank"></i><span data-i18n="payments.transfer">تحويل</span></span></div><input type="hidden" id="pay-method" value="cash"></div>
+        <div class="fi full" id="pay-cheque-wrap" style="display:none"><div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> <span data-i18n="receipts.cheque_info">معلومات الشيك</span></div><div class="fg"><div class="fi"><label data-i18n="receipts.cheque_no">رقم الشيك</label><input type="text" id="pay-cheque-no"></div><div class="fi"><label data-i18n="receipts.cheque_date">تاريخ الشيك</label><input type="date" id="pay-cheque-date"></div><div class="fi full"><label data-i18n="receipts.cheque_bank">البنك المسحوب عليه</label><input type="text" id="pay-cheque-bank"></div></div></div></div>
+        <div class="fi"><label data-i18n="payments.approved_by">معتمد من</label><input type="text" id="pay-approved" placeholder="اسم المعتمد" data-i18n-placeholder="payments.approved_ph"></div>
+        <div class="fi full"><label data-i18n="common.notes">ملاحظات</label><textarea id="pay-notes" placeholder="وصف تفصيلي..." data-i18n-placeholder="payments.desc_ph"></textarea></div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn danger" onclick="window.savePay(true)"><i class="ti ti-printer"></i><span data-i18n="receipts.save_print">حفظ وطباعة</span></button><button class="btn" onclick="window.savePay(false)"><i class="ti ti-device-floppy"></i><span data-i18n="receipts.save_only">حفظ فقط</span></button><button class="btn" onclick="window.closeM()"><span data-i18n="common.cancel">إلغاء</span></button></div>
+  </div>
+
+  <!-- Member Modal -->
+  <div class="modal" id="m-member" style="display:none;max-width:480px">
+    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-user-plus"></i></span>إضافة عضو جديد</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="mem-name" placeholder="الاسم الرباعي"><span class="ferr" id="e-mem-name"><i class="ti ti-alert-circle"></i>مطلوب</span></div><div class="fi"><label>الهاتف</label><input type="tel" id="mem-phone" placeholder="05x-xxx-xxxx"></div><div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="mem-from-year" min="2000" max="2100" step="1"></div><div class="fi"><label>الرصيد الافتتاحي ₪</label><input type="number" id="mem-balance" value="0" step="0.01"><span style="font-size:10.5px;color:var(--tx3)">سالب = دين على العضو</span></div><div class="fi full"><label>ملاحظات</label><textarea id="mem-notes" placeholder="ملاحظات..."></textarea></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.saveMember()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Edit Member -->
+  <div class="modal" id="m-edit-member" style="display:none;max-width:480px">
+    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-edit"></i></span>تعديل بيانات العضو</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><input type="hidden" id="edit-mem-id"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="edit-mem-name"></div><div class="fi"><label>الهاتف</label><input type="tel" id="edit-mem-phone"></div><div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="edit-mem-from-year" min="2000" max="2100" step="1"></div><div class="fi"><label>الرصيد الافتتاحي ₪</label><input type="number" id="edit-mem-balance" step="0.01"></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-mem-notes"></textarea></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.updateMember()"><i class="ti ti-device-floppy"></i>حفظ التعديل</button><button class="btn danger" onclick="window.deleteMember()"><i class="ti ti-trash"></i>حذف العضو</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+ <!-- Edit Receipt -->
+
+<div class="modal" id="m-edit-rec" style="display:none;max-width:420px">
+  <div class="mhd">
+    <span class="mtt">
+      <span class="mico green">
+        <i class="ti ti-edit"></i>
+      </span>
+      تعديل الإيصال
+    </span>
+
+```
+<button class="btn ghost" onclick="window.closeM()">
+  <i class="ti ti-x"></i>
+</button>
+```
+
+  </div>
+
+  <div class="mbd">
+
+```
+<input type="hidden" id="edit-rec-id">
+
+<div class="ibox warn">
+  <i class="ti ti-lock"></i>
+  يمكن تعديل المبلغ والتاريخ والملاحظات فقط
+</div>
+
+<div class="fg">
+
+  <div class="fi full">
+    <label>المبلغ بالشيكل ₪ <span class="req">*</span></label>
+    <div class="iw">
+      <span class="ipx">₪</span>
+      <input
+        type="number"
+        id="edit-rec-amount"
+        min="0.01"
+        step="0.01">
+    </div>
+  </div>
+
+  <div class="fi full">
+    <label>التاريخ <span class="req">*</span></label>
+    <input
+      type="date"
+      id="edit-rec-date">
+  </div>
+
+  <div class="fi full">
+    <label>ملاحظات</label>
+    <textarea id="edit-rec-notes"></textarea>
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <div class="mft">
+    <button class="btn primary" onclick="window.updateRec()">
+      <i class="ti ti-device-floppy"></i>
+      حفظ
+    </button>
+
+```
+<button class="btn danger" onclick="window.deleteRec()">
+  <i class="ti ti-trash"></i>
+  إلغاء السند
+</button>
+
+<button class="btn" onclick="window.closeM()">
+  إلغاء
+</button>
+```
+
+  </div>
+</div>
 
 
-/* == FORMATTERS == */
-window.formatNumber = function(n) {
-  const num = Number(n || 0);
-  return Math.round(num).toLocaleString('en-US');
-};
+  <!-- Edit Payment -->
+  <div class="modal" id="m-edit-pay" style="display:none;max-width:420px">
+    <div class="mhd"><span class="mtt"><span class="mico red"><i class="ti ti-edit"></i></span>تعديل سند الصرف</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><input type="hidden" id="edit-pay-id"><div class="ibox warn"><i class="ti ti-lock"></i>يمكن تعديل المبلغ بالشيكل والملاحظات فقط</div><div class="fg"><div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-pay-amount" min="0.01" step="0.01"></div></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-pay-notes"></textarea></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.updatePay()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn danger" onclick="window.deletePay()"><i class="ti ti-trash"></i>إلغاء السند</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
 
-window.formatCurrency = function(n) {
-  const num = Number(n || 0);
-  if (window.LANG === 'ar') {
-    return Math.round(num).toLocaleString('en-US') + ' ₪';
+  <!-- Invite User -->
+  <div class="modal" id="m-invite" style="display:none;max-width:420px">
+    <div class="mhd"><span class="mtt"><span class="mico don"><i class="ti ti-send"></i></span>دعوة مستخدم جديد</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل</label><input type="text" id="inv-name" placeholder="اسم المستخدم"></div><div class="fi full"><label>البريد الإلكتروني <span class="req">*</span></label><input type="email" id="inv-email"></div><div class="fi full"><label>كلمة المرور المؤقتة <span class="req">*</span></label><input type="text" id="inv-pass"></div><div class="fi full"><label>الدور</label><select id="inv-role"><option value="viewer">عارض — عرض فقط</option><option value="admin">مدير — كامل الصلاحيات</option></select></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.inviteUser()"><i class="ti ti-send"></i>إنشاء الحساب</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Change Password -->
+  <div class="modal" id="m-change-pass" style="display:none;max-width:400px">
+    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><form onsubmit="event.preventDefault();window.changePassword();"><div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div><div class="fg"><div class="fi full"><label>كلمة المرور الجديدة <span class="req">*</span></label><input type="password" id="new-pass" placeholder="••••••••" minlength="6" autocomplete="new-password"><span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span></div><div class="fi full"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" id="confirm-pass" placeholder="••••••••" autocomplete="new-password"><span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span></form></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.changePassword()"><i class="ti ti-lock-check"></i>حفظ كلمة المرور</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+</div>
+
+<!-- Mobile Nav -->
+<div id="mobile-nav" style="display:none">
+  <div class="mnb on" onclick="window.nav('dash');setMobileNav(this)"><i class="ti ti-layout-dashboard"></i><span>الرئيسية</span></div>
+  <div class="mnb" onclick="window.nav('food-stmt');setMobileNav(this)"><i class="ti ti-tools-kitchen-2"></i><span>الغداء</span></div>
+  <div class="mnb" onclick="window.nav('diwan-stmt');setMobileNav(this)"><i class="ti ti-building"></i><span>الديوان</span></div>
+  <div class="mnb" onclick="window.nav('members');setMobileNav(this)"><i class="ti ti-users"></i><span>الأعضاء</span></div>
+  <div class="mnb" id="mnb-more" onclick="toggleMobileMenu()"><i class="ti ti-menu-2"></i><span>المزيد</span></div>
+</div>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" style="display:none;position:fixed;bottom:62px;left:0;right:0;background:var(--navy2);border-top:1px solid rgba(255,255,255,.08);z-index:199;padding:8px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:var(--food)"></i><span>إيصالات الغداء</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:var(--diwan)"></i><span>إيصالات الديوان</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('don');closeMobileMenu();setMobileNav(null)"><i class="ti ti-heart" style="color:var(--don)"></i><span>التبرعات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:var(--food)"></i><span>مصاريف الغداء</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:var(--diwan)"></i><span>مصاريف الديوان</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('member-stmt');closeMobileMenu();setMobileNav(null)"><i class="ti ti-user"></i><span>كشف عضو</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('audit');closeMobileMenu();setMobileNav(null)"><i class="ti ti-list-check"></i><span>سجل العمليات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-annual" onclick="window.nav('annual');closeMobileMenu();setMobileNav(null)"><i class="ti ti-calendar"></i><span>الاشتراكات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-settings" onclick="window.nav('settings');closeMobileMenu();setMobileNav(null)"><i class="ti ti-settings"></i><span>الإعدادات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" id="mnb-users-mob" onclick="window.nav('users');closeMobileMenu();setMobileNav(null)"><i class="ti ti-shield-lock"></i><span>المستخدمون</span></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ── Login page controls (مستقلة عن app.js) ──
+var LP_LANG = 'ar', LP_MODE = 'dark', LP_PW = false;
+
+function loginSetLang(l) {
+  LP_LANG = l;
+  document.getElementById('lp-btn-ar').classList.toggle('on', l==='ar');
+  document.getElementById('lp-btn-en').classList.toggle('on', l==='en');
+
+  var $ = function(id){ return document.getElementById(id); };
+  var set = function(id, txt){ var el=$(id); if(el) el.textContent=txt; };
+  var ph = function(id, txt){ var el=$(id); if(el) el.placeholder=txt; };
+
+  if(l==='en') {
+    // LEFT PANEL
+    set('lp-org', 'Diwan Al-Taha');
+    set('lp-title', 'Official Financial and Administrative System');
+    set('lp-inst-1', 'This system was established by the Diwan Al Taha Committee in 2026 to serve as the primary financial reference for managing payments, expenses, and electronic administration of Diwan funds, and to facilitate account review and financial operations tracking by committee members.');
+    set('lp-inst-2', 'All information and data within this system are the exclusive property of the Diwan Al Taha Committee. No person or entity may access, use, or share this data without the full and explicit consent of the system founders and authorized parties.');
+    set('lp-f1', 'Accurate financial reports');
+    set('lp-f2', 'Data and information protection');
+    set('lp-f3', 'Comprehensive multi-operation financial records');
+    set('lp-notice', 'Anyone accessing this system must fully comply with the approved policies and instructions, maintain data confidentiality, and is prohibited from using or sharing any information without authorization, subject to accountability.');
+    set('lp-mem-lbl', 'Members');
+    set('lp-fy-lbl', 'Fiscal Year');
+    set('lp-auth-title', 'Authorized users');
+    set('lp-admin-lbl', 'System Admin');
+    set('lp-comm-lbl', 'Committee');
+    set('lp-foot-title', 'Version 2.0 — Diwan Al Taha Financial Management System © 2026–2027');
+    set('lp-foot-text', 'This system serves as the official financial and administrative platform for Diwan Al Taha funds, providing a secure environment for financial operations, account review, and record management.');
+
+    // RIGHT PANEL (form)
+    set('lp-welcome', 'Sign In');
+    set('lp-subtitle', 'Enter your credentials to access the system');
+    set('lbl-email', 'Email Address');
+    ph('l-email', 'Enter your email address');
+    set('lbl-pass', 'Password');
+    ph('l-pass', '••••••••');
+    set('lbl-remember', 'Remember this device');
+    set('lbl-forgot', 'Forgot password?');
+    set('btn-login-txt', 'Sign In');
+    set('lp-card-footer', 'Support: 00972562666612');
+  } else {
+    // LEFT PANEL
+    set('lp-org', 'ديوان آل طه');
+    set('lp-title', 'النظام المالي والإداري الرسمي');
+    set('lp-inst-1', 'تم إنشاء هذا النظام من قبل لجنة ديوان آل طه في عام 2026 ليكون المرجع المالي الرئيسي لإدارة المدفوعات والمصاريف والإدارة الإلكترونية لصناديق الديوان، ولتسهيل مراجعة الحسابات ومتابعة العمليات المالية من قبل أعضاء اللجنة.');
+    set('lp-inst-2', 'جميع المعلومات والبيانات الموجودة داخل هذا النظام هي ملك حصري للجنة ديوان آل طه، ولا يحق لأي شخص أو جهة الاطلاع عليها أو استخدامها أو تداولها إلا بموافقة كاملة وصريحة من مؤسسي النظام والجهات المخولة بذلك.');
+    set('lp-f1', 'تقارير مالية دقيقة');
+    set('lp-f2', 'حماية البيانات والمعلومات');
+    set('lp-f3', 'سجل مالي متكامل ومتعدد العمليات');
+    set('lp-notice', 'على كل من يصل إلى هذا النظام الالتزام الكامل بالتعليمات والسياسات المعتمدة والمحافظة على سرية البيانات والمعلومات، ويُمنع استخدام أو مشاركة أي معلومات دون صلاحية، وذلك تحت طائلة المساءلة.');
+    set('lp-mem-lbl', 'عدد الأعضاء');
+    set('lp-fy-lbl', 'السنة المالية');
+    set('lp-auth-title', 'المستخدمون المصرح لهم بالدخول');
+    set('lp-admin-lbl', 'مدير النظام');
+    set('lp-comm-lbl', 'أعضاء اللجنة');
+    set('lp-foot-title', 'الإصدار 2.0 — النظام المالي لديوان آل طه © 2026–2027');
+    set('lp-foot-text', 'تم تطوير هذا النظام ليكون المرجع المالي والإداري الرسمي لصناديق ديوان آل طه، مع توفير بيئة آمنة لإدارة العمليات المالية ومراجعة الحسابات وحفظ السجلات.');
+
+    // RIGHT PANEL
+    set('lp-welcome', 'تسجيل الدخول');
+    set('lp-subtitle', 'أدخل بيانات حسابك للوصول إلى النظام');
+    set('lbl-email', 'البريد الإلكتروني');
+    ph('l-email', 'أدخل البريد الإلكتروني');
+    set('lbl-pass', 'كلمة المرور');
+    ph('l-pass', '••••••••');
+    set('lbl-remember', 'تذكرني على هذا الجهاز');
+    set('lbl-forgot', 'نسيت كلمة المرور؟');
+    set('btn-login-txt', 'تسجيل الدخول');
+    set('lp-card-footer', '00للدعم الفني: 972562666612');
   }
-  return '₪ ' + Math.round(num).toLocaleString('en-US');
-};
+  localStorage.setItem('diwan_lang', l);
+  window.LANG = l;
+}
 
-window.formatCurrencyD = function(n) {
-  const num = Number(n || 0);
-  const fixed = num.toFixed(2);
-  if (window.LANG === 'ar') {
-    return parseFloat(fixed).toLocaleString('ar-SA', {minimumFractionDigits:2}) + ' ₪';
-  }
-  return '₪ ' + parseFloat(fixed).toLocaleString('en-US', {minimumFractionDigits:2});
-};
+function loginTogglePw() {
+  LP_PW = !LP_PW;
+  document.getElementById('l-pass').type = LP_PW ? 'text' : 'password';
+  var icon = document.getElementById('lp-eye');
+  if(icon) icon.className = LP_PW ? 'ti ti-eye-off' : 'ti ti-eye';
+}
 
-window.formatDate = function(d) {
-  if (!d) return '—';
+/* Export dropdown */
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('export-member-menu');
+  if(menu) menu.classList.toggle('show');
+}
+function closeExportMenu() {
+  var menu = document.getElementById('export-member-menu');
+  if(menu) menu.classList.remove('show');
+}
+document.addEventListener('click', function(){ closeExportMenu(); });
+
+/* Dynamic member count on login */
+async function updateLoginMemberCount() {
   try {
-    const dt = new Date(d);
-    const dd = String(dt.getDate()).padStart(2, '0');
-    const mm = String(dt.getMonth() + 1).padStart(2, '0');
-    const yyyy = dt.getFullYear();
-    if (window.LANG === 'en') {
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return dd + ' ' + months[dt.getMonth()] + ' ' + yyyy;
-    }
-    return dd + '/' + mm + '/' + yyyy;
-  } catch(e) { return d; }
-};
-
-window.formatDateFull = function(d) {
-  if (!d) return '—';
-  try {
-    const dt = new Date(d);
-    if (window.LANG === 'ar') {
-      return dt.toLocaleDateString('ar-SA', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-    }
-    return dt.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  } catch(e) { return d; }
-};
-
-/* == TRANSLATION HELPER == */
-window.t = function(key) {
-  if(!key) return '';
-  const parts = key.split('.');
-  let obj = translations[window.LANG] || translations.ar;
-  for (const p of parts) {
-    if (obj && obj[p] !== undefined) obj = obj[p];
-    else {
-      if(window.LANG !== 'ar') {
-        let fallback = translations.ar;
-        for (const p2 of parts) {
-          if (fallback && fallback[p2] !== undefined) fallback = fallback[p2];
-          else { console.warn('[i18n] Missing key:', key); return key; }
-        }
-        return typeof fallback === 'string' ? fallback : key;
-      }
-      console.warn('[i18n] Missing key:', key);
-      return key;
-    }
-  }
-  return typeof obj === 'string' ? obj : key;
-};
-
-/* == SET EL TEXT SAFELY == */
-function setTxt(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-function setInner(id, html) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = html;
-}
-function setAttr(id, attr, val) {
-  const el = document.getElementById(id);
-  if (el) el.setAttribute(attr, val);
-}
-function qTxt(sel, text) {
-  const el = document.querySelector(sel);
-  if (el) el.textContent = text;
-}
-
-
-/* == SCAN FOR UNTRANSLATED TEXT == */
-window.scanForUntranslatedText = function() {
-  const arabicRegex = /[؀-ۿ]/;
-  const results = { hardcoded: [], missing: [], total: 0 };
-
-  // فحص العناصر التي تحتوي نصاً عربياً بدون data-i18n
-  document.querySelectorAll('button, label, th, td, h1, h2, h3, p, span, div').forEach(el => {
-    if (el.children.length === 0) {
-      const txt = el.textContent.trim();
-      if (arabicRegex.test(txt) && !el.hasAttribute('data-i18n') && !el.closest('[data-i18n]')) {
-        results.hardcoded.push({ tag: el.tagName, text: txt.slice(0,50), el });
-      }
-    }
-    results.total++;
-  });
-
-  // فحص data-i18n مفاتيح غير موجودة
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (window.t(key) === key) {
-      results.missing.push(key);
-    }
-  });
-
-  console.group('[i18n] Scan Report');
-  console.log('Total elements scanned:', results.total);
-  console.log('Hardcoded Arabic text:', results.hardcoded.length);
-  results.hardcoded.forEach(r => console.warn('  Hardcoded:', r.tag, '-', r.text));
-  console.log('Missing translation keys:', results.missing.length);
-  results.missing.forEach(k => console.warn('  Missing key:', k));
-  console.groupEnd();
-
-  return results;
-};
-
-/* == CACHE DOM REFS FOR PERFORMANCE == */
-const _i18nCache = {};
-function getCached(sel) {
-  if (!_i18nCache[sel]) _i18nCache[sel] = document.querySelectorAll(sel);
-  return _i18nCache[sel];
-}
-function clearI18nCache() {
-  Object.keys(_i18nCache).forEach(k => delete _i18nCache[k]);
-}
-
-
-/* == CACHE DOM REFS FOR PERFORMANCE == */
-const _missingKeys = new Set();
-const _originalT = window.t;
-window.t = function(key) {
-  const parts = key.split('.');
-  let obj = translations[window.LANG] || translations.ar;
-  let found = true;
-  for (const p of parts) {
-    if (obj && obj[p] !== undefined) { obj = obj[p]; }
-    else { found = false; break; }
-  }
-  if (!found || typeof obj !== 'string') {
-    if (!_missingKeys.has(key)) {
-      _missingKeys.add(key);
-      console.warn(`[i18n] Missing key: "${key}" for lang: ${window.LANG}`);
-    }
-    // fallback to Arabic
-    obj = translations.ar;
-    for (const p of parts) {
-      if (obj && obj[p] !== undefined) obj = obj[p];
-      else return key;
-    }
-    return typeof obj === 'string' ? obj : key;
-  }
-  return obj;
-};
-
-/* == CACHE DOM REFS FOR PERFORMANCE == */
-window.scanForUntranslatedText = function() {
-  const arabicRegex = /[؀-ۿ]/;
-  const issues = [];
-  const allText = document.querySelectorAll('*');
-  let count = 0;
-  allText.forEach(el => {
-    if (['SCRIPT','STYLE','META','LINK'].includes(el.tagName)) return;
-    if (el.childNodes.length === 0) return;
-    el.childNodes.forEach(node => {
-      if (node.nodeType === 3) {
-        const txt = node.textContent.trim();
-        if (txt && arabicRegex.test(txt) && !el.hasAttribute('data-i18n')) {
-          issues.push({ element: el.tagName, text: txt.slice(0,50), path: el.className||el.id||'' });
-          count++;
-        }
-      }
+    var url = 'https://ralifvemgapmsgrjgazh.supabase.co/rest/v1/members?select=id&is_active=eq.true&limit=1';
+    var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4';
+    var res = await fetch(url, {
+      headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Prefer': 'count=exact' }
     });
-  });
-  const translated = document.querySelectorAll('[data-i18n]').length;
-  const total = count + translated;
-  console.group('[i18n] Translation Coverage Report');
-  console.log(`Total elements: ${total}`);
-  console.log(`Translated (data-i18n): ${translated}`);
-  console.log(`Potentially untranslated: ${count}`);
-  console.log(`Missing keys logged: ${_missingKeys.size}`);
-  if (issues.length > 0) {
-    console.warn('Untranslated Arabic text found:');
-    issues.slice(0,20).forEach(i => console.warn(`  <${i.element}> "${i.text}" [${i.path}]`));
-  }
-  console.groupEnd();
-  return { total, translated, untranslated: count, missingKeys: [..._missingKeys] };
-};
-
-/* == DOM CACHE for performance == */
-const _domCache = new Map();
-function getCached(selector) {
-  if (!_domCache.has(selector)) {
-    _domCache.set(selector, document.querySelector(selector));
-  }
-  return _domCache.get(selector);
-}
-function clearDomCache() { _domCache.clear(); }
-
-/* == APPLY LANGUAGE == */
-window.applyLang = function() {
-  const lang = window.LANG;
-  const isAr = lang === 'ar';
-  clearI18nCache();
-
-  // RTL ثابت دائماً
-  document.documentElement.setAttribute('lang', lang);
-  document.documentElement.setAttribute('dir', 'rtl');
-
-  // data-i18n — ترجمة النصوص
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    const text = window.t(key);
-    if (text && text !== key) el.textContent = text;
-  });
-
-  // data-i18n-placeholder — ترجمة placeholders
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    const text = window.t(key);
-    if (text && text !== key) el.setAttribute('placeholder', text);
-  });
-
-  // data-i18n-title — ترجمة titles
-  document.querySelectorAll('[data-i18n-title]').forEach(el => {
-    const key = el.getAttribute('data-i18n-title');
-    const text = window.t(key);
-    if (text && text !== key) el.setAttribute('title', text);
-  });
-
-  // -- TOPBAR --
-  const themeBtn = document.getElementById('theme-btn');
-  if (themeBtn) {
-    const isLight = document.body.classList.contains('light');
-    const ico = isLight ? 'ti-moon' : 'ti-sun';
-    const lbl = isLight ? window.t('topbar.dark') : window.t('topbar.light');
-    themeBtn.innerHTML = `<i class="ti ${ico}"></i>${lbl}`;
-  }
-  const langBtn = document.getElementById('lang-btn');
-  if (langBtn) langBtn.innerHTML = `<i class="ti ti-language"></i>${isAr ? 'EN' : 'AR'}`;
-
-  const backupBtn = document.querySelector('.tbtn[onclick="window.doBackup()"]');
-  if (backupBtn) backupBtn.innerHTML = `<i class="ti ti-database-export"></i>${window.t('topbar.backup')}`;
-  const passBtn = document.querySelector('.tbtn[onclick="window.openM(\'change-pass\')"]');
-  if (passBtn) passBtn.innerHTML = `<i class="ti ti-lock"></i>${window.t('topbar.password')}`;
-  const logoutBtn = document.querySelector('.tbtn.red[onclick="window.logout()"]');
-  if (logoutBtn) logoutBtn.innerHTML = `<i class="ti ti-logout"></i>${window.t('topbar.logout')}`;
-
-  // -- SIDEBAR --
-  const nbMap = {
-    'dash':        ['ti-layout-dashboard', 'nav.dashboard'],
-    'food-rec':    ['ti-receipt',          'nav.food_receipts'],
-    'food-pay':    ['ti-cash',             'nav.food_expenses'],
-    'food-stmt':   ['ti-file-description', 'nav.food_stmt'],
-    'diwan-rec':   ['ti-receipt',          'nav.diwan_receipts'],
-    'diwan-pay':   ['ti-cash',             'nav.diwan_expenses'],
-    'diwan-stmt':  ['ti-file-description', 'nav.diwan_stmt'],
-    'don':         ['ti-heart',            'nav.donations'],
-    'members':     ['ti-users',            'nav.members'],
-    'member-stmt': ['ti-user',             'nav.member_stmt'],
-    'annual':      ['ti-calendar',         'nav.annual'],
-    'users':       ['ti-shield-lock',      'nav.users'],
-    'audit':       ['ti-list-check',       'nav.audit'],
-    'bk':          ['ti-database',         'nav.backup'],
-    'settings':    ['ti-settings',         'nav.settings'],
-  };
-  Object.entries(nbMap).forEach(([p, [ico, key]]) => {
-    const el = document.querySelector(`.nb[data-p="${p}"]`);
-    if (el) el.innerHTML = `<i class="ti ${ico}"></i>${window.t(key)}`;
-  });
-
-  // Sidebar sections
-  const secs = document.querySelectorAll('.sb-sec');
-  const secLabels = [
-    'nav.home','nav.operations','nav.food_fund','nav.diwan_fund',
-    'nav.donations_sec','nav.members_sec','nav.system_sec'
-  ];
-  secs.forEach((el, i) => { if (secLabels[i]) el.textContent = window.t(secLabels[i]); });
-
-  // -- PAGE HEADERS --
-  qTxt('#pg-dash .ph-t',       window.t('dashboard.title'));
-  qTxt('#pg-food-rec .ph-t',   window.t('receipts.title_food'));
-  qTxt('#pg-food-pay .ph-t',   window.t('payments.title_food'));
-  qTxt('#pg-food-stmt .ph-t',  window.t('nav.food_stmt'));
-  qTxt('#pg-diwan-rec .ph-t',  window.t('receipts.title_diwan'));
-  qTxt('#pg-diwan-pay .ph-t',  window.t('payments.title_diwan'));
-  qTxt('#pg-diwan-stmt .ph-t', window.t('nav.diwan_stmt'));
-  qTxt('#pg-don .ph-t',        window.t('donations.title'));
-  qTxt('#pg-members .ph-t',    window.t('members.title'));
-  qTxt('#pg-member-stmt .ph-t',window.t('nav.member_stmt'));
-  qTxt('#pg-annual .ph-t',     window.t('annual.title'));
-  qTxt('#pg-annual .ph-s',     window.t('annual.desc'));
-  qTxt('#pg-users .ph-t',      window.t('users.title'));
-  qTxt('#pg-audit .ph-t',      window.t('audit.title'));
-  qTxt('#pg-bk .ph-t',         window.t('backup.title'));
-  qTxt('#pg-settings .ph-t',   window.t('settings.title'));
-  qTxt('#pg-settings .ph-s',   window.t('settings.subtitle'));
-
-  // -- ACTION BUTTONS --
-  const btnMap = {
-    'dash-btn-rec':   ['ti-plus',     'dashboard.new_receipt'],
-    'dash-btn-pay':   ['ti-minus',    'dashboard.new_payment'],
-    'btn-food-rec':   ['ti-plus',     'receipts.new'],
-    'btn-food-pay':   ['ti-plus',     'payments.new'],
-    'btn-diwan-rec':  ['ti-plus',     'receipts.new'],
-    'btn-diwan-pay':  ['ti-plus',     'payments.new'],
-    'btn-don':        ['ti-heart',    'donations.new'],
-    'btn-add-member': ['ti-user-plus','members.new'],
-    'btn-apply-due':  ['ti-calendar-plus','annual.apply'],
-  };
-  Object.entries(btnMap).forEach(([id, [ico, key]]) => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = `<i class="ti ${ico}"></i>${window.t(key)}`;
-  });
-
-  // Export buttons
-  document.querySelectorAll('.btn.sm[onclick*="exportCSV"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-download"></i>${window.t('common.export')}`;
-  });
-  document.querySelectorAll('.btn.sm[onclick*="prtStmt"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-printer"></i>${window.t('common.print')}`;
-  });
-  document.querySelectorAll('.btn.sm[onclick*="prtMember"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-printer"></i>${window.t('common.print')}`;
-  });
-  document.querySelectorAll('.btn.sm[onclick="window.loadAll()"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-refresh"></i>${window.t('common.refresh')}`;
-  });
-
-  // -- TABLE HEADERS --
-  const thMap = {
-    'food-rec-body':   [t('receipts.receipt_no'), t('common.date'), t('receipts.payer'), t('common.amount'), t('payments.method'), t('common.notes'), t('common.actions')],
-    'food-pay-body':   [t('payments.payment_no'), t('common.date'), t('payments.beneficiary'), t('common.amount'), t('payments.method'), t('common.notes'), t('common.actions')],
-    'diwan-rec-body':  [t('receipts.receipt_no'), t('common.date'), t('receipts.payer'), t('common.amount'), t('common.currency'), t('payments.method'), t('common.notes'), t('common.actions')],
-    'diwan-pay-body':  [t('payments.payment_no'), t('common.date'), t('payments.beneficiary'), t('common.amount'), t('payments.expense_type'), t('payments.method'), t('common.notes'), t('common.actions')],
-    'don-body':        [t('receipts.receipt_no'), t('common.date'), t('donations.donor'), t('common.amount'), t('common.currency'), t('donations.show_in'), t('common.notes'), t('common.actions')],
-    'members-body':    ['#', t('common.name'), t('common.phone'), t('members.food_balance'), t('common.status'), t('common.actions')],
-  };
-  Object.entries(thMap).forEach(([bodyId, headers]) => {
-    const tbody = document.getElementById(bodyId);
-    if (!tbody) return;
-    const table = tbody.closest('table');
-    const thead = table ? table.querySelector('thead tr') : null;;
-    if (thead) thead.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-  });
-
-  // -- STATEMENT FILTERS --
-  [['food-stmt-from','diwan-stmt-from','ms-from']].flat().forEach(id => {
-    const lbl = document.querySelector(`label[for="${id}"]`);
-    if (lbl) lbl.textContent = window.t('common.from_date');
-  });
-  [['food-stmt-to','diwan-stmt-to','ms-to']].flat().forEach(id => {
-    const lbl = document.querySelector(`label[for="${id}"]`);
-    if (lbl) lbl.textContent = window.t('common.to_date');
-  });
-  document.querySelectorAll('[id$="-stmt-type"] option, #food-stmt-type option, #diwan-stmt-type option').forEach(opt => {
-    if (opt.value === '')    opt.text = window.t('stmt.type_all');
-    if (opt.value === 'cr')  opt.text = window.t('stmt.type_cr');
-    if (opt.value === 'dr')  opt.text = window.t('stmt.type_dr');
-    if (opt.value === 'don') opt.text = window.t('stmt.type_don');
-  });
-
-  // -- DIWAN PAY FILTER --
-  const diwanPayFilter = document.getElementById('f-diwan-pay-type');
-  if (diwanPayFilter) {
-    const opts = diwanPayFilter.options;
-    if (opts[0]) opts[0].text = window.t('common.all');
-    if (opts[1]) opts[1].text = window.t('payments.electricity');
-    if (opts[2]) opts[2].text = window.t('payments.water');
-    if (opts[3]) opts[3].text = window.t('payments.cleaning');
-    if (opts[4]) opts[4].text = window.t('payments.maintenance');
-    if (opts[5]) opts[5].text = window.t('payments.other');
-  }
-
-  // -- MEMBER FILTER --
-  const memFilter = document.getElementById('f-member-status');
-  if (memFilter) {
-    const opts = memFilter.options;
-    if (opts[0]) opts[0].text = window.t('common.all');
-    if (opts[1]) opts[1].text = window.t('members.paid');
-    if (opts[2]) opts[2].text = window.t('members.late');
-  }
-
-  // -- MODALS --
-  // Receipt modal
-  qTxt('#rec-mtitle', window.t('receipts.new'));
-  const recFundSel = document.getElementById('rec-fund');
-  if (recFundSel) {
-    const opts = recFundSel.options;
-    if (opts[0]) opts[0].text = window.t('receipts.fund_food') + ' — ' + (isAr ? 'مساهمة عضو' : 'Member Contribution');
-    if (opts[1]) opts[1].text = window.t('receipts.fund_diwan') + ' — ' + (isAr ? 'دفعة للديوان' : 'Diwan Payment');
-    if (opts[2]) opts[2].text = window.t('receipts.fund_don') + ' — ' + (isAr ? 'صندوق التبرعات' : 'Donation Fund');
-  }
-  qTxt('label[for="rec-member"]',   window.t('members.title'));
-  qTxt('label[for="rec-currency"]', window.t('common.currency'));
-  qTxt('label[for="rec-date"]',     window.t('common.date'));
-
-  // Payment modal
-  qTxt('#pay-mtitle', window.t('payments.new'));
-  qTxt('label[for="pay-currency"]', window.t('common.currency'));
-  qTxt('label[for="pay-date"]',     window.t('common.date'));
-  qTxt('label[for="pay-approved"]', window.t('payments.approved_by'));
-
-  // Placeholders
-  const placeholders = {
-    'q-food-rec': 'common.search', 'q-food-pay': 'common.search',
-    'q-diwan-rec': 'common.search', 'q-diwan-pay': 'common.search',
-    'q-don': 'common.search', 'q-members': 'common.search',
-  };
-  Object.entries(placeholders).forEach(([id, key]) => {
-    const el = document.getElementById(id);
-    if (el) el.placeholder = window.t(key);
-  });
-
-  // Payment method pills
-  document.querySelectorAll('.pill[data-val="cash"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-cash"></i>${window.t('payments.cash')}`;
-  });
-  document.querySelectorAll('.pill[data-val="check"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-file-dollar"></i>${window.t('payments.check')}`;
-  });
-  document.querySelectorAll('.pill[data-val="transfer"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-building-bank"></i>${window.t('payments.transfer')}`;
-  });
-  document.querySelectorAll('.pill[data-val="online"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-device-mobile"></i>${window.t('payments.online')}`;
-  });
-
-  // Settings page labels
-  qTxt('label[for="set-food-opening"]',  window.t('settings.food_opening'));
-  qTxt('label[for="set-diwan-opening"]', window.t('settings.diwan_opening'));
-  qTxt('label[for="set-usd-rate"]',      window.t('settings.usd_rate'));
-  qTxt('label[for="set-jod-rate"]',      window.t('settings.jod_rate'));
-
-  // Annual page
-  qTxt('label[for="due-year"]',   window.t('annual.year'));
-  qTxt('label[for="due-amount"]', window.t('annual.amount'));
-
-  // Member stmt
-  const msFrom = document.querySelector('label[for="ms-from"]');
-  if (msFrom) msFrom.textContent = window.t('common.from_date');
-  const msTo = document.querySelector('label[for="ms-to"]');
-  if (msTo) msTo.textContent = window.t('common.to_date');
-  const msSel = document.querySelector('label[for="ms-member"]');
-  if (msSel) msSel.textContent = window.t('nav.members');
-
-  // Invite user modal
-  qTxt('#m-invite .modal-title-text', window.t('users.invite'));
-  qTxt('label[for="inv-name"]',  window.t('users.full_name'));
-  qTxt('label[for="inv-email"]', window.t('users.email'));
-  qTxt('label[for="inv-pass"]',  window.t('users.temp_pass'));
-  qTxt('label[for="inv-role"]',  window.t('users.role'));
-  const invRoleSel = document.getElementById('inv-role');
-  if (invRoleSel) {
-    const opts = invRoleSel.options;
-    if (opts[0]) opts[0].text = window.t('users.viewer');
-    if (opts[1]) opts[1].text = window.t('users.accountant');
-    if (opts[2]) opts[2].text = window.t('users.admin');
-  }
-
-  // Change password modal
-  qTxt('label[for="new-pass"]',     window.t('password.new_pass'));
-  qTxt('label[for="confirm-pass"]', window.t('password.confirm_pass'));
-
-  // Edit modals
-  qTxt('label[for="edit-rec-amount"]',  window.t('edit.amount_ils'));
-  qTxt('label[for="edit-pay-amount"]',  window.t('edit.amount_ils'));
-
-  // Mobile nav
-  const mobNav = document.getElementById('mobile-nav');
-  if (mobNav) {
-    const mnbs = mobNav.querySelectorAll('.mnb span');
-    const mobLabels = [
-      'nav.dashboard','nav.food_fund','nav.diwan_fund','nav.members','nav.more'
-    ];
-    mnbs.forEach((el, i) => { if (mobLabels[i]) el.textContent = window.t(mobLabels[i]); });
-  }
-
-  // Users page invite btn
-  qTxt('#pg-users .btn.sm.primary', window.t('users.invite'));
-
-  // ترجمة كل بقية العناصر
-  translateAll();
-};
-
-
-/* == COMPLETE UI TRANSLATION == */
-
-// قاموس ثنائي الاتجاه لكل النصوص
-const UI_MAP = {
-  // صناديق
-  'صندوق الغداء': 'Food Fund',
-  'صندوق الديوان': 'Diwan Fund',
-  'صندوق التبرعات': 'Donations Fund',
-
-  // KPI labels
-  'أعضاء العائلة': 'Family Members',
-  'متأخرون': 'Late Members',
-  'لم يسددوا': 'Unpaid',
-  'إجمالي الإيصالات': 'Total Receipts',
-  'إجمالي المصاريف': 'Total Expenses',
-  'الرصيد الحالي': 'Current Balance',
-  'الرصيد الحالي (2025+)': 'Current Balance (2025+)',
-  'إجمالي التبرعات': 'Total Donations',
-  'إجمالي الإيرادات': 'Total Income',
-  'الرصيد الختامي': 'Closing Balance',
-  'صندوق الغداء (مع الافتتاحي)': 'Food Fund (with Opening)',
-  'صندوق الديوان (مع الافتتاحي)': 'Diwan Fund (with Opening)',
-
-  // dashboard sections
-  'الحركات الشهرية': 'Monthly Activity',
-  'آخر 6 أشهر': 'Last 6 months',
-  'آخر الحركات': 'Recent Operations',
-  'إجراءات سريعة': 'Quick Actions',
-  'أعضاء متأخرون': 'Late Members',
-  '✅ كل الأعضاء ملتزمون': '✅ All members are up to date',
-
-  // badges / status
-  'نقد': 'Cash', 'شيك': 'Cheque', 'تحويل': 'Transfer',
-  'تحويل بنكي': 'Bank Transfer', 'أونلاين': 'Online',
-  'مسدَّد': 'Paid', 'متأخر': 'Late',
-  'مساهمة': 'Contribution',
-  'كهرباء': 'Electricity', 'ماء': 'Water',
-  'تنظيف': 'Cleaning', 'صيانة': 'Maintenance', 'أخرى': 'Other',
-  'مصاريف إطعام': 'Food Expenses',
-  'مصاريف إطعام عزاء': 'Funeral Food Expenses',
-  'غداء': 'Food', 'ديوان': 'Diwan', 'تبرع': 'Donation',
-
-  // form labels
-  'نوع الإيصال': 'Receipt Type',
-  'نوع الدافع': 'Payer Type',
-  'اسم العضو': 'Member Name',
-  'جهة الاتصال': 'Contact',
-  'اسم الدافع': 'Payer Name',
-  'حفظ كجهة اتصال': 'Save as Contact',
-  'توجيه التبرع': 'Donation Direction',
-  'يُظهر في كشف أي صندوق؟': 'Show in which fund?',
-  'المبلغ': 'Amount',
-  'طريقة الدفع': 'Payment Method',
-  'طريقة الصرف': 'Payment Method',
-  'فئة المصروف': 'Expense Type',
-  'المستفيد': 'Beneficiary',
-  'نوع المستفيد': 'Beneficiary Type',
-  'اسم المستفيد': 'Beneficiary Name',
-  'معتمد من': 'Approved By',
-  'الاسم الكامل': 'Full Name',
-  'سالب = دين على العضو': 'Negative = debt on member',
-  'الرصيد الافتتاحي لصندوق الغداء ₪': 'Food Fund Opening Balance ₪',
-  'الرصيد الافتتاحي لصندوق الديوان ₪': 'Diwan Fund Opening Balance ₪',
-  'المبلغ الموجود في الصندوق قبل بدء النظام': 'Amount in fund before system start',
-  'سعر الدولار الأمريكي USD ₪': 'USD Rate ₪',
-  'سعر الدينار الأردني JOD ₪': 'JOD Rate ₪',
-  'تُستخدم فقط إذا تعذّر جلب السعر التلقائي من الإنترنت': 'Used only if automatic rate fetch fails',
-  'ملخص الأرصدة مع الافتتاحي': 'Balance Summary with Opening',
-  'السنة': 'Year',
-  'المبلغ ₪': 'Amount ₪',
-  'من تاريخ': 'From Date',
-  'إلى تاريخ': 'To Date',
-  'اختر العضو': 'Select Member',
-  'نوع الحركة': 'Operation Type',
-  'البريد الإلكتروني': 'Email Address',
-  'كلمة المرور المؤقتة': 'Temporary Password',
-  'الدور': 'Role',
-  'كلمة المرور الجديدة': 'New Password',
-  'تأكيد كلمة المرور': 'Confirm Password',
-  'المبلغ بالشيكل ₪': 'Amount in ILS ₪',
-  'رقم الشيك': 'Cheque No.',
-  'تاريخ الشيك': 'Cheque Date',
-  'البنك المسحوب عليه': 'Bank Name',
-  'اسم المتبرع': 'Donor Name',
-  'نوع الدافع': 'Payer Type',
-  'معلومات الشيك': 'Cheque Information',
-
-  // select options
-  'صندوق الغداء — مساهمة عضو': 'Food Fund — Member Contribution',
-  'صندوق الديوان — دفعة للديوان': 'Diwan Fund — Diwan Payment',
-  'تبرع — يُسجَّل في صندوق التبرعات': 'Donation — Donations Fund',
-  'عضو من العائلة': 'Family Member',
-  'جهة اتصال مسجلة': 'Saved Contact',
-  'إدخال يدوي': 'Manual Entry',
-  'كشف صندوق الغداء': 'Food Fund Statement',
-  'كشف صندوق الديوان': 'Diwan Fund Statement',
-  '₪ شيكل إسرائيلي': '₪ Israeli Shekel',
-  '$ دولار أمريكي': '$ US Dollar',
-  'د.أ دينار أردني': 'JD Jordanian Dinar',
-  'صندوق الغداء — مصاريف الإطعام': 'Food Fund — Food Expenses',
-  'صندوق الديوان — مصاريف الديوان': 'Diwan Fund — Diwan Expenses',
-  'كل الفئات': 'All Categories',
-  'الكل': 'All',
-  'إيصالات فقط': 'Receipts Only',
-  'مصاريف فقط': 'Expenses Only',
-  'تبرعات فقط': 'Donations Only',
-  'عليه رصيد': 'Has Balance',
-  'شخص آخر': 'Other Person',
-  'عارض — عرض فقط': 'Viewer — Read Only',
-  'محاسب — إضافة سندات': 'Accountant — Add Vouchers',
-  'مدير — كامل الصلاحيات': 'Admin — Full Access',
-  '-- اختر عضواً --': '-- Select Member --',
-  '-- اختر --': '-- Select --',
-
-  // empty states
-  'لا توجد إيصالات': 'No receipts found',
-  'لا توجد مصاريف': 'No expenses found',
-  'لا توجد تبرعات': 'No donations found',
-  'لا يوجد أعضاء': 'No members found',
-  'لا توجد حركات': 'No transactions found',
-  'لا توجد حركات في هذه الفترة': 'No transactions in this period',
-  'لا توجد اشتراكات مطبقة': 'No dues applied yet',
-  'السجل فارغ': 'Log is empty',
-  'لا توجد بيانات': 'No data available',
-
-  // mobile nav
-  'الرئيسية': 'Home',
-  'الغداء': 'Food',
-  'الديوان': 'Diwan',
-  'الأعضاء': 'Members',
-  'المزيد': 'More',
-  'إيصالات الغداء': 'Food Receipts',
-  'إيصالات الديوان': 'Diwan Receipts',
-  'مصاريف الغداء': 'Food Expenses',
-  'مصاريف الديوان': 'Diwan Expenses',
-  'كشف عضو': 'Member Stmt',
-  'سجل العمليات': 'Audit Log',
-  'الاشتراكات': 'Annual Dues',
-  'المستخدمون': 'Users',
-  'الإعدادات': 'Settings',
-
-  // system info
-  'عدد الأعضاء': 'Members Count',
-  'عدد الإيصالات': 'Receipts Count',
-  'عدد سندات الصرف': 'Payments Count',
-  'رصيد صندوق الغداء': 'Food Fund Balance',
-  'رصيد صندوق الديوان': 'Diwan Fund Balance',
-  'سعر الدولار': 'Dollar Rate',
-  'سعر الدينار الأردني': 'JD Rate',
-
-  // page subtitles
-  '200 ₪ على كل عضو بداية كل سنة': '₪200 per member at start of each year',
-  'الرصيد الافتتاحي وإعدادات النظام': 'Opening balances and system settings',
-  'مدفوعات أعضاء العائلة للمساهمة في صندوق الغداء': 'Member contributions to the Food Fund',
-
-  // warnings
-  'يمكن تعديل المبلغ بالشيكل والملاحظات فقط': 'Only ILS amount and notes can be edited',
-  'الرصيد الافتتاحي يُحسب أولاً قبل أي عملية — يُدخَل مرة واحدة فقط ولا يتغير إلا بموافقة المدير':
-    'Opening balance is calculated first — entered once only',
-
-  // backup
-  'تصدير كامل بصيغة JSON': 'Full export in JSON format',
-  'معلومات النظام': 'System Information',
-
-  // login
-  'يرجى التواصل مع المدير لإعادة تعيين كلمة المرور': 'Please contact the admin to reset your password',
-  'نسيت كلمة المرور؟': 'Forgot password?',
-
-  // user roles
-  'مدير': 'Admin', 'محاسب': 'Accountant', 'عارض': 'Viewer',
-  '(أنت)': '(You)',
-
-  // annual
-  'سجل الاشتراكات المطبقة': 'Applied Dues History',
-  'طُبِّق': 'Applied',
-  'بواسطة': 'By',
-};
-
-// بناء الخريطة العكسية تلقائياً
-const UI_MAP_REVERSE = {};
-Object.entries(UI_MAP).forEach(([ar, en]) => { UI_MAP_REVERSE[en] = ar; });
-
-function translateText(txt, toEn) {
-  const t = txt.trim();
-  if (toEn) return UI_MAP[t] || t;
-  return UI_MAP_REVERSE[t] || t;
-}
-
-function translateNode(el, toEn) {
-  if (!el) return;
-  // تجاهل العناصر التي لها أطفال عناصر (ليس نص فقط)
-  const hasOnlyText = Array.from(el.childNodes).every(n =>
-    n.nodeType === 3 || (n.nodeType === 1 && ['I','SPAN','B','STRONG','SMALL'].includes(n.tagName))
-  );
-  if (!hasOnlyText) return;
-
-  el.childNodes.forEach(node => {
-    if (node.nodeType === 3 && node.textContent.trim()) {
-      const translated = translateText(node.textContent.trim(), toEn);
-      if (translated !== node.textContent.trim()) {
-        node.textContent = node.textContent.replace(node.textContent.trim(), translated);
-      }
+    var count = res.headers.get('content-range');
+    if(count) {
+      var total = count.split('/')[1];
+      var el = document.getElementById('lp-mem-count');
+      if(el && total) el.textContent = total;
     }
-  });
+  } catch(e) { /* silent */ }
 }
 
-function translateAll() {
-  const toEn = window.LANG === 'en';
-  const isAr = !toEn;
+(function(){
+  var savedLang = localStorage.getItem('diwan_lang') || 'ar';
+  window.LANG = savedLang;
+  if(savedLang === 'en') loginSetLang('en');
+  updateLoginMemberCount();
+})();
+</script>
 
-  // ترجمة كل العناصر النصية في النظام
-  const selectors = [
-    '.fund-label', '.kpi-lbl', '.kpi-sub',
-    '.ct', '.badge', '.role-tag',
-    '.fi label', '.lfi label', '.sdiv',
-    '.empty-t', '.empty-s',
-    '.fund-sub', '.info-t', '.info-d',
-    '.sr-l', '.sr-v',
-    '.ph-s',
-    '.ibox > span', '.ibox > i + span',
-    'select option',
-    '.pill',
-    '.mtt > span:last-child',
-    '#pg-bk p',
-    '.card > .ct',
-    '.ledger-hdr > span',
-    '.lr-desc',
-  ];
-
-  selectors.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      // تجاهل data-i18n (تُترجم تلقائياً)
-      if (el.hasAttribute('data-i18n')) return;
-      // تجاهل الأيقونات
-      if (el.tagName === 'I') return;
-      translateNode(el, toEn);
-    });
-  });
-
-  // ترجمة placeholders
-  const phMap = {
-    'ملاحظات اختيارية...': 'Optional notes...',
-    'وصف تفصيلي...': 'Detailed description...',
-    'اسم المعتمد': 'Approver name',
-    'اسم المستفيد': 'Beneficiary name',
-    'Beneficiary Name': 'Beneficiary Name',
-    'اسم الشخص': 'Person name',
-    'اسم الدافع': 'Payer name',
-    'اسم البنك': 'Bank name',
-    'Bank Name': 'Bank Name',
-    'مثال: 123456': 'e.g. 123456',
-    'الاسم الكامل': 'Full name',
-    'ملاحظات...': 'Notes...',
-    'بحث...': 'Search...',
-    'Search...': 'Search...',
-    'اسم العضو': 'Member name',
-    '0599-xxx-xxxx': '0599-xxx-xxxx',
-  };
-  const phMapRev = Object.fromEntries(Object.entries(phMap).map(([k,v])=>[v,k]));
-
-  document.querySelectorAll('input, textarea').forEach(el => {
-    if (el.hasAttribute('data-i18n-placeholder')) return;
-    const ph = el.placeholder;
-    if (!ph) return;
-    if (toEn && phMap[ph]) { el.placeholder = phMap[ph]; }
-    else if (!toEn && phMapRev[ph]) { el.placeholder = phMapRev[ph]; }
-    else {
-      const tr = translateText(ph, toEn);
-      if (tr !== ph) el.placeholder = tr;
-    }
-  });
-
-  // ترجمة login screen
-  const lEmail = document.getElementById('l-email');
-  if (lEmail) lEmail.placeholder = toEn ? '0599123456 or email@example.com' : '0599123456 أو email@example.com';
-  const lPass = document.getElementById('l-pass');
-  if (lPass) lPass.placeholder = toEn ? 'Password' : 'كلمة المرور';
-  const lEmailLbl = document.getElementById('lbl-email');
-  if (lEmailLbl) lEmailLbl.textContent = toEn ? 'Phone or Email' : 'رقم الهاتف أو البريد الإلكتروني';
-  const lPassLbl = document.getElementById('lbl-pass');
-  if (lPassLbl) lPassLbl.textContent = toEn ? 'Password' : 'كلمة المرور';
-  const lRemLbl = document.getElementById('lbl-remember');
-  if (lRemLbl) lRemLbl.textContent = toEn ? 'Remember me' : 'تذكرني';
-  const forgotBtn = document.getElementById('btn-forgot');
-  if (forgotBtn) forgotBtn.textContent = toEn ? 'Forgot password?' : 'نسيت كلمة المرور؟';
-  const loginLangTxt = document.getElementById('login-lang-txt');
-  if (loginLangTxt) loginLangTxt.textContent = toEn ? 'AR' : 'EN';
-  const loginBtnTxt = document.getElementById('btn-login-txt');
-  if (loginBtnTxt) loginBtnTxt.textContent = toEn ? 'Sign In' : 'تسجيل الدخول';
-
-  // ترجمة topbar subtitle
-  const sub = document.querySelector('.top-logo-sub');
-  if (sub) sub.textContent = toEn ? 'Financial Management System' : 'نظام الإدارة المالية';
-  // ترجمة topbar title
-  const topTitle = document.querySelector('.top-logo-text');
-  if (topTitle) topTitle.textContent = toEn ? 'Diwan Al Taha' : 'ديوان آل طه';
-}
-
-/* == TOGGLE LANGUAGE == */
-window.toggleLang = function() {
-  window.LANG = window.LANG === 'ar' ? 'en' : 'ar';
-  localStorage.setItem('diwan_lang', window.LANG);
-  // إعادة رسم كل البيانات أولاً (تستخدم window.LANG الجديد)
-  if (typeof renderAll === 'function') renderAll();
-  // ثم تطبيق الترجمة على العناصر الثابتة
-  window.applyLang();
-};
-
-/* == INIT ON LOAD == */
-document.addEventListener('DOMContentLoaded', () => {
-  window.LANG = localStorage.getItem('diwan_lang') || 'ar';
-});
+<script src="/js/i18n.js?v=2.1"></script>
+<script src="/js/app.js?v=2.1"></script>
+</body>
+</html>
