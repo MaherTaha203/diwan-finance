@@ -222,6 +222,7 @@ const translations = {
     },
     errors: {
       no_permission:'ليس لديك صلاحية',
+      no_permission_add:'ليس لديك صلاحية الإضافة',
       no_print:'ليس لديك صلاحية الطباعة',
       required:'مطلوب',
       invalid_amount:'أدخل مبلغاً صحيحاً',
@@ -520,6 +521,7 @@ const translations = {
     },
     errors: {
       no_permission:'Permission denied',
+      no_permission_add:'No permission to add',
       no_print:'No print permission',
       required:'Required',
       invalid_amount:'Enter a valid amount',
