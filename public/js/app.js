@@ -1061,24 +1061,24 @@ window.renderStmt=function(fund){
     <div class="card">
       <div style="background:${fund==='food'?'var(--food)':'var(--diwan)'};color:#fff;padding:12px 16px;border-radius:var(--r);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
         <div style="font-size:15px;font-weight:700">${fundLabel}</div>
-        <div style="font-size:12px;opacity:.8">${from&&to?`${fdate(from)} — ${fdate(to)}`:from?`من ${fdate(from)}`:to?`حتى ${fdate(to)}`:'كل الفترات'}</div>
+        <div style="font-size:12px;opacity:.8">${from&&to?`${fdate(from)} — ${fdate(to)}`:from?`${window.t('stmt.date_from')} ${fdate(from)}`:to?`${window.t('stmt.date_to')} ${fdate(to)}`:window.t('stmt.all_periods')}</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-        <div class="kpi green" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Total Income':'إجمالي الإيرادات'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalCr)}</div></div>
-        <div class="kpi red" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Total Expenses':'إجمالي المصاريف'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDr)}</div></div>
-        <div class="kpi ${bal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${window.LANG==='en'?'Current Balance':'الرصيد الجاري'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(bal)}</div></div>
+        <div class="kpi green" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_income')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalCr)}</div></div>
+        <div class="kpi red" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_expenses')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDr)}</div></div>
+        <div class="kpi ${bal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.current_bal')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(bal)}</div></div>
       </div>
       <div class="ledger-hdr">
-        <span style="flex:0 0 85px">${window.LANG==='en'?'Date':'التاريخ'}</span>
-        <span style="flex:0 0 120px">${window.LANG==='en'?'Name':'الاسم'}</span>
-        <span style="flex:1">${window.LANG==='en'?'Description':'البيان'}</span>
-        <span style="flex:0 0 80px;text-align:left">${window.LANG==='en'?'Credit ₪':'دائن ₪'}</span>
-        <span style="flex:0 0 80px;text-align:left">${window.LANG==='en'?'Debit ₪':'مدين ₪'}</span>
-        <span style="flex:0 0 85px;text-align:left">${window.LANG==='en'?'Balance ₪':'الرصيد ₪'}</span>
-        <span style="flex:0 0 110px">${window.LANG==='en'?'Notes':'ملاحظات'}</span>
+        <span style="flex:0 0 85px">${window.t('common.date')}</span>
+        <span style="flex:0 0 120px">${window.t('stmt.donor_name')}</span>
+        <span style="flex:1">${window.t('stmt.desc')}</span>
+        <span style="flex:0 0 80px;text-align:left">${window.t('stmt.credit')} ₪</span>
+        <span style="flex:0 0 80px;text-align:left">${window.t('stmt.debit')} ₪</span>
+        <span style="flex:0 0 85px;text-align:left">${window.t('stmt.balance')} ₪</span>
+        <span style="flex:0 0 110px">${window.t('stmt.note')}</span>
       </div>
       <div class="scroll">${rowsHTML}</div>
-      ${can.print()?`<div style="margin-top:12px;text-align:left"><button class="btn ghost sm" onclick="window.prtStmt('${fund}')" data-requires-print="1"><i class="ti ti-printer"></i> طباعة</button></div>`:''}
+      ${can.print()?`<div style="margin-top:12px;text-align:left"><button class="btn ghost sm" onclick="window.prtStmt('${fund}')" data-requires-print="1"><i class="ti ti-printer"></i> ${window.t('common.print')}</button></div>`:''}
     </div>`;
 };
 
@@ -1086,7 +1086,7 @@ window.renderStmt=function(fund){
 function fillMemberSelect(){
   const sel=document.getElementById('ms-member');if(!sel)return;
   const cur=sel.value;
-  sel.innerHTML='<option value="">-- اختر عضواً --</option>'+DB.members.filter(m=>m.is_active).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  sel.innerHTML=`<option value="">${window.t('members.choose')}</option>`+DB.members.filter(m=>m.is_active).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   if(cur)sel.value=cur;
   enhanceMemberSelect('ms-member'); syncComboInput('ms-member');
 }
@@ -2233,7 +2233,7 @@ window.buildFundStatementHTML=function(fund){
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="5">الرصيد الجاري · Current Balance</td><td class="'+balCls+'">₪ '+fmt(bal)+'</td><td></td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">رئيس الديوان</div></div></div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع الديوان</div></div></div></div>'
     +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>';
   const title=(fund==='food'?'كشف صندوق الغداء':'كشف صندوق الديوان');
   return {css:css, body:body, title:title};
@@ -2390,7 +2390,7 @@ window.prtDonStmt=function(){
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="3">الإجمالي · Total</td><td class="pos">₪ '+fmt(tot)+'</td><td colspan="3"></td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">رئيس الديوان</div></div></div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع الديوان</div></div></div></div>'
     +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>';
   openPrintWin(css,body);
 };
