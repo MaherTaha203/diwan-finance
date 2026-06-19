@@ -2209,33 +2209,33 @@ window.buildFundStatementHTML=function(fund){
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
   const rows=FIN.fundLedger(fund,from,to,type);   /* FIN logic unchanged */
-  const fundLabel=fund==='food'?'صندوق الغداء':'صندوق الديوان';
+  const fundLabel=fund==='food'?window.t('receipts.fund_food'):window.t('receipts.fund_diwan');
   let bal=0,totCr=0,totDr=0,openBal=0;
   const rowsHTML=rows.map((r,i)=>{
     bal+=r.cr-r.dr;totCr+=r.cr;totDr+=r.dr;
     if(i===0&&r.type==='open')openBal=r.cr-r.dr;
-    const crCell=r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':(r.type==='don'?'<span class="cr">تبرع</span>':'—');
+    const crCell=r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':(r.type==='don'?'<span class="cr">'+window.t('receipts.fund_don')+'</span>':'—');
     const drCell=r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—';
     return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(bal)+'</td><td>'+esc(r.note||'')+'</td></tr>';
   }).join('');
-  const period=(from&&to?fmtDate2(from)+' — '+fmtDate2(to):from?'من '+fmtDate2(from):to?'حتى '+fmtDate2(to):'كل الفترات');
+  const period=(from&&to?fmtDate2(from)+' — '+fmtDate2(to):from?window.t('stmt.date_from')+' '+fmtDate2(from):to?window.t('stmt.date_to')+' '+fmtDate2(to):window.t('stmt.all_periods'));
   const balCls=bal>=0?'pos':'neg';
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">كشف '+fundLabel+'</span><div class="sub">عملة الكشف: شيكل (₪)</div></div></div>'
-    +'<div class="period">الفترة: '+period+'</div>'
+    +'<div class="meta"><span class="tt">'+window.t('stmt.print_title')+' '+fundLabel+'</span><div class="sub">'+window.t('stmt.currency_note')+'</div></div></div>'
+    +'<div class="period">'+window.t('stmt.period_label')+' '+period+'</div>'
     +'<div class="cards">'
-    +'<div class="card"><div class="k">رصيد افتتاحي</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
-    +'<div class="card"><div class="k">إجمالي الوارد</div><div class="v pos">₪ '+fmt(totCr)+'</div></div>'
-    +'<div class="card"><div class="k">إجمالي المنصرف</div><div class="v neg">₪ '+fmt(totDr)+'</div></div>'
-    +'<div class="card"><div class="k">الرصيد الجاري</div><div class="v '+balCls+'">₪ '+fmt(bal)+'</div></div></div>'
-    +'<table class="dt"><thead><tr><th>التاريخ</th><th>الاسم</th><th>البيان</th><th>وارد</th><th>منصرف</th><th>الرصيد</th><th>ملاحظات</th></tr></thead>'
+    +'<div class="card"><div class="k">'+window.t('stmt.opening_bal')+'</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.total_in')+'</div><div class="v pos">₪ '+fmt(totCr)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.total_out')+'</div><div class="v neg">₪ '+fmt(totDr)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.current_bal')+'</div><div class="v '+balCls+'">₪ '+fmt(bal)+'</div></div></div>'
+    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.donor_name')+'</th><th>'+window.t('stmt.desc')+'</th><th>'+window.t('stmt.col_in')+'</th><th>'+window.t('stmt.col_out')+'</th><th>'+window.t('stmt.balance')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="5">الرصيد الجاري · Current Balance</td><td class="'+balCls+'">₪ '+fmt(bal)+'</td><td></td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع الديوان</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>';
-  const title=(fund==='food'?'كشف صندوق الغداء':'كشف صندوق الديوان');
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>'+window.t('stmt.printed_at')+' '+fmtDate2(new Date().toISOString())+'</span><span>'+window.t('stmt.page_info')+'</span></div>';
+  const title=(fund==='food'?window.t('receipts.don_disp_food'):window.t('receipts.don_disp_diwan'));
   return {css:css, body:body, title:title};
 };
 window.prtStmt=function(fund){
@@ -2280,7 +2280,7 @@ window.prtMemberStmt=function(){
   const openBal=st.openingBalance, totalDues=st.totalDues, totalPaid=st.totalPaid;
   const finalBal=st.finalBalance;
   const rowsHTML=st.rows.map(r=>{
-    const balTxt='₪ '+fmt(Math.abs(r.bal))+(r.bal>0?' (مدين)':r.bal<0?' (دائن)':'');
+    const balTxt='₪ '+fmt(Math.abs(r.bal))+(r.bal>0?' '+window.t('stmt.debit_tag'):r.bal<0?' '+window.t('stmt.credit_tag'):'');
     return '<tr>'
       +'<td>'+(r.date==='—'?'—':fmtDate2(r.date))+'</td>'
       +'<td>'+esc(r.no)+'</td>'
@@ -2290,24 +2290,24 @@ window.prtMemberStmt=function(){
       +'<td class="bal">'+balTxt+'</td></tr>';
   }).join('');
   const printDate=new Date().toLocaleDateString('en-GB').replace(/\//g,'/');
-  const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`من ${fmtDate2(from)}`:to?`حتى ${fmtDate2(to)}`:'كل الفترات';
+  const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`${window.t('stmt.date_from')} ${fmtDate2(from)}`:to?`${window.t('stmt.date_to')} ${fmtDate2(to)}`:window.t('stmt.all_periods');
 
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const finalCls=finalBal>0?'neg':finalBal<0?'pos':'';  /* mo, positive bal = credit(green) */
   const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">كشف حساب عضو</span><div class="sub">العضو: '+esc(member.name)+'</div></div></div>'
-    +'<div class="period">الفترة: '+periodLabel+' · ناشط من سنة '+(member.active_from_year||'—')+'</div>'
+    +'<div class="meta"><span class="tt">'+window.t('members.member_stmt')+'</span><div class="sub">'+window.t('stmt.member_label')+' '+esc(member.name)+'</div></div></div>'
+    +'<div class="period">'+window.t('stmt.period_label')+' '+periodLabel+' '+window.t('stmt.active_since')+' '+(member.active_from_year||'—')+'</div>'
     +'<div class="cards">'
-    +'<div class="card"><div class="k">رصيد افتتاحي</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
-    +'<div class="card"><div class="k">إجمالي المستحق</div><div class="v neg">₪ '+fmt(totalDues)+'</div></div>'
-    +'<div class="card"><div class="k">إجمالي المدفوع</div><div class="v pos">₪ '+fmt(totalPaid)+'</div></div>'
-    +'<div class="card"><div class="k">الرصيد النهائي</div><div class="v '+(finalBal<=0?'pos':'neg')+'">'+FIN.balanceLabel(finalBal,true)+'</div></div></div>'
-    +'<table class="dt"><thead><tr><th>التاريخ</th><th>المرجع</th><th>البيان</th><th>مستحق (مدين)</th><th>مدفوع (دائن)</th><th>الرصيد</th></tr></thead>'
+    +'<div class="card"><div class="k">'+window.t('stmt.opening_bal')+'</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.total_due')+'</div><div class="v neg">₪ '+fmt(totalDues)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.total_paid')+'</div><div class="v pos">₪ '+fmt(totalPaid)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.final_bal')+'</div><div class="v '+(finalBal<=0?'pos':'neg')+'">'+FIN.balanceLabel(finalBal,true)+'</div></div></div>'
+    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+window.t('stmt.desc')+'</th><th>'+window.t('stmt.col_due')+'</th><th>'+window.t('stmt.col_paid')+'</th><th>'+window.t('stmt.balance')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="5">الرصيد النهائي · Final Balance</td><td class="'+(finalBal<=0?'pos':'neg')+'">'+FIN.balanceLabel(finalBal,true)+'</td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع العضو</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+printDate+'</span><span>صفحة 1 / 1</span></div>';
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_member')+'</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>'+window.t('stmt.printed_at')+' '+printDate+'</span><span>'+window.t('stmt.page_info')+'</span></div>';
   openPrintWin(css,body);
 };
 
@@ -2375,23 +2375,23 @@ window.prtDonStmt=function(){
     +'<td>'+esc(r.payer_name||gmn(r.member_id)||'—')+'</td>'
     +'<td><span class="cr">₪ '+fmt(r.amount_ils||r.amount)+'</span></td>'
     +'<td>'+(r.currency!=='ILS'?esc(r.currency):'ILS')+'</td>'
-    +'<td>'+(r.donation_display_fund==='food'?'صندوق الغداء':'صندوق الديوان')+'</td>'
+    +'<td>'+(r.donation_display_fund==='food'?window.t('receipts.fund_food'):window.t('receipts.fund_diwan'))+'</td>'
     +'<td>'+esc(r.notes||'—')+'</td></tr>').join('');
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">تقرير التبرعات</span><div class="sub">عملة الكشف: شيكل (₪)</div></div></div>'
-    +'<div class="period">عدد التبرعات: '+rows.length+'</div>'
+    +'<div class="meta"><span class="tt">'+window.t('stmt.donation_report')+'</span><div class="sub">'+window.t('stmt.currency_note')+'</div></div></div>'
+    +'<div class="period">'+window.t('stmt.count_label')+' '+rows.length+'</div>'
     +'<div class="cards">'
-    +'<div class="card"><div class="k">عدد التبرعات</div><div class="v">'+rows.length+'</div></div>'
-    +'<div class="card"><div class="k">إجمالي التبرعات</div><div class="v pos">₪ '+fmt(tot)+'</div></div>'
-    +'<div class="card"><div class="k">موجّه للغداء</div><div class="v">₪ '+fmt(toFood)+'</div></div>'
-    +'<div class="card"><div class="k">موجّه للديوان</div><div class="v">₪ '+fmt(toDiwan)+'</div></div></div>'
-    +'<table class="dt"><thead><tr><th>التاريخ</th><th>المرجع</th><th>المتبرع</th><th>المبلغ</th><th>العملة</th><th>التوجيه</th><th>ملاحظات</th></tr></thead>'
+    +'<div class="card"><div class="k">'+window.t('stmt.donation_count')+'</div><div class="v">'+rows.length+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.total_donations')+'</div><div class="v pos">₪ '+fmt(tot)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.to_food')+'</div><div class="v">₪ '+fmt(toFood)+'</div></div>'
+    +'<div class="card"><div class="k">'+window.t('stmt.to_diwan')+'</div><div class="v">₪ '+fmt(toDiwan)+'</div></div></div>'
+    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+window.t('donations.donor')+'</th><th>'+window.t('common.amount')+'</th><th>'+window.t('common.currency')+'</th><th>'+window.t('stmt.direction')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="3">الإجمالي · Total</td><td class="pos">₪ '+fmt(tot)+'</td><td colspan="3"></td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع الديوان</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>';
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>'+window.t('stmt.printed_at')+' '+fmtDate2(new Date().toISOString())+'</span><span>'+window.t('stmt.page_info')+'</span></div>';
   openPrintWin(css,body);
 };
 
