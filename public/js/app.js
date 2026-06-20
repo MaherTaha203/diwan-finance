@@ -231,7 +231,7 @@ const FIN={
        EXCEPT: reduce_deficit donations that overflow once the historical deficit reaches
        zero are routed to current via current_addition (Phase 15 allocation engine). */
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const donCurrentAddition=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.allocation_type==='reduce_deficit').reduce((s,r)=>s+Number(r.current_addition||0),0);
+    const donCurrentAddition=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit').reduce((s,r)=>s+Number(r.current_addition||0),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     return income+donCurrentAddition-expense;
   },
@@ -1735,7 +1735,7 @@ window.saveRec=async function(print=false){
          remaining deficit = abs(FOOD_OPENING) minus sum of all prior reduce_deficit donations */
       const historicalDeficit=Math.max(0,-(window.FOOD_OPENING||0));
       const totalPriorReductions=DB.receipts
-        .filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.allocation_type==='reduce_deficit')
+        .filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit')
         .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
       const remainingDeficit=Math.max(0,historicalDeficit-totalPriorReductions);
       deficitReduction=Math.min(amountILS,remainingDeficit);
@@ -1752,7 +1752,7 @@ window.saveRec=async function(print=false){
     amount,currency,amount_ils:amountILS,exchange_rate:rate,
     payment_method:method,notes,
     donation_display_fund:fund==='donation'?donDisplay:null,
-    allocation_type:finalAllocType,
+    food_donation_allocation:finalAllocType,
     current_addition:currentAddition||null,
     created_by:CUR?.full_name||CU?.email,
   }).select().single();
