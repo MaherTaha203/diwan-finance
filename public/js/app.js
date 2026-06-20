@@ -1731,15 +1731,15 @@ window.saveRec=async function(print=false){
   if(fund==='donation'&&donDisplay==='food'){
     finalAllocType=allocationType||'support_current';
     if(finalAllocType==='reduce_deficit'){
-      const foodOpeningNow=Number(window.FOOD_OPENING||0);
-      const historicalDeficit=foodOpeningNow<0?Math.abs(foodOpeningNow):0;
-      deficitReduction=Math.min(amountILS,historicalDeficit);
+      /* FOOD_OPENING is IMMUTABLE — deficit is computed dynamically.
+         remaining deficit = abs(FOOD_OPENING) minus sum of all prior reduce_deficit donations */
+      const historicalDeficit=Math.max(0,-(window.FOOD_OPENING||0));
+      const totalPriorReductions=DB.receipts
+        .filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.allocation_type==='reduce_deficit')
+        .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+      const remainingDeficit=Math.max(0,historicalDeficit-totalPriorReductions);
+      deficitReduction=Math.min(amountILS,remainingDeficit);
       currentAddition=amountILS-deficitReduction;
-      if(deficitReduction>0){
-        const newOpening=foodOpeningNow+deficitReduction;
-        await SB.from('settings').upsert({key:'food_opening_balance',value:String(newOpening),updated_at:new Date().toISOString()});
-        window.FOOD_OPENING=newOpening;
-      }
     }
   }
   const no=nextNo('REC',DB.receipts);
