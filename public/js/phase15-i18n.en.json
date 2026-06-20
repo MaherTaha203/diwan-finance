@@ -1,0 +1,71 @@
+{
+  "manageAccount": {
+    "title": "Manage Account Structure",
+    "adminOnly": "Administrator access required",
+    "fields": {
+      "activeYear": "Active Year",
+      "historicalBalance": "Historical Balance Before 01.01.2025",
+      "historicalPayments": "Payments Before 01.01.2025",
+      "creditBalance": "Credit Balance",
+      "subscription2025": "Subscription 2025 Balance",
+      "subscription2026": "Subscription 2026 Balance",
+      "notes": "Notes"
+    },
+    "override": {
+      "label": "Manual Override",
+      "reason": "Override reason",
+      "reasonRequired": "A reason is required for a manual override"
+    },
+    "preview": {
+      "title": "Preview — recalculated obligations",
+      "before": "Before",
+      "after": "After",
+      "warning": "Changing Active Year recalculates the Historical Balance and rebuilds annual subscription obligations. Historical Payments are not affected.",
+      "noChange": "No change to obligations"
+    },
+    "actions": { "save": "Save changes", "cancel": "Cancel", "preview": "Preview changes" },
+    "toast": { "saved": "Changes saved", "error": "Could not save changes" },
+    "validation": { "activeYearInvalid": "Enter a valid year", "numberInvalid": "Enter a valid amount" }
+  },
+  "rebuild": {
+    "title": "Rebuild Account",
+    "description": "Recalculates subscriptions, balances, and allocations. Manual overrides are preserved.",
+    "rulesTitle": "Allocation Rules Applied",
+    "rules": [
+      "Oldest unpaid annual subscription first.",
+      "Newer annual subscription second.",
+      "Historical balance third.",
+      "Credit balance last."
+    ],
+    "reasonLabel": "Reason for rebuild",
+    "actions": { "run": "Rebuild account", "cancel": "Cancel" },
+    "states": {
+      "running": "Rebuilding…",
+      "empty": "No rebuilds have been run yet",
+      "success": "Rebuild completed — {count} members affected",
+      "error": "Rebuild failed"
+    }
+  },
+  "donationAllocation": {
+    "label": "Donation Allocation",
+    "required": "Choose where this food-fund donation is applied",
+    "options": {
+      "support_current": "Support Current Food Fund Balance",
+      "reduce_deficit": "Reduce Historical Food Fund Deficit"
+    }
+  },
+  "foodFundReport": {
+    "currentBalance": "Current Food Fund Balance",
+    "deficitRemaining": "Historical Food Fund Deficit Remaining",
+    "deficitCleared": "Historical deficit fully cleared"
+  },
+  "audit": {
+    "active_year_change": "Active Year changed",
+    "historical_balance_change": "Historical Balance changed",
+    "historical_payment_change": "Historical Payments changed",
+    "credit_balance_change": "Credit Balance changed",
+    "subscription_override": "Subscription override",
+    "allocation_change": "Allocation changed",
+    "rebuild_account": "Rebuild Account"
+  }
+}
