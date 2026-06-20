@@ -227,10 +227,13 @@ const FIN={
 
   foodBalance(){
     /* TREASURY MODEL: Food fund is operational-only. The old fund was closed;
-       the historical reference value (FOOD_OPENING) is display-only and NEVER summed. */
+       the historical reference value (FOOD_OPENING) is display-only and NEVER summed
+       EXCEPT: reduce_deficit donations that overflow once the historical deficit reaches
+       zero are routed to current via current_addition (Phase 15 allocation engine). */
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const donCurrentAddition=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.allocation_type==='reduce_deficit').reduce((s,r)=>s+Number(r.current_addition||0),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
-    return income-expense;
+    return income+donCurrentAddition-expense;
   },
   foodHistorical(){ return Number(window.FOOD_OPENING||0); },  /* reference only, never in calculations */
   diwanBalance(){
@@ -267,6 +270,32 @@ const FIN={
     rows.sort((a,b)=>new Date(a.date)-new Date(b.date));
     return rows;
   },
+};
+
+/* ═══ HISTORICAL BALANCE FORMULA (Phase 15 FINAL LOCK) ═══
+   Historical Balance = years from active_from_year through 2024 × 200.
+   Years 2025+ are tracked by the active annual-dues system (DB.annual).
+   Returns 0 for any year > 2024 (member joined in the current era). */
+function calcHistoricalFromYear(year){
+  const y=parseInt(year,10);
+  if(!y||isNaN(y)||y>2024) return 0;
+  return Math.max(0,2024-y+1)*200;
+}
+
+window.onMemberFromYearChange=function(mode){
+  const prefix=mode==='edit'?'edit-mem':'mem';
+  const yearEl=document.getElementById(prefix+(mode==='edit'?'-from-year':'-from-year'));
+  const balEl=document.getElementById(prefix+(mode==='edit'?'-balance':'-balance'));
+  if(!yearEl||!balEl) return;
+  const year=parseInt(yearEl.value,10);
+  if(!year||isNaN(year)) return;
+  const suggested=calcHistoricalFromYear(year);
+  balEl.value=suggested;
+  /* Show visual hint */
+  const hint=document.getElementById(prefix+'-hist-hint');
+  if(hint) hint.textContent=suggested>0
+    ?`محسوب تلقائياً: ${2024}-${year}+1 = ${2024-year+1} سنة × 200 ₪ = ${suggested.toLocaleString()} ₪`
+    :'لا توجد سنوات تاريخية (السنة > 2024)';
 };
 
 /* ═══ UTILS ═══ */
@@ -1282,8 +1311,20 @@ window.onRecFundChange=function(){
     if(optContact)optContact.style.display='none';
     if(optManual)optManual.style.display='none';
     if(ptSel)ptSel.value='member';
+    window.onDonDisplayChange();
   }
   window.onPayerTypeChange();
+};
+/* Show/hide allocation_type selector based on donation target fund */
+window.onDonDisplayChange=function(){
+  const display=document.getElementById('rec-don-display')?.value;
+  const allocWrap=document.getElementById('rec-don-alloc-wrap');
+  if(allocWrap) allocWrap.style.display=display==='food'?'':'none';
+  /* Reset allocation to default when switching away from food */
+  if(display!=='food'){
+    const allocSel=document.getElementById('rec-don-alloc-type');
+    if(allocSel) allocSel.value='support_current';
+  }
 };
 window.onPayerTypeChange=function(){
   const t=document.getElementById('rec-payer-type').value;
@@ -1663,6 +1704,7 @@ window.saveRec=async function(print=false){
   const method=document.getElementById('rec-method').value||'cash';
   const notes=document.getElementById('rec-notes').value;
   const donDisplay=document.getElementById('rec-don-display')?.value||null;
+  const allocationType=document.getElementById('rec-don-alloc-type')?.value||'support_current';
   const saveContact=document.getElementById('rec-save-contact')?.checked||false;
 
   const v1=fund==='donation'?vf('rec-member',v=>!!v,'e-rec-member'):
@@ -1684,6 +1726,22 @@ window.saveRec=async function(print=false){
     await loadAll();
   }
 
+  /* Phase 15 — Food Fund Donation Allocation */
+  let finalAllocType=null, deficitReduction=0, currentAddition=0;
+  if(fund==='donation'&&donDisplay==='food'){
+    finalAllocType=allocationType||'support_current';
+    if(finalAllocType==='reduce_deficit'){
+      /* FOOD_OPENING is IMMUTABLE — deficit is computed dynamically.
+         remaining deficit = abs(FOOD_OPENING) minus sum of all prior reduce_deficit donations */
+      const historicalDeficit=Math.max(0,-(window.FOOD_OPENING||0));
+      const totalPriorReductions=DB.receipts
+        .filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.allocation_type==='reduce_deficit')
+        .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+      const remainingDeficit=Math.max(0,historicalDeficit-totalPriorReductions);
+      deficitReduction=Math.min(amountILS,remainingDeficit);
+      currentAddition=amountILS-deficitReduction;
+    }
+  }
   const no=nextNo('REC',DB.receipts);
   const{data,error}=await SB.from('receipts').insert({
     no,fund_type:fund,receipt_date:date,
@@ -1694,6 +1752,8 @@ window.saveRec=async function(print=false){
     amount,currency,amount_ils:amountILS,exchange_rate:rate,
     payment_method:method,notes,
     donation_display_fund:fund==='donation'?donDisplay:null,
+    allocation_type:finalAllocType,
+    current_addition:currentAddition||null,
     created_by:CUR?.full_name||CU?.email,
   }).select().single();
   if(error){toast(window.t('errors.save_error')+': '+error.message,'err');return;}
@@ -2493,23 +2553,16 @@ window.exportCSV=function(type){
     h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
     rows=stmtRows.map(r=>{bal+=r.cr-r.dr;return[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',bal,r.note||''];});
   }else if(type==='member-stmt'){
+    /* V-01 FIX: use canonical FIN.memberStatement() — single source of truth (Phase 15) */
     const mid=document.getElementById('ms-member')?.value;
     const member=gm(mid);
     if(!member){toast(window.t('errors.select_member'),'warn');return;}
     h=['التاريخ','رقم السند','البيان','دائن ₪','مدين ₪','الرصيد ₪'];
-    const csvRows=[];
-    const openBal=Number(member.opening_balance||0);
-    let csvBal=0;
-    if(openBal!==0){csvBal+=openBal;csvRows.push(['—','—','رصيد افتتاحي','',openBal,csvBal]);}
-    /* BUG 5 FIX: active_from_year filter */
-    DB.annual
-      .filter(a=>!member.active_from_year||a.year>=member.active_from_year)
-      .forEach(a=>{csvBal+=Number(a.amount);csvRows.push([a.applied_at?.slice(0,10)||a.year+'-01-01','—',`اشتراك سنة ${a.year}`,'',a.amount,csvBal]);});
-    DB.receipts
-      .filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid)
-      .sort((a,b)=>new Date(a.receipt_date)-new Date(b.receipt_date))
-      .forEach(r=>{csvBal-=Number(r.amount_ils||r.amount);csvRows.push([r.receipt_date,r.no,r.notes||'مساهمة',r.amount_ils||r.amount,'',csvBal]);});
-    rows=csvRows;
+    const st=FIN.memberStatement(mid);
+    rows=st.rows.map(r=>[
+      r.date==='—'?'—':r.date, r.no, r.desc,
+      r.cr>0?r.cr:'', r.dr>0?r.dr:'', r.bal
+    ]);
   }else if(type==='food-rec'){
     h=['رقم','التاريخ','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
     rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').map(r=>[r.no,r.receipt_date,r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
