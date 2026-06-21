@@ -480,3 +480,97 @@ Audit records must include:
 Every future feature, report, dashboard card, receipt workflow, payment workflow, ledger calculation, and export must be validated against this specification before deployment.
 
 This document is the official source of truth for the Diwan Finance System.
+
+# Historical Deficit Accounting Model
+
+## Definition
+
+Historical Deficit represents historical obligations owed by the Food Fund from periods prior to the current operational balance.
+
+It is not part of the current operational balance.
+
+It must always be displayed separately.
+
+---
+
+## Historical Deficit Settlement Donations
+
+A donation may be directed toward Historical Deficit Settlement.
+
+Such donations are intended to reduce historical obligations owed by the Food Fund.
+
+---
+
+## Accounting Treatment
+
+When a Historical Deficit Settlement Donation is received:
+
+1. The donation is recorded in the donation ledger.
+2. The Historical Deficit is reduced by the donation amount.
+3. The donation amount is reserved for paying historical creditors.
+4. The Current Operational Food Balance must not increase.
+
+The donation is therefore considered:
+
+* Money received by the organization.
+* Money simultaneously committed to historical obligations.
+
+It is not available for current operational spending.
+
+---
+
+## Example
+
+Current Food Balance = 10,000
+
+Historical Deficit = -8,639
+
+Historical Deficit Donation = 3,000
+
+Result:
+
+Current Food Balance = 10,000
+
+Historical Deficit = -5,639
+
+Reserved Historical Deficit Settlement Amount = 3,000
+
+---
+
+## Historical Deficit Settlement Reserve
+
+The system shall maintain a separate tracked amount representing donations received for historical deficit settlement.
+
+This amount represents money reserved for repayment of historical obligations.
+
+It must not be treated as operational cash available for current spending.
+
+---
+
+## Dashboard Requirements
+
+The dashboard must display separately:
+
+* Current Food Balance
+* Remaining Historical Deficit
+* Historical Deficit Settlement Reserve
+* Net Food Fund Position
+
+Formula:
+
+Net Food Fund Position =
+Current Food Balance
+
+* Remaining Historical Deficit
+
+---
+
+## Reversal Rule
+
+If a Historical Deficit Settlement Donation is edited, deleted, or reversed:
+
+* Historical Deficit must be recalculated.
+* Historical Deficit Settlement Reserve must be recalculated.
+* All affected reports and dashboard values must be rebuilt from source transactions.
+
+No manual balance adjustments are permitted.
