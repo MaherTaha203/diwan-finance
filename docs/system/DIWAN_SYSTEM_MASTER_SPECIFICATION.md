@@ -558,10 +558,11 @@ The dashboard must display separately:
 
 Formula:
 
-Net Food Fund Position =
-Current Food Balance
+Net Food Fund Position = Current Food Balance + Remaining Historical Deficit
 
-* Remaining Historical Deficit
+Because Remaining Historical Deficit is stored as a negative number, it reduces the Net Food Fund Position.
+
+Example: 10,000 + (−5,639) = 4,361.
 
 ---
 
