@@ -2127,7 +2127,7 @@ function amountToWords(n){
 }
 
 /* ═══ VIS-1: UNIFIED PRINT DESIGN TOKENS (single source of truth) ═══ */
-const PRINT_TOKENS=':root{--navy:#1C2B3A;--green:#00C896;--gold:#C4A450;--danger:#DC3545;--gray:#6B7280;--bg:#F8FAFC;--bd:#e2e8f0;--ink:#1C2B3A;--fa:"Cairo",Arial,sans-serif;--fe:"Inter",Arial,sans-serif}'
+const PRINT_TOKENS=':root{--navy:#0F1B2D;--green:#00C896;--gold:#C6A46A;--danger:#DC3545;--gray:#6B7280;--bg:#F8FAFC;--bd:#e2e8f0;--ink:#0F1B2D;--fa:"Cairo",Arial,sans-serif;--fe:"Inter",Arial,sans-serif}'
 +'*{box-sizing:border-box;margin:0;padding:0}'
 +'.dh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--gold);padding-bottom:10px}'
 +'.dh .org{display:flex;gap:10px;align-items:center}'
@@ -2167,7 +2167,7 @@ function openPrintWin(css,body){
     +'<style>'+PRINT_TOKENS+css+'</style></head><body>'+body
     +'<script>window.onload=function(){'
     +'document.querySelectorAll("[data-qr-url]").forEach(function(el){'
-    +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#1C2B3A",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
+    +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#0F1B2D",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
     +'});'
     +'setTimeout(function(){window.print();},900);'
     +'};<\/script></body></html>';
@@ -2385,7 +2385,7 @@ function loadStyledXLSX(cb){
 function styleDiwanSheet(XLSX, ws, opts){
   opts=opts||{};
   const range=XLSX.utils.decode_range(ws['!ref']);
-  const NAVY='1C2B3A', WHITE='FFFFFF', BG='F8FAFC';
+  const NAVY='0F1B2D', WHITE='FFFFFF', BG='F8FAFC';
   const thin={style:'thin',color:{rgb:'E2E8F0'}};
   const border={top:thin,bottom:thin,left:thin,right:thin};
   const hr=(opts.headerRow!=null)?opts.headerRow:0;
@@ -2833,10 +2833,10 @@ function showSessionWarning() {
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;direction:rtl';
     overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:380px;text-align:center;font-family:Cairo,sans-serif">'
       + '<div style="font-size:40px;margin-bottom:12px">⏰</div>'
-      + '<div style="font-size:16px;font-weight:600;color:#1A1A2E;margin-bottom:8px">تنبيه انتهاء الجلسة</div>'
+      + '<div style="font-size:16px;font-weight:600;color:#0F1B2D;margin-bottom:8px">تنبيه انتهاء الجلسة</div>'
       + '<div style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.7">ستنتهي الجلسة خلال دقيقتين بسبب عدم النشاط.</div>'
       + '<div style="display:flex;gap:10px;justify-content:center">'
-      + '<button onclick="resetSessionTimer()" style="padding:10px 24px;background:#1A1A2E;color:#fff;border:none;border-radius:8px;font-family:Cairo;font-size:13px;font-weight:500;cursor:pointer">متابعة الجلسة</button>'
+      + '<button onclick="resetSessionTimer()" style="padding:10px 24px;background:#0F1B2D;color:#fff;border:none;border-radius:8px;font-family:Cairo;font-size:13px;font-weight:500;cursor:pointer">متابعة الجلسة</button>'
       + '<button onclick="window.logout()" style="padding:10px 24px;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;font-family:Cairo;font-size:13px;cursor:pointer">تسجيل الخروج</button>'
       + '</div></div>';
     document.body.appendChild(overlay);
