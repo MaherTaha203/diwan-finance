@@ -25,14 +25,14 @@ const DiwanQR = {
       text:           url,
       width:          80,   // 80px = ~2.1cm عند 96dpi
       height:         80,
-      colorDark:      '#0A3D6B',   // نيفي بلو
+      colorDark:      '#0F1B2D',   // كحلي الهوية
       colorLight:     '#ffffff',
       correctLevel:   QRCode.CorrectLevel.H  // أعلى مستوى تصحيح خطأ
     });
 
     // أضف النص أسفل QR
     const label = document.createElement('div');
-    label.style.cssText = 'font-size:7px;color:#0A3D6B;text-align:center;margin-top:3px;word-break:break-all;max-width:80px;line-height:1.3;';
+    label.style.cssText = 'font-size:7px;color:#0F1B2D;text-align:center;margin-top:3px;word-break:break-all;max-width:80px;line-height:1.3;';
     label.textContent = 'diwan-finance.com/verify/' + docId;
     container.appendChild(label);
   },
