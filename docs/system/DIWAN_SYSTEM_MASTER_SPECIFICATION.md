@@ -283,12 +283,15 @@ Does not affect Historical Deficit.
 
 ### Historical Deficit Settlement
 
-Effects:
+Reserve Model (approved). Effects:
 
 * Food Donations Fund
-* Historical Deficit
+* Historical Deficit (reduced)
+* Historical Deficit Settlement Reserve (increased)
 
-Does not affect Current Food Balance while deficit remains.
+Does NOT increase Current Food Balance under any circumstance.
+
+The donation is reserved for repayment of historical creditors and is not available for operational spending.
 
 Example:
 
@@ -299,6 +302,8 @@ Donation = 300
 Result:
 
 Deficit = -8339
+
+Reserve += 300
 
 Current Balance unchanged.
 
@@ -315,27 +320,19 @@ Total allocation must equal donation amount.
 
 ---
 
-# 12. DEFICIT OVERFLOW RULE
+# 12. OVER-SETTLEMENT RULE (RESERVE MODEL)
 
-Example:
+Historical Deficit Settlement Donations follow the Reserve Model. Deficit reduction and the Historical Deficit Settlement Reserve are both capped at the remaining Historical Deficit.
 
-Deficit = -500
+A settlement donation never reduces the deficit below zero and never increases Current Food Balance.
 
-Donation = 3000
+If a settlement donation exceeds the remaining Historical Deficit:
 
-Result:
+* Only the portion equal to the remaining deficit is applied to the deficit and to the Reserve.
+* The surplus is NOT added to Current Food Balance.
+* The surplus is held as an unallocated amount and flagged for explicit admin reallocation (for example, re-designating it as Support Current Balance).
 
-500 → Historical Deficit
-
-2500 → Current Food Balance
-
-Final:
-
-Deficit = 0
-
-Current Balance += 2500
-
-Overflow happens automatically.
+This rule supersedes the previous automatic deficit-overflow behavior.
 
 ---
 
@@ -389,7 +386,9 @@ All reports must match accounting rules.
 Dashboard must display separately:
 
 * Current Food Balance
-* Historical Deficit
+* Remaining Historical Deficit
+* Historical Deficit Settlement Reserve
+* Net Food Fund Position
 * Total Food Donations
 * Total Diwan Donations
 * Outstanding Debts
@@ -399,7 +398,7 @@ Dashboard must display separately:
 * Total Receipts
 * Total Payments
 
-Historical Deficit and Current Balance must never be merged.
+Current Food Balance, Remaining Historical Deficit, and the Historical Deficit Settlement Reserve must never be merged.
 
 ---
 
@@ -487,6 +486,8 @@ This document is the official source of truth for the Diwan Finance System.
 
 Historical Deficit represents historical obligations owed by the Food Fund from periods prior to the current operational balance.
 
+The authoritative Historical Deficit constant is `food_opening_balance = -8639`. It is never mutated; deficit reduction is computed additively from settlement donations.
+
 It is not part of the current operational balance.
 
 It must always be displayed separately.
@@ -544,6 +545,8 @@ The system shall maintain a separate tracked amount representing donations recei
 This amount represents money reserved for repayment of historical obligations.
 
 It must not be treated as operational cash available for current spending.
+
+The Reserve is capped at the magnitude of the Historical Deficit constant. It can never exceed the total historical obligation, and settlement donations never increase Current Food Balance (see Section 12).
 
 ---
 
