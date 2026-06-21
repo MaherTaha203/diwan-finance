@@ -7,6 +7,10 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0F1B2D">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,10 +21,10 @@
 <style>
 /* == CONCEPT B — PREMIUM FINANCIAL INSTITUTION — REVISION 3 == */
 :root {
-  --b-navy:#1A1A2E; --b-navy2:#252538; --b-gold:#C4A450;
-  --b-cream:#F5F3EE; --b-white:#fff; --b-border:#EDE9E0;
+  --b-navy:#0F1B2D; --b-navy2:#16273D; --b-gold:#C6A46A;
+  --b-cream:#F2EEE7; --b-white:#fff; --b-border:#EDE9E0;
   --b-input-border:#DDD9D0; --b-input-bg:#FAFAF8;
-  --b-text:#1A1A2E; --b-text2:#555; --b-text3:#888; --b-placeholder:#B8B4AC;
+  --b-text:#0F1B2D; --b-text2:#555; --b-text3:#888; --b-placeholder:#B8B4AC;
 }
 
 #login-screen{position:fixed;inset:0;z-index:1000;display:flex;overflow:hidden}
@@ -28,47 +32,47 @@
 
 /* ── LEFT PANEL — 60% Navy institutional ── */
 .lp{width:55%;min-height:100vh;background:var(--b-navy);position:relative;display:flex;flex-direction:column;padding:26px 36px 20px;overflow-y:auto;transition:background .3s}
-.lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(196,164,80,.05) 0%,transparent 60%);pointer-events:none}
+.lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(198,164,106,.05) 0%,transparent 60%);pointer-events:none}
 
 /* Logo emblem */
-.lp-logo{display:flex;align-items:center;gap:0;margin-bottom:20px;position:relative;z-index:2}
-.lp-emblem{display:none}
-.lp-emblem-inner{display:none}
+.lp-logo{display:flex;align-items:center;gap:12px;margin-bottom:20px;position:relative;z-index:2}
+.lp-emblem{width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(198,164,106,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lp-emblem svg{width:34px;height:34px;display:block}
 .lp-org{font-size:26px;font-weight:600;color:#fff;font-family:'Cairo',sans-serif;display:block}
 .lp-org-en{font-size:13px;color:rgba(255,255,255,.28);letter-spacing:3px;display:block;margin-top:1px}
 
 /* Institutional content */
 .lp-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;padding:8px 0;max-width:none}
-.lp-gold-bar{width:56px;height:3px;background:#C4A450;border-radius:1px;margin-bottom:14px}
+.lp-gold-bar{width:56px;height:3px;background:#C6A46A;border-radius:1px;margin-bottom:14px}
 .lp-title{font-size:30px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:22px;font-family:'Cairo',sans-serif}
 .lp-inst{font-size:15.5px;color:rgba(255,255,255,.52);line-height:2;margin-bottom:18px;font-family:'Cairo',sans-serif;text-align:justify}
 
 /* Features */
 .lp-feats{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
 .lp-feat{display:flex;align-items:center;gap:9px}
-.lp-feat-icon{width:30px;height:30px;border-radius:5px;background:rgba(196,164,80,.08);border:.5px solid rgba(196,164,80,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#C4A450}
+.lp-feat-icon{width:30px;height:30px;border-radius:5px;background:rgba(198,164,106,.08);border:.5px solid rgba(198,164,106,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#C6A46A}
 .lp-feat-text{font-size:16px;color:rgba(255,255,255,.58);font-family:'Cairo',sans-serif}
 
 /* Compliance notice */
-.lp-notice{font-size:14px;color:rgba(196,164,80,.58);line-height:1.9;padding:16px 20px;background:rgba(196,164,80,.03);border:.5px solid rgba(196,164,80,.12);border-radius:6px;margin-bottom:20px;font-family:'Cairo',sans-serif;text-align:justify}
+.lp-notice{font-size:14px;color:rgba(198,164,106,.58);line-height:1.9;padding:16px 20px;background:rgba(198,164,106,.03);border:.5px solid rgba(198,164,106,.12);border-radius:6px;margin-bottom:20px;font-family:'Cairo',sans-serif;text-align:justify}
 
 /* System info */
 .lp-sys{display:flex;gap:14px;margin-bottom:16px}
 .lp-sys-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;text-align:center}
 .lp-sys-lbl{font-size:13px;color:rgba(255,255,255,.32);font-family:'Cairo',sans-serif;display:block;margin-bottom:2px}
-.lp-sys-val{font-size:28px;font-weight:600;color:#C4A450;display:block}
+.lp-sys-val{font-size:28px;font-weight:600;color:#C6A46A;display:block}
 
 /* Authorized users */
 .lp-auth-title{font-size:13px;color:rgba(255,255,255,.28);margin-bottom:8px;font-family:'Cairo',sans-serif}
 .lp-auth{display:flex;gap:14px;margin-bottom:16px}
 .lp-auth-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;display:flex;align-items:center;gap:8px}
-.lp-auth-icon{width:32px;height:32px;border-radius:4px;background:rgba(196,164,80,.06);border:.5px solid rgba(196,164,80,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lp-auth-icon{width:32px;height:32px;border-radius:4px;background:rgba(198,164,106,.06);border:.5px solid rgba(198,164,106,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .lp-auth-lbl{font-size:13px;color:rgba(255,255,255,.3);display:block;font-family:'Cairo',sans-serif}
 .lp-auth-val{font-size:18px;font-weight:500;color:rgba(255,255,255,.7);font-family:'Cairo',sans-serif}
 
 /* Footer */
 .lp-foot{position:relative;z-index:2;padding-top:12px;border-top:.5px solid rgba(255,255,255,.05)}
-.lp-foot-title{font-size:12px;color:rgba(196,164,80,.45);font-family:'Cairo',sans-serif;margin-bottom:4px}
+.lp-foot-title{font-size:12px;color:rgba(198,164,106,.45);font-family:'Cairo',sans-serif;margin-bottom:4px}
 .lp-foot-text{font-size:11px;color:rgba(255,255,255,.24);line-height:1.75;font-family:'Cairo',sans-serif}
 
 /* ── RIGHT PANEL — 40% Cream form ── */
@@ -102,7 +106,7 @@
 .rem-row-login{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .rem-right{display:flex;align-items:center;gap:6px}
 .cchk-login{width:18px;height:18px;border-radius:3px;border:1px solid var(--b-input-border);background:var(--b-white);appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;transition:all .15s;position:relative}
-.cchk-login:checked{background:#E8E4DC;border-color:#C4A450}
+.cchk-login:checked{background:#E8E4DC;border-color:#C6A46A}
 .cchk-login:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:var(--b-navy);font-weight:700}
 .rem-lbl-login{font-family:'Cairo',sans-serif;font-size:14px;color:#666;cursor:pointer}
 .forgot-link{font-family:'Cairo',sans-serif;font-size:14px;color:var(--b-navy);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0}
@@ -115,7 +119,7 @@
 /* Error + forgot msg */
 .login-err-box{background:rgba(220,38,38,.06);color:#DC2626;border:1px solid rgba(220,38,38,.15);border-radius:8px;padding:12px 16px;font-size:13px;margin-top:10px;display:none;text-align:center;font-family:'Cairo',sans-serif}
 .login-err-box.show{display:block}
-.forgot-msg{display:none;background:rgba(196,164,80,.06);border:1px solid rgba(196,164,80,.15);border-radius:8px;padding:12px 16px;font-size:13px;color:#92700C;margin-top:10px;text-align:center;font-family:'Cairo',sans-serif}
+.forgot-msg{display:none;background:rgba(198,164,106,.06);border:1px solid rgba(198,164,106,.15);border-radius:8px;padding:12px 16px;font-size:13px;color:#92700C;margin-top:10px;text-align:center;font-family:'Cairo',sans-serif}
 
 /* Card footer */
 .login-card-footer{text-align:center;margin-top:22px;padding-top:16px;border-top:.5px solid var(--b-border);font-size:13px;color:#aaa;font-family:'Cairo',sans-serif}
@@ -186,7 +190,7 @@
     <!-- LEFT PANEL — Institutional -->
     <div class="lp">
       <div class="lp-logo">
-        <div class="lp-emblem"><div class="lp-emblem-inner">د</div></div>
+        <div class="lp-emblem"><svg viewBox="0 0 120 120" aria-hidden="true"><polygon points="50,18 42.6,18 18,42.6 18,50 34,50 50,34" fill="#F2EEE7"/><polygon points="70,18 77.4,18 102,42.6 102,50 86,50 70,34" fill="#F2EEE7"/><polygon points="102,70 102,77.4 77.4,102 70,102 70,86 86,70" fill="#F2EEE7"/><polygon points="50,102 42.6,102 18,77.4 18,70 34,70 50,86" fill="#F2EEE7"/><polygon points="53,18 67,18 60,34" fill="#C6A46A"/><polygon points="102,53 102,67 86,60" fill="#C6A46A"/><polygon points="53,102 67,102 60,86" fill="#C6A46A"/><polygon points="18,53 18,67 34,60" fill="#C6A46A"/></svg></div>
         <div><span class="lp-org" id="lp-org">ديوان آل طه</span><span class="lp-org-en">DIWAN AL-TAHA</span></div>
       </div>
 
@@ -212,11 +216,11 @@
         <div class="lp-auth-title" id="lp-auth-title">المستخدمون المصرح لهم بالدخول</div>
         <div class="lp-auth">
           <div class="lp-auth-card">
-            <div class="lp-auth-icon"><i class="ti ti-shield-check" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div class="lp-auth-icon"><i class="ti ti-shield-check" style="font-size:10px;color:#C6A46A" aria-hidden="true"></i></div>
             <div><span class="lp-auth-lbl" id="lp-admin-lbl">مدير النظام</span><span class="lp-auth-val">1</span></div>
           </div>
           <div class="lp-auth-card">
-            <div class="lp-auth-icon"><i class="ti ti-users" style="font-size:10px;color:#C4A450" aria-hidden="true"></i></div>
+            <div class="lp-auth-icon"><i class="ti ti-users" style="font-size:10px;color:#C6A46A" aria-hidden="true"></i></div>
             <div><span class="lp-auth-lbl" id="lp-comm-lbl">أعضاء اللجنة</span><span class="lp-auth-val">6</span></div>
           </div>
         </div>
