@@ -322,15 +322,29 @@ Total allocation must equal donation amount.
 
 # 12. OVER-SETTLEMENT RULE (RESERVE MODEL)
 
-Historical Deficit Settlement Donations follow the Reserve Model. Deficit reduction and the Historical Deficit Settlement Reserve are both capped at the remaining Historical Deficit.
+Historical Deficit Settlement Donations follow the Reserve Model. The portion that settles the deficit is reserved and never increases Current Food Balance. Deficit reduction and the Historical Deficit Settlement Reserve are capped at the remaining Historical Deficit.
 
-A settlement donation never reduces the deficit below zero and never increases Current Food Balance.
+When a Historical Deficit Settlement Donation exceeds the remaining Historical Deficit, the system automatically splits the donation so that the full amount is always allocated.
 
-If a settlement donation exceeds the remaining Historical Deficit:
+Example:
 
-* Only the portion equal to the remaining deficit is applied to the deficit and to the Reserve.
-* The surplus is NOT added to Current Food Balance.
-* The surplus is held as an unallocated amount and flagged for explicit admin reallocation (for example, re-designating it as Support Current Balance).
+Remaining Historical Deficit = 500
+
+Donation = 3000
+
+The system shall automatically allocate:
+
+500 → Historical Deficit Settlement (Reserve; does not increase Current Food Balance)
+
+2500 → Current Food Fund Support (increases Current Food Balance)
+
+Confirmation requirement:
+
+* Before saving the receipt, the system must display a confirmation message showing the automatic allocation.
+* The user must explicitly approve the allocation.
+* If the user cancels, no receipt is created.
+
+The full donation amount must always be allocated. No amount may remain unallocated.
 
 This rule supersedes the previous automatic deficit-overflow behavior.
 
