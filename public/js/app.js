@@ -212,6 +212,13 @@ const FIN={
       .filter(r => !r.is_deleted && r.fund_type==='food' && r.member_id===memberId && inRange(r.receipt_date))
       .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:r.notes||'مساهمة', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'paid'}));
 
+    /* ITEM 9 — Debt Settlement from the member's food donations (debt-priority). */
+    const debtSettled = Number(FIN.allocateFoodDonations().perMember[memberId] || 0);
+    if(debtSettled > 0){
+      const donDates = DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.member_id===memberId&&inRange(r.receipt_date)).map(r=>r.receipt_date).filter(Boolean).sort();
+      rows.push({date:donDates.length?donDates[donDates.length-1]:today(), no:'—', desc:'تسوية ذمة من تبرع · Debt Settlement (from donation)', cr:debtSettled, dr:0, cls:'debtsettle'});
+    }
+
     rows.sort((a,b)=> a.date==='—' ? -1 : b.date==='—' ? 1 : new Date(a.date)-new Date(b.date));
 
     let bal = 0;
@@ -219,10 +226,10 @@ const FIN={
 
     const totalDues = rows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
     const totalPaid = rows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
-    const finalBalance = openingDebt + totalDues - totalPaid;   /* >0 owed · <0 credit */
+    const finalBalance = openingDebt + totalDues - totalPaid - debtSettled;   /* >0 owed · <0 credit */
     const creditBalance = finalBalance < 0 ? -finalBalance : 0;
 
-    return {member, rows, openingBalance:openingDebt, totalDues, totalPaid, prepaidEffective:0, finalBalance, creditBalance};
+    return {member, rows, openingBalance:openingDebt, totalDues, totalPaid, debtSettled, prepaidEffective:0, finalBalance, creditBalance};
   },
 
   /* Approved balance terminology (Phase 11.5). Sign unchanged. */
@@ -235,34 +242,44 @@ const FIN={
   },
 
   foodBalance(){
-    /* PHASE 2 — Reserve Model. Current Food Fund Balance =
-       operational food receipts + support_current donations − operational food expenses.
-       reduce_deficit donations NEVER increase the current balance — they go to the
-       Settlement Reserve and reduce the Historical Deficit only. */
+    /* ITEM 9 — Current Food Fund Balance = operational food receipts
+       + Debt Settlement movements + Current Support donations − operational expenses.
+       reduce_deficit donations feed the Settlement Reserve (not the current balance);
+       only the post-debt over-settlement overflow becomes Current Support. */
+    const a=FIN.allocateFoodDonations();
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
-    const supportCurrent=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='support_current').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount||0),0);
-    return FIN._r2(income+supportCurrent-expense);
+    return FIN._r2(income+a.debtSettlementTotal+a.currentSupportTotal-expense);
   },
-  /* ── Reserve Model — Historical Deficit figures (Phase 2). Constant is immutable. ── */
   _r2(n){ return Math.round((Number(n||0)+Number.EPSILON)*100)/100; },
-  _foodReduceDeficitTotal(){
-    return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+  /* Item 9 — member base (pre-donation) debt = opening + dues − payments. */
+  _memberBaseBalance(memberId){
+    const m=DB.members.find(x=>x.id===memberId); if(!m) return 0;
+    const subs=(DB.subscriptions||[]).filter(s=>s.member_id===memberId);
+    const subsDue=subs.reduce((s,x)=>s+Number(x.due_amount_ils||0),0);
+    const subsPaid=subs.reduce((s,x)=>s+Number(x.paid_amount_ils||0),0);
+    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId).reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    return FIN._r2(Number(m.historical_balance_ils||0)+subsDue-Number(m.historical_payments_ils||0)-subsPaid-liveFood);
   },
-  foodSettlementReserve(){
+  /* Item 9 — chronological debt-priority allocation of all food donations (memoized per load). */
+  allocateFoodDonations(){
+    if(DB._alloc) return DB._alloc;
+    const eng=(typeof window!=='undefined'&&window.FoodDonationAllocation);
+    const donations=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food')
+      .slice().sort((a,b)=>(new Date(a.receipt_date)-new Date(b.receipt_date))||String(a.id).localeCompare(String(b.id)))
+      .map(r=>({id:r.id,memberId:r.member_id||null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
+    const baseDebt={};
+    donations.forEach(d=>{ if(d.memberId!=null&&baseDebt[d.memberId]===undefined) baseDebt[d.memberId]=FIN._memberBaseBalance(d.memberId); });
     const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
-    return FIN._r2(Math.min(FIN._foodReduceDeficitTotal(),magnitude));
+    DB._alloc = eng ? eng.allocate(donations,baseDebt,magnitude)
+                    : {perReceipt:{},perMember:{},debtSettlementTotal:0,reserveTotal:0,currentSupportTotal:0};
+    return DB._alloc;
   },
-  foodDeficitRemaining(){
-    return FIN._r2(Number(window.FOOD_OPENING||0)+FIN.foodSettlementReserve());
-  },
-  foodOverSettlement(){
-    const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
-    return FIN._r2(Math.max(0,FIN._foodReduceDeficitTotal()-magnitude));
-  },
-  foodNetPosition(){
-    return FIN._r2(FIN.foodBalance()+FIN.foodDeficitRemaining());
-  },
+  foodDebtSettlementTotal(){ return FIN._r2(FIN.allocateFoodDonations().debtSettlementTotal); },
+  foodCurrentSupportTotal(){ return FIN._r2(FIN.allocateFoodDonations().currentSupportTotal); },
+  foodSettlementReserve(){ return FIN._r2(FIN.allocateFoodDonations().reserveTotal); },
+  foodDeficitRemaining(){ return FIN._r2(Number(window.FOOD_OPENING||0)+FIN.allocateFoodDonations().reserveTotal); },
+  foodNetPosition(){ return FIN._r2(FIN.foodBalance()+FIN.foodDeficitRemaining()); },
   foodHistorical(){ return Number(window.FOOD_OPENING||0); },  /* original deficit constant (reference) */
   diwanBalance(){
     const opening=Number(window.DIWAN_OPENING||0);
@@ -714,7 +731,7 @@ async function loadAll(){
       SB.from('member_subscriptions').select('id,member_id,year,due_amount_ils,paid_amount_ils,balance_ils,is_overridden,override_amount_ils,override_reason'),
     ]);
     DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
-    DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];DB.subscriptions=r7.data||[];
+    DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];DB.subscriptions=r7.data||[];DB._alloc=null;
     await loadAttachCounts();
     renderAll();
   }catch(e){toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err');console.error(e);}
@@ -1134,7 +1151,7 @@ window.renderStmt=function(fund){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
         <div class="kpi green" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_income')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalCr)}</div></div>
         <div class="kpi red" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_expenses')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDr)}</div></div>
-        <div class="kpi ${curBal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${curLbl}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(curBal)}</div>${isFood?`<div class="kpi-sub" style="font-size:10px;opacity:.85">${_en?'Operational':'تشغيلي'} ₪${fmt(bal)} + ${_en?'Support':'دعم حالي'} ₪${fmt(FIN._r2(FIN.foodBalance()-bal))}</div>`:''}</div>
+        <div class="kpi ${curBal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${curLbl}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(curBal)}</div>${isFood?`<div class="kpi-sub" style="font-size:10px;opacity:.85">${_en?'Operational':'تشغيلي'} ₪${fmt(bal)} + ${_en?'Debt Settle':'تسوية ذمم'} ₪${fmt(FIN.foodDebtSettlementTotal())} + ${_en?'Support':'دعم'} ₪${fmt(FIN.foodCurrentSupportTotal())}</div>`:''}</div>
       </div>
       ${foodFigsHTML}
       <div class="ledger-hdr">
@@ -1248,15 +1265,25 @@ window.renderMemberStmt=function(){
     `;
   }).join('');
 
+  const _alloc=FIN.allocateFoodDonations();
+  const donSplit=d=>{
+    const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
+    if(d.donation_display_fund!=='food') return [(_en?'Diwan Donation':'تبرع ديوان')+' ₪'+fmt(d.amount_ils||d.amount)];
+    const parts=[];
+    if(sp.debtSettled>0) parts.push((_en?'Debt Settlement':'تسوية ذمة')+' ₪'+fmt(sp.debtSettled));
+    if(sp.toDeficit>0)   parts.push((_en?'Historical Deficit Donation':'تبرع عجز تاريخي')+' ₪'+fmt(sp.toDeficit));
+    if(sp.toCurrent>0)   parts.push((_en?'Current Support':'دعم حالي')+' ₪'+fmt(sp.toCurrent));
+    return parts.length?parts:[donCat(d)];
+  };
   const donsHTML=dons.length ? `
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
       <div style="font-size:11px;font-weight:600;color:var(--don);margin-bottom:8px">
-        التبرعات (لا تؤثر على الرصيد)
+        ${_en?'Donation breakdown (Debt Settlement reduces the balance above)':'تفصيل التبرعات (تسوية الذمة تخفّض الرصيد أعلاه)'}
       </div>
       ${dons.map(d=>`
         <div class="sr">
           <span class="sr-l">
-            ${fdate(d.receipt_date)} — <b>${donCat(d)}</b>${d.notes?' · '+esc(d.notes):''}
+            ${fdate(d.receipt_date)} — <b>${donSplit(d).join(' · ')}</b>${d.notes?' · '+esc(d.notes):''}
           </span>
           <span class="sr-v" style="color:var(--don)">
             ₪ ${fmt(d.amount_ils||d.amount)}
@@ -1779,20 +1806,25 @@ window.saveRec=async function(print=false){
     await loadAll();
   }
 
-  /* Phase 15 — Food Fund Donation Allocation */
-  let finalAllocType=null, deficitReduction=0, currentAddition=0;
+  /* ITEM 9 — Food Fund Donation: member debt priority allocation + confirmation. */
+  let finalAllocType=null;
   if(fund==='donation'&&donDisplay==='food'){
     finalAllocType=allocationType||'support_current';
-    if(finalAllocType==='reduce_deficit'){
-      /* FOOD_OPENING is IMMUTABLE — deficit is computed dynamically.
-         remaining deficit = abs(FOOD_OPENING) minus sum of all prior reduce_deficit donations */
-      const historicalDeficit=Math.max(0,-(window.FOOD_OPENING||0));
-      const totalPriorReductions=DB.receipts
-        .filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit')
-        .reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-      const remainingDeficit=Math.max(0,historicalDeficit-totalPriorReductions);
-      deficitReduction=Math.min(amountILS,remainingDeficit);
-      currentAddition=amountILS-deficitReduction;
+    const memberDebtNow=(payerType==='member'&&memberId)?Math.max(0,FIN.memberStatement(memberId).finalBalance):0;
+    const debtSettled=Math.min(memberDebtNow,amountILS);
+    const remainder=FIN._r2(amountILS-debtSettled);
+    const remDeficit=Math.max(0,-FIN.foodDeficitRemaining());
+    let toDeficit=0,toCurrent=0;
+    if(finalAllocType==='reduce_deficit'){ toDeficit=Math.min(remainder,remDeficit); toCurrent=FIN._r2(remainder-toDeficit); }
+    else { toCurrent=remainder; }
+    if(debtSettled>0 || (finalAllocType==='reduce_deficit'&&toCurrent>0)){
+      const _en=window.LANG==='en';
+      const lines=[];
+      if(debtSettled>0) lines.push((_en?'Debt Settlement':'تسوية ذمة')+': ₪'+fmt(debtSettled));
+      if(toDeficit>0)   lines.push((_en?'Historical Deficit Donation':'تبرع عجز تاريخي')+': ₪'+fmt(toDeficit));
+      if(toCurrent>0)   lines.push((_en?'Current Support Donation':'تبرع دعم حالي')+': ₪'+fmt(toCurrent));
+      const msg=(_en?'This donation will be allocated as follows:':'سيتم توزيع هذا التبرع كالتالي:')+'\n\n'+lines.join('\n')+'\n\n'+(_en?'Approve and save?':'هل توافق على الحفظ؟');
+      if(!window.confirm(msg)) return;
     }
   }
   const no=nextNo('REC',DB.receipts);
@@ -1806,7 +1838,7 @@ window.saveRec=async function(print=false){
     payment_method:method,notes,
     donation_display_fund:fund==='donation'?donDisplay:null,
     food_donation_allocation:finalAllocType,
-    current_addition:currentAddition||null,
+    current_addition:null,
     created_by:CUR?.full_name||CU?.email,
   }).select().single();
   if(error){toast(window.t('errors.save_error')+': '+error.message,'err');return;}
@@ -2529,8 +2561,10 @@ window.prtDonStmt=function(){
   const tot=rows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   const toFood=rows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   const toDiwan=tot-toFood;
-  const foodSupport=rows.filter(r=>r.donation_display_fund==='food'&&r.food_donation_allocation==='support_current').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-  const foodDeficit=rows.filter(r=>r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+  /* ITEM 9 — recognized donation portions (after member debt settlement). */
+  const foodDeficit=FIN.foodSettlementReserve();   // Historical Deficit Donation -> Reserve
+  const foodSupport=FIN.foodCurrentSupportTotal(); // Current Support Donation
+  const foodDebt=FIN.foodDebtSettlementTotal();    // Debt Settlement (NOT a donation)
   const rowsHTML=rows.map(r=>'<tr>'
     +'<td>'+fmtDate2(r.receipt_date)+'</td>'
     +'<td>'+esc(r.no)+'</td>'
@@ -2546,8 +2580,9 @@ window.prtDonStmt=function(){
     +'<div class="cards">'
     +'<div class="card"><div class="k">'+window.t('stmt.donation_count')+'</div><div class="v">'+rows.length+'</div></div>'
     +'<div class="card"><div class="k">'+window.t('stmt.total_donations')+'</div><div class="v pos">₪ '+fmt(tot)+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'Food — Current Support':'الغداء — دعم حالي')+'</div><div class="v">₪ '+fmt(foodSupport)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'Debt Settlement':'تسوية ذمم')+'</div><div class="v">₪ '+fmt(foodDebt)+'</div></div>'
     +'<div class="card"><div class="k">'+(_en?'Food — Deficit Settlement':'الغداء — تسوية العجز')+'</div><div class="v">₪ '+fmt(foodDeficit)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'Food — Current Support':'الغداء — دعم حالي')+'</div><div class="v">₪ '+fmt(foodSupport)+'</div></div>'
     +'<div class="card"><div class="k">'+window.t('stmt.to_diwan')+'</div><div class="v">₪ '+fmt(toDiwan)+'</div></div></div>'
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+window.t('donations.donor')+'</th><th>'+window.t('common.amount')+'</th><th>'+window.t('common.currency')+'</th><th>'+window.t('stmt.direction')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
