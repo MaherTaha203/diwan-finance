@@ -1198,6 +1198,18 @@ window.renderMemberStmt=function(){
   /* PHASE 11.5 — single balance engine (incl. capped prepaid credit row) */
   const st=FIN.memberStatement(mid,from,to);
   const rows=st.rows;
+  const _en=window.LANG==='en';
+  const finBal=Number(st.finalBalance||0);
+  const balText=finBal>0?(_en?'Outstanding — member owes':'على العضو مستحقات'):finBal<0?(_en?'Credit balance — owed to member':'رصيد دائن للعضو'):(_en?'Fully settled':'مسدد بالكامل');
+  const balCol=finBal>0?'var(--danger)':finBal<0?'#2563EB':'#00C896';
+  const donCat=d=>{
+    if(d.donation_display_fund==='food'){
+      if(d.food_donation_allocation==='reduce_deficit') return _en?'Historical Deficit Donation':'تبرع عجز تاريخي';
+      if(d.food_donation_allocation==='support_current') return _en?'Food Donation · Current Support':'تبرع غداء · دعم حالي';
+      return _en?'Food Donation':'تبرع غداء';
+    }
+    return _en?'Diwan Donation':'تبرع ديوان';
+  };
 
   const rowsHTML=rows.map(r=>{
 
@@ -1244,7 +1256,7 @@ window.renderMemberStmt=function(){
       ${dons.map(d=>`
         <div class="sr">
           <span class="sr-l">
-            ${fdate(d.receipt_date)} — ${esc(d.notes||'تبرع')}
+            ${fdate(d.receipt_date)} — <b>${donCat(d)}</b>${d.notes?' · '+esc(d.notes):''}
           </span>
           <span class="sr-v" style="color:var(--don)">
             ₪ ${fmt(d.amount_ils||d.amount)}
@@ -1261,6 +1273,7 @@ window.renderMemberStmt=function(){
           ${esc(member.name)}
         </div>
         ${member.active_from_year?`<div style="font-size:12px;color:var(--tx3);margin-top:3px">سنة بدء الاشتراك: ${member.active_from_year}</div>`:''}
+        <div style="margin-top:8px;display:inline-block;padding:6px 12px;border-radius:8px;background:rgba(0,0,0,.04);font-size:13px;font-weight:700;color:${balCol}">${balText}: ₪ ${fmt(Math.abs(finBal))}</div>
       </div>
       <div class="ledger-hdr">
         <span style="flex:0 0 90px">التاريخ</span>
