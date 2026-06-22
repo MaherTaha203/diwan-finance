@@ -235,16 +235,35 @@ const FIN={
   },
 
   foodBalance(){
-    /* TREASURY MODEL: Food fund is operational-only. The old fund was closed;
-       the historical reference value (FOOD_OPENING) is display-only and NEVER summed
-       EXCEPT: reduce_deficit donations that overflow once the historical deficit reaches
-       zero are routed to current via current_addition (Phase 15 allocation engine). */
-    const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const donCurrentAddition=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit').reduce((s,r)=>s+Number(r.current_addition||0),0);
-    const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
-    return income+donCurrentAddition-expense;
+    /* PHASE 2 — Reserve Model. Current Food Fund Balance =
+       operational food receipts + support_current donations − operational food expenses.
+       reduce_deficit donations NEVER increase the current balance — they go to the
+       Settlement Reserve and reduce the Historical Deficit only. */
+    const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    const supportCurrent=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='support_current').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount||0),0);
+    return FIN._r2(income+supportCurrent-expense);
   },
-  foodHistorical(){ return Number(window.FOOD_OPENING||0); },  /* reference only, never in calculations */
+  /* ── Reserve Model — Historical Deficit figures (Phase 2). Constant is immutable. ── */
+  _r2(n){ return Math.round((Number(n||0)+Number.EPSILON)*100)/100; },
+  _foodReduceDeficitTotal(){
+    return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+  },
+  foodSettlementReserve(){
+    const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
+    return FIN._r2(Math.min(FIN._foodReduceDeficitTotal(),magnitude));
+  },
+  foodDeficitRemaining(){
+    return FIN._r2(Number(window.FOOD_OPENING||0)+FIN.foodSettlementReserve());
+  },
+  foodOverSettlement(){
+    const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
+    return FIN._r2(Math.max(0,FIN._foodReduceDeficitTotal()-magnitude));
+  },
+  foodNetPosition(){
+    return FIN._r2(FIN.foodBalance()+FIN.foodDeficitRemaining());
+  },
+  foodHistorical(){ return Number(window.FOOD_OPENING||0); },  /* original deficit constant (reference) */
   diwanBalance(){
     const opening=Number(window.DIWAN_OPENING||0);
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
@@ -684,7 +703,7 @@ async function checkSession(){
 async function loadAll(){
   try{
     const[r1,r2,r3,r4,r5,r6]=await Promise.all([
-      SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
+      SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
       SB.from('members').select(
 'id,name,phone,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
