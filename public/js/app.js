@@ -860,7 +860,7 @@ const D={
       <td>${esc(r.payer_name||gmn(r.member_id))}</td>
       <td class="num" style="color:var(--don)">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'don'}">${r.currency}</span></td>
-      <td><span class="badge ${r.donation_display_fund==='food'?'food':'diwan'}">${r.donation_display_fund==='food'?L.fundLabel('food'):L.fundLabel('diwan')}</span></td>
+      <td><span class="badge ${r.donation_display_fund==='food'?'food':'diwan'}">${r.donation_display_fund==='food'?L.fundLabel('food'):L.fundLabel('diwan')}</span>${r.donation_display_fund==='food'&&r.food_donation_allocation?`<span class="badge gray" style="font-size:9px;margin-inline-start:3px">${r.food_donation_allocation==='reduce_deficit'?(window.LANG==='en'?'Deficit':'عجز'):(window.LANG==='en'?'Support':'دعم')}</span>`:''}</td>
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
@@ -2465,17 +2465,20 @@ window.exportPDF=function(type){
 
 window.prtDonStmt=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const _en=window.LANG==='en';
   const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
   const tot=rows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   const toFood=rows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   const toDiwan=tot-toFood;
+  const foodSupport=rows.filter(r=>r.donation_display_fund==='food'&&r.food_donation_allocation==='support_current').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+  const foodDeficit=rows.filter(r=>r.donation_display_fund==='food'&&r.food_donation_allocation==='reduce_deficit').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
   const rowsHTML=rows.map(r=>'<tr>'
     +'<td>'+fmtDate2(r.receipt_date)+'</td>'
     +'<td>'+esc(r.no)+'</td>'
     +'<td>'+esc(r.payer_name||gmn(r.member_id)||'—')+'</td>'
     +'<td><span class="cr">₪ '+fmt(r.amount_ils||r.amount)+'</span></td>'
     +'<td>'+(r.currency!=='ILS'?esc(r.currency):'ILS')+'</td>'
-    +'<td>'+(r.donation_display_fund==='food'?window.t('receipts.fund_food'):window.t('receipts.fund_diwan'))+'</td>'
+    +'<td>'+(r.donation_display_fund==='food'?(window.t('receipts.fund_food')+(r.food_donation_allocation==='reduce_deficit'?(_en?' · Deficit Settlement':' · تسوية العجز'):r.food_donation_allocation==='support_current'?(_en?' · Current Support':' · دعم حالي'):'')):window.t('receipts.fund_diwan'))+'</td>'
     +'<td>'+esc(r.notes||'—')+'</td></tr>').join('');
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
@@ -2484,7 +2487,8 @@ window.prtDonStmt=function(){
     +'<div class="cards">'
     +'<div class="card"><div class="k">'+window.t('stmt.donation_count')+'</div><div class="v">'+rows.length+'</div></div>'
     +'<div class="card"><div class="k">'+window.t('stmt.total_donations')+'</div><div class="v pos">₪ '+fmt(tot)+'</div></div>'
-    +'<div class="card"><div class="k">'+window.t('stmt.to_food')+'</div><div class="v">₪ '+fmt(toFood)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'Food — Current Support':'الغداء — دعم حالي')+'</div><div class="v">₪ '+fmt(foodSupport)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'Food — Deficit Settlement':'الغداء — تسوية العجز')+'</div><div class="v">₪ '+fmt(foodDeficit)+'</div></div>'
     +'<div class="card"><div class="k">'+window.t('stmt.to_diwan')+'</div><div class="v">₪ '+fmt(toDiwan)+'</div></div></div>'
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+window.t('donations.donor')+'</th><th>'+window.t('common.amount')+'</th><th>'+window.t('common.currency')+'</th><th>'+window.t('stmt.direction')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
