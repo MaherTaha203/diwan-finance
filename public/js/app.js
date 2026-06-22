@@ -1874,8 +1874,18 @@ window.saveMember=async function(){
   const notes=document.getElementById('mem-notes').value;
   const fromYearRaw=document.getElementById('mem-from-year')?.value;
   const fromYear=fromYearRaw?parseInt(fromYearRaw,10):new Date().getFullYear();
-  const{data:mNew,error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal,active_from_year:fromYear}).select('id').single();
+  /* R1 — write the AUTHORITATIVE model. The opening field is a signed net:
+     >=0 = opening debt (historical_balance_ils); <0 = opening credit (an opening
+     payment + credit snapshot). opening_balance is kept legacy-only (never used
+     in any financial calculation). */
+  const auth = bal>=0
+    ? {historical_balance_ils:bal, historical_payments_ils:0, credit_balance_ils:0}
+    : {historical_balance_ils:0, historical_payments_ils:-bal, credit_balance_ils:-bal};
+  const{data:mNew,error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal,active_from_year:fromYear,...auth}).select('id').single();
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
+  /* R1 — seed authoritative subscription rows so the new member carries dues. */
+  const subRows=DB.annual.map(a=>({member_id:mNew.id,year:a.year,due_amount_ils:(fromYear<=a.year?Number(a.amount||0):0),paid_amount_ils:0,balance_ils:(fromYear<=a.year?Number(a.amount||0):0)}));
+  if(subRows.length){await SB.from('member_subscriptions').insert(subRows);}
   await logAction('add',`إضافة عضو: ${name}`,'members',mNew?.id||null);
   window.closeM();await loadAll();toast(window.t('messages.member_added')+' '+name,'ok');
 };
@@ -1984,7 +1994,9 @@ window.editMember=function(id){
   document.getElementById('edit-mem-id').value=id;
   document.getElementById('edit-mem-name').value=m.name;
   document.getElementById('edit-mem-phone').value=m.phone||'';
-  document.getElementById('edit-mem-balance').value=m.opening_balance||0;
+  /* R1 — read the AUTHORITATIVE net opening (historical_balance_ils − historical_payments_ils),
+     not the legacy opening_balance. */
+  document.getElementById('edit-mem-balance').value=Math.round((Number(m.historical_balance_ils||0)-Number(m.historical_payments_ils||0))*100)/100;
   document.getElementById('edit-mem-notes').value=m.notes||'';
   const efy=document.getElementById('edit-mem-from-year');
   if(efy) efy.value=m.active_from_year||'';
@@ -2000,7 +2012,18 @@ window.updateMember=async function(){
   const notes=document.getElementById('edit-mem-notes').value;
   const efyRaw=document.getElementById('edit-mem-from-year')?.value;
   const efy=efyRaw?parseInt(efyRaw,10):null;
-  const{error}=await SB.from('members').update({name,phone,opening_balance:bal,notes,active_from_year:efy,updated_at:new Date().toISOString()}).eq('id',id);
+  /* R1 — keep the AUTHORITATIVE model in sync. Only rewrite the authoritative
+     opening fields when the net opening balance actually changed, so migrated
+     gross-debt / pre-2025-payment detail is preserved when untouched. */
+  const _m=gm(id);
+  const oldNet=Math.round((Number(_m?.historical_balance_ils||0)-Number(_m?.historical_payments_ils||0))*100)/100;
+  const upd={name,phone,opening_balance:bal,notes,active_from_year:efy,updated_at:new Date().toISOString()};
+  if(Math.round(bal*100)/100!==oldNet){
+    Object.assign(upd, bal>=0
+      ? {historical_balance_ils:bal, historical_payments_ils:0, credit_balance_ils:0}
+      : {historical_balance_ils:0, historical_payments_ils:-bal, credit_balance_ils:-bal});
+  }
+  const{error}=await SB.from('members').update(upd).eq('id',id);
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
   await logAction('edit',`تعديل بيانات عضو: ${name}`,'members',id);
   window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
