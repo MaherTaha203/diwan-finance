@@ -2624,7 +2624,15 @@ window.exportCSV=function(type){
     const stmtRows=FIN.fundLedger('food',from,to,'');
     let bal=0;
     h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
-    rows=stmtRows.map(r=>{bal+=r.cr-r.dr;return[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',bal,r.note||''];});
+    const _en=window.LANG==='en';
+    const summary=[
+      [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FIN.foodBalance(),'','',''],
+      [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FIN.foodDeficitRemaining(),'','',''],
+      [(_en?'Settlement Reserve':'احتياطي تسوية العجز'),'','',FIN.foodSettlementReserve(),'','',''],
+      [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FIN.foodNetPosition(),'','',''],
+      ['','','','','','','']
+    ];
+    rows=[...summary,...stmtRows.map(r=>{bal+=r.cr-r.dr;return[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',bal,r.note||''];})];
   }else if(type==='diwan-stmt'){
     const from=document.getElementById('diwan-stmt-from')?.value||'';
     const to=document.getElementById('diwan-stmt-to')?.value||'';
@@ -2784,7 +2792,7 @@ window.exportPagePDF=function(type){
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
     d.forEach(r=>{
       const amt=Number(r.amount_ils||r.amount||0);total+=amt;
-      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${r.donation_display_fund||''}</td><td>${esc(r.notes||'')}</td></tr>`;
+      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${(r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.food_donation_allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'')}</td><td>${esc(r.notes||'')}</td></tr>`;
     });
     tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length})</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
@@ -2792,7 +2800,7 @@ window.exportPagePDF=function(type){
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th></tr></thead><tbody>';
     DB.members.filter(m=>m.is_active!==false).forEach(m=>{
       const bal=FIN.memberBalance(m.id);
-      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>\u20aa ${fmt(m.opening_balance||0)}</td><td class="bal">\u20aa ${fmt(bal)}</td></tr>`;
+      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>\u20aa ${fmt(m.historical_balance_ils||0)}</td><td class="bal">\u20aa ${fmt(bal)}</td></tr>`;
     });
     tableHTML+='</tbody></table>';
   }
@@ -2842,11 +2850,11 @@ window.exportPageExcel=function(type){
   else if(type==='don'){
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u062a\u0628\u0631\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u064a\u0638\u0647\u0631 \u0641\u064a','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),r.donation_display_fund||'',r.notes||'']));
+    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),(r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.food_donation_allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),r.notes||'']));
   }
   else if(type==='members'){
     wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
-    DB.members.filter(m=>m.is_active!==false).forEach(m=>wsData.push([m.name,m.phone||'',m.opening_balance||0,FIN.memberBalance(m.id)]));
+    DB.members.filter(m=>m.is_active!==false).forEach(m=>wsData.push([m.name,m.phone||'',Number(m.historical_balance_ils||0),FIN.memberBalance(m.id)]));
   }
   else if(type==='annual'){
     wsData=[['\u0627\u0644\u0633\u0646\u0629','\u0627\u0644\u0645\u0628\u0644\u063a','\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621','\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629','\u0627\u0644\u062a\u0627\u0631\u064a\u062e']];
