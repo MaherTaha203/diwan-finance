@@ -204,10 +204,17 @@ Historical Deficit must always be displayed separately.
 
 Formula:
 
-Current Income
+Current Food Balance =
+Operational Food Receipts
++ Debt Settlement movements
++ Current Support donations
 − Current Expenses
 
+Debt Settlement, Current Support, and Operational receipts are independent components. They are itemized separately in the Food Fund breakdown, reports, statements, and exports, and are never merged.
+
 Historical Deficit must never be included.
+
+The Historical Deficit Settlement Reserve must never be included in Current Food Balance.
 
 ---
 
@@ -240,11 +247,13 @@ Increases Food Fund.
 
 ## Debt Settlement
 
+An independent accounting movement class. It is NOT a donation, NOT Current Support, and NOT Historical Deficit Settlement.
+
 Reduces member debt.
 
-Increases Food Fund.
+Increases Food Fund (an internal component of the Current Food Balance; not a fund, reserve, liability, or standalone KPI).
 
-Not considered a donation.
+Not considered a donation. Reports, statements, dashboard calculations, exports, and reconciliation logic must preserve Debt Settlement as a separate movement class.
 
 ---
 
@@ -256,15 +265,43 @@ Registers donations.
 
 # 11. DONATIONS
 
-## General Rule
+## General Rule — Member Debt Priority Allocation
 
-If a member has debt:
+When a member with an outstanding Food Fund debt makes a Food Fund donation, allocation occurs in this mandatory order:
 
-Debt is reduced automatically until it reaches zero.
+Step 1 — Settle member debt first.
 
-This affects the member account only.
+The debt portion becomes a Debt Settlement movement (see Section 10), capped at the outstanding debt:
 
-The donation itself remains a donation.
+Debt Settlement = min(payment, member debt)
+
+This reduces member debt and increases the Food Fund. It is NOT a donation.
+
+Step 2 — Allocate the remaining amount as a donation.
+
+Donation = payment − Debt Settlement
+
+Only this remaining amount is a donation. The donation destination rules (Current Support / Historical Deficit Settlement / Custom Distribution) apply to this remaining amount alone.
+
+Example:
+
+Debt = 1600
+
+Payment = 3000
+
+Destination = Historical Deficit Settlement
+
+Generated movements:
+
+Debt Settlement = 1600
+
+Historical Deficit Donation = 1400
+
+(Not: Historical Deficit Donation = 3000.)
+
+The member statement must show these as separate movements, never as a single donation row.
+
+This rule applies only when the payer is a member whose Food Fund debt is greater than zero. Non-member donors, and members without debt, skip Step 1.
 
 ---
 
@@ -283,12 +320,15 @@ Does not affect Historical Deficit.
 
 ### Historical Deficit Settlement
 
-Effects:
+Reserve Model (approved). Effects:
 
 * Food Donations Fund
-* Historical Deficit
+* Historical Deficit (reduced)
+* Historical Deficit Settlement Reserve (increased)
 
-Does not affect Current Food Balance while deficit remains.
+Does NOT increase Current Food Balance under any circumstance.
+
+The donation is reserved for repayment of historical creditors and is not available for operational spending.
 
 Example:
 
@@ -300,42 +340,52 @@ Result:
 
 Deficit = -8339
 
+Reserve += 300
+
 Current Balance unchanged.
 
 ---
 
 ### Custom Distribution
 
-Allows allocation between:
+Allows allocation of the donation (the amount remaining after any Debt Settlement) between:
 
-* Current Food Balance
-* Historical Deficit
+* Current Food Balance (Current Support)
+* Historical Deficit (Historical Deficit Settlement Reserve)
 
-Total allocation must equal donation amount.
+The Historical Deficit portion follows the Reserve Model and is capped at the remaining deficit; any surplus overflows to Current Support per Section 12.
+
+Total allocation must equal the donation amount (the amount remaining after Debt Settlement).
 
 ---
 
-# 12. DEFICIT OVERFLOW RULE
+# 12. OVER-SETTLEMENT RULE (RESERVE MODEL)
+
+Historical Deficit Settlement Donations follow the Reserve Model. The portion that settles the deficit is reserved and never increases Current Food Balance. Deficit reduction and the Historical Deficit Settlement Reserve are capped at the remaining Historical Deficit.
+
+When a Historical Deficit Settlement Donation exceeds the remaining Historical Deficit, the system automatically splits the donation so that the full amount is always allocated.
 
 Example:
 
-Deficit = -500
+Remaining Historical Deficit = 500
 
 Donation = 3000
 
-Result:
+The system shall automatically allocate:
 
-500 → Historical Deficit
+500 → Historical Deficit Settlement (Reserve; does not increase Current Food Balance)
 
-2500 → Current Food Balance
+2500 → Current Food Fund Support (increases Current Food Balance)
 
-Final:
+Confirmation requirement:
 
-Deficit = 0
+* Before saving the receipt, the system must display a confirmation message showing the automatic allocation.
+* The user must explicitly approve the allocation.
+* If the user cancels, no receipt is created.
 
-Current Balance += 2500
+The full donation amount must always be allocated. No amount may remain unallocated.
 
-Overflow happens automatically.
+This rule supersedes the previous automatic deficit-overflow behavior.
 
 ---
 
@@ -386,10 +436,27 @@ All reports must match accounting rules.
 
 # 16. DASHBOARD
 
-Dashboard must display separately:
+## High-Level Financial Indicators
 
-* Current Food Balance
-* Historical Deficit
+The dashboard displays only these high-level financial indicators:
+
+* Current Food Fund Balance
+* Remaining Historical Deficit
+* Net Food Fund Position
+* Diwan Fund Balance
+
+## Components Shown Only in the Breakdown
+
+The following are internal components, not standalone dashboard cards. They appear only within the Food Fund breakdown, reports, statements, exports, and reconciliation views:
+
+* Debt Settlement (an internal component of the Food Fund balance; not a fund, reserve, liability, or standalone KPI)
+* Historical Deficit Settlement Reserve
+* Operational receipts and Current Support components
+
+## Operational Monitoring
+
+Operational monitoring figures may also be displayed:
+
 * Total Food Donations
 * Total Diwan Donations
 * Outstanding Debts
@@ -399,7 +466,7 @@ Dashboard must display separately:
 * Total Receipts
 * Total Payments
 
-Historical Deficit and Current Balance must never be merged.
+Current Food Balance, Remaining Historical Deficit, the Historical Deficit Settlement Reserve, and Debt Settlement must never be merged.
 
 ---
 
@@ -487,6 +554,8 @@ This document is the official source of truth for the Diwan Finance System.
 
 Historical Deficit represents historical obligations owed by the Food Fund from periods prior to the current operational balance.
 
+The authoritative Historical Deficit constant is `food_opening_balance = -8639`. It is never mutated; deficit reduction is computed additively from settlement donations.
+
 It is not part of the current operational balance.
 
 It must always be displayed separately.
@@ -545,32 +614,40 @@ This amount represents money reserved for repayment of historical obligations.
 
 It must not be treated as operational cash available for current spending.
 
+The Reserve is capped at the magnitude of the Historical Deficit constant. It can never exceed the total historical obligation, and settlement donations never increase Current Food Balance (see Section 12).
+
 ---
 
 ## Dashboard Requirements
 
-The dashboard must display separately:
+The dashboard displays only these high-level financial indicators:
 
-* Current Food Balance
+* Current Food Fund Balance
 * Remaining Historical Deficit
-* Historical Deficit Settlement Reserve
 * Net Food Fund Position
+* Diwan Fund Balance
+
+The Historical Deficit Settlement Reserve is not a standalone dashboard card. It is displayed within the Food Fund breakdown, reports, and reconciliation views — shown separately there, never merged into Current Food Balance.
 
 Formula:
 
-Net Food Fund Position =
-Current Food Balance
+Net Food Fund Position = Current Food Balance + Remaining Historical Deficit
 
-* Remaining Historical Deficit
+Because Remaining Historical Deficit is stored as a negative number, it reduces the Net Food Fund Position.
+
+Example: 10,000 + (−5,639) = 4,361.
 
 ---
 
 ## Reversal Rule
 
-If a Historical Deficit Settlement Donation is edited, deleted, or reversed:
+If a Food Fund donation — including any of its Debt Settlement, Current Support, or Historical Deficit Settlement components — is edited, deleted, or reversed:
 
+* Member Food Fund debt must be recalculated.
+* Debt Settlement movements must be recalculated.
 * Historical Deficit must be recalculated.
 * Historical Deficit Settlement Reserve must be recalculated.
-* All affected reports and dashboard values must be rebuilt from source transactions.
+* Current Food Balance and Net Food Fund Position must be recalculated.
+* All affected reports, statements, dashboard, and export values must be rebuilt from source transactions.
 
 No manual balance adjustments are permitted.
