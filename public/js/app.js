@@ -1,7 +1,7 @@
 'use strict';
 /* ═══ STATE ═══ */
 let SB=null,CU=null,CUR=null;
-const DB={receipts:[],payments:[],members:[],contacts:[],annual:[],audit:[]};
+const DB={receipts:[],payments:[],members:[],contacts:[],annual:[],audit:[],subscriptions:[]};
 const RATES={ILS:1,USD:3.7,JOD:5.0};
 window.FOOD_OPENING=0;
 window.DIWAN_OPENING=0;
@@ -178,31 +178,39 @@ const FIN={
      positive = على العضو مستحقات. */
   memberStatement(memberId, from, to){
     const member = DB.members.find(m => m.id === memberId);
-    if(!member) return {member:null, rows:[], openingBalance:0, totalDues:0, totalPaid:0, prepaidEffective:0, finalBalance:0};
+    if(!member) return {member:null, rows:[], openingBalance:0, totalDues:0, totalPaid:0, prepaidEffective:0, finalBalance:0, creditBalance:0};
 
-    const openingBalance = Number(member.opening_balance || 0);
+    /* PHASE 1 — Authoritative member model (Excel migration, Phase 0).
+       Opening debt source = historical_balance_ils (NEVER opening_balance).
+       Dues + pre-system payments come from member_subscriptions + historical_payments_ils.
+       New (post-migration) payments are live food receipts.
+       Legacy opening_balance and prepaid_subscription_ils are NOT used (no double counting). */
+    const openingDebt    = Number(member.historical_balance_ils || 0);
+    const historicalPaid = Number(member.historical_payments_ils || 0);
     const fd = from ? new Date(from) : null;
     const td = to   ? new Date(to)   : null;
     const inRange = d => { if(!d || d==='—') return true; const dt=new Date(d); if(fd&&dt<fd) return false; if(td&&dt>td) return false; return true; };
 
-    const rows = [];
-    if(openingBalance !== 0)
-      rows.push({date:'—', no:'—', desc:'رصيد افتتاحي · Opening Balance', cr:0, dr:openingBalance, cls:'opening'});
+    const subs = (DB.subscriptions||[])
+      .filter(s => s.member_id === memberId)
+      .sort((a,b)=>Number(a.year)-Number(b.year));
 
-    DB.annual
-      .filter(a => !member.active_from_year || a.year >= member.active_from_year)
-      .forEach(a => rows.push({date:a.applied_at?.slice(0,10) || a.year+'-01-01', no:'—', desc:`اشتراك سنة ${a.year}`, cr:0, dr:Number(a.amount||0), cls:'due'}));
+    const rows = [];
+    if(openingDebt !== 0)
+      rows.push({date:'—', no:'—', desc:'ذمة تاريخية قبل 2025 · Historical Opening', cr:0, dr:openingDebt, cls:'opening'});
+    if(historicalPaid !== 0)
+      rows.push({date:'—', no:'—', desc:'مدفوعات قبل 2025 · Payments before 2025', cr:historicalPaid, dr:0, cls:'paid'});
+
+    subs.forEach(s => {
+      const due  = Number(s.due_amount_ils  || 0);
+      const paid = Number(s.paid_amount_ils || 0);
+      if(due  > 0) rows.push({date:s.year+'-01-01', no:'—', desc:`اشتراك سنة ${s.year}`, cr:0, dr:due, cls:'due'});
+      if(paid > 0) rows.push({date:s.year+'-12-31', no:'—', desc:`دفعات اشتراك ${s.year}`, cr:paid, dr:0, cls:'paid'});
+    });
 
     DB.receipts
       .filter(r => !r.is_deleted && r.fund_type==='food' && r.member_id===memberId && inRange(r.receipt_date))
       .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:r.notes||'مساهمة', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'paid'}));
-
-    const dues2526 = DB.annual
-      .filter(a => (a.year===2025 || a.year===2026) && (!member.active_from_year || a.year >= member.active_from_year))
-      .reduce((s,a)=>s + Number(a.amount||0),0);
-    const prepaidEffective = Math.min(Number(member.prepaid_subscription_ils||0), dues2526);
-    if(prepaidEffective > 0)
-      rows.push({date:'2026-12-31', no:'—', desc:'مدفوعات قبل تطبيق النظام (2025–2026)', cr:prepaidEffective, dr:0, cls:'prepaid'});
 
     rows.sort((a,b)=> a.date==='—' ? -1 : b.date==='—' ? 1 : new Date(a.date)-new Date(b.date));
 
@@ -211,9 +219,10 @@ const FIN={
 
     const totalDues = rows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
     const totalPaid = rows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
-    const finalBalance = openingBalance + totalDues - totalPaid - prepaidEffective;
+    const finalBalance = openingDebt + totalDues - totalPaid;   /* >0 owed · <0 credit */
+    const creditBalance = finalBalance < 0 ? -finalBalance : 0;
 
-    return {member, rows, openingBalance, totalDues, totalPaid, prepaidEffective, finalBalance};
+    return {member, rows, openingBalance:openingDebt, totalDues, totalPaid, prepaidEffective:0, finalBalance, creditBalance};
   },
 
   /* Approved balance terminology (Phase 11.5). Sign unchanged. */
@@ -678,14 +687,15 @@ async function loadAll(){
       SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
       SB.from('members').select(
-'id,name,phone,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year'
+'id,name,phone,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
 ).order('name'),
       SB.from('contacts').select('*').order('name'),
       SB.from('annual_dues').select('*').order('year',{ascending:false}),
       SB.from('audit_log').select('id,action,description,user_name,created_at').order('created_at',{ascending:false}).limit(50),
+      SB.from('member_subscriptions').select('id,member_id,year,due_amount_ils,paid_amount_ils,balance_ils,is_overridden,override_amount_ils,override_reason'),
     ]);
     DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
-    DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];
+    DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];DB.subscriptions=r7.data||[];
     await loadAttachCounts();
     renderAll();
   }catch(e){toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err');console.error(e);}
