@@ -317,6 +317,18 @@ const FIN={
   },
 };
 
+/* Canonical bilingual labels for the three Food Fund movement classes (presentation only). */
+function mcLabel(k){
+  const en=window.LANG==='en';
+  return ({
+    debt:        en?'Debt Settlement':'تسوية ذمة',
+    deficit:     en?'Historical Deficit Donation':'تبرع عجز تاريخي',
+    current:     en?'Current Support Donation':'تبرع دعم حالي',
+    reserve:     en?'Historical Deficit Donations (Reserve)':'تبرعات العجز التاريخي (احتياطي)',
+    operational: en?'Operational':'تشغيلي'
+  })[k]||k;
+}
+
 /* ═══ HISTORICAL BALANCE FORMULA (Phase 15 FINAL LOCK) ═══
    Historical Balance = years from active_from_year through 2024 × 200.
    Years 2025+ are tracked by the active annual-dues system (DB.annual).
@@ -994,17 +1006,20 @@ function renderTreasuryPanel(){
     </div>`;
   } else if(fund==='food'){
     const remDeficit=FIN.foodDeficitRemaining();
+    const reserve=FIN.foodSettlementReserve();
+    const a=FIN.allocateFoodDonations();
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
-    total=income-expense; neg=total<0;
-    cap='الرصيد الإجمالي الكلي (تشغيلي)';
-    rule='القاعدة: الإجمالي = رصيد الصندوق الحالي فقط · العجز التاريخي المتبقي يُعرض منفصلاً ولا يُجمع';
+    const operational=FIN._r2(income-expense);
+    total=FIN.foodBalance(); neg=total<0;
+    cap='رصيد صندوق الغداء الحالي';
+    rule='القاعدة: الرصيد الحالي = تشغيلي + تسوية الذمم + الدعم الحالي · العجز التاريخي يُعرض منفصلاً ولا يُجمع';
     middle=`<div class="tp-food">
-      <div class="tp-prev"><div class="t">العجز التاريخي المتبقي · Remaining Historical Deficit</div><div class="v${remDeficit<0?' neg':''}">₪ ${fmt(remDeficit)}</div><div class="ro">يُعرض منفصلاً · لا يدخل في رصيد الصندوق الحالي</div></div>
+      <div class="tp-prev"><div class="t">العجز التاريخي المتبقي · Remaining Historical Deficit</div><div class="v${remDeficit<0?' neg':''}">₪ ${fmt(remDeficit)}</div><div class="ro">${mcLabel('reserve')}: ₪${fmt(reserve)} · يُعرض منفصلاً ولا يدخل في الرصيد الحالي</div></div>
       <div class="tp-op"><div class="t">رصيد الصندوق الحالي</div>
-        <div class="of"><div class="sg"><div class="l">البداية</div><div class="n">₪ 0</div></div><span class="x">+</span>
-        <div class="sg"><div class="l">إجمالي المقبوضات</div><div class="n up">₪ ${fmt(income)}</div></div><span class="x">−</span>
-        <div class="sg"><div class="l">إجمالي المصروفات</div><div class="n dn">₪ ${fmt(expense)}</div></div></div>
+        <div class="of"><div class="sg"><div class="l">${mcLabel('operational')}</div><div class="n">₪ ${fmt(operational)}</div></div><span class="x">+</span>
+        <div class="sg"><div class="l">${mcLabel('debt')}</div><div class="n up">₪ ${fmt(a.debtSettlementTotal)}</div></div><span class="x">+</span>
+        <div class="sg"><div class="l">${mcLabel('current')}</div><div class="n up">₪ ${fmt(a.currentSupportTotal)}</div></div></div>
         <div class="rs"><div class="l">رصيد الصندوق الحالي = الإجمالي</div><div class="n">₪ ${fmt(total)}</div></div></div>
     </div>`;
   } else {
@@ -1138,7 +1153,7 @@ window.renderStmt=function(fund){
   const foodFigsHTML=isFood?`
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
         <div class="kpi" style="padding:12px"><div class="kpi-lbl">${_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'}</div><div class="kpi-val" style="font-size:16px;${FIN.foodDeficitRemaining()<0?'color:#e53935':''}">₪ ${fmt(FIN.foodDeficitRemaining())}</div></div>
-        <div class="kpi" style="padding:12px"><div class="kpi-lbl">${_en?'Settlement Reserve':'احتياطي تسوية العجز'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(FIN.foodSettlementReserve())}</div></div>
+        <div class="kpi" style="padding:12px"><div class="kpi-lbl">${mcLabel('reserve')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(FIN.foodSettlementReserve())}</div></div>
         <div class="kpi ${FIN.foodNetPosition()>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(FIN.foodNetPosition())}</div></div>
       </div>`:'';
   const fundLabel=fund==='food'?'صندوق الغداء':'صندوق الديوان';
@@ -1277,8 +1292,11 @@ window.renderMemberStmt=function(){
   };
   const donsHTML=dons.length ? `
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-      <div style="font-size:11px;font-weight:600;color:var(--don);margin-bottom:8px">
-        ${_en?'Donation breakdown (Debt Settlement reduces the balance above)':'تفصيل التبرعات (تسوية الذمة تخفّض الرصيد أعلاه)'}
+      <div style="font-size:11px;font-weight:600;color:var(--don);margin-bottom:4px">
+        ${_en?'Donation movements':'حركات التبرعات'}
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:8px;line-height:1.6">
+        ${_en?'<b>Debt Settlement</b> reduces the member balance above. <b>Historical Deficit Donation</b> and <b>Current Support Donation</b> are shown for transparency only and do not affect the member balance.':'<b>تسوية الذمة</b> تخفّض رصيد العضو أعلاه. <b>تبرع العجز التاريخي</b> و<b>تبرع الدعم الحالي</b> يُعرضان للشفافية فقط ولا يؤثّران على رصيد العضو.'}
       </div>
       ${dons.map(d=>`
         <div class="sr">
@@ -2403,8 +2421,9 @@ window.buildFundStatementHTML=function(fund){
     +'<div class="card"><div class="k">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal'))+'</div><div class="v '+curCls+'">₪ '+fmt(curBal)+'</div></div></div>'
     +(isFood?('<div class="cards">'
       +'<div class="card"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v '+(FIN.foodDeficitRemaining()<0?'neg':'pos')+'">₪ '+fmt(FIN.foodDeficitRemaining())+'</div></div>'
-      +'<div class="card"><div class="k">'+(_en?'Settlement Reserve':'احتياطي تسوية العجز')+'</div><div class="v">₪ '+fmt(FIN.foodSettlementReserve())+'</div></div>'
-      +'<div class="card"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v '+(FIN.foodNetPosition()>=0?'pos':'neg')+'">₪ '+fmt(FIN.foodNetPosition())+'</div></div></div>'):'')
+      +'<div class="card"><div class="k">'+mcLabel('reserve')+'</div><div class="v">₪ '+fmt(FIN.foodSettlementReserve())+'</div></div>'
+      +'<div class="card"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v '+(FIN.foodNetPosition()>=0?'pos':'neg')+'">₪ '+fmt(FIN.foodNetPosition())+'</div></div></div>'
+      +'<div style="font-size:10px;color:#666;margin:2px 0 6px">'+(_en?'Current Food Fund Balance = Operational ':'رصيد صندوق الغداء الحالي = تشغيلي ')+'₪'+fmt(bal)+' + '+mcLabel('debt')+' ₪'+fmt(FIN.foodDebtSettlementTotal())+' + '+mcLabel('current')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+'</div>'):'')
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.donor_name')+'</th><th>'+window.t('stmt.desc')+'</th><th>'+window.t('stmt.col_in')+'</th><th>'+window.t('stmt.col_out')+'</th><th>'+window.t('stmt.balance')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="5">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):'الرصيد الجاري · Current Balance')+'</td><td class="'+curCls+'">₪ '+fmt(curBal)+'</td><td></td></tr></tbody></table>'
@@ -2465,9 +2484,20 @@ window.prtMemberStmt=function(){
     return _en?'Diwan Donation':'تبرع ديوان';
   };
   const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
-  const donsHTML=dons.length?('<div class="period" style="margin-top:10px">'+(_en?'Donations (do not affect the member balance)':'التبرعات (لا تؤثر على رصيد العضو)')+'</div>'
-    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Category':'التصنيف')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
-    +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donCat(d)+'</td><td><span class="cr">₪ '+fmt(d.amount_ils||d.amount)+'</span></td></tr>').join('')
+  const _alloc=FIN.allocateFoodDonations();
+  const donSplit=d=>{
+    const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
+    if(d.donation_display_fund!=='food') return (_en?'Diwan Donation':'تبرع ديوان');
+    const parts=[];
+    if(sp.debtSettled>0) parts.push(mcLabel('debt')+' ₪'+fmt(sp.debtSettled));
+    if(sp.toDeficit>0)   parts.push(mcLabel('deficit')+' ₪'+fmt(sp.toDeficit));
+    if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
+    return parts.length?parts.join(' · '):donCat(d);
+  };
+  const donsHTML=dons.length?('<div class="period" style="margin-top:10px">'+(_en?'Donation movements':'حركات التبرعات')+'</div>'
+    +'<div style="font-size:10px;color:#666;margin:4px 0">'+(_en?'Debt Settlement reduces the member balance. Historical Deficit Donation and Current Support Donation are shown for transparency only and do not affect the member balance.':'تسوية الذمة تخفّض رصيد العضو. تبرع العجز التاريخي وتبرع الدعم الحالي يُعرضان للشفافية فقط ولا يؤثّران على رصيد العضو.')+'</div>'
+    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Movement breakdown':'تفصيل الحركة')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
+    +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donSplit(d)+'</td><td><span class="cr">₪ '+fmt(d.amount_ils||d.amount)+'</span></td></tr>').join('')
     +'</tbody></table>'):'';
   const rowsHTML=st.rows.map(r=>{
     const balTxt='₪ '+fmt(Math.abs(r.bal))+(r.bal>0?' '+window.t('stmt.debit_tag'):r.bal<0?' '+window.t('stmt.credit_tag'):'');
@@ -2565,13 +2595,23 @@ window.prtDonStmt=function(){
   const foodDeficit=FIN.foodSettlementReserve();   // Historical Deficit Donation -> Reserve
   const foodSupport=FIN.foodCurrentSupportTotal(); // Current Support Donation
   const foodDebt=FIN.foodDebtSettlementTotal();    // Debt Settlement (NOT a donation)
+  const _dalloc=FIN.allocateFoodDonations();
+  const donDir=r=>{
+    if(r.donation_display_fund!=='food') return window.t('receipts.fund_diwan');
+    const sp=_dalloc.perReceipt[r.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
+    const parts=[];
+    if(sp.debtSettled>0) parts.push(mcLabel('debt')+' ₪'+fmt(sp.debtSettled));
+    if(sp.toDeficit>0)   parts.push(mcLabel('deficit')+' ₪'+fmt(sp.toDeficit));
+    if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
+    return window.t('receipts.fund_food')+(parts.length?' · '+parts.join(' · '):'');
+  };
   const rowsHTML=rows.map(r=>'<tr>'
     +'<td>'+fmtDate2(r.receipt_date)+'</td>'
     +'<td>'+esc(r.no)+'</td>'
     +'<td>'+esc(r.payer_name||gmn(r.member_id)||'—')+'</td>'
     +'<td><span class="cr">₪ '+fmt(r.amount_ils||r.amount)+'</span></td>'
     +'<td>'+(r.currency!=='ILS'?esc(r.currency):'ILS')+'</td>'
-    +'<td>'+(r.donation_display_fund==='food'?(window.t('receipts.fund_food')+(r.food_donation_allocation==='reduce_deficit'?(_en?' · Deficit Settlement':' · تسوية العجز'):r.food_donation_allocation==='support_current'?(_en?' · Current Support':' · دعم حالي'):'')):window.t('receipts.fund_diwan'))+'</td>'
+    +'<td>'+donDir(r)+'</td>'
     +'<td>'+esc(r.notes||'—')+'</td></tr>').join('');
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+Cjxwb2x5Z29uIHBvaW50cz0iNTAsMTggNDIuNiwxOCAxOCw0Mi42IDE4LDUwIDM0LDUwIDUwLDM0IiBmaWxsPSIjMEYxQjJEIi8+Cjxwb2x5Z29uIHBvaW50cz0iNzAsMTggNzcuNCwxOCAxMDIsNDIuNiAxMDIsNTAgODYsNTAgNzAsMzQiIGZpbGw9IiMwRjFCMkQiLz4KPHBvbHlnb24gcG9pbnRzPSIxMDIsNzAgMTAyLDc3LjQgNzcuNCwxMDIgNzAsMTAyIDcwLDg2IDg2LDcwIiBmaWxsPSIjMEYxQjJEIi8+Cjxwb2x5Z29uIHBvaW50cz0iNTAsMTAyIDQyLjYsMTAyIDE4LDc3LjQgMTgsNzAgMzQsNzAgNTAsODYiIGZpbGw9IiMwRjFCMkQiLz4KPHBvbHlnb24gcG9pbnRzPSI1MywxOCA2NywxOCA2MCwzNCIgZmlsbD0iI0M2QTQ2QSIvPgo8cG9seWdvbiBwb2ludHM9IjEwMiw1MyAxMDIsNjcgODYsNjAiIGZpbGw9IiNDNkE0NkEiLz4KPHBvbHlnb24gcG9pbnRzPSI1MywxMDIgNjcsMTAyIDYwLDg2IiBmaWxsPSIjQzZBNDZBIi8+Cjxwb2x5Z29uIHBvaW50cz0iMTgsNTMgMTgsNjcgMzQsNjAiIGZpbGw9IiNDNkE0NkEiLz4KPC9zdmc+" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
@@ -2686,7 +2726,7 @@ window.exportCSV=function(type){
     const summary=[
       [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FIN.foodBalance(),'','',''],
       [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FIN.foodDeficitRemaining(),'','',''],
-      [(_en?'Settlement Reserve':'احتياطي تسوية العجز'),'','',FIN.foodSettlementReserve(),'','',''],
+      [mcLabel('reserve'),'','',FIN.foodSettlementReserve(),'','',''],
       [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FIN.foodNetPosition(),'','',''],
       ['','','','','','','']
     ];
