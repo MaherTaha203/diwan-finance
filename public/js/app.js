@@ -976,14 +976,14 @@ function renderTreasuryPanel(){
       <div class="nd cur"><div class="t">رصيد الصندوق الحالي = الكلي</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
   } else if(fund==='food'){
-    const hist=FIN.foodHistorical();
+    const remDeficit=FIN.foodDeficitRemaining();
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     total=income-expense; neg=total<0;
     cap='الرصيد الإجمالي الكلي (تشغيلي)';
-    rule='القاعدة: الإجمالي = رصيد الصندوق الحالي فقط · «الرصيد الأولي السابق» مرجعي ولا يُجمع';
+    rule='القاعدة: الإجمالي = رصيد الصندوق الحالي فقط · العجز التاريخي المتبقي يُعرض منفصلاً ولا يُجمع';
     middle=`<div class="tp-food">
-      <div class="tp-prev"><div class="lk">🔒 للملاحظة فقط</div><div class="t">الرصيد الأولي السابق</div><div class="v${hist<0?' neg':''}">₪ ${fmt(hist)}</div><div class="ro">رصيد مرجعي للملاحظة فقط · لا يدخل في أي حساب أو تقرير</div></div>
+      <div class="tp-prev"><div class="t">العجز التاريخي المتبقي · Remaining Historical Deficit</div><div class="v${remDeficit<0?' neg':''}">₪ ${fmt(remDeficit)}</div><div class="ro">يُعرض منفصلاً · لا يدخل في رصيد الصندوق الحالي</div></div>
       <div class="tp-op"><div class="t">رصيد الصندوق الحالي</div>
         <div class="of"><div class="sg"><div class="l">البداية</div><div class="n">₪ 0</div></div><span class="x">+</span>
         <div class="sg"><div class="l">إجمالي المقبوضات</div><div class="n up">₪ ${fmt(income)}</div></div><span class="x">−</span>
@@ -3178,14 +3178,14 @@ function renderSettingsSummary(){
   if(!summaryCard||!summaryEl) return;
   summaryCard.style.display = '';
   const foodOp = FIN.foodBalance();          /* operational only */
-  const foodHist = FIN.foodHistorical();      /* reference only — never summed */
+  const foodRemDeficit = FIN.foodDeficitRemaining();  /* live remaining deficit, shown separately */
   const diwanBal = FIN.diwanBalance();        /* unchanged: opening + movements */
   summaryEl.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
       <div class="kpi food" style="padding:14px">
         <div class="kpi-lbl">صندوق الغداء (تشغيلي)</div>
         <div class="kpi-val">₪ ${fmt(foodOp)}</div>
-        <div class="kpi-sub">رصيد سابق (للمعلومية فقط، لا يُجمع): ₪${fmt(foodHist)}</div>
+        <div class="kpi-sub">العجز التاريخي المتبقي: ₪${fmt(foodRemDeficit)}</div>
       </div>
       <div class="kpi diwan" style="padding:14px">
         <div class="kpi-lbl">صندوق الديوان (مع الافتتاحي)</div>
