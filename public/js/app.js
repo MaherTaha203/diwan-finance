@@ -1010,17 +1010,17 @@ function renderTreasuryPanel(){
   </div>`;
 }
 function renderDash(){
-  const fb=FIN.foodBalance(),db=FIN.diwanBalance(),donb=FIN.donBalance();
+  const fb=FIN.foodBalance(),rd=FIN.foodDeficitRemaining(),np=FIN.foodNetPosition(),db=FIN.diwanBalance();
   const dd=document.getElementById('dash-date');
   if(dd)dd.textContent=new Date().toLocaleDateString('en-CA');
 
   const _isEn=window.LANG==='en';
   document.getElementById('fund-summary').innerHTML=`
     <div class="fsum-brand"><i class="ti ti-building-bank"></i><span>${_isEn?'Treasury':'الخزينة'}</span></div>
-    <div class="fsum-seg food"><span class="fsum-k">${L.fundLabel('food')}</span><span class="fsum-v">₪ ${fmt(fb)}</span></div>
-    <div class="fsum-seg diwan"><span class="fsum-k">${L.fundLabel('diwan')}</span><span class="fsum-v">₪ ${fmt(db)}</span></div>
-    <div class="fsum-seg don"><span class="fsum-k">${L.fundLabel('donation')}</span><span class="fsum-v">₪ ${fmt(donb)}</span></div>
-    <div class="fsum-seg members"><span class="fsum-k">${_isEn?'Members':'الأعضاء'}</span><span class="fsum-v">${DB.members.filter(m=>m.is_active).length}</span></div>
+    <div class="fsum-seg food"><span class="fsum-k">${_isEn?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'}</span><span class="fsum-v">₪ ${fmt(fb)}</span></div>
+    <div class="fsum-seg deficit"><span class="fsum-k">${_isEn?'Remaining Historical Deficit':'العجز التاريخي المتبقي'}</span><span class="fsum-v" style="${rd<0?'color:#e53935':''}">₪ ${fmt(rd)}</span></div>
+    <div class="fsum-seg net"><span class="fsum-k">${_isEn?'Net Food Fund Position':'صافي مركز صندوق الغداء'}</span><span class="fsum-v" style="${np<0?'color:#e53935':''}">₪ ${fmt(np)}</span></div>
+    <div class="fsum-seg diwan"><span class="fsum-k">${_isEn?'Diwan Fund Balance':'رصيد صندوق الديوان'}</span><span class="fsum-v">₪ ${fmt(db)}</span></div>
   `;
   renderTreasuryTabs();renderTreasuryPanel();
 
