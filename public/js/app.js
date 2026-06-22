@@ -1114,6 +1114,16 @@ window.renderStmt=function(fund){
     </div>`;
   }).join('');
 
+  const _en=window.LANG==='en';
+  const isFood=fund==='food';
+  const curBal=isFood?FIN.foodBalance():bal;
+  const curLbl=isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal');
+  const foodFigsHTML=isFood?`
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="kpi" style="padding:12px"><div class="kpi-lbl">${_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'}</div><div class="kpi-val" style="font-size:16px;${FIN.foodDeficitRemaining()<0?'color:#e53935':''}">₪ ${fmt(FIN.foodDeficitRemaining())}</div></div>
+        <div class="kpi" style="padding:12px"><div class="kpi-lbl">${_en?'Settlement Reserve':'احتياطي تسوية العجز'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(FIN.foodSettlementReserve())}</div></div>
+        <div class="kpi ${FIN.foodNetPosition()>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(FIN.foodNetPosition())}</div></div>
+      </div>`:'';
   const fundLabel=fund==='food'?'صندوق الغداء':'صندوق الديوان';
   out.innerHTML=`
     <div class="card">
@@ -1121,11 +1131,12 @@ window.renderStmt=function(fund){
         <div style="font-size:15px;font-weight:700">${fundLabel}</div>
         <div style="font-size:12px;opacity:.8">${from&&to?`${fdate(from)} — ${fdate(to)}`:from?`${window.t('stmt.date_from')} ${fdate(from)}`:to?`${window.t('stmt.date_to')} ${fdate(to)}`:window.t('stmt.all_periods')}</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
         <div class="kpi green" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_income')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalCr)}</div></div>
         <div class="kpi red" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_expenses')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDr)}</div></div>
-        <div class="kpi ${bal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.current_bal')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(bal)}</div></div>
+        <div class="kpi ${curBal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${curLbl}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(curBal)}</div>${isFood?`<div class="kpi-sub" style="font-size:10px;opacity:.85">${_en?'Operational':'تشغيلي'} ₪${fmt(bal)} + ${_en?'Support':'دعم حالي'} ₪${fmt(FIN._r2(FIN.foodBalance()-bal))}</div>`:''}</div>
       </div>
+      ${foodFigsHTML}
       <div class="ledger-hdr">
         <span style="flex:0 0 85px">${window.t('common.date')}</span>
         <span style="flex:0 0 120px">${window.t('stmt.donor_name')}</span>
