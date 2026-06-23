@@ -109,7 +109,7 @@ body.light .fund-card.food{background:#FFFBEB} body.light .fund-card.diwan{backg
 .btn.danger{background:rgba(220,38,38,.1);color:var(--danger);border-color:rgba(220,38,38,.2)} .btn.danger:hover{background:rgba(220,38,38,.18)}
 .btn.ghost{background:transparent;border-color:transparent;color:var(--tx2);padding:4px 7px} .btn.ghost:hover{background:var(--bg3);color:var(--tx)}
 .btn.green{background:rgba(0,200,150,.12);color:#00C896;border-color:rgba(0,200,150,.3)}
-.tw { border:1px solid var(--bd); border-radius:var(--rl); overflow:hidden; overflow-x:auto; }
+.tw { border:1px solid var(--bd); border-radius:var(--rl); overflow:hidden; overflow-x:auto; -webkit-overflow-scrolling:touch; }
 table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:500px; }
 thead th { background:var(--navy2); color:rgba(255,255,255,.8); padding:10px 13px; text-align:right; font-weight:500; font-size:11px; letter-spacing:.03em; white-space:nowrap; position:sticky; top:0; z-index:1; }
 body.light thead th{background:var(--navy)}
@@ -230,6 +230,7 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
   .pag{gap:3px;margin-top:10px} .pb{min-width:28px;height:28px;font-size:11px}
   .lr{flex-wrap:wrap;gap:4px} .lr-date{flex:0 0 70px} .lr-name{flex:0 0 100px}
   .lr-desc{flex:0 0 100%;font-size:11px} .lr-cr,.lr-dr,.lr-bal{flex:0 0 70px} .lr-note{display:none}
+  .sr{align-items:flex-start} .sr-l{font-size:11.5px;line-height:1.55} .sr-v{white-space:nowrap}
   .tc{bottom:72px;left:10px;right:10px} .toast{min-width:0;width:100%}
   #pg-annual .fg{max-width:100% !important} #users-list>div{flex-wrap:wrap}
   #pg-bk>div{grid-template-columns:1fr !important}
