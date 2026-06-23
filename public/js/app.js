@@ -516,6 +516,7 @@ window.nav=function(p){
   if(p==='users') loadUsers();
   if(p==='bk') renderSysInfo();
   if(p==='annual') renderAnnual();
+  if(p==='annual-debt') renderAnnualDebt();
   if(p==='member-stmt') fillMemberSelect();
   D[p]?.render();
 };
@@ -735,7 +736,7 @@ async function loadAll(){
       SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
       SB.from('members').select(
-'id,name,phone,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
+'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
 ).order('name'),
       SB.from('contacts').select('*').order('name'),
       SB.from('annual_dues').select('*').order('year',{ascending:false}),
@@ -2605,6 +2606,65 @@ window.exportPDF=function(type){
   else if(type==='don')    window.prtDonStmt();
 };
 
+/* ═══ A2 — Annual Debt Report (reporting only · FIN.* = single source of truth) ═══ */
+let _adFilter='all';
+function annualDebtRows(filter){
+  const f=filter||_adFilter;
+  let rows=DB.members.filter(m=>m.is_active!==false).map(m=>{
+    const st=FIN.memberStatement(m.id);
+    return {code:m.member_code||'—', name:m.name, phone:m.phone||'',
+      opening:st.openingBalance, dues:st.totalDues,
+      paid:FIN._r2(st.totalPaid+(st.debtSettled||0)), current:st.finalBalance};
+  });
+  if(f==='debtors')        rows=rows.filter(r=>r.current>0.005);
+  else if(f==='creditors') rows=rows.filter(r=>r.current<-0.005);
+  else if(f==='zero')      rows=rows.filter(r=>Math.abs(r.current)<=0.005);
+  return rows.sort((a,b)=>b.current-a.current);
+}
+function _adHead(){ return window.LANG==='en'
+  ? ['Member No.','Member Name','Phone','Historical Balance','Subscription Dues','Total Paid','Current Balance']
+  : ['رقم العضو','اسم العضو','الهاتف','رصيد افتتاحي','اشتراكات مستحقة','إجمالي المدفوع','الرصيد الحالي']; }
+function _adCurCell(c){
+  if(c>0.005)  return '<span class="dr">₪ '+fmt(c)+'</span>';
+  if(c<-0.005) return '<span class="cr">₪ '+fmt(-c)+' '+(window.LANG==='en'?'credit':'دائن')+'</span>';
+  return '<span style="color:var(--tx3,#94a3b8)">₪ 0</span>';
+}
+function _adFilterLabel(){ const en=window.LANG==='en';
+  return _adFilter==='debtors'?(en?'Debtors':'مدينون'):_adFilter==='creditors'?(en?'Creditors':'دائنون'):_adFilter==='zero'?(en?'Zero balance':'رصيد صفر'):(en?'All':'الكل'); }
+window.setAnnualDebtFilter=function(f){ _adFilter=f; renderAnnualDebt(); };
+function renderAnnualDebt(){
+  const el=document.getElementById('annual-debt-list'); if(!el) return;
+  const en=window.LANG==='en';
+  const rows=annualDebtRows();
+  const total=DB.members.filter(m=>m.is_active!==false).length;
+  const sub=document.getElementById('annual-debt-sub');
+  if(sub) sub.textContent='Annual Debt Report · '+rows.length+(en?' of ':' من ')+total;
+  const chips=[['all',en?'All':'الكل'],['debtors',en?'Debtors':'مدينون'],['creditors',en?'Creditors':'دائنون'],['zero',en?'Zero balance':'رصيد صفر']]
+    .map(c=>'<button class="tp-tab'+(_adFilter===c[0]?' on':'')+'" onclick="setAnnualDebtFilter(\''+c[0]+'\')">'+c[1]+'</button>').join('');
+  const head=_adHead().map(h=>'<th>'+h+'</th>').join('');
+  const bodyRows=rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td><td>₪ '+fmt(r.opening)+'</td><td>₪ '+fmt(r.dues)+'</td><td><span class="cr">₪ '+fmt(r.paid)+'</span></td><td class="bal">'+_adCurCell(r.current)+'</td></tr>').join('');
+  el.innerHTML='<div class="tp-tabs">'+chips+'</div>'
+    +(rows.length
+      ? '<div class="tw"><table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+bodyRows+'</tbody></table></div>'
+      : '<div class="card" style="text-align:center;color:var(--tx3)">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>');
+}
+window.prtAnnualDebt=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const en=window.LANG==='en';
+  const rows=annualDebtRows();
+  const total=DB.members.filter(m=>m.is_active!==false).length;
+  const head=_adHead().map(h=>'<th>'+h+'</th>').join('');
+  const body=rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td><td>₪ '+fmt(r.opening)+'</td><td>₪ '+fmt(r.dues)+'</td><td><span class="cr">₪ '+fmt(r.paid)+'</span></td><td class="bal">'+_adCurCell(r.current)+'</td></tr>').join('');
+  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
+  const b=reportHeader(en?'Annual Debt Report':'تقرير المديونية السنوية',{sub:window.t('stmt.currency_note')})
+    +'<div class="period">'+(en?'Filter: ':'التصنيف: ')+_adFilterLabel()+' · '+(en?'Shown: ':'المعروض: ')+rows.length+' / '+total+'</div>'
+    +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
+  openPrintWin(css,b);
+};
+
 window.prtDonStmt=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const _en=window.LANG==='en';
@@ -2881,6 +2941,7 @@ window.exportMemberStmt=function(format){
 
 /* ═══ UNIVERSAL PDF + EXCEL EXPORT ═══ */
 window.exportPagePDF=function(type){
+  if(type==='annual-debt') return window.prtAnnualDebt();
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
   const printDate=new Date().toLocaleDateString('en-GB');
   const titles={
@@ -2997,6 +3058,10 @@ window.exportPageExcel=function(type){
     wsData=[['\u0627\u0644\u0633\u0646\u0629','\u0627\u0644\u0645\u0628\u0644\u063a','\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621','\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629','\u0627\u0644\u062a\u0627\u0631\u064a\u062e']];
     DB.annual.forEach(a=>wsData.push([a.year,a.amount,a.member_count,a.applied_by||'',a.applied_at?.slice(0,10)||'']));
   }
+  else if(type==='annual-debt'){
+    wsData=[_adHead()];
+    annualDebtRows().forEach(r=>wsData.push([r.code,r.name,r.phone||'',Number(r.opening||0),Number(r.dues||0),Number(r.paid||0),Number(r.current||0)]));
+  }
   else if(type==='audit'){
     wsData=[['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0625\u062c\u0631\u0627\u0621','\u0627\u0644\u0648\u0635\u0641','\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645','\u0627\u0644\u062c\u062f\u0648\u0644']];
     DB.audit.forEach(a=>wsData.push([a.created_at?.slice(0,10)||'',a.action,a.description||'',a.user_name||'',a.table_name||'']));
@@ -3005,8 +3070,8 @@ window.exportPageExcel=function(type){
   const doExcel=()=>{
     const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644...','info');return;}
     const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
-    const moneyMap={receipts:[3],payments:[3],donation:[3],members:[3,4],annual:[1],audit:[],users:[]};
-    const colW={receipts:[10,12,26,14,16,24],payments:[10,12,26,14,16,24],donation:[10,12,26,14,16,24],members:[26,16,12,14,16],annual:[10,14,16,18,14],audit:[14,12,30,18,14],users:[26,14,14]};
+    const moneyMap={receipts:[3],payments:[3],donation:[3],members:[3,4],annual:[1],'annual-debt':[3,4,5,6],audit:[],users:[]};
+    const colW={receipts:[10,12,26,14,16,24],payments:[10,12,26,14,16,24],donation:[10,12,26,14,16,24],members:[26,16,12,14,16],annual:[10,14,16,18,14],'annual-debt':[14,28,14,14,16,14,18],audit:[14,12,30,18,14],users:[26,14,14]};
     if(colW[type])ws['!cols']=colW[type].map(w=>({wch:w}));
     styleDiwanSheet(XLSX,ws,{headerRow:0,money:(moneyMap[type]||[])});
     const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a');
