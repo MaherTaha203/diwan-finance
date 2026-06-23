@@ -2304,6 +2304,31 @@ function openPrintWin(css,body){
 
 function fundLabelAr(ft){return ft==='food'?'صندوق الغداء':ft==='donation'?'صندوق التبرعات':'صندوق الديوان';}
 
+/* ═══ A0.5 — COUNCIL branding · single source of truth for every report/print surface ═══ */
+const BRAND_NAME='ديوان آل طه';
+const BRAND_SUBTITLE='نظام الإدارة المالية';
+const BRAND_SITE='diwan-finance.com';
+/* Approved COUNCIL mark (public/logo-dark.svg) — ivory+gold, for the navy report-header box. */
+const BRAND_LOGO='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+Cjxwb2x5Z29uIHBvaW50cz0iNTAsMTggNDIuNiwxOCAxOCw0Mi42IDE4LDUwIDM0LDUwIDUwLDM0IiBmaWxsPSIjRjJFRUU3Ij48L3BvbHlnb24+PHBvbHlnb24gcG9pbnRzPSI3MCwxOCA3Ny40LDE4IDEwMiw0Mi42IDEwMiw1MCA4Niw1MCA3MCwzNCIgZmlsbD0iI0YyRUVFNyI+PC9wb2x5Z29uPjxwb2x5Z29uIHBvaW50cz0iMTAyLDcwIDEwMiw3Ny40IDc3LjQsMTAyIDcwLDEwMiA3MCw4NiA4Niw3MCIgZmlsbD0iI0YyRUVFNyI+PC9wb2x5Z29uPjxwb2x5Z29uIHBvaW50cz0iNTAsMTAyIDQyLjYsMTAyIDE4LDc3LjQgMTgsNzAgMzQsNzAgNTAsODYiIGZpbGw9IiNGMkVFRTciPjwvcG9seWdvbj48cG9seWdvbiBwb2ludHM9IjUzLDE4IDY3LDE4IDYwLDM0IiBmaWxsPSIjQzZBNDZBIj48L3BvbHlnb24+PHBvbHlnb24gcG9pbnRzPSIxMDIsNTMgMTAyLDY3IDg2LDYwIiBmaWxsPSIjQzZBNDZBIj48L3BvbHlnb24+PHBvbHlnb24gcG9pbnRzPSI1MywxMDIgNjcsMTAyIDYwLDg2IiBmaWxsPSIjQzZBNDZBIj48L3BvbHlnb24+PHBvbHlnb24gcG9pbnRzPSIxOCw1MyAxOCw2NyAzNCw2MCIgZmlsbD0iI0M2QTQ2QSI+PC9wb2x5Z29uPgo8L3N2Zz4=';
+/* Shared report/print header — vouchers, statements, reports, future A2/A3/A4. opts:{sub,no} */
+function reportHeader(title,opts){
+  opts=opts||{};
+  return '<div class="dh"><div class="org"><div class="logo"><img src="'+BRAND_LOGO+'" alt="'+BRAND_NAME+'"></div>'
+    +'<div><h1>'+BRAND_NAME+'</h1><p>'+BRAND_SUBTITLE+' · '+BRAND_SITE+'</p></div></div>'
+    +'<div class="meta"><span class="tt">'+title+'</span>'
+    +(opts.no?'<div class="no">'+opts.no+'</div>':'')
+    +(opts.sub?'<div class="sub">'+opts.sub+'</div>':'')
+    +'</div></div>';
+}
+/* Shared report/print footer strip — identical brand line everywhere. opts:{printedLabel,date,page} */
+function reportFooter(opts){
+  opts=opts||{};
+  var date=opts.date||new Date().toLocaleDateString('en-GB');
+  var page=opts.page||'صفحة 1';
+  var printedLabel=opts.printedLabel||'طُبع:';
+  return '<div class="pgfoot"><span>'+BRAND_NAME+' — '+BRAND_SITE+'</span><span>'+printedLabel+' '+date+'</span><span>'+page+'</span></div>';
+}
+
 /* VIS-2: single-voucher builders matching approved mockups (01 receipt / 03 payment) */
 function buildRecVoucher(r){
   const verifyUrl='https://www.diwan-finance.com/verify/'+esc(r.no);
@@ -2311,8 +2336,7 @@ function buildRecVoucher(r){
   const cur=(r.currency&&r.currency!=='ILS')?('<div class="row"><div class="lbl">العملة الأصلية</div><div class="val">'+fmtD(r.amount)+' '+esc(r.currency)+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</div></div>'):'';
   const note=r.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(r.notes)+'</div></div>'):'';
   return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
-    +'<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">سند قبض</span><div class="no">'+esc(r.no)+'</div><div class="sub">معتمد إلكترونياً · Verified</div></div></div>'
+    +reportHeader('سند قبض',{no:esc(r.no),sub:'معتمد إلكترونياً · Verified'})
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(r.receipt_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(r.fund_type)+'</div></div>'
@@ -2323,7 +2347,7 @@ function buildRecVoucher(r){
     +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsAr(r.amount_ils||r.amount)+'</div></div>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify/'+esc(r.no)+'</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
 }
 function buildPayVoucher(p){
@@ -2332,8 +2356,7 @@ function buildPayVoucher(p){
   const note=p.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(p.notes)+'</div></div>'):'';
   const appr=p.approved_by?('<div class="row"><div class="lbl">معتمد من</div><div class="val">'+esc(p.approved_by)+'</div></div>'):'';
   return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
-    +'<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">سند صرف</span><div class="no">'+esc(p.no)+'</div><div class="sub">معتمد إلكترونياً · Verified</div></div></div>'
+    +reportHeader('سند صرف',{no:esc(p.no),sub:'معتمد إلكترونياً · Verified'})
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(p.payment_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(p.fund_type)+'</div></div>'
@@ -2345,7 +2368,7 @@ function buildPayVoucher(p){
     +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsAr(p.amount_ils||p.amount)+'</div></div>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify/'+esc(p.no)+'</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>طُبع: '+fmtDate2(new Date().toISOString())+'</span><span>صفحة 1 / 1</span></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
 }
 
@@ -2411,8 +2434,7 @@ window.buildFundStatementHTML=function(fund){
   const curBal=isFood?FIN.foodBalance():bal;
   const curCls=curBal>=0?'pos':'neg';
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
-  const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">'+window.t('stmt.print_title')+' '+fundLabel+'</span><div class="sub">'+window.t('stmt.currency_note')+'</div></div></div>'
+  const body=reportHeader(window.t('stmt.print_title')+' '+fundLabel,{sub:window.t('stmt.currency_note')})
     +'<div class="period">'+window.t('stmt.period_label')+' '+period+'</div>'
     +'<div class="cards">'
     +'<div class="card"><div class="k">'+window.t('stmt.opening_bal')+'</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
@@ -2429,7 +2451,7 @@ window.buildFundStatementHTML=function(fund){
     +'<tr class="final"><td colspan="5">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):'الرصيد الجاري · Current Balance')+'</td><td class="'+curCls+'">₪ '+fmt(curBal)+'</td><td></td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>'+window.t('stmt.printed_at')+' '+fmtDate2(new Date().toISOString())+'</span><span>'+window.t('stmt.page_info')+'</span></div>';
+    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   const title=(fund==='food'?window.t('receipts.don_disp_food'):window.t('receipts.don_disp_diwan'));
   return {css:css, body:body, title:title};
 };
@@ -2514,8 +2536,7 @@ window.prtMemberStmt=function(){
 
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const finalCls=finalBal>0?'neg':finalBal<0?'pos':'';  /* mo, positive bal = credit(green) */
-  const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">'+window.t('members.member_stmt')+'</span><div class="sub">'+window.t('stmt.member_label')+' '+esc(member.name)+'</div></div></div>'
+  const body=reportHeader(window.t('members.member_stmt'),{sub:window.t('stmt.member_label')+' '+esc(member.name)})
     +'<div class="period">'+window.t('stmt.period_label')+' '+periodLabel+' '+window.t('stmt.active_since')+' '+(member.active_from_year||'—')+(member.phone?' · ☎ '+esc(member.phone):'')+'</div>'
     +'<div class="cards">'
     +'<div class="card"><div class="k">'+window.t('stmt.opening_bal')+'</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
@@ -2528,7 +2549,7 @@ window.prtMemberStmt=function(){
     +donsHTML
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_member')+'</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>'+window.t('stmt.printed_at')+' '+printDate+'</span><span>'+window.t('stmt.page_info')+'</span></div>';
+    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:printDate,page:window.t('stmt.page_info')});
   openPrintWin(css,body);
 };
 
@@ -2614,8 +2635,7 @@ window.prtDonStmt=function(){
     +'<td>'+donDir(r)+'</td>'
     +'<td>'+esc(r.notes||'—')+'</td></tr>').join('');
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
-  const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
-    +'<div class="meta"><span class="tt">'+window.t('stmt.donation_report')+'</span><div class="sub">'+window.t('stmt.currency_note')+'</div></div></div>'
+  const body=reportHeader(window.t('stmt.donation_report'),{sub:window.t('stmt.currency_note')})
     +'<div class="period">'+window.t('stmt.count_label')+' '+rows.length+'</div>'
     +'<div class="cards">'
     +'<div class="card"><div class="k">'+window.t('stmt.donation_count')+'</div><div class="v">'+rows.length+'</div></div>'
@@ -2629,7 +2649,7 @@ window.prtDonStmt=function(){
     +'<tr class="final"><td colspan="3">الإجمالي · Total</td><td class="pos">₪ '+fmt(tot)+'</td><td colspan="3"></td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
-    +'<div class="pgfoot"><span>ديوان آل طه — diwan-finance.com</span><span>'+window.t('stmt.printed_at')+' '+fmtDate2(new Date().toISOString())+'</span><span>'+window.t('stmt.page_info')+'</span></div>';
+    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   openPrintWin(css,body);
 };
 
@@ -2841,7 +2861,7 @@ window.exportMemberStmt=function(format){
   const rowsHtml=computed.map(r=>{const balTxt='\u20aa '+fmt(Math.abs(r.bal))+(r.bal>0?' (\u0645\u062f\u064a\u0646)':r.bal<0?' (\u062f\u0627\u0626\u0646)':'');return '<tr><td>'+(r.date==='\u2014'?'\u2014':r.date)+'</td><td>'+esc(r.no)+'</td><td>'+esc(r.desc)+'</td>'+'<td>'+(r.dr>0?'<span class="dr">\u20aa '+fmt(r.dr)+'</span>':'\u2014')+'</td>'+'<td>'+(r.cr>0?'<span class="cr">\u20aa '+fmt(r.cr)+'</span>':'\u2014')+'</td>'+'<td class="bal">'+balTxt+'</td></tr>';}).join('');
   const finalTxt=FIN.balanceLabel(finalBal,true);
   const balCls=finalBal<=0?'pos':'neg';
-  const htmlDoc='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Reem+Kufi:wght@400;500;700&display=swap" rel="stylesheet">'+'<style>'+PRINT_TOKENS+'@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff;padding:10mm}</style></head><body>'+'<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</h1><p>\u0646\u0638\u0627\u0645 \u0627\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u00b7 diwan-finance.com</p></div></div>'+'<div class="meta"><span class="tt">\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648</span><div class="sub">\u0627\u0644\u0639\u0636\u0648: '+esc(member.name)+'</div></div></div>'+'<div class="period">\u0627\u0644\u0641\u062a\u0631\u0629: '+periodLabel+' \u00b7 \u0646\u0627\u0634\u0637 \u0645\u0646 \u0633\u0646\u0629 '+(member.active_from_year||'\u2014')+'</div>'+'<div class="cards"><div class="card"><div class="k">\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a</div><div class="v">\u20aa '+fmt(openBal)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0633\u062a\u062d\u0642</div><div class="v neg">\u20aa '+fmt(totalDues)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639</div><div class="v pos">\u20aa '+fmt(totalPaid)+'</div></div>'+'<div class="card"><div class="k">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a</div><div class="v '+balCls+'">'+finalTxt+'</div></div></div>'+'<table class="dt"><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0631\u062c\u0639</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u0645\u0633\u062a\u062d\u0642 (\u0645\u062f\u064a\u0646)</th><th>\u0645\u062f\u0641\u0648\u0639 (\u062f\u0627\u0626\u0646)</th><th>\u0627\u0644\u0631\u0635\u064a\u062f</th></tr></thead><tbody>'+rowsHtml+'<tr class="final"><td colspan="5">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a \u00b7 Final Balance</td><td class="'+balCls+'">'+finalTxt+'</td></tr></tbody></table>'+'<div class="dfoot"><div class="qr-u"><div class="box"></div><div class="cap">diwan-finance.com</div></div>'+'<div class="sigs"><div class="sig-u"><div class="line">\u0627\u0644\u0645\u064f\u062d\u0627\u0633\u0628</div></div><div class="sig-u"><div class="line">\u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0639\u0636\u0648</div></div></div></div>'+'<div class="pgfoot"><span>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 diwan-finance.com</span><span>\u0637\u064f\u0628\u0639: '+printDate+'</span><span>\u0635\u0641\u062d\u0629 1 / 1</span></div>'+'</body></html>';
+  const htmlDoc='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Reem+Kufi:wght@400;500;700&display=swap" rel="stylesheet">'+'<style>'+PRINT_TOKENS+'@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff;padding:10mm}</style></head><body>'+reportHeader('\u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648',{sub:'\u0627\u0644\u0639\u0636\u0648: '+esc(member.name)})+'<div class="period">\u0627\u0644\u0641\u062a\u0631\u0629: '+periodLabel+' \u00b7 \u0646\u0627\u0634\u0637 \u0645\u0646 \u0633\u0646\u0629 '+(member.active_from_year||'\u2014')+'</div>'+'<div class="cards"><div class="card"><div class="k">\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a</div><div class="v">\u20aa '+fmt(openBal)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0633\u062a\u062d\u0642</div><div class="v neg">\u20aa '+fmt(totalDues)+'</div></div>'+'<div class="card"><div class="k">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639</div><div class="v pos">\u20aa '+fmt(totalPaid)+'</div></div>'+'<div class="card"><div class="k">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a</div><div class="v '+balCls+'">'+finalTxt+'</div></div></div>'+'<table class="dt"><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0631\u062c\u0639</th><th>\u0627\u0644\u0628\u064a\u0627\u0646</th><th>\u0645\u0633\u062a\u062d\u0642 (\u0645\u062f\u064a\u0646)</th><th>\u0645\u062f\u0641\u0648\u0639 (\u062f\u0627\u0626\u0646)</th><th>\u0627\u0644\u0631\u0635\u064a\u062f</th></tr></thead><tbody>'+rowsHtml+'<tr class="final"><td colspan="5">\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a \u00b7 Final Balance</td><td class="'+balCls+'">'+finalTxt+'</td></tr></tbody></table>'+'<div class="dfoot"><div class="qr-u"><div class="box"></div><div class="cap">diwan-finance.com</div></div>'+'<div class="sigs"><div class="sig-u"><div class="line">\u0627\u0644\u0645\u064f\u062d\u0627\u0633\u0628</div></div><div class="sig-u"><div class="line">\u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0639\u0636\u0648</div></div></div></div>'+reportFooter({date:printDate,page:'\u0635\u0641\u062d\u0629 1 / 1'})+'</body></html>';
 
   if(format==='html'){
     const a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(htmlDoc);a.download=fname+'.html';a.click();
@@ -2943,7 +2963,7 @@ window.exportPagePDF=function(type){
     tableHTML+='</tbody></table>';
   }
 
-  const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647</h1><p>\u0646\u0638\u0627\u0645 \u0627\u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u00b7 diwan-finance.com</p></div></div>'+'<div class="meta"><span class="tt">'+t[0]+'</span><div class="sub">'+t[1]+'</div></div></div>'+'<div class="period">\u0637\u064f\u0628\u0639: '+printDate+'</div>'+tableHTML+'<div class="pgfoot"><span>\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 diwan-finance.com</span><span>\u0637\u064f\u0628\u0639: '+printDate+'</span><span>\u0635\u0641\u062d\u0629 1</span></div>';
+  const body=reportHeader(t[0],{sub:t[1]})+'<div class="period">\u0637\u064f\u0628\u0639: '+printDate+'</div>'+tableHTML+reportFooter({date:printDate});
   openPrintWin(css,body);
 };
 
