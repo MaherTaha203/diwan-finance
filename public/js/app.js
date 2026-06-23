@@ -1317,7 +1317,7 @@ window.renderMemberStmt=function(){
         <div style="font-size:18px;font-weight:700">
           ${esc(member.name)}
         </div>
-        ${member.active_from_year?`<div style="font-size:12px;color:var(--tx3);margin-top:3px">سنة بدء الاشتراك: ${member.active_from_year}</div>`:''}
+        ${(member.phone||member.active_from_year)?`<div style="font-size:12px;color:var(--tx3);margin-top:3px">${member.phone?'📞 '+esc(member.phone):''}${member.phone&&member.active_from_year?' · ':''}${member.active_from_year?'سنة بدء الاشتراك: '+member.active_from_year:''}</div>`:''}
         <div style="margin-top:8px;display:inline-block;padding:6px 12px;border-radius:8px;background:rgba(0,0,0,.04);font-size:13px;font-weight:700;color:${balCol}">${balText}: ₪ ${fmt(Math.abs(finBal))}</div>
       </div>
       <div class="ledger-hdr">
@@ -2516,7 +2516,7 @@ window.prtMemberStmt=function(){
   const finalCls=finalBal>0?'neg':finalBal<0?'pos':'';  /* mo, positive bal = credit(green) */
   const body='<div class="dh"><div class="org"><div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLYr9mK2YjYp9mGINii2YQg2LfZhyI+CiAgPCEtLSBDb25jZXB0IEIg4oCUIE1vZGVybiBUcmVhc3VyeSDCtyB0cmFuc3BhcmVudCBpbnN0aXR1dGlvbmFsIG1hcmsgwrcgZ29sZCDYtyBvbiBsZWRnZXIgcm93cyAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjAxLDE2Miw3NSwuMzIpIiBzdHJva2Utd2lkdGg9IjEuMyI+CiAgICA8bGluZSB4MT0iMjQiIHkxPSIzNCIgeDI9Ijc2IiB5Mj0iMzQiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjQ2IiB4Mj0iNzYiIHkyPSI0NiIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iNTgiIHgyPSI3NiIgeTI9IjU4Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI3MCIgeDI9Ijc2IiB5Mj0iNzAiLz4KICA8L2c+CiAgPHRleHQgeD0iNTAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjQzlBMjRCIgogICAgZm9udC1mYW1pbHk9IidSZWVtIEt1ZmknLCdDYWlybycsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSI1MiI+2Lc8L3RleHQ+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iNDAiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjMDBBNTdCIi8+CiAgPHJlY3QgeD0iMzAiIHk9Ijc2IiB3aWR0aD0iMTMiIGhlaWdodD0iMy40IiByeD0iMS43IiBmaWxsPSIjQzlBMjRCIi8+Cjwvc3ZnPgo=" alt="ديوان آل طه"></div><div><h1>ديوان آل طه</h1><p>نظام الإدارة المالية · diwan-finance.com</p></div></div>'
     +'<div class="meta"><span class="tt">'+window.t('members.member_stmt')+'</span><div class="sub">'+window.t('stmt.member_label')+' '+esc(member.name)+'</div></div></div>'
-    +'<div class="period">'+window.t('stmt.period_label')+' '+periodLabel+' '+window.t('stmt.active_since')+' '+(member.active_from_year||'—')+'</div>'
+    +'<div class="period">'+window.t('stmt.period_label')+' '+periodLabel+' '+window.t('stmt.active_since')+' '+(member.active_from_year||'—')+(member.phone?' · ☎ '+esc(member.phone):'')+'</div>'
     +'<div class="cards">'
     +'<div class="card"><div class="k">'+window.t('stmt.opening_bal')+'</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
     +'<div class="card"><div class="k">'+window.t('stmt.total_due')+'</div><div class="v neg">₪ '+fmt(totalDues)+'</div></div>'
@@ -2807,9 +2807,28 @@ window.exportMemberStmt=function(format){
 
   /* EXCEL */
   if(format==='excel'){
+    const _dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
+    const _alloc=FIN.allocateFoodDonations();
+    const _donRows=[];
+    if(_dons.length){
+      _donRows.push([],['حركات التبرعات · Donation movements'],['التاريخ','رقم السند','تفصيل الحركة','المبلغ ₪']);
+      _dons.forEach(d=>{
+        let label;
+        if(d.donation_display_fund==='food'){
+          const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
+          const parts=[];
+          if(sp.debtSettled>0) parts.push(mcLabel('debt')+' ₪'+fmt(sp.debtSettled));
+          if(sp.toDeficit>0)   parts.push(mcLabel('deficit')+' ₪'+fmt(sp.toDeficit));
+          if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
+          label=parts.join(' · ')||'تبرع';
+        } else label='تبرع ديوان';
+        _donRows.push([d.receipt_date,d.no,label,Number(d.amount_ils||d.amount||0)]);
+      });
+      _donRows.push(['تسوية الذمة تخفّض رصيد العضو · التبرعات الأخرى للشفافية فقط ولا تؤثّر على الرصيد']);
+    }
     const doExcel=()=>{
       const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064f \u062a\u062d\u0645\u064a\u0644 \u0645\u0643\u062a\u0628\u0629 Excel...','info');return;}
-      const wsData=[['\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 \u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648'],[`\u0627\u0644\u0639\u0636\u0648: ${member.name}  |  \u0627\u0644\u0641\u062a\u0631\u0629: ${periodLabel}`],[],['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f','\u0627\u0644\u0628\u064a\u0627\u0646','\u062f\u0627\u0626\u0646 \u20aa','\u0645\u062f\u064a\u0646 \u20aa','\u0627\u0644\u0631\u0635\u064a\u062f \u20aa'],...computed.map(r=>[r.date==='—'?'—':r.date,r.no,r.desc,r.cr>0?r.cr:'',r.dr>0?r.dr:'',r.bal]),[],['\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a','','',openBal,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a','','',totalDues,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a','','','',totalPaid,''],['\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a','','','','',finalBal]];
+      const wsData=[['\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 \u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648'],[`\u0627\u0644\u0639\u0636\u0648: ${member.name}${member.phone?'  |  \u260e '+member.phone:''}  |  \u0627\u0644\u0641\u062a\u0631\u0629: ${periodLabel}`],[],['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f','\u0627\u0644\u0628\u064a\u0627\u0646','\u062f\u0627\u0626\u0646 \u20aa','\u0645\u062f\u064a\u0646 \u20aa','\u0627\u0644\u0631\u0635\u064a\u062f \u20aa'],...computed.map(r=>[r.date==='—'?'—':r.date,r.no,r.desc,r.cr>0?r.cr:'',r.dr>0?r.dr:'',r.bal]),[],['\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a','','',openBal,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a','','',totalDues,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a','','','',totalPaid,''],['\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a','','','','',finalBal],..._donRows];
       const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!cols']=[{wch:12},{wch:14},{wch:30},{wch:14},{wch:14},{wch:16}];ws['!rtl']=true;styleDiwanSheet(XLSX,ws,{headerRow:3,money:[3,4,5]});
       const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'\u0643\u0634\u0641 \u0627\u0644\u062d\u0633\u0627\u0628');XLSX.writeFile(wb,fname+'.xlsx');
       toast('\u2713 Excel exported','ok');
