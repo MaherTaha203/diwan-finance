@@ -749,8 +749,8 @@ async function checkSession(){
 async function loadAll(){
   try{
     const[r1,r2,r3,r4,r5,r6]=await Promise.all([
-      SB.from('receipts').select('id,no,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
-      SB.from('payments').select('id,no,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
+      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
+      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
       SB.from('members').select(
 'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
 ).order('name'),
@@ -1803,6 +1803,19 @@ async function logAction(action,desc,tableN,recordId){
 }
 
 /* ═══ SAVE RECEIPT ═══ */
+/* ═══ QR verification token — cryptographically secure, non-sequential, base62 (16 chars).
+   Uniqueness is enforced by the DB unique index on verification_token. ═══ */
+function genVerificationToken(len){
+  len=len||16;
+  const A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const rng=(typeof crypto!=='undefined'&&crypto.getRandomValues)?crypto:(window.crypto||window.msCrypto);
+  const out=[]; const buf=new Uint8Array(len*2);
+  while(out.length<len){
+    rng.getRandomValues(buf);
+    for(let i=0;i<buf.length&&out.length<len;i++){ if(buf[i]<248) out.push(A[buf[i]%62]); } /* 248=4*62 → modulo-unbiased */
+  }
+  return out.join('');
+}
 window.saveRec=async function(print=false){
   if(!guardSave('saveRec')){return;}
   if(!can.write()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
@@ -1864,7 +1877,7 @@ window.saveRec=async function(print=false){
   }
   const no=nextNo('REC',DB.receipts);
   const{data,error}=await SB.from('receipts').insert({
-    no,fund_type:fund,receipt_date:date,
+    no,verification_token:genVerificationToken(),fund_type:fund,receipt_date:date,
     payer_type:payerType,
     member_id:payerType==='member'?memberId:null,
     contact_id:finalContactId,
@@ -1911,7 +1924,7 @@ window.savePay=async function(print=false){
   const benName=benType==='member'?gmn(memberId):benNameInput;
   const no=nextNo('PAY',DB.payments);
   const{data,error}=await SB.from('payments').insert({
-    no,fund_type:fund,payment_date:date,
+    no,verification_token:genVerificationToken(),fund_type:fund,payment_date:date,
     beneficiary_type:benType,
     member_id:benType==='member'?memberId:null,
     beneficiary_name:benName,
@@ -2348,7 +2361,7 @@ function reportFooter(opts){
 
 /* VIS-2: single-voucher builders matching approved mockups (01 receipt / 03 payment) */
 function buildRecVoucher(r){
-  const verifyUrl='https://www.diwan-finance.com/verify/'+esc(r.no);
+  const verifyUrl='https://www.diwan-finance.com/verify/'+esc(r.verification_token||'');
   const meth=METHOD_LABELS[r.payment_method||'cash']||(r.payment_method||'');
   const cur=(r.currency&&r.currency!=='ILS')?('<div class="row"><div class="lbl">العملة الأصلية</div><div class="val">'+fmtD(r.amount)+' '+esc(r.currency)+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</div></div>'):'';
   const note=r.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(r.notes)+'</div></div>'):'';
@@ -2362,13 +2375,13 @@ function buildRecVoucher(r){
     +cur+note
     +'</div>'
     +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsAr(r.amount_ils||r.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify/'+esc(r.no)+'</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
 }
 function buildPayVoucher(p){
-  const verifyUrl='https://www.diwan-finance.com/verify/'+esc(p.no);
+  const verifyUrl='https://www.diwan-finance.com/verify/'+esc(p.verification_token||'');
   const cur=(p.currency&&p.currency!=='ILS')?('<div class="row"><div class="lbl">العملة الأصلية</div><div class="val">'+fmtD(p.amount)+' '+esc(p.currency)+' × ₪'+Number(p.exchange_rate||1).toFixed(2)+'</div></div>'):'';
   const note=p.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(p.notes)+'</div></div>'):'';
   const appr=p.approved_by?('<div class="row"><div class="lbl">معتمد من</div><div class="val">'+esc(p.approved_by)+'</div></div>'):'';
@@ -2383,7 +2396,7 @@ function buildPayVoucher(p){
     +cur+note+appr
     +'</div>'
     +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsAr(p.amount_ils||p.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify/'+esc(p.no)+'</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';

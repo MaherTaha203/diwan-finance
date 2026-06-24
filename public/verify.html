@@ -13,11 +13,12 @@
 <link rel="icon" type="image/svg+xml" href="/logo.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#0F1B2D">
+<style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 /* ═══ DESIGN TOKENS (matches app.css) ═══ */
 :root{
-  --navy:#1C2B3A;
+  --navy:#0F1B2D;
   --navy2:#243447;
   --navy3:#2E4259;
   --acc:#00C896;
@@ -392,10 +393,11 @@ let LAST_RESULT = null;  /* Cache for language re-render */
 function getDocIdFromPath() {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const raw = segments.pop() || '';
-  const clean = raw.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
-  /* Validate: must look like a voucher ID — letters, dash, digits.
-     e.g.  REC-00005 ✓   PAY-00012 ✓   VERIFY ✗   (empty) ✗     */
-  if (!clean || !/^[A-Z]+-\d+$/.test(clean)) return null;
+  /* Verification tokens are case-sensitive base62 (A-Za-z0-9), 10-64 chars.
+     Receipt/payment NUMBERS are never used for lookup (anti-enumeration):
+     no uppercasing, no REC-/PAY- pattern. */
+  const clean = raw.replace(/[^A-Za-z0-9]/g, '');
+  if (!clean || !/^[A-Za-z0-9]{10,64}$/.test(clean)) return null;
   return clean;
 }
 
@@ -533,7 +535,8 @@ function showResult(apiResult, docId) {
   const elTs     = document.getElementById('verified-ts');
   const elTag    = document.getElementById('system-tag-text');
 
-  elChip.textContent = docId || '';
+  /* Show the official receipt/payment number when valid; otherwise the scanned token. */
+  elChip.textContent = (valid && doc && doc.id) ? doc.id : (docId || '');
 
   /* ── Classify state ── */
   let state;
