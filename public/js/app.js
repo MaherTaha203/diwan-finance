@@ -576,11 +576,19 @@ window.login=async function(){
 function showLoginErr(msg){const el=document.getElementById('login-err');el.textContent=msg;el.classList.add('show');}
 
 async function afterLogin(){
-  const{data:role}=await SB.from('user_roles').select('*').eq('user_id',CU.id).single();
-  /* Enforce two-role model: any unrecognised role defaults to viewer */
+  const{data:role}=await SB.from('user_roles').select('*').eq('user_id',CU.id).maybeSingle();
+  /* Fail-closed: only users provisioned with a valid role row may enter.
+     No default-viewer fallback — an unknown/self-registered account is denied. */
   const rawRole=role?.role;
+  if(!role||(rawRole!=='admin'&&rawRole!=='viewer')){
+    await SB.auth.signOut();CU=null;CUR=null;
+    showLoginErr('لا تملك صلاحية الوصول إلى النظام. الرجاء التواصل مع مسؤول النظام.');
+    const lb=document.getElementById('login-btn');
+    if(lb){lb.disabled=false;lb.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
+    return;
+  }
   const safeRole=(rawRole==='admin')?'admin':'viewer';
-  CUR={...(role||{}),role:safeRole,full_name:role?.full_name||CU.email};
+  CUR={...role,role:safeRole,full_name:role.full_name||CU.email};
 
   const ini=(CUR.full_name||CU.email).charAt(0).toUpperCase();
   document.getElementById('uav').textContent=ini;
