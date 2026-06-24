@@ -572,6 +572,34 @@
       id="edit-rec-date">
   </div>
 
+  <div class="fi full" id="edit-rec-member-wrap" style="display:none">
+    <label>العضو (يمكن إعادة التعيين) <span class="req">*</span></label>
+    <select id="edit-rec-member"></select>
+  </div>
+
+  <div id="edit-rec-food-wrap" style="display:none">
+    <div class="fi full">
+      <label>تصنيف تبرع الغداء</label>
+      <select id="edit-rec-alloc-type">
+        <option value="support_current">دعم حالي · Food Current</option>
+        <option value="reduce_deficit">عجز تاريخي · Food Historical</option>
+      </select>
+    </div>
+    <div class="fi full">
+      <label>وضع التوزيع</label>
+      <select id="edit-rec-alloc-mode" onchange="window.onEditAllocModeChange()">
+        <option value="auto">تلقائي — Item 9</option>
+        <option value="manual">يدوي</option>
+      </select>
+    </div>
+    <div id="edit-rec-manual-wrap" style="display:none">
+      <div class="fi full"><label>تسوية ذمة · Debt</label><input type="number" id="edit-rec-m-debt" min="0" step="0.01" oninput="window.onEditManualInput()"></div>
+      <div class="fi full"><label>تبرع تاريخي · Historical</label><input type="number" id="edit-rec-m-hist" min="0" step="0.01" oninput="window.onEditManualInput()"></div>
+      <div class="fi full"><label>دعم حالي · Current</label><input type="number" id="edit-rec-m-current" min="0" step="0.01" oninput="window.onEditManualInput()"></div>
+      <div class="ibox" id="edit-rec-manual-sum" style="font-size:12px">المجموع: ₪0 / ₪0</div>
+    </div>
+  </div>
+
   <div class="fi full">
     <label>ملاحظات</label>
     <textarea id="edit-rec-notes"></textarea>

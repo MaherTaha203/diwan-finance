@@ -280,14 +280,31 @@ const FIN={
   allocateFoodDonations(){
     if(DB._alloc) return DB._alloc;
     const eng=(typeof window!=='undefined'&&window.FoodDonationAllocation);
-    const donations=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food')
-      .slice().sort((a,b)=>(new Date(a.receipt_date)-new Date(b.receipt_date))||String(a.id).localeCompare(String(b.id)))
-      .map(r=>({id:r.id,memberId:r.member_id||null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
+    /* P7 — manual override layer (ADDITIVE, wrapper-only). The pure Item 9 engine
+       (foodDonationAllocation.js) is untouched and runs UNCHANGED on the automatic
+       subset only. Manual-allocated vouchers are carved out; their stored split
+       (debt/historical/current) is the accounting source for those vouchers. When no
+       manual vouchers exist the result is value-identical to the previous behaviour. */
+    const foodDon=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food')
+      .slice().sort((a,b)=>(new Date(a.receipt_date)-new Date(b.receipt_date))||String(a.id).localeCompare(String(b.id)));
+    const autoRows=foodDon.filter(r=>r.manual_allocation!==true);
+    const manualRows=foodDon.filter(r=>r.manual_allocation===true);
+    const donations=autoRows.map(r=>({id:r.id,memberId:r.member_id||null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
     const baseDebt={};
     donations.forEach(d=>{ if(d.memberId!=null&&baseDebt[d.memberId]===undefined) baseDebt[d.memberId]=FIN._memberBaseBalance(d.memberId); });
     const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
-    DB._alloc = eng ? eng.allocate(donations,baseDebt,magnitude)
-                    : {perReceipt:{},perMember:{},debtSettlementTotal:0,reserveTotal:0,currentSupportTotal:0};
+    const autoRes = eng ? eng.allocate(donations,baseDebt,magnitude)
+                        : {perReceipt:{},perMember:{},debtSettlementTotal:0,reserveTotal:0,currentSupportTotal:0};
+    const perReceipt=Object.assign({},autoRes.perReceipt);
+    const perMember=Object.assign({},autoRes.perMember);
+    let dT=autoRes.debtSettlementTotal, rT=autoRes.reserveTotal, cT=autoRes.currentSupportTotal;
+    manualRows.forEach(r=>{
+      const debt=Number(r.manual_debt_settlement||0), hist=Number(r.manual_historical_donation||0), cur=Number(r.manual_current_support||0);
+      perReceipt[r.id]={debtSettled:FIN._r2(debt),toDeficit:FIN._r2(hist),toCurrent:FIN._r2(cur)};
+      if(r.member_id!=null) perMember[r.member_id]=FIN._r2((perMember[r.member_id]||0)+debt);
+      dT=FIN._r2(dT+debt); rT=FIN._r2(rT+hist); cT=FIN._r2(cT+cur);
+    });
+    DB._alloc={perReceipt,perMember,debtSettlementTotal:FIN._r2(dT),reserveTotal:FIN._r2(rT),currentSupportTotal:FIN._r2(cT)};
     return DB._alloc;
   },
   foodDebtSettlementTotal(){ return FIN._r2(FIN.allocateFoodDonations().debtSettlementTotal); },
@@ -757,7 +774,7 @@ async function checkSession(){
 async function loadAll(){
   try{
     const[r1,r2,r3,r4,r5,r6]=await Promise.all([
-      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version').order('receipt_date',{ascending:false}),
+      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version').order('payment_date',{ascending:false}),
       SB.from('members').select(
 'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
@@ -1513,7 +1530,7 @@ window.setPill=function(prefix,el){
 /* ═══ DROPDOWNS ═══ */
 function fillMemberDropdowns(){
   const opts='<option value="">-- اختر عضواً --</option>'+DB.members.filter(m=>m.is_active).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
-  ['rec-member','pay-member','don-mem-sel'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  ['rec-member','pay-member','don-mem-sel','edit-rec-member'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
   ['rec-member','pay-member'].forEach(id=>{ if(document.getElementById(id)){ enhanceMemberSelect(id); syncComboInput(id); } });
 }
 function fillContactDropdown(){
@@ -2036,6 +2053,24 @@ window.showVoucherHistory=async function(kind,voucherId){
         +'<div style="font-size:11px;color:var(--warn);margin-top:3px">السبب: '+esc(v.edit_reason||'—')+'</div></div>';}).join('');
   window.openM('vhist');
 };
+/* P7 — manual allocation UI helpers (edit modal). */
+window.onEditAllocModeChange=function(){
+  const mode=document.getElementById('edit-rec-alloc-mode')?.value;
+  const mw=document.getElementById('edit-rec-manual-wrap');
+  if(mw) mw.style.display=(mode==='manual')?'':'none';
+  window.onEditManualInput();
+};
+window.onEditManualInput=function(){
+  const amount=parseFloat(document.getElementById('edit-rec-amount')?.value)||0;
+  const debt=parseFloat(document.getElementById('edit-rec-m-debt')?.value)||0;
+  const hist=parseFloat(document.getElementById('edit-rec-m-hist')?.value)||0;
+  const cur=parseFloat(document.getElementById('edit-rec-m-current')?.value)||0;
+  const sum=Math.round((debt+hist+cur)*100)/100;
+  const box=document.getElementById('edit-rec-manual-sum');
+  if(box){ const ok=sum===Math.round(amount*100)/100;
+    box.textContent='المجموع: ₪'+fmt(sum)+' / ₪'+fmt(amount)+(ok?'  ✓':'  ✗ يجب أن يتساوى');
+    box.className='ibox'+(ok?'':' warn'); }
+};
 window.editRec=function(id){
   if(!can.admin()){
     toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
@@ -2056,6 +2091,28 @@ window.editRec=function(id){
   const dateEl = document.getElementById('edit-rec-date');
   if(dateEl){
     dateEl.value = r.receipt_date || '';
+  }
+
+  /* P4/P6 — member reassignment (member-type receipts only; type/domain immutable). */
+  const mWrap=document.getElementById('edit-rec-member-wrap');
+  const mSel=document.getElementById('edit-rec-member');
+  if(mWrap&&mSel){
+    if(r.payer_type==='member'){ mWrap.style.display=''; mSel.value=r.member_id||''; }
+    else { mWrap.style.display='none'; }
+  }
+  /* P4/P7 — food-donation allocation mode + manual split (food domain only). */
+  const fWrap=document.getElementById('edit-rec-food-wrap');
+  if(fWrap){
+    const isFoodDon=r.fund_type==='donation'&&r.donation_display_fund==='food';
+    fWrap.style.display=isFoodDon?'':'none';
+    if(isFoodDon){
+      const at=document.getElementById('edit-rec-alloc-type'); if(at) at.value=r.food_donation_allocation||'support_current';
+      const am=document.getElementById('edit-rec-alloc-mode'); if(am) am.value=r.manual_allocation?'manual':'auto';
+      const md=document.getElementById('edit-rec-m-debt'); if(md) md.value=(r.manual_debt_settlement!=null?r.manual_debt_settlement:'');
+      const mh=document.getElementById('edit-rec-m-hist'); if(mh) mh.value=(r.manual_historical_donation!=null?r.manual_historical_donation:'');
+      const mc=document.getElementById('edit-rec-m-current'); if(mc) mc.value=(r.manual_current_support!=null?r.manual_current_support:'');
+      window.onEditAllocModeChange();
+    }
   }
 
   window.openM('edit-rec');
@@ -2086,14 +2143,33 @@ if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
 /* Phase 10 — cannot move a voucher INTO a locked (closed) year. */
 if(voucherLocked(date)){ toast('🔒 لا يمكن نقل السند إلى سنة مقفلة','err'); return; }
 
-/* Phase 2/5 — versioned edit. Voucher number (no) is immutable; only amount_ils,
-   receipt_date and notes change here. FIN rebuilds all balances on loadAll(). */
+/* P4/P6/P7 — build the full edit set. Voucher number, fund_type and the donation
+   domain (food/diwan) are NEVER changed. FIN rebuilds every balance on loadAll(). */
+const upd={ amount_ils:amount, receipt_date:date, notes:notes };
+/* P6 — member reassignment (member-type receipts). */
+if(r.payer_type==='member'){
+  const newMid=document.getElementById('edit-rec-member')?.value||r.member_id;
+  if(!newMid){ toast('✋ اختر العضو','warn'); return; }
+  upd.member_id=newMid; upd.payer_name=gmn(newMid);
+}
+/* P7 — food-donation allocation: automatic (Item 9) or manual per-voucher override. */
+if(r.fund_type==='donation' && r.donation_display_fund==='food'){
+  upd.food_donation_allocation=document.getElementById('edit-rec-alloc-type')?.value||r.food_donation_allocation||'support_current';
+  const mode=document.getElementById('edit-rec-alloc-mode')?.value||'auto';
+  if(mode==='manual'){
+    const debt=parseFloat(document.getElementById('edit-rec-m-debt')?.value)||0;
+    const hist=parseFloat(document.getElementById('edit-rec-m-hist')?.value)||0;
+    const cur=parseFloat(document.getElementById('edit-rec-m-current')?.value)||0;
+    if(!validateManualAllocation(amount,debt,hist,cur)){ toast('✋ مجموع التوزيع اليدوي يجب أن يساوي مبلغ السند (₪'+fmt(amount)+')','err'); return; }
+    upd.manual_allocation=true; upd.manual_debt_settlement=debt; upd.manual_historical_donation=hist; upd.manual_current_support=cur;
+  } else {
+    upd.manual_allocation=false; upd.manual_debt_settlement=null; upd.manual_historical_donation=null; upd.manual_current_support=null;
+  }
+}
 const nowIso = new Date().toISOString();
 const newVer = Number(r.version||1)+1;
-const { error } = await SB
-  .from('receipts')
-  .update({ amount_ils: amount, receipt_date: date, notes: notes, version: newVer, updated_at: nowIso })
-  .eq('id', id);
+upd.version=newVer; upd.updated_at=nowIso;
+const { error } = await SB.from('receipts').update(upd).eq('id', id);
 
 if (error) {
   toast(window.t('errors.generic_error')+': '+error.message,'err');
@@ -2101,9 +2177,7 @@ if (error) {
 }
 /* Phase 2/3 — immutable full snapshot + reason for this version (and v1 baseline). */
 try{
-  await recordVoucherVersion('receipt', r,
-    { ...r, amount_ils:amount, receipt_date:date, notes:notes, version:newVer, updated_at:nowIso },
-    reason, newVer);
+  await recordVoucherVersion('receipt', r, { ...r, ...upd }, reason, newVer);
 }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
 
 await logAction('edit',`تعديل إيصال ${r.no} (نسخة ${newVer}) — ₪${fmt(amount)} | السبب: ${reason}`, 'receipts', id);
@@ -2562,7 +2636,17 @@ window.buildFundStatementHTML=function(fund){
   const rowsHTML=rows.map((r,i)=>{
     bal+=r.cr-r.dr;totCr+=r.cr;totDr+=r.dr;
     if(i===0&&r.type==='open')openBal=r.cr-r.dr;
-    const crCell=r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':(r.type==='don'?'<span class="cr">'+window.t('receipts.fund_don')+'</span>':'—');
+    let crCell;
+    if(r.cr>0){ crCell='<span class="cr">₪ '+fmt(r.cr)+'</span>'; }
+    else if(r.type==='don'){
+      /* P9 — informational food-donation row: classify Historical vs Current Support and
+         show the amount. cr stays 0 so the current balance is NOT affected (display only). */
+      const _dr=DB.receipts.find(x=>x.id===r.id);
+      const _amt=_dr?Number(_dr.amount_ils||_dr.amount||0):0;
+      const _hist=_dr?(_dr.manual_allocation?(Number(_dr.manual_historical_donation||0)>0):(_dr.food_donation_allocation==='reduce_deficit')):false;
+      const _lbl=fund==='food'?(_hist?(window.LANG==='en'?'Historical Donation':'تبرع تاريخي'):(window.LANG==='en'?'Current Support':'دعم حالي')):window.t('receipts.fund_don');
+      crCell='<span class="cr">+₪ '+fmt(_amt)+' · '+_lbl+'</span>';
+    } else { crCell='—'; }
     const drCell=r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—';
     return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(bal)+'</td><td>'+esc(r.note||'')+'</td></tr>';
   }).join('');
