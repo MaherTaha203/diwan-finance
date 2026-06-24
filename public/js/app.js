@@ -2147,6 +2147,18 @@ if(!btn)return;
 btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   const{data:adNew,error}=await SB.from('annual_dues').insert({year,amount,applied_by:CUR?.full_name||CU?.email,member_count:members.length}).select('id').single();
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
+  /* H1 FIX — generate the per-member subscription obligations for this year so the dues are
+     actually billed. FIN.memberStatement / A2 / A3 / member statements all read
+     member_subscriptions; without these rows the year is invisible to the accounting engine.
+     Every active member gets a row; due = amount when eligible (active_from_year<=year), else 0. */
+  const subRows=DB.members.filter(m=>m.is_active!==false).map(m=>{
+    const due=(!m.active_from_year||m.active_from_year<=year)?Number(amount):0;
+    return {member_id:m.id,year,due_amount_ils:due,paid_amount_ils:0,balance_ils:due};
+  });
+  if(subRows.length){
+    const{error:subErr}=await SB.from('member_subscriptions').insert(subRows);
+    if(subErr){toast(window.t('errors.generic_error')+': '+subErr.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
+  }
   await logAction('add',`تطبيق اشتراك سنة ${year} — ${members.length} عضو — ₪${fmt(amount)} لكل عضو`,'annual_dues',adNew?.id||null);
   await loadAll();
   btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';
