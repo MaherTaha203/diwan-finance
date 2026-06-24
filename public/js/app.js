@@ -757,8 +757,8 @@ async function checkSession(){
 async function loadAll(){
   try{
     const[r1,r2,r3,r4,r5,r6]=await Promise.all([
-      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
-      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
+      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version').order('receipt_date',{ascending:false}),
+      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version').order('payment_date',{ascending:false}),
       SB.from('members').select(
 'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
 ).order('name'),
@@ -1979,6 +1979,63 @@ window.saveMember=async function(){
 };
 
 /* ═══ EDIT RECORDS (admin only) ═══ */
+/* ═══ VOUCHER VERSIONING · EDIT REASON · YEAR-END LOCK (Phases 2/3/5/7/10/11/12) ═══
+   The live receipt/payment row is the single source; FIN.* rebuilds every balance from
+   source on loadAll(), so the Universal Rebuild rule (reverse → recompute → reapply) is
+   satisfied automatically — no deltas, no partial adjustments. Voucher numbers (`no`)
+   are never changed by any edit. */
+function lockedThroughYear(){
+  return Number.isFinite(window.LOCKED_THROUGH_YEAR)?window.LOCKED_THROUGH_YEAR:(new Date().getFullYear()-1);
+}
+function voucherLocked(dateStr){
+  if(!dateStr) return false;
+  const y=new Date(dateStr).getFullYear();
+  return Number.isFinite(y)&&y<=lockedThroughYear();
+}
+/* Phase 7 — manual food-donation allocation must sum EXACTLY to the voucher amount. */
+function validateManualAllocation(amount,debt,historical,current){
+  const sum=FIN._r2(Number(debt||0)+Number(historical||0)+Number(current||0));
+  return FIN._r2(sum)===FIN._r2(Number(amount||0));
+}
+/* Phase 2/12 — append immutable full-snapshot versions. Backfills the v1 baseline from the
+   pre-edit state the first time a voucher is edited. preRow/postRow are complete row objects. */
+async function recordVoucherVersion(kind,preRow,postRow,reason,newVer){
+  const editor=CUR?.full_name||CU?.email||'admin';
+  const nowIso=new Date().toISOString();
+  const{data:hist}=await SB.from('voucher_versions').select('version_no')
+    .eq('voucher_kind',kind).eq('voucher_id',preRow.id).limit(1);
+  if(!hist||!hist.length){
+    const{error:bErr}=await SB.from('voucher_versions').insert({
+      voucher_kind:kind,voucher_id:preRow.id,voucher_no:preRow.no,version_no:Number(preRow.version||1),
+      snapshot:preRow,edit_reason:'سجل أولي · Initial',
+      edited_by:preRow.created_by||editor,edited_at:preRow.created_at||nowIso});
+    if(bErr) throw new Error(bErr.message);
+  }
+  const{error:nErr}=await SB.from('voucher_versions').insert({
+    voucher_kind:kind,voucher_id:preRow.id,voucher_no:preRow.no,version_no:newVer,
+    snapshot:postRow,edit_reason:reason,edited_by:editor,edited_at:nowIso});
+  if(nErr) throw new Error(nErr.message);
+}
+async function fetchVoucherHistory(kind,voucherId){
+  const{data}=await SB.from('voucher_versions').select('*')
+    .eq('voucher_kind',kind).eq('voucher_id',voucherId).order('version_no',{ascending:true});
+  return data||[];
+}
+window.showVoucherHistory=async function(kind,voucherId){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  const vers=await fetchVoucherHistory(kind,voucherId);
+  const box=document.getElementById('vhist-body');
+  if(!box){toast('عدد النسخ: '+vers.length,'info');return;}
+  box.innerHTML=(!vers.length)?'<div class="empty"><div class="empty-t">لا توجد نسخ سابقة</div></div>'
+    :vers.map(v=>{const s=v.snapshot||{};const amt=s.amount_ils!=null?('₪ '+fmt(s.amount_ils)):'';
+      const dt=s.receipt_date||s.payment_date||'';const who=s.payer_name||s.beneficiary_name||(s.member_id?gmn(s.member_id):'—');
+      return '<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:700">'
+        +'<span>نسخة رقم '+v.version_no+'</span><span style="color:var(--tx3);font-size:11px">'+esc((v.edited_at||'').slice(0,10))+'</span></div>'
+        +'<div style="font-size:12px;margin-top:4px">'+esc(String(who))+' · '+amt+' · '+esc(dt)+'</div>'
+        +'<div style="font-size:11px;color:var(--tx3);margin-top:3px">المستخدم: '+esc(v.edited_by||'—')+'</div>'
+        +'<div style="font-size:11px;color:var(--warn);margin-top:3px">السبب: '+esc(v.edit_reason||'—')+'</div></div>';}).join('');
+  window.openM('vhist');
+};
 window.editRec=function(id){
   if(!can.admin()){
     toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
@@ -1987,10 +2044,13 @@ window.editRec=function(id){
 
   const r = DB.receipts.find(x=>x.id===id);
   if(!r) return;
+  /* Phase 10 — Year-End Lock (no override): closed-year vouchers are read-only. */
+  if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 
   document.getElementById('edit-rec-id').value = id;
   document.getElementById('edit-rec-amount').value = r.amount_ils || r.amount;
   document.getElementById('edit-rec-notes').value = r.notes || '';
+  const rsn=document.getElementById('edit-rec-reason'); if(rsn) rsn.value='';
 
   /* BUG 2 FIX: قراءة receipt_date وليس r.date */
   const dateEl = document.getElementById('edit-rec-date');
@@ -2008,34 +2068,45 @@ if (!can.admin()) {
 }
 
 const id = document.getElementById('edit-rec-id').value;
+const r = DB.receipts.find(x=>x.id===id);
+if(!r){ toast('السند غير موجود','err'); return; }
+/* Phase 10 — Year-End Lock (no override). */
+if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 const amount = parseFloat(document.getElementById('edit-rec-amount').value) || 0;
 const date = document.getElementById('edit-rec-date')?.value || null;
 const notes = document.getElementById('edit-rec-notes').value || '';
+const reason = (document.getElementById('edit-rec-reason')?.value || '').trim();
 
 if (amount <= 0) {
   toast(window.t('errors.invalid_amount'),'warn');
   return;
 }
+/* Phase 3 — editing requires a reason; saving without one is impossible. */
+if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
+/* Phase 10 — cannot move a voucher INTO a locked (closed) year. */
+if(voucherLocked(date)){ toast('🔒 لا يمكن نقل السند إلى سنة مقفلة','err'); return; }
 
-/* BUG 3 FIX: حفظ receipt_date وليس date
-   BUG 4 FIX: لا نغير amount الأصلي — فقط amount_ils
-   نحافظ على: amount (العملة الأصلية), currency, exchange_rate */
+/* Phase 2/5 — versioned edit. Voucher number (no) is immutable; only amount_ils,
+   receipt_date and notes change here. FIN rebuilds all balances on loadAll(). */
+const nowIso = new Date().toISOString();
+const newVer = Number(r.version||1)+1;
 const { error } = await SB
   .from('receipts')
-  .update({
-    amount_ils: amount,
-    receipt_date: date,
-    notes: notes,
-    updated_at: new Date().toISOString()
-  })
+  .update({ amount_ils: amount, receipt_date: date, notes: notes, version: newVer, updated_at: nowIso })
   .eq('id', id);
 
 if (error) {
   toast(window.t('errors.generic_error')+': '+error.message,'err');
   return;
 }
+/* Phase 2/3 — immutable full snapshot + reason for this version (and v1 baseline). */
+try{
+  await recordVoucherVersion('receipt', r,
+    { ...r, amount_ils:amount, receipt_date:date, notes:notes, version:newVer, updated_at:nowIso },
+    reason, newVer);
+}catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
 
-await logAction('edit',`تعديل إيصال — ₪${fmt(amount)} | تاريخ: ${date||'—'}`, 'receipts', id);
+await logAction('edit',`تعديل إيصال ${r.no} (نسخة ${newVer}) — ₪${fmt(amount)} | السبب: ${reason}`, 'receipts', id);
 window.closeM();
 await loadAll();
 toast(window.t('messages.updated'),'ok');
@@ -2044,6 +2115,8 @@ toast(window.t('messages.updated'),'ok');
 window.deleteRec=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-rec-id').value;
+  const _dr=DB.receipts.find(x=>x.id===id);
+  if(_dr&&voucherLocked(_dr.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('receipts').update({is_deleted:true}).eq('id',id);
   await logAction('delete','إلغاء إيصال','receipts',id);
@@ -2052,25 +2125,40 @@ window.deleteRec=async function(){
 window.editPay=function(id){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
+  if(voucherLocked(p.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
   document.getElementById('edit-pay-id').value=id;
   document.getElementById('edit-pay-amount').value=p.amount_ils||p.amount;
   document.getElementById('edit-pay-notes').value=p.notes||'';
+  const rsn=document.getElementById('edit-pay-reason'); if(rsn) rsn.value='';
   window.openM('edit-pay');
 };
 window.updatePay=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
+  const p=DB.payments.find(x=>x.id===id);
+  if(!p){toast('السند غير موجود','err');return;}
+  if(voucherLocked(p.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
   const amount=parseFloat(document.getElementById('edit-pay-amount').value)||0;
   const notes=document.getElementById('edit-pay-notes').value;
+  const reason=(document.getElementById('edit-pay-reason')?.value||'').trim();
   if(amount<=0){toast(window.t('errors.invalid_amount'),'warn');return;}
-  const{error}=await SB.from('payments').update({amount_ils:amount,amount,notes,updated_at:new Date().toISOString()}).eq('id',id);
+  if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
+  const nowIso=new Date().toISOString();
+  const newVer=Number(p.version||1)+1;
+  const{error}=await SB.from('payments').update({amount_ils:amount,notes,version:newVer,updated_at:nowIso}).eq('id',id);
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  await logAction('edit',`تعديل سند صرف — ₪${fmt(amount)}`,'payments',id);
+  try{
+    await recordVoucherVersion('payment', p,
+      {...p, amount_ils:amount, notes:notes, version:newVer, updated_at:nowIso}, reason, newVer);
+  }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
+  await logAction('edit',`تعديل سند صرف ${p.no} (نسخة ${newVer}) — ₪${fmt(amount)} | السبب: ${reason}`,'payments',id);
   window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
 };
 window.deletePay=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
+  const _dp=DB.payments.find(x=>x.id===id);
+  if(_dp&&voucherLocked(_dp.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('payments').update({is_deleted:true}).eq('id',id);
   await logAction('delete','إلغاء سند صرف','payments',id);
@@ -2387,7 +2475,7 @@ function buildRecVoucher(r){
   const cur=(r.currency&&r.currency!=='ILS')?('<div class="row"><div class="lbl">العملة الأصلية</div><div class="val">'+fmtD(r.amount)+' '+esc(r.currency)+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</div></div>'):'';
   const note=r.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(r.notes)+'</div></div>'):'';
   return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
-    +reportHeader('سند قبض',{no:esc(r.no),sub:'معتمد إلكترونياً · Verified'})
+    +reportHeader('سند قبض',{no:esc(r.no),sub:'معتمد إلكترونياً · Verified'+(Number(r.version||1)>1?(' · نسخة رقم '+Number(r.version)+' · تم التعديل'):'')})
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(r.receipt_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(r.fund_type)+'</div></div>'
@@ -2407,7 +2495,7 @@ function buildPayVoucher(p){
   const note=p.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(p.notes)+'</div></div>'):'';
   const appr=p.approved_by?('<div class="row"><div class="lbl">معتمد من</div><div class="val">'+esc(p.approved_by)+'</div></div>'):'';
   return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
-    +reportHeader('سند صرف',{no:esc(p.no),sub:'معتمد إلكترونياً · Verified'})
+    +reportHeader('سند صرف',{no:esc(p.no),sub:'معتمد إلكترونياً · Verified'+(Number(p.version||1)>1?(' · نسخة رقم '+Number(p.version)+' · تم التعديل'):'')})
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(p.payment_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(p.fund_type)+'</div></div>'
@@ -3523,6 +3611,9 @@ async function loadSettings(){
     if(!data) return;
     const map={};
     data.forEach(s=>map[s.key]=s.value);
+    /* Phase 10 — Year-End Lock threshold (default: previous calendar year). */
+    window.LOCKED_THROUGH_YEAR = (map['locked_through_year']!=null && map['locked_through_year']!=='')
+      ? Number(map['locked_through_year']) : (new Date().getFullYear()-1);
     const foodEl=document.getElementById('set-food-opening');
     const diwanEl=document.getElementById('set-diwan-opening');
     const usdEl=document.getElementById('set-usd-rate');
