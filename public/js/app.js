@@ -2311,6 +2311,7 @@ const PRINT_TOKENS=':root{--navy:#0F1B2D;--green:#00C896;--gold:#C6A46A;--danger
 +'.qr-u .box{width:62px;height:62px;border:1px solid var(--navy);border-radius:4px;margin:0 auto}'
 +'.qr-u .box>div,.qr-u .box img,.qr-u .box canvas{width:56px!important;height:56px!important;margin:3px}'
 +'.qr-u .cap{font-size:7px;color:var(--gray);margin-top:3px;word-break:break-all}'
++'.qr-u .cap .tok{display:block;font-weight:700;color:var(--navy);font-size:7.5px;letter-spacing:.2px;margin-top:1px}'
 +'.sigs{display:flex;gap:40px}'
 +'.sig-u .line{width:120px;border-top:1px solid var(--navy);margin-top:34px;padding-top:4px;font-size:10px;color:var(--gray);text-align:center}'
 +'.pgfoot{border-top:1px solid var(--bd);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;font-size:8.5px;color:var(--gray)}'
@@ -2375,7 +2376,7 @@ function buildRecVoucher(r){
     +cur+note
     +'</div>'
     +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsAr(r.amount_ils||r.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify<span class="tok">'+esc(r.verification_token||'')+'</span></div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
@@ -2396,7 +2397,7 @@ function buildPayVoucher(p){
     +cur+note+appr
     +'</div>'
     +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsAr(p.amount_ils||p.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify<span class="tok">'+esc(p.verification_token||'')+'</span></div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
