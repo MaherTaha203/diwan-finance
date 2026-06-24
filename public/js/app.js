@@ -252,6 +252,21 @@ const FIN={
     return FIN._r2(income+a.debtSettlementTotal+a.currentSupportTotal-expense);
   },
   _r2(n){ return Math.round((Number(n||0)+Number.EPSILON)*100)/100; },
+  /* A3 — read-only subscription projections (no accounting; same source as memberStatement). */
+  subscriptionYears(){
+    const ys=new Set();
+    (DB.subscriptions||[]).forEach(s=>{ if(s.year!=null) ys.add(Number(s.year)); });
+    return Array.from(ys).sort((a,b)=>a-b);
+  },
+  memberDelinquency(memberId){
+    const byYear={}; let unpaidCount=0;
+    (DB.subscriptions||[]).filter(s=>s.member_id===memberId).forEach(s=>{
+      const due=Number(s.due_amount_ils||0), paid=Number(s.paid_amount_ils||0);
+      byYear[Number(s.year)]={ due, paid, remaining:FIN._r2(Math.max(0,due-paid)), settled:(due<=0)||(paid>=due) };
+      if(due>0 && paid<due) unpaidCount++;
+    });
+    return { byYear, isDelinquent:unpaidCount>0, unpaidCount };
+  },
   /* Item 9 — member base (pre-donation) debt = opening + dues − payments. */
   _memberBaseBalance(memberId){
     const m=DB.members.find(x=>x.id===memberId); if(!m) return 0;
@@ -517,6 +532,7 @@ window.nav=function(p){
   if(p==='bk') renderSysInfo();
   if(p==='annual') renderAnnual();
   if(p==='annual-debt') renderAnnualDebt();
+  if(p==='delinquent') renderDelinquent();
   if(p==='member-stmt') fillMemberSelect();
   D[p]?.render();
 };
@@ -2665,6 +2681,103 @@ window.prtAnnualDebt=function(){
   openPrintWin(css,b);
 };
 
+/* ═══ A3 — Delinquent Members Report (read-only · dynamic subscription years) ═══ */
+let _delPrimary='all', _delYear='all';
+function _delYearStatus(byYear, year){
+  const v=byYear[year];
+  if(!v || v.due<=0) return 'na';
+  return v.paid>=v.due ? 'settled' : 'unpaid';
+}
+function _delCell(v){
+  if(!v || v.due<=0) return '<span style="color:var(--tx3,#94a3b8)">—</span>';
+  if(v.paid>=v.due)  return '<span class="cr">✓ مسدد</span>';
+  return '<span class="dr">✗ '+fmt(v.remaining)+' ₪</span>';
+}
+function _delHeaderLabel(){
+  const en=window.LANG==='en';
+  const prim=_delPrimary==='delinquent'?(en?'Delinquent':'المتأخرون'):_delPrimary==='current'?(en?'Not delinquent':'غير المتأخرين'):(en?'All':'الكل');
+  const yr=_delYear==='all'?(en?'All years':'جميع السنوات'):String(_delYear);
+  return (en?'Filter: ':'التصنيف: ')+prim+' · '+(en?'Year: ':'السنة: ')+yr;
+}
+function delinquentRows(){
+  const years=FIN.subscriptionYears();
+  let rows=DB.members.filter(m=>m.is_active!==false).map(m=>({
+    code:m.member_code||'—', name:m.name, phone:m.phone||'', d:FIN.memberDelinquency(m.id)
+  }));
+  rows=rows.filter(r=>{
+    if(_delPrimary==='all') return true;
+    if(_delYear==='all') return _delPrimary==='delinquent' ? r.d.isDelinquent : !r.d.isDelinquent;
+    const st=_delYearStatus(r.d.byYear, Number(_delYear));
+    return _delPrimary==='delinquent' ? st==='unpaid' : st==='settled';
+  });
+  rows.sort((a,b)=> b.d.unpaidCount-a.d.unpaidCount || String(a.name).localeCompare(String(b.name),'ar'));
+  return {years, rows};
+}
+function _delHead(years){
+  const en=window.LANG==='en';
+  return ['رقم العضو','اسم العضو','الهاتف'].concat(years.map(String)).concat([en?'Unpaid years':'عدد السنوات غير المسددة']);
+}
+function _delRowCells(r, years){
+  return '<td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
+    +years.map(y=>'<td>'+_delCell(r.d.byYear[y])+'</td>').join('')
+    +'<td class="bal">'+(r.d.unpaidCount>0?'<span class="dr"><b>'+r.d.unpaidCount+'</b></span>':'<span class="cr">0</span>')+'</td>';
+}
+window.setDelPrimary=function(p){ _delPrimary=p; renderDelinquent(); };
+window.setDelYear=function(y){ _delYear=y; renderDelinquent(); };
+function renderDelinquent(){
+  const el=document.getElementById('delinquent-list'); if(!el) return;
+  const en=window.LANG==='en';
+  const {years, rows}=delinquentRows();
+  const total=DB.members.filter(m=>m.is_active!==false).length;
+  const sub=document.getElementById('delinquent-sub'); if(sub) sub.textContent='Delinquent Members Report · '+rows.length+(en?' of ':' من ')+total;
+  const chips=[['all',en?'All':'الكل'],['delinquent',en?'Delinquent':'المتأخرون'],['current',en?'Not delinquent':'غير المتأخرين']]
+    .map(c=>'<button class="tp-tab'+(_delPrimary===c[0]?' on':'')+'" onclick="setDelPrimary(\''+c[0]+'\')">'+c[1]+'</button>').join('');
+  const yopts=['<option value="all">'+(en?'All years':'جميع السنوات')+'</option>']
+    .concat(years.map(y=>'<option value="'+y+'"'+(String(_delYear)===String(y)?' selected':'')+'>'+y+'</option>')).join('');
+  const yearSel='<select onchange="setDelYear(this.value)" style="height:34px;padding:0 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-weight:700;margin-inline-start:auto">'+yopts+'</select>';
+  const head=_delHead(years).map(h=>'<th>'+h+'</th>').join('');
+  const body=rows.map(r=>'<tr>'+_delRowCells(r,years)+'</tr>').join('');
+  el.innerHTML='<div class="tp-tabs" style="align-items:center">'+chips+yearSel+'</div>'
+    +(rows.length?'<div class="tw"><table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
+      :'<div class="card" style="text-align:center;color:var(--tx3)">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>');
+}
+window.prtDelinquent=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const en=window.LANG==='en';
+  const {years, rows}=delinquentRows();
+  const total=DB.members.filter(m=>m.is_active!==false).length;
+  const head=_delHead(years).map(h=>'<th>'+h+'</th>').join('');
+  const body=rows.map(r=>'<tr>'+_delRowCells(r,years)+'</tr>').join('');
+  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
+  const b=reportHeader(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين',{sub:window.t('stmt.currency_note')})
+    +'<div class="period">'+_delHeaderLabel()+' · '+(en?'Shown: ':'المعروض: ')+rows.length+' / '+total+'</div>'
+    +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
+  openPrintWin(css,b);
+};
+window.exportDelinquentExcel=function(){
+  if(!can.export()){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
+  const {years, rows}=delinquentRows();
+  const head=_delHead(years);
+  const doExcel=()=>{
+    const XLSX=window.XLSX; if(!XLSX){toast('جارٍ تحميل مكتبة Excel...','info');return;}
+    const wsData=[['ديوان آل طه — تقرير الأعضاء المتأخرين'],[_delHeaderLabel()],[],head];
+    rows.forEach(r=>{
+      const yc=years.map(y=>{ const v=r.d.byYear[y]; if(!v||v.due<=0) return '—'; return v.paid>=v.due?'✓ مسدد':'✗ '+fmt(v.remaining)+' ₪'; });
+      wsData.push([r.code, r.name, r.phone||'—'].concat(yc).concat([r.d.unpaidCount]));
+    });
+    const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
+    ws['!cols']=[{wch:14},{wch:28},{wch:14}].concat(years.map(()=>({wch:12}))).concat([{wch:18}]);
+    styleDiwanSheet(XLSX,ws,{headerRow:3});
+    const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'المتأخرون');
+    XLSX.writeFile(wb,'diwan-delinquent-'+today()+'.xlsx');
+    toast('✓ Excel','ok');
+  };
+  loadStyledXLSX(doExcel);
+};
+
 window.prtDonStmt=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const _en=window.LANG==='en';
@@ -2942,6 +3055,7 @@ window.exportMemberStmt=function(format){
 /* ═══ UNIVERSAL PDF + EXCEL EXPORT ═══ */
 window.exportPagePDF=function(type){
   if(type==='annual-debt') return window.prtAnnualDebt();
+  if(type==='delinquent') return window.prtDelinquent();
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
   const printDate=new Date().toLocaleDateString('en-GB');
   const titles={
@@ -3031,6 +3145,7 @@ window.exportPagePDF=function(type){
 /* Universal Excel Export */
 window.exportPageExcel=function(type){
   if(!can.export()){toast('\u0644\u0627 \u062a\u0648\u062c\u062f \u0635\u0644\u0627\u062d\u064a\u0629','err');return;}
+  if(type==='delinquent') return window.exportDelinquentExcel();
   const fund=type.startsWith('food')?'food':'diwan';
   let wsData=[];
   const fname='diwan-'+type+'-'+today();

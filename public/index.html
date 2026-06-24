@@ -334,6 +334,7 @@
   <div class="nb" data-p="members"><i class="ti ti-users"></i>أعضاء العائلة</div>
   <div class="nb" data-p="member-stmt"><i class="ti ti-user"></i>كشف حساب عضو</div>
   <div class="nb" data-p="annual-debt"><i class="ti ti-report-money"></i>تقرير المديونية</div>
+  <div class="nb" data-p="delinquent"><i class="ti ti-user-exclamation"></i>الأعضاء المتأخرون</div>
   <div class="nb" data-p="annual"><i class="ti ti-calendar"></i>الاشتراكات السنوية</div>
   <div class="sb-sec" data-i18n="nav.system_sec">النظام</div>
   <div class="nb" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i>المستخدمون</div>
@@ -420,6 +421,10 @@
   <div class="pg" id="pg-annual-debt">
     <div class="ph"><div><div class="ph-t">تقرير المديونية السنوية</div><div class="ph-s" id="annual-debt-sub"></div></div><div class="ph-a"><button class="btn sm" onclick="window.prtAnnualDebt()"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-annual-debt')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-annual-debt"><button class="export-dropdown-item" onclick="window.exportPageExcel('annual-debt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('annual-debt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
     <div id="annual-debt-list"></div>
+  </div>
+  <div class="pg" id="pg-delinquent">
+    <div class="ph"><div><div class="ph-t">تقرير الأعضاء المتأخرين</div><div class="ph-s" id="delinquent-sub"></div></div><div class="ph-a"><button class="btn sm" onclick="window.prtDelinquent()"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-delinquent')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-delinquent"><button class="export-dropdown-item" onclick="window.exportPageExcel('delinquent')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('delinquent')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
+    <div id="delinquent-list"></div>
   </div>
   <div class="pg" id="pg-annual">
     <div class="ph"><div><div class="ph-t" data-i18n="annual.title">الاشتراكات السنوية</div><div class="ph-s" data-i18n="annual.desc">200 ₪ على كل عضو بداية كل سنة</div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-annual')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-annual"><button class="export-dropdown-item" onclick="window.exportPageExcel('annual')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('annual')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
@@ -640,6 +645,7 @@
     <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('member-stmt');closeMobileMenu();setMobileNav(null)"><i class="ti ti-user"></i><span>كشف عضو</span></div>
     <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('audit');closeMobileMenu();setMobileNav(null)"><i class="ti ti-list-check"></i><span>سجل العمليات</span></div>
     <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('annual-debt');closeMobileMenu();setMobileNav(null)"><i class="ti ti-report-money"></i><span>المديونية</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('delinquent');closeMobileMenu();setMobileNav(null)"><i class="ti ti-user-exclamation"></i><span>المتأخرون</span></div>
     <div class="mnb" style="max-width:none;padding:10px" id="mnb-annual" onclick="window.nav('annual');closeMobileMenu();setMobileNav(null)"><i class="ti ti-calendar"></i><span>الاشتراكات</span></div>
     <div class="mnb" style="max-width:none;padding:10px" id="mnb-settings" onclick="window.nav('settings');closeMobileMenu();setMobileNav(null)"><i class="ti ti-settings"></i><span>الإعدادات</span></div>
     <div class="mnb" style="max-width:none;padding:10px" id="mnb-users-mob" onclick="window.nav('users');closeMobileMenu();setMobileNav(null)"><i class="ti ti-shield-lock"></i><span>المستخدمون</span></div>
