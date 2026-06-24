@@ -280,14 +280,31 @@ const FIN={
   allocateFoodDonations(){
     if(DB._alloc) return DB._alloc;
     const eng=(typeof window!=='undefined'&&window.FoodDonationAllocation);
-    const donations=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food')
-      .slice().sort((a,b)=>(new Date(a.receipt_date)-new Date(b.receipt_date))||String(a.id).localeCompare(String(b.id)))
-      .map(r=>({id:r.id,memberId:r.member_id||null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
+    /* P7 — manual override layer (ADDITIVE, wrapper-only). The pure Item 9 engine
+       (foodDonationAllocation.js) is untouched and runs UNCHANGED on the automatic
+       subset only. Manual-allocated vouchers are carved out; their stored split
+       (debt/historical/current) is the accounting source for those vouchers. When no
+       manual vouchers exist the result is value-identical to the previous behaviour. */
+    const foodDon=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food')
+      .slice().sort((a,b)=>(new Date(a.receipt_date)-new Date(b.receipt_date))||String(a.id).localeCompare(String(b.id)));
+    const autoRows=foodDon.filter(r=>r.manual_allocation!==true);
+    const manualRows=foodDon.filter(r=>r.manual_allocation===true);
+    const donations=autoRows.map(r=>({id:r.id,memberId:r.member_id||null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
     const baseDebt={};
     donations.forEach(d=>{ if(d.memberId!=null&&baseDebt[d.memberId]===undefined) baseDebt[d.memberId]=FIN._memberBaseBalance(d.memberId); });
     const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
-    DB._alloc = eng ? eng.allocate(donations,baseDebt,magnitude)
-                    : {perReceipt:{},perMember:{},debtSettlementTotal:0,reserveTotal:0,currentSupportTotal:0};
+    const autoRes = eng ? eng.allocate(donations,baseDebt,magnitude)
+                        : {perReceipt:{},perMember:{},debtSettlementTotal:0,reserveTotal:0,currentSupportTotal:0};
+    const perReceipt=Object.assign({},autoRes.perReceipt);
+    const perMember=Object.assign({},autoRes.perMember);
+    let dT=autoRes.debtSettlementTotal, rT=autoRes.reserveTotal, cT=autoRes.currentSupportTotal;
+    manualRows.forEach(r=>{
+      const debt=Number(r.manual_debt_settlement||0), hist=Number(r.manual_historical_donation||0), cur=Number(r.manual_current_support||0);
+      perReceipt[r.id]={debtSettled:FIN._r2(debt),toDeficit:FIN._r2(hist),toCurrent:FIN._r2(cur)};
+      if(r.member_id!=null) perMember[r.member_id]=FIN._r2((perMember[r.member_id]||0)+debt);
+      dT=FIN._r2(dT+debt); rT=FIN._r2(rT+hist); cT=FIN._r2(cT+cur);
+    });
+    DB._alloc={perReceipt,perMember,debtSettlementTotal:FIN._r2(dT),reserveTotal:FIN._r2(rT),currentSupportTotal:FIN._r2(cT)};
     return DB._alloc;
   },
   foodDebtSettlementTotal(){ return FIN._r2(FIN.allocateFoodDonations().debtSettlementTotal); },
@@ -576,11 +593,19 @@ window.login=async function(){
 function showLoginErr(msg){const el=document.getElementById('login-err');el.textContent=msg;el.classList.add('show');}
 
 async function afterLogin(){
-  const{data:role}=await SB.from('user_roles').select('*').eq('user_id',CU.id).single();
-  /* Enforce two-role model: any unrecognised role defaults to viewer */
+  const{data:role}=await SB.from('user_roles').select('*').eq('user_id',CU.id).maybeSingle();
+  /* Fail-closed: only users provisioned with a valid role row may enter.
+     No default-viewer fallback — an unknown/self-registered account is denied. */
   const rawRole=role?.role;
+  if(!role||(rawRole!=='admin'&&rawRole!=='viewer')){
+    await SB.auth.signOut();CU=null;CUR=null;
+    showLoginErr('لا تملك صلاحية الوصول إلى النظام. الرجاء التواصل مع مسؤول النظام.');
+    const lb=document.getElementById('login-btn');
+    if(lb){lb.disabled=false;lb.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
+    return;
+  }
   const safeRole=(rawRole==='admin')?'admin':'viewer';
-  CUR={...(role||{}),role:safeRole,full_name:role?.full_name||CU.email};
+  CUR={...role,role:safeRole,full_name:role.full_name||CU.email};
 
   const ini=(CUR.full_name||CU.email).charAt(0).toUpperCase();
   document.getElementById('uav').textContent=ini;
@@ -749,8 +774,8 @@ async function checkSession(){
 async function loadAll(){
   try{
     const[r1,r2,r3,r4,r5,r6]=await Promise.all([
-      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted').order('receipt_date',{ascending:false}),
-      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted').order('payment_date',{ascending:false}),
+      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support').order('receipt_date',{ascending:false}),
+      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version').order('payment_date',{ascending:false}),
       SB.from('members').select(
 'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
 ).order('name'),
@@ -1505,7 +1530,7 @@ window.setPill=function(prefix,el){
 /* ═══ DROPDOWNS ═══ */
 function fillMemberDropdowns(){
   const opts='<option value="">-- اختر عضواً --</option>'+DB.members.filter(m=>m.is_active).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
-  ['rec-member','pay-member','don-mem-sel'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  ['rec-member','pay-member','don-mem-sel','edit-rec-member'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
   ['rec-member','pay-member'].forEach(id=>{ if(document.getElementById(id)){ enhanceMemberSelect(id); syncComboInput(id); } });
 }
 function fillContactDropdown(){
@@ -1971,6 +1996,81 @@ window.saveMember=async function(){
 };
 
 /* ═══ EDIT RECORDS (admin only) ═══ */
+/* ═══ VOUCHER VERSIONING · EDIT REASON · YEAR-END LOCK (Phases 2/3/5/7/10/11/12) ═══
+   The live receipt/payment row is the single source; FIN.* rebuilds every balance from
+   source on loadAll(), so the Universal Rebuild rule (reverse → recompute → reapply) is
+   satisfied automatically — no deltas, no partial adjustments. Voucher numbers (`no`)
+   are never changed by any edit. */
+function lockedThroughYear(){
+  return Number.isFinite(window.LOCKED_THROUGH_YEAR)?window.LOCKED_THROUGH_YEAR:(new Date().getFullYear()-1);
+}
+function voucherLocked(dateStr){
+  if(!dateStr) return false;
+  const y=new Date(dateStr).getFullYear();
+  return Number.isFinite(y)&&y<=lockedThroughYear();
+}
+/* Phase 7 — manual food-donation allocation must sum EXACTLY to the voucher amount. */
+function validateManualAllocation(amount,debt,historical,current){
+  const sum=FIN._r2(Number(debt||0)+Number(historical||0)+Number(current||0));
+  return FIN._r2(sum)===FIN._r2(Number(amount||0));
+}
+/* Phase 2/12 — append immutable full-snapshot versions. Backfills the v1 baseline from the
+   pre-edit state the first time a voucher is edited. preRow/postRow are complete row objects. */
+async function recordVoucherVersion(kind,preRow,postRow,reason,newVer){
+  const editor=CUR?.full_name||CU?.email||'admin';
+  const nowIso=new Date().toISOString();
+  const{data:hist}=await SB.from('voucher_versions').select('version_no')
+    .eq('voucher_kind',kind).eq('voucher_id',preRow.id).limit(1);
+  if(!hist||!hist.length){
+    const{error:bErr}=await SB.from('voucher_versions').insert({
+      voucher_kind:kind,voucher_id:preRow.id,voucher_no:preRow.no,version_no:Number(preRow.version||1),
+      snapshot:preRow,edit_reason:'سجل أولي · Initial',
+      edited_by:preRow.created_by||editor,edited_at:preRow.created_at||nowIso});
+    if(bErr) throw new Error(bErr.message);
+  }
+  const{error:nErr}=await SB.from('voucher_versions').insert({
+    voucher_kind:kind,voucher_id:preRow.id,voucher_no:preRow.no,version_no:newVer,
+    snapshot:postRow,edit_reason:reason,edited_by:editor,edited_at:nowIso});
+  if(nErr) throw new Error(nErr.message);
+}
+async function fetchVoucherHistory(kind,voucherId){
+  const{data}=await SB.from('voucher_versions').select('*')
+    .eq('voucher_kind',kind).eq('voucher_id',voucherId).order('version_no',{ascending:true});
+  return data||[];
+}
+window.showVoucherHistory=async function(kind,voucherId){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  const vers=await fetchVoucherHistory(kind,voucherId);
+  const box=document.getElementById('vhist-body');
+  if(!box){toast('عدد النسخ: '+vers.length,'info');return;}
+  box.innerHTML=(!vers.length)?'<div class="empty"><div class="empty-t">لا توجد نسخ سابقة</div></div>'
+    :vers.map(v=>{const s=v.snapshot||{};const amt=s.amount_ils!=null?('₪ '+fmt(s.amount_ils)):'';
+      const dt=s.receipt_date||s.payment_date||'';const who=s.payer_name||s.beneficiary_name||(s.member_id?gmn(s.member_id):'—');
+      return '<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:700">'
+        +'<span>نسخة رقم '+v.version_no+'</span><span style="color:var(--tx3);font-size:11px">'+esc((v.edited_at||'').slice(0,10))+'</span></div>'
+        +'<div style="font-size:12px;margin-top:4px">'+esc(String(who))+' · '+amt+' · '+esc(dt)+'</div>'
+        +'<div style="font-size:11px;color:var(--tx3);margin-top:3px">المستخدم: '+esc(v.edited_by||'—')+'</div>'
+        +'<div style="font-size:11px;color:var(--warn);margin-top:3px">السبب: '+esc(v.edit_reason||'—')+'</div></div>';}).join('');
+  window.openM('vhist');
+};
+/* P7 — manual allocation UI helpers (edit modal). */
+window.onEditAllocModeChange=function(){
+  const mode=document.getElementById('edit-rec-alloc-mode')?.value;
+  const mw=document.getElementById('edit-rec-manual-wrap');
+  if(mw) mw.style.display=(mode==='manual')?'':'none';
+  window.onEditManualInput();
+};
+window.onEditManualInput=function(){
+  const amount=parseFloat(document.getElementById('edit-rec-amount')?.value)||0;
+  const debt=parseFloat(document.getElementById('edit-rec-m-debt')?.value)||0;
+  const hist=parseFloat(document.getElementById('edit-rec-m-hist')?.value)||0;
+  const cur=parseFloat(document.getElementById('edit-rec-m-current')?.value)||0;
+  const sum=Math.round((debt+hist+cur)*100)/100;
+  const box=document.getElementById('edit-rec-manual-sum');
+  if(box){ const ok=sum===Math.round(amount*100)/100;
+    box.textContent='المجموع: ₪'+fmt(sum)+' / ₪'+fmt(amount)+(ok?'  ✓':'  ✗ يجب أن يتساوى');
+    box.className='ibox'+(ok?'':' warn'); }
+};
 window.editRec=function(id){
   if(!can.admin()){
     toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
@@ -1979,15 +2079,46 @@ window.editRec=function(id){
 
   const r = DB.receipts.find(x=>x.id===id);
   if(!r) return;
+  /* Phase 10 — Year-End Lock (no override): closed-year vouchers are read-only. */
+  if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 
   document.getElementById('edit-rec-id').value = id;
   document.getElementById('edit-rec-amount').value = r.amount_ils || r.amount;
   document.getElementById('edit-rec-notes').value = r.notes || '';
+  const rsn=document.getElementById('edit-rec-reason'); if(rsn) rsn.value='';
 
   /* BUG 2 FIX: قراءة receipt_date وليس r.date */
   const dateEl = document.getElementById('edit-rec-date');
   if(dateEl){
     dateEl.value = r.receipt_date || '';
+  }
+
+  /* P4/P6 — member reassignment (member-type receipts only; type/domain immutable). */
+  const mWrap=document.getElementById('edit-rec-member-wrap');
+  const mSel=document.getElementById('edit-rec-member');
+  if(mWrap&&mSel){
+    if(r.payer_type==='member'){ mWrap.style.display=''; mSel.value=r.member_id||''; }
+    else { mWrap.style.display='none'; }
+  }
+  const pWrap=document.getElementById('edit-rec-payer-wrap');
+  const pInput=document.getElementById('edit-rec-payer-name');
+  if(pWrap&&pInput){
+    if(r.payer_type==='manual'){ pWrap.style.display=''; pInput.value=r.payer_name||''; }
+    else { pWrap.style.display='none'; }
+  }
+  /* P4/P7 — food-donation allocation mode + manual split (food domain only). */
+  const fWrap=document.getElementById('edit-rec-food-wrap');
+  if(fWrap){
+    const isFoodDon=r.fund_type==='donation'&&r.donation_display_fund==='food';
+    fWrap.style.display=isFoodDon?'':'none';
+    if(isFoodDon){
+      const at=document.getElementById('edit-rec-alloc-type'); if(at) at.value=r.food_donation_allocation||'support_current';
+      const am=document.getElementById('edit-rec-alloc-mode'); if(am) am.value=r.manual_allocation?'manual':'auto';
+      const md=document.getElementById('edit-rec-m-debt'); if(md) md.value=(r.manual_debt_settlement!=null?r.manual_debt_settlement:'');
+      const mh=document.getElementById('edit-rec-m-hist'); if(mh) mh.value=(r.manual_historical_donation!=null?r.manual_historical_donation:'');
+      const mc=document.getElementById('edit-rec-m-current'); if(mc) mc.value=(r.manual_current_support!=null?r.manual_current_support:'');
+      window.onEditAllocModeChange();
+    }
   }
 
   window.openM('edit-rec');
@@ -2000,34 +2131,65 @@ if (!can.admin()) {
 }
 
 const id = document.getElementById('edit-rec-id').value;
+const r = DB.receipts.find(x=>x.id===id);
+if(!r){ toast('السند غير موجود','err'); return; }
+/* Phase 10 — Year-End Lock (no override). */
+if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 const amount = parseFloat(document.getElementById('edit-rec-amount').value) || 0;
 const date = document.getElementById('edit-rec-date')?.value || null;
 const notes = document.getElementById('edit-rec-notes').value || '';
+const reason = (document.getElementById('edit-rec-reason')?.value || '').trim();
 
 if (amount <= 0) {
   toast(window.t('errors.invalid_amount'),'warn');
   return;
 }
+/* Phase 3 — editing requires a reason; saving without one is impossible. */
+if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
+/* Phase 10 — cannot move a voucher INTO a locked (closed) year. */
+if(voucherLocked(date)){ toast('🔒 لا يمكن نقل السند إلى سنة مقفلة','err'); return; }
 
-/* BUG 3 FIX: حفظ receipt_date وليس date
-   BUG 4 FIX: لا نغير amount الأصلي — فقط amount_ils
-   نحافظ على: amount (العملة الأصلية), currency, exchange_rate */
-const { error } = await SB
-  .from('receipts')
-  .update({
-    amount_ils: amount,
-    receipt_date: date,
-    notes: notes,
-    updated_at: new Date().toISOString()
-  })
-  .eq('id', id);
+/* P4/P6/P7 — build the full edit set. Voucher number, fund_type and the donation
+   domain (food/diwan) are NEVER changed. FIN rebuilds every balance on loadAll(). */
+const upd={ amount_ils:amount, receipt_date:date, notes:notes };
+/* P6 — member reassignment (member-type receipts). */
+if(r.payer_type==='member'){
+  const newMid=document.getElementById('edit-rec-member')?.value||r.member_id;
+  if(!newMid){ toast('✋ اختر العضو','warn'); return; }
+  upd.member_id=newMid; upd.payer_name=gmn(newMid);
+} else if(r.payer_type==='manual'){
+  const pn=(document.getElementById('edit-rec-payer-name')?.value||'').trim();
+  if(pn) upd.payer_name=pn;
+}
+/* P7 — food-donation allocation: automatic (Item 9) or manual per-voucher override. */
+if(r.fund_type==='donation' && r.donation_display_fund==='food'){
+  upd.food_donation_allocation=document.getElementById('edit-rec-alloc-type')?.value||r.food_donation_allocation||'support_current';
+  const mode=document.getElementById('edit-rec-alloc-mode')?.value||'auto';
+  if(mode==='manual'){
+    const debt=parseFloat(document.getElementById('edit-rec-m-debt')?.value)||0;
+    const hist=parseFloat(document.getElementById('edit-rec-m-hist')?.value)||0;
+    const cur=parseFloat(document.getElementById('edit-rec-m-current')?.value)||0;
+    if(!validateManualAllocation(amount,debt,hist,cur)){ toast('✋ مجموع التوزيع اليدوي يجب أن يساوي مبلغ السند (₪'+fmt(amount)+')','err'); return; }
+    upd.manual_allocation=true; upd.manual_debt_settlement=debt; upd.manual_historical_donation=hist; upd.manual_current_support=cur;
+  } else {
+    upd.manual_allocation=false; upd.manual_debt_settlement=null; upd.manual_historical_donation=null; upd.manual_current_support=null;
+  }
+}
+const nowIso = new Date().toISOString();
+const newVer = Number(r.version||1)+1;
+upd.version=newVer; upd.updated_at=nowIso;
+const { error } = await SB.from('receipts').update(upd).eq('id', id);
 
 if (error) {
   toast(window.t('errors.generic_error')+': '+error.message,'err');
   return;
 }
+/* Phase 2/3 — immutable full snapshot + reason for this version (and v1 baseline). */
+try{
+  await recordVoucherVersion('receipt', r, { ...r, ...upd }, reason, newVer);
+}catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
 
-await logAction('edit',`تعديل إيصال — ₪${fmt(amount)} | تاريخ: ${date||'—'}`, 'receipts', id);
+await logAction('edit',`تعديل إيصال ${r.no} (نسخة ${newVer}) — ₪${fmt(amount)} | السبب: ${reason}`, 'receipts', id);
 window.closeM();
 await loadAll();
 toast(window.t('messages.updated'),'ok');
@@ -2036,6 +2198,8 @@ toast(window.t('messages.updated'),'ok');
 window.deleteRec=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-rec-id').value;
+  const _dr=DB.receipts.find(x=>x.id===id);
+  if(_dr&&voucherLocked(_dr.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('receipts').update({is_deleted:true}).eq('id',id);
   await logAction('delete','إلغاء إيصال','receipts',id);
@@ -2044,25 +2208,40 @@ window.deleteRec=async function(){
 window.editPay=function(id){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
+  if(voucherLocked(p.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
   document.getElementById('edit-pay-id').value=id;
   document.getElementById('edit-pay-amount').value=p.amount_ils||p.amount;
   document.getElementById('edit-pay-notes').value=p.notes||'';
+  const rsn=document.getElementById('edit-pay-reason'); if(rsn) rsn.value='';
   window.openM('edit-pay');
 };
 window.updatePay=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
+  const p=DB.payments.find(x=>x.id===id);
+  if(!p){toast('السند غير موجود','err');return;}
+  if(voucherLocked(p.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
   const amount=parseFloat(document.getElementById('edit-pay-amount').value)||0;
   const notes=document.getElementById('edit-pay-notes').value;
+  const reason=(document.getElementById('edit-pay-reason')?.value||'').trim();
   if(amount<=0){toast(window.t('errors.invalid_amount'),'warn');return;}
-  const{error}=await SB.from('payments').update({amount_ils:amount,amount,notes,updated_at:new Date().toISOString()}).eq('id',id);
+  if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
+  const nowIso=new Date().toISOString();
+  const newVer=Number(p.version||1)+1;
+  const{error}=await SB.from('payments').update({amount_ils:amount,notes,version:newVer,updated_at:nowIso}).eq('id',id);
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  await logAction('edit',`تعديل سند صرف — ₪${fmt(amount)}`,'payments',id);
+  try{
+    await recordVoucherVersion('payment', p,
+      {...p, amount_ils:amount, notes:notes, version:newVer, updated_at:nowIso}, reason, newVer);
+  }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
+  await logAction('edit',`تعديل سند صرف ${p.no} (نسخة ${newVer}) — ₪${fmt(amount)} | السبب: ${reason}`,'payments',id);
   window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
 };
 window.deletePay=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
+  const _dp=DB.payments.find(x=>x.id===id);
+  if(_dp&&voucherLocked(_dp.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
   await SB.from('payments').update({is_deleted:true}).eq('id',id);
   await logAction('delete','إلغاء سند صرف','payments',id);
@@ -2139,6 +2318,18 @@ if(!btn)return;
 btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   const{data:adNew,error}=await SB.from('annual_dues').insert({year,amount,applied_by:CUR?.full_name||CU?.email,member_count:members.length}).select('id').single();
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
+  /* H1 FIX — generate the per-member subscription obligations for this year so the dues are
+     actually billed. FIN.memberStatement / A2 / A3 / member statements all read
+     member_subscriptions; without these rows the year is invisible to the accounting engine.
+     Every active member gets a row; due = amount when eligible (active_from_year<=year), else 0. */
+  const subRows=DB.members.filter(m=>m.is_active!==false).map(m=>{
+    const due=(!m.active_from_year||m.active_from_year<=year)?Number(amount):0;
+    return {member_id:m.id,year,due_amount_ils:due,paid_amount_ils:0,balance_ils:due};
+  });
+  if(subRows.length){
+    const{error:subErr}=await SB.from('member_subscriptions').insert(subRows);
+    if(subErr){toast(window.t('errors.generic_error')+': '+subErr.message,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
+  }
   await logAction('add',`تطبيق اشتراك سنة ${year} — ${members.length} عضو — ₪${fmt(amount)} لكل عضو`,'annual_dues',adNew?.id||null);
   await loadAll();
   btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';
@@ -2311,6 +2502,7 @@ const PRINT_TOKENS=':root{--navy:#0F1B2D;--green:#00C896;--gold:#C6A46A;--danger
 +'.qr-u .box{width:62px;height:62px;border:1px solid var(--navy);border-radius:4px;margin:0 auto}'
 +'.qr-u .box>div,.qr-u .box img,.qr-u .box canvas{width:56px!important;height:56px!important;margin:3px}'
 +'.qr-u .cap{font-size:7px;color:var(--gray);margin-top:3px;word-break:break-all}'
++'.qr-u .cap .tok{display:block;font-weight:700;color:var(--navy);font-size:7.5px;letter-spacing:.2px;margin-top:1px}'
 +'.sigs{display:flex;gap:40px}'
 +'.sig-u .line{width:120px;border-top:1px solid var(--navy);margin-top:34px;padding-top:4px;font-size:10px;color:var(--gray);text-align:center}'
 +'.pgfoot{border-top:1px solid var(--bd);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;font-size:8.5px;color:var(--gray)}'
@@ -2366,7 +2558,7 @@ function buildRecVoucher(r){
   const cur=(r.currency&&r.currency!=='ILS')?('<div class="row"><div class="lbl">العملة الأصلية</div><div class="val">'+fmtD(r.amount)+' '+esc(r.currency)+' × ₪'+Number(r.exchange_rate||1).toFixed(2)+'</div></div>'):'';
   const note=r.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(r.notes)+'</div></div>'):'';
   return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
-    +reportHeader('سند قبض',{no:esc(r.no),sub:'معتمد إلكترونياً · Verified'})
+    +reportHeader('سند قبض',{no:esc(r.no),sub:'معتمد إلكترونياً · Verified'+(Number(r.version||1)>1?(' · نسخة رقم '+Number(r.version)+' · تم التعديل'):'')})
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(r.receipt_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(r.fund_type)+'</div></div>'
@@ -2375,7 +2567,7 @@ function buildRecVoucher(r){
     +cur+note
     +'</div>'
     +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsAr(r.amount_ils||r.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify<span class="tok">'+esc(r.verification_token||'')+'</span></div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
@@ -2386,7 +2578,7 @@ function buildPayVoucher(p){
   const note=p.notes?('<div class="row"><div class="lbl">البيان</div><div class="val">'+esc(p.notes)+'</div></div>'):'';
   const appr=p.approved_by?('<div class="row"><div class="lbl">معتمد من</div><div class="val">'+esc(p.approved_by)+'</div></div>'):'';
   return '<div class="page portrait"><div class="wm"><span>أصل</span></div><div class="voucher">'
-    +reportHeader('سند صرف',{no:esc(p.no),sub:'معتمد إلكترونياً · Verified'})
+    +reportHeader('سند صرف',{no:esc(p.no),sub:'معتمد إلكترونياً · Verified'+(Number(p.version||1)>1?(' · نسخة رقم '+Number(p.version)+' · تم التعديل'):'')})
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(p.payment_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(p.fund_type)+'</div></div>'
@@ -2396,7 +2588,7 @@ function buildPayVoucher(p){
     +cur+note+appr
     +'</div>'
     +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsAr(p.amount_ils||p.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify</div></div>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify<span class="tok">'+esc(p.verification_token||'')+'</span></div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
@@ -2453,7 +2645,17 @@ window.buildFundStatementHTML=function(fund){
   const rowsHTML=rows.map((r,i)=>{
     bal+=r.cr-r.dr;totCr+=r.cr;totDr+=r.dr;
     if(i===0&&r.type==='open')openBal=r.cr-r.dr;
-    const crCell=r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':(r.type==='don'?'<span class="cr">'+window.t('receipts.fund_don')+'</span>':'—');
+    let crCell;
+    if(r.cr>0){ crCell='<span class="cr">₪ '+fmt(r.cr)+'</span>'; }
+    else if(r.type==='don'){
+      /* P9 — informational food-donation row: classify Historical vs Current Support and
+         show the amount. cr stays 0 so the current balance is NOT affected (display only). */
+      const _dr=DB.receipts.find(x=>x.id===r.id);
+      const _amt=_dr?Number(_dr.amount_ils||_dr.amount||0):0;
+      const _hist=_dr?(_dr.manual_allocation?(Number(_dr.manual_historical_donation||0)>0):(_dr.food_donation_allocation==='reduce_deficit')):false;
+      const _lbl=fund==='food'?(_hist?(window.LANG==='en'?'Historical Donation':'تبرع تاريخي'):(window.LANG==='en'?'Current Support':'دعم حالي')):window.t('receipts.fund_don');
+      crCell='<span class="cr">+₪ '+fmt(_amt)+' · '+_lbl+'</span>';
+    } else { crCell='—'; }
     const drCell=r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—';
     return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(bal)+'</td><td>'+esc(r.note||'')+'</td></tr>';
   }).join('');
@@ -3502,6 +3704,9 @@ async function loadSettings(){
     if(!data) return;
     const map={};
     data.forEach(s=>map[s.key]=s.value);
+    /* Phase 10 — Year-End Lock threshold (default: previous calendar year). */
+    window.LOCKED_THROUGH_YEAR = (map['locked_through_year']!=null && map['locked_through_year']!=='')
+      ? Number(map['locked_through_year']) : (new Date().getFullYear()-1);
     const foodEl=document.getElementById('set-food-opening');
     const diwanEl=document.getElementById('set-diwan-opening');
     const usdEl=document.getElementById('set-usd-rate');

@@ -374,21 +374,22 @@ let LAST_RESULT = null;  /* Cache for language re-render */
 /* ═══════════════════════════════════════════
    STEP 1 — URL PARSING
    ─────────────────────────────────────────
-   Input URL:   https://diwan-finance.com/verify/REC-00005
-   pathname:    /verify/REC-00005
+   Input URL:   https://www.diwan-finance.com/verify/XfdpMvcDAQ4Y9S9c
+   pathname:    /verify/XfdpMvcDAQ4Y9S9c
 
    Steps:
-     window.location.pathname          →  "/verify/REC-00005"
-     .split('/')                        →  ["", "verify", "REC-00005"]
-     .filter(Boolean)                   →  ["verify", "REC-00005"]
-     .pop()                             →  "REC-00005"
-     .toUpperCase()                     →  "REC-00005"
-     .replace(/[^A-Z0-9\-]/g, '')       →  "REC-00005"  (sanitise)
+     window.location.pathname          →  "/verify/XfdpMvcDAQ4Y9S9c"
+     .split('/').filter(Boolean)        →  ["verify", "XfdpMvcDAQ4Y9S9c"]
+     .pop()                             →  "XfdpMvcDAQ4Y9S9c"
+     .replace(/[^A-Za-z0-9]/g, '')      →  "XfdpMvcDAQ4Y9S9c"  (sanitise, case-PRESERVING)
+
+   Tokens are case-sensitive base62 (A-Za-z0-9), 10–64 chars.
+   Receipt/payment NUMBERS (REC-/PAY-) are NEVER used for lookup (anti-enumeration).
 
    Edge cases handled:
-     /verify/              →  null  (no ID)
-     /verify/rec-00005     →  "REC-00005"  (lowercased input)
-     /verify/REC 00005     →  "REC00005"   (spaces stripped by sanitise)
+     /verify/              →  null  (no token)
+     /verify/REC-00005     →  null  (sanitises to "REC00005" = 8 chars < 10 → rejected)
+     /verify/AAAAAAAAAAAA  →  "AAAAAAAAAAAA"  (well-formed but unknown → API → not-found)
 ═══════════════════════════════════════════ */
 function getDocIdFromPath() {
   const segments = window.location.pathname.split('/').filter(Boolean);
@@ -404,7 +405,7 @@ function getDocIdFromPath() {
 /* ═══════════════════════════════════════════
    STEP 2 — API CALL
    ─────────────────────────────────────────
-   Endpoint:  GET /api/verify?id=REC-00005
+   Endpoint:  GET /api/verify?id=XfdpMvcDAQ4Y9S9c
    Handler:   api/verify.js  (Vercel serverless function)
    Returns:   { valid: bool, document?: {...}, error?: string }
 

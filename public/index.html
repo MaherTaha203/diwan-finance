@@ -572,9 +572,47 @@
       id="edit-rec-date">
   </div>
 
+  <div class="fi full" id="edit-rec-member-wrap" style="display:none">
+    <label>العضو (يمكن إعادة التعيين) <span class="req">*</span></label>
+    <select id="edit-rec-member"></select>
+  </div>
+
+  <div class="fi full" id="edit-rec-payer-wrap" style="display:none">
+    <label>اسم الدافع <span class="req">*</span></label>
+    <input type="text" id="edit-rec-payer-name">
+  </div>
+
+  <div id="edit-rec-food-wrap" style="display:none">
+    <div class="fi full">
+      <label>تصنيف تبرع الغداء</label>
+      <select id="edit-rec-alloc-type">
+        <option value="support_current">دعم حالي · Food Current</option>
+        <option value="reduce_deficit">عجز تاريخي · Food Historical</option>
+      </select>
+    </div>
+    <div class="fi full">
+      <label>وضع التوزيع</label>
+      <select id="edit-rec-alloc-mode" onchange="window.onEditAllocModeChange()">
+        <option value="auto">تلقائي — Item 9</option>
+        <option value="manual">يدوي</option>
+      </select>
+    </div>
+    <div id="edit-rec-manual-wrap" style="display:none">
+      <div class="fi full"><label>تسوية ذمة · Debt</label><input type="number" id="edit-rec-m-debt" min="0" step="0.01" oninput="window.onEditManualInput()"></div>
+      <div class="fi full"><label>تبرع تاريخي · Historical</label><input type="number" id="edit-rec-m-hist" min="0" step="0.01" oninput="window.onEditManualInput()"></div>
+      <div class="fi full"><label>دعم حالي · Current</label><input type="number" id="edit-rec-m-current" min="0" step="0.01" oninput="window.onEditManualInput()"></div>
+      <div class="ibox" id="edit-rec-manual-sum" style="font-size:12px">المجموع: ₪0 / ₪0</div>
+    </div>
+  </div>
+
   <div class="fi full">
     <label>ملاحظات</label>
     <textarea id="edit-rec-notes"></textarea>
+  </div>
+
+  <div class="fi full">
+    <label>سبب التعديل <span class="req">*</span></label>
+    <textarea id="edit-rec-reason" placeholder="إلزامي — يُحفظ في سجل النُّسخ"></textarea>
   </div>
 
 </div>
@@ -586,6 +624,10 @@
     <button class="btn primary" onclick="window.updateRec()">
       <i class="ti ti-device-floppy"></i>
       حفظ
+    </button>
+    <button class="btn ghost" onclick="window.showVoucherHistory('receipt',document.getElementById('edit-rec-id').value)">
+      <i class="ti ti-history"></i>
+      السجل
     </button>
 
 ```
@@ -606,8 +648,15 @@
   <!-- Edit Payment -->
   <div class="modal" id="m-edit-pay" style="display:none;max-width:420px">
     <div class="mhd"><span class="mtt"><span class="mico red"><i class="ti ti-edit"></i></span>تعديل سند الصرف</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><input type="hidden" id="edit-pay-id"><div class="ibox warn"><i class="ti ti-lock"></i>يمكن تعديل المبلغ بالشيكل والملاحظات فقط</div><div class="fg"><div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-pay-amount" min="0.01" step="0.01"></div></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-pay-notes"></textarea></div></div></div>
-    <div class="mft"><button class="btn primary" onclick="window.updatePay()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn danger" onclick="window.deletePay()"><i class="ti ti-trash"></i>إلغاء السند</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+    <div class="mbd"><input type="hidden" id="edit-pay-id"><div class="ibox warn"><i class="ti ti-lock"></i>يمكن تعديل المبلغ بالشيكل والملاحظات فقط</div><div class="fg"><div class="fi full"><label>المبلغ بالشيكل ₪ <span class="req">*</span></label><div class="iw"><span class="ipx">₪</span><input type="number" id="edit-pay-amount" min="0.01" step="0.01"></div></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-pay-notes"></textarea></div><div class="fi full"><label>سبب التعديل <span class="req">*</span></label><textarea id="edit-pay-reason" placeholder="إلزامي — يُحفظ في سجل النُّسخ"></textarea></div></div></div>
+    <div class="mft"><button class="btn primary" onclick="window.updatePay()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn ghost" onclick="window.showVoucherHistory('payment',document.getElementById('edit-pay-id').value)"><i class="ti ti-history"></i>السجل</button><button class="btn danger" onclick="window.deletePay()"><i class="ti ti-trash"></i>إلغاء السند</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  </div>
+
+  <!-- Voucher Version History (read-only) -->
+  <div class="modal" id="m-vhist" style="display:none;max-width:460px">
+    <div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-history"></i></span>سجل نسخ السند</span><button class="btn ghost" onclick="window.closeM()"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div id="vhist-body"></div></div>
+    <div class="mft"><button class="btn" onclick="window.closeM()">إغلاق</button></div>
   </div>
 
   <!-- Invite User -->
