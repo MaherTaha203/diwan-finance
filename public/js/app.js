@@ -2100,6 +2100,12 @@ window.editRec=function(id){
     if(r.payer_type==='member'){ mWrap.style.display=''; mSel.value=r.member_id||''; }
     else { mWrap.style.display='none'; }
   }
+  const pWrap=document.getElementById('edit-rec-payer-wrap');
+  const pInput=document.getElementById('edit-rec-payer-name');
+  if(pWrap&&pInput){
+    if(r.payer_type==='manual'){ pWrap.style.display=''; pInput.value=r.payer_name||''; }
+    else { pWrap.style.display='none'; }
+  }
   /* P4/P7 — food-donation allocation mode + manual split (food domain only). */
   const fWrap=document.getElementById('edit-rec-food-wrap');
   if(fWrap){
@@ -2151,6 +2157,9 @@ if(r.payer_type==='member'){
   const newMid=document.getElementById('edit-rec-member')?.value||r.member_id;
   if(!newMid){ toast('✋ اختر العضو','warn'); return; }
   upd.member_id=newMid; upd.payer_name=gmn(newMid);
+} else if(r.payer_type==='manual'){
+  const pn=(document.getElementById('edit-rec-payer-name')?.value||'').trim();
+  if(pn) upd.payer_name=pn;
 }
 /* P7 — food-donation allocation: automatic (Item 9) or manual per-voucher override. */
 if(r.fund_type==='donation' && r.donation_display_fund==='food'){
