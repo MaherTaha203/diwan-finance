@@ -626,3 +626,88 @@ table td.num,table th.num,table td.bal,table .lr-cr,table .lr-dr,table .lr-bal{
 .combo-item:hover{background:rgba(198,164,106,.10)}
 .combo-item mark{background:rgba(198,164,106,.30);color:inherit;border-radius:2px;padding:0 1px}
 .combo-empty{padding:10px 12px;font-size:12px;color:var(--tx3);text-align:center}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PREMIUM REDESIGN — Member Account Statement (.msr) & Debt Report (.adr)
+   Presentation layer only. Inherits dashboard tokens (--card,--bd,--rl,--navy,
+   --gold, accent colours). Soft shadows + floating cards + perfect RTL.
+   ════════════════════════════════════════════════════════════════════════ */
+.msr,.adr{ --sh-soft:0 6px 22px rgba(15,27,45,.07); }
+body:not(.light) .msr,body:not(.light) .adr{ --sh-soft:0 8px 26px rgba(0,0,0,.28); }
+.msr .card,.adr .card{ box-shadow:var(--sh-soft); }
+.msr .msr-sec-title,.adr .adr-sec-title{ font-size:13px; font-weight:700; color:var(--tx); display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.msr .msr-sec-title i,.adr .adr-sec-title i{ font-size:17px; color:var(--gold); }
+
+/* ── Section 1 · Header ── */
+.msr-head{ display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+.msr-head-r{ min-width:0; }
+.msr-kicker{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--gold); background:rgba(198,164,106,.12); border:1px solid rgba(198,164,106,.28); padding:4px 12px; border-radius:20px; margin-bottom:10px; }
+.msr-name{ font-size:23px; font-weight:800; color:var(--tx); letter-spacing:-.4px; line-height:1.2; }
+.msr-meta{ display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:8px; }
+.msr-meta span{ display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--tx2); }
+.msr-meta i{ font-size:14px; color:var(--tx3); }
+.msr-head-l{ display:flex; flex-direction:column; align-items:flex-end; gap:9px; flex-shrink:0; }
+.msr-printdate{ font-size:11px; color:var(--tx3); }
+.msr-head-l .export-dropdown-menu{ left:0; right:auto; min-width:185px; }
+
+/* ── Section 2 · Current Balance hero ── */
+.msr-hero{ text-align:center; padding:30px 20px; position:relative; overflow:hidden; --hero:var(--tx); }
+.msr-hero::before{ content:''; position:absolute; inset:0 0 auto 0; height:4px; background:linear-gradient(90deg,transparent,var(--hero),transparent); opacity:.85; }
+.msr-hero-label{ font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--tx3); margin-bottom:10px; }
+.msr-hero-amt{ font-size:46px; font-weight:800; line-height:1; letter-spacing:-1.5px; color:var(--hero); font-feature-settings:"tnum" 1; }
+.msr-hero-status{ display:inline-block; margin-top:14px; font-size:13px; font-weight:700; color:var(--hero); background:color-mix(in srgb,var(--hero) 12%,transparent); border:1px solid color-mix(in srgb,var(--hero) 30%,transparent); padding:6px 18px; border-radius:22px; }
+
+/* ── Section 3 · Opening balance equation ── */
+.msr-eq{ display:flex; align-items:stretch; gap:10px; flex-wrap:wrap; }
+.msr-eq-item{ flex:1 1 0; min-width:130px; background:var(--bg3); border:1px solid var(--bd); border-radius:var(--rl); padding:16px 14px; text-align:center; }
+.msr-eq-item.total{ background:rgba(198,164,106,.10); border-color:rgba(198,164,106,.32); }
+.msr-eq-item .k{ font-size:11px; font-weight:600; color:var(--tx3); margin-bottom:8px; }
+.msr-eq-item .v{ font-size:21px; font-weight:800; color:var(--tx); font-feature-settings:"tnum" 1; }
+.msr-eq-item .v.neg{ color:var(--danger); } .msr-eq-item .v.pos{ color:var(--acc); }
+.msr-eq-op{ display:flex; align-items:center; font-size:26px; font-weight:800; color:var(--tx3); }
+
+/* ── Section 4 · Timeline blocks ── */
+.msr-tl-wrap{ display:flex; flex-direction:column; gap:14px; }
+.tlb{ --acc:var(--tx3); border:1px solid var(--bd); border-inline-start:4px solid var(--acc); border-radius:var(--rl); background:color-mix(in srgb,var(--acc) 6%,var(--card)); padding:14px 16px; }
+.tlb.gold{ --acc:#C6A46A; } .tlb.green{ --acc:#00C896; } .tlb.blue{ --acc:#38BDF8; }
+.tlb.purple{ --acc:#A78BFA; } .tlb.gray{ --acc:#7A9AB8; }
+.tlb-head{ display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+.tlb-ico{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; background:color-mix(in srgb,var(--acc) 16%,transparent); color:var(--acc); flex-shrink:0; }
+.tlb-title{ font-size:14px; font-weight:800; color:var(--tx); flex:1; }
+.tlb-bal{ font-size:15px; font-weight:800; font-feature-settings:"tnum" 1; }
+.tlb-rows{ display:flex; flex-direction:column; gap:2px; }
+.tlb-row{ display:flex; align-items:center; justify-content:space-between; padding:7px 2px; font-size:13px; border-top:1px dashed var(--bd); }
+.tlb-row:first-child{ border-top:none; }
+.tlb-row .l{ color:var(--tx2); display:flex; align-items:center; gap:7px; min-width:0; }
+.tlb-row .l small{ color:var(--tx3); font-size:11px; }
+.tlb-row .v{ font-weight:700; color:var(--tx); font-feature-settings:"tnum" 1; white-space:nowrap; }
+.tlb-row .v.neg{ color:var(--danger); } .tlb-row .v.pos{ color:var(--acc2,#059669); }
+body:not(.light) .tlb-row .v.pos{ color:#34D399; }
+.tlb-empty{ font-size:12px; color:var(--tx3); padding:4px 2px; }
+
+/* ── Debt Report (.adr) ── */
+.adr-filters{ display:flex; flex-direction:column; gap:14px; margin-bottom:14px; }
+.adr-yearcard{ display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.adr-yearcard .adr-yc-lbl{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:var(--tx); }
+.adr-yearcard .adr-yc-lbl i{ color:var(--gold); font-size:16px; }
+.adr-years{ display:flex; flex-wrap:wrap; gap:8px; }
+.adr-ychip{ display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:22px; border:1px solid var(--bd2); background:var(--bg3); color:var(--tx2); font-family:var(--fn); font-size:12.5px; font-weight:600; cursor:pointer; transition:all .13s; }
+.adr-ychip:hover{ border-color:var(--gold); color:var(--tx); }
+.adr-ychip .ck{ font-size:15px; color:var(--tx3); display:flex; }
+.adr-ychip .amt{ font-size:11px; color:var(--tx3); font-weight:500; }
+.adr-ychip.on{ background:rgba(198,164,106,.13); border-color:rgba(198,164,106,.45); color:var(--gold); }
+.adr-ychip.on .ck{ color:var(--gold); } .adr-ychip.on .amt{ color:var(--gold-d,#A9854C); }
+body:not(.light) .adr-ychip.on .amt{ color:var(--gold-l,#DBC18C); }
+.adr-tablecard{ padding:0; overflow:hidden; }
+.adr-tablecard .tw{ border:none; border-radius:0; }
+.adr-tablecard .dt tfoot td{ background:var(--navy2); color:#fff; font-weight:800; padding:11px 13px; }
+body.light .adr-tablecard .dt tfoot td{ background:var(--navy); }
+.adr-tablecard .dt .cr{ color:#059669; font-weight:600; }
+body:not(.light) .adr-tablecard .dt .cr{ color:#34D399; }
+
+@media(max-width:760px){
+  .msr-hero-amt{ font-size:36px; }
+  .msr-eq{ gap:6px; } .msr-eq-item{ min-width:0; padding:12px 8px; } .msr-eq-item .v{ font-size:17px; }
+  .msr-eq-op{ font-size:20px; }
+  .msr-head-l{ align-items:stretch; width:100%; }
+}
