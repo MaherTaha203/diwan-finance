@@ -1368,48 +1368,88 @@ window.renderMemberStmt=function(){
   const foodRecs=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date));
   const debtSettled=Number(_alloc.perMember[mid]||0);
   const balClr=v=>v>0?'var(--danger)':v<0?'#2563EB':'#00C896';
-  const _sec=(t,tag)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0 5px;margin-top:4px;border-top:1px solid var(--bd)"><span style="font-size:13.5px;font-weight:700;color:var(--tx)">${t}</span>${tag?`<span style="font-size:10px;font-weight:600;color:var(--gold);background:rgba(198,164,106,.13);padding:2px 9px;border-radius:20px">${tag}</span>`:''}</div>`;
-  const _ln=(l,v,c)=>`<div style="display:flex;justify-content:space-between;padding:6px 2px;font-size:13.5px"><span style="color:var(--tx2)">${l}</span><span style="font-weight:600;color:${c||'var(--tx)'}">${v}</span></div>`;
-  const _bln=(l,v)=>`<div style="display:flex;justify-content:space-between;padding:9px 12px;margin:5px 0;background:var(--bg3);border-radius:var(--r);font-weight:700;font-size:13.5px"><span style="color:var(--tx)">${l}</span><span style="color:${balClr(v)}">₪ ${fmt(Math.abs(v))}${v<0?(_en?' Cr':' دائن'):''}</span></div>`;
-  let _flow=_sec(_en?'Carried balance before 2025':'رصيد مُرحّل قبل 2025',_en?'Prior':'رصيد سابق');
-  _flow+=_ln(_en?'Dues until 31/12/2024':'ذمم مستحقة حتى 31/12/2024','₪ '+fmt(histDue),'var(--danger)');
-  _flow+=_ln(_en?'Paid until 31/12/2024':'مدفوعات حتى 31/12/2024','− ₪ '+fmt(histPaid),'var(--acc)');
-  _flow+=_bln(_en?'Carried balance':'الرصيد المُرحّل',carried);
+  const printDate=new Date().toLocaleDateString('en-GB');
+
+  /* ── Timeline block builders (presentation only — values unchanged) ── */
+  const yColor=y=> y<2025?'gold': y===2025?'green': y===2026?'blue':'purple';
+  const _row=(l,sub,v,cls)=>`<div class="tlb-row"><span class="l">${l}${sub?` <small>${sub}</small>`:''}</span><span class="v${cls?' '+cls:''}">${v}</span></div>`;
+  const _block=(cls,ico,title,bal,rowsHtml)=>{
+    const balHtml=bal!=null?`<span class="tlb-bal" style="color:${balClr(bal)}">₪ ${fmt(Math.abs(bal))}${bal<0?(_en?' Cr':' دائن'):''}</span>`:'';
+    return `<div class="tlb ${cls}"><div class="tlb-head"><span class="tlb-ico">${ico}</span><span class="tlb-title">${title}</span>${balHtml}</div><div class="tlb-rows">${rowsHtml}</div></div>`;
+  };
+
+  /* Before 2025 (Gold) */
+  let blocks=_block('gold','📅',(_en?'Before 2025':'قبل 2025'),carried,
+      _row(_en?'Opening balance':'الرصيد الافتتاحي','','₪ 0')
+    + _row(_en?'Accumulated dues':'ذمم متراكمة','','₪ '+fmt(histDue),'neg')
+    + _row(_en?'Paid':'المسدد','','₪ '+fmt(histPaid),'pos')
+    + _row(_en?'Closing balance':'الرصيد الختامي','','₪ '+fmt(Math.abs(carried))+(carried<0?(_en?' Cr':' دائن'):'')) );
+
+  /* Per-year blocks (Green/Blue/Purple by year) */
   yearBlocks.forEach(y=>{
-    _flow+=_sec((_en?'Year ':'سنة ')+y.year);
-    _flow+=_ln((_en?'Subscription ':'اشتراك ')+y.year,'₪ '+fmt(y.due),'var(--danger)');
-    _flow+=_ln((_en?'Payment ':'دفعة ')+y.year,(y.paid>0?'− ₪ '+fmt(y.paid):'₪ 0'),'var(--acc)');
-    _flow+=_bln((_en?'Balance after ':'الرصيد بعد ')+y.year,y.bal);
+    blocks+=_block(yColor(Number(y.year)),'📅',(_en?'Year ':'سنة ')+y.year,y.bal,
+        _row(_en?'Subscription':'اشتراك',y.year,'₪ '+fmt(y.due),'neg')
+      + _row(_en?'Payments':'مدفوعات',y.year,(y.paid>0?'₪ '+fmt(y.paid):'₪ 0'),'pos')
+      + _row(_en?'Closing balance':'الرصيد الختامي','','₪ '+fmt(Math.abs(y.bal))+(y.bal<0?(_en?' Cr':' دائن'):'')) );
   });
-  _flow+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin:10px 0;background:rgba(198,164,106,.10);border:1px solid rgba(198,164,106,.30);border-radius:var(--rl);font-weight:800;font-size:15px"><span style="color:var(--tx)">${_en?'Current balance':'الرصيد الحالي'}</span><span style="color:${balClr(currentBalance)}">₪ ${fmt(Math.abs(currentBalance))}</span></div>`;
-  const _hasSys=foodRecs.length>0||debtSettled>0||dons.length>0;
-  if(_hasSys){
-    _flow+=_sec(_en?'System transactions':'حركات النظام',_en?'Receipts & vouchers':'إيصالات وسندات');
-    foodRecs.forEach(r=>_flow+=_ln(fdate(r.receipt_date)+' · '+esc(r.notes||(_en?'Food contribution':'مساهمة غداء')),'− ₪ '+fmt(r.amount_ils||r.amount),'var(--acc)'));
-    if(debtSettled>0) _flow+=_ln(_en?'Debt settlement from donation (Item 9)':'تسوية ذمة من تبرع (البند 9)','− ₪ '+fmt(debtSettled),'var(--acc)');
-    _flow+=donsHTML;
-  }else{
-    _flow+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;margin-top:4px;border-top:1px solid var(--bd);font-size:12.5px;color:var(--tx3)"><span>${_en?'System transactions (receipts & vouchers)':'حركات النظام (إيصالات وسندات)'}</span><span style="background:var(--bg3);padding:3px 10px;border-radius:20px">${_en?'No transactions':'لا توجد حركات حالياً'}</span></div>`;
-  }
-  const _fclr=finBal>0?'#ff9aa2':finBal<0?'#7CC4FF':'#00C896';
-  _flow+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;margin-top:12px;background:var(--navy);border-radius:var(--rl);color:#fff"><div><div style="font-size:14px;font-weight:800">${_en?'Final current balance':'الرصيد النهائي الحالي'}</div><div style="font-size:11px;opacity:.72;margin-top:2px">${balText}</div></div><div style="font-size:26px;font-weight:800;color:${_fclr}">₪ ${fmt(Math.abs(finBal))}</div></div>`;
+
+  /* System movements (Gray) */
+  let sysRows='';
+  foodRecs.forEach(r=>sysRows+=_row(esc(r.notes||(_en?'Food contribution':'مساهمة غداء')),fdate(r.receipt_date),'₪ '+fmt(r.amount_ils||r.amount),'pos'));
+  if(debtSettled>0) sysRows+=_row(_en?'Debt settlement from donation':'تسوية ذمة من تبرع','','₪ '+fmt(debtSettled),'pos');
+  dons.forEach(d=>sysRows+=_row(donSplit(d).join(' · '),fdate(d.receipt_date),'₪ '+fmt(d.amount_ils||d.amount)));
+  if(dons.length) sysRows+=`<div class="tlb-empty">${_en?'Debt settlement reduces the member balance. Historical deficit & current-support donations are shown for transparency only.':'تسوية الذمة تخفّض رصيد العضو. تبرعات العجز التاريخي والدعم الحالي تُعرض للشفافية فقط ولا تؤثّر على الرصيد.'}</div>`;
+  if(!sysRows) sysRows=`<div class="tlb-empty">${_en?'No transactions yet':'لا توجد حركات حالياً'}</div>`;
+  blocks+=_block('gray','🔄',(_en?'Movements after system launch':'حركات بعد تشغيل النظام'),null,sysRows);
 
   out.innerHTML=`
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:6px">
-        <div>
-          <div style="font-size:18px;font-weight:700;color:var(--tx)">${esc(member.name)}</div>
-          <div style="font-size:12px;color:var(--tx3);margin-top:3px">${member.member_code?(_en?'No. ':'رقم العضو: ')+esc(member.member_code):''}${member.active_from_year?((member.member_code?' · ':'')+(_en?'Member since ':'سنة بدء الاشتراك: ')+member.active_from_year):''}${member.phone?' · ☎ '+esc(member.phone):''}</div>
-        </div>
-        <div style="text-align:left">
-          <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em">${_en?'Current balance':'الرصيد الحالي'}</div>
-          <div style="font-size:21px;font-weight:800;color:${balCol}">₪ ${fmt(Math.abs(finBal))}</div>
-          <div style="font-size:11px;font-weight:600;color:${balCol}">${balText}</div>
+  <div class="msr">
+    <div class="msr-head card">
+      <div class="msr-head-r">
+        <div class="msr-kicker"><i class="ti ti-user"></i>${_en?'Member Account Statement':'كشف حساب عضو'}</div>
+        <div class="msr-name">${esc(member.name)}</div>
+        <div class="msr-meta">
+          ${member.member_code?`<span><i class="ti ti-id-badge-2"></i>${_en?'No. ':'رقم العضو: '}${esc(member.member_code)}</span>`:''}
+          ${member.active_from_year?`<span><i class="ti ti-calendar-event"></i>${_en?'Registered: ':'تاريخ التسجيل: '}${member.active_from_year}</span>`:''}
+          ${member.phone?`<span><i class="ti ti-phone"></i>${esc(member.phone)}</span>`:''}
         </div>
       </div>
-      ${_flow}
+      <div class="msr-head-l">
+        <div class="msr-printdate">${_en?'Print date: ':'تاريخ الطباعة: '}${printDate}</div>
+        <div class="export-dropdown">
+          <button class="btn primary export-dropdown-btn" onclick="togglePageExport(event,'ms-print-menu')"><i class="ti ti-printer"></i>${_en?'Print':'طباعة'}<i class="ti ti-chevron-down"></i></button>
+          <div class="export-dropdown-menu" id="ms-print-menu">
+            <button class="export-dropdown-item" onclick="window.prtMemberStmt()"><i class="ti ti-file-description"></i>${_en?'Print statement':'طباعة كشف الحساب'}</button>
+            <button class="export-dropdown-item" onclick="window.exportMemberStmt('pdf')"><i class="ti ti-file-type-pdf"></i>${_en?'Download PDF':'تنزيل PDF'}</button>
+            <button class="export-dropdown-item" onclick="window.exportMemberStmt('excel')"><i class="ti ti-file-spreadsheet"></i>${_en?'Export Excel':'تصدير Excel'}</button>
+            <button class="export-dropdown-item" onclick="window.exportMemberStmt('pdf')"><i class="ti ti-printer"></i>${_en?'Print PDF':'طباعة PDF'}</button>
+          </div>
+        </div>
+      </div>
     </div>
-  `;
+
+    <div class="msr-hero card" style="--hero:${balCol}">
+      <div class="msr-hero-label">${_en?'Current balance':'الرصيد الحالي'}</div>
+      <div class="msr-hero-amt">₪ ${fmt(Math.abs(finBal))}</div>
+      <div class="msr-hero-status">${balText}</div>
+    </div>
+
+    <div class="msr-open card">
+      <div class="msr-sec-title"><i class="ti ti-history"></i>${_en?'Carried balance until 31/12/2024':'الرصيد المرحل حتى 31/12/2024'}</div>
+      <div class="msr-eq">
+        <div class="msr-eq-item"><div class="k">${_en?'Accumulated dues':'ذمم متراكمة'}</div><div class="v neg">₪ ${fmt(histDue)}</div></div>
+        <div class="msr-eq-op">−</div>
+        <div class="msr-eq-item"><div class="k">${_en?'Paid':'المسدد'}</div><div class="v pos">₪ ${fmt(histPaid)}</div></div>
+        <div class="msr-eq-op">=</div>
+        <div class="msr-eq-item total"><div class="k">${_en?'Carried balance':'الرصيد المرحل'}</div><div class="v" style="color:${balClr(carried)}">₪ ${fmt(Math.abs(carried))}</div></div>
+      </div>
+    </div>
+
+    <div class="msr-open card">
+      <div class="msr-sec-title"><i class="ti ti-list-details"></i>${_en?'Statement details':'تفاصيل الكشف'}</div>
+      <div class="msr-tl-wrap">${blocks}</div>
+    </div>
+  </div>`;
 };
 
 
@@ -2923,21 +2963,85 @@ function _adCurCell(c){
 function _adFilterLabel(){ const en=window.LANG==='en';
   return _adFilter==='debtors'?(en?'Debtors':'مدينون'):_adFilter==='creditors'?(en?'Creditors':'دائنون'):_adFilter==='zero'?(en?'Zero balance':'رصيد صفر'):(en?'All':'الكل'); }
 window.setAnnualDebtFilter=function(f){ _adFilter=f; renderAnnualDebt(); };
+
+/* ── Dynamic subscription-year filter (years read from existing records — never hardcoded) ── */
+let _adYears=null; // Set<number> of selected years; null until first init
+function adAvailableYears(){
+  const map={};
+  (DB.subscriptions||[]).forEach(s=>{
+    const y=Number(s.year); if(!y) return;
+    map[y]=Math.max(map[y]||0,Number(s.due_amount_ils||0));
+  });
+  return Object.keys(map).map(Number).sort((a,b)=>a-b).map(y=>({year:y,due:map[y]}));
+}
+function adEnsureYears(){
+  const avail=adAvailableYears();
+  if(_adYears===null) _adYears=new Set(avail.map(y=>y.year)); // default: all years selected
+  return avail;
+}
+window.toggleAdYear=function(y){
+  adEnsureYears(); y=Number(y);
+  if(_adYears.has(y)) _adYears.delete(y); else _adYears.add(y);
+  renderAnnualDebt();
+};
+/* Per-member aggregation over selected years — SUMS OF EXISTING STORED VALUES ONLY (no new calc) */
+function adMemberSelected(mid){
+  let sub=0,paid=0;
+  (DB.subscriptions||[]).filter(s=>s.member_id===mid).forEach(s=>{
+    if(_adYears && _adYears.has(Number(s.year))){ sub+=Number(s.due_amount_ils||0); paid+=Number(s.paid_amount_ils||0); }
+  });
+  return {sub,paid};
+}
 function renderAnnualDebt(){
   const el=document.getElementById('annual-debt-list'); if(!el) return;
   const en=window.LANG==='en';
-  const rows=annualDebtRows();
-  const total=DB.members.filter(m=>m.is_active!==false).length;
-  const sub=document.getElementById('annual-debt-sub');
-  if(sub) sub.textContent='Annual Debt Report · '+rows.length+(en?' of ':' من ')+total;
+  const avail=adEnsureYears();
+  /* Rows: historical figures + selected-year aggregation + authoritative FIN final balance */
+  let rows=DB.members.filter(m=>m.is_active!==false).map(m=>{
+    const st=FIN.memberStatement(m.id);
+    const seld=adMemberSelected(m.id);
+    return {code:m.member_code||'—', name:m.name, phone:m.phone||'',
+      hist:Number(m.historical_balance_ils||0), histPaid:Number(m.historical_payments_ils||0),
+      selSub:seld.sub, selPaid:seld.paid, current:st.finalBalance};
+  });
+  const total=rows.length;
+  if(_adFilter==='debtors')        rows=rows.filter(r=>r.current>0.005);
+  else if(_adFilter==='creditors') rows=rows.filter(r=>r.current<-0.005);
+  else if(_adFilter==='zero')      rows=rows.filter(r=>Math.abs(r.current)<=0.005);
+  rows.sort((a,b)=>b.current-a.current);
+
+  const subEl=document.getElementById('annual-debt-sub');
+  if(subEl) subEl.textContent='Annual Debt Report · '+rows.length+(en?' of ':' من ')+total;
+
   const chips=[['all',en?'All':'الكل'],['debtors',en?'Debtors':'مدينون'],['creditors',en?'Creditors':'دائنون'],['zero',en?'Zero balance':'رصيد صفر']]
     .map(c=>'<button class="tp-tab'+(_adFilter===c[0]?' on':'')+'" onclick="setAnnualDebtFilter(\''+c[0]+'\')">'+c[1]+'</button>').join('');
-  const head=_adHead().map(h=>'<th>'+h+'</th>').join('');
-  const bodyRows=rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td><td>₪ '+fmt(r.opening)+'</td><td>₪ '+fmt(r.dues)+'</td><td><span class="cr">₪ '+fmt(r.paid)+'</span></td><td class="bal">'+_adCurCell(r.current)+'</td></tr>').join('');
-  el.innerHTML='<div class="tp-tabs">'+chips+'</div>'
+  const yearChips=avail.length
+    ? avail.map(y=>{const on=_adYears.has(y.year);return '<button class="adr-ychip'+(on?' on':'')+'" onclick="toggleAdYear('+y.year+')"><span class="ck"><i class="ti '+(on?'ti-square-check':'ti-square')+'"></i></span>'+y.year+'<span class="amt">('+fmt(y.due)+' ₪)</span></button>';}).join('')
+    : '<span style="font-size:12px;color:var(--tx3)">'+(en?'No subscription years yet':'لا توجد سنوات اشتراك')+'</span>';
+
+  const head=['<th>'+(en?'Member No.':'رقم العضو')+'</th>','<th>'+(en?'Member Name':'اسم العضو')+'</th>','<th>'+(en?'Phone':'الهاتف')+'</th>',
+    '<th>'+(en?'Debt until 31/12/2024':'الذمم حتى 31/12/2024')+'</th>','<th>'+(en?'Paid until 31/12/2024':'المسدد حتى 31/12/2024')+'</th>',
+    '<th>'+(en?'Selected subscriptions':'اشتراكات السنوات المحددة')+'</th>','<th>'+(en?'Selected payments':'مدفوعات السنوات المحددة')+'</th>',
+    '<th>'+(en?'Current final balance':'الرصيد النهائي الحالي')+'</th>'].join('');
+
+  let tHist=0,tHistPaid=0,tSub=0,tPaid=0;
+  const bodyRows=rows.map(r=>{tHist+=r.hist;tHistPaid+=r.histPaid;tSub+=r.selSub;tPaid+=r.selPaid;
+    return '<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
+      +'<td>₪ '+fmt(r.hist)+'</td><td><span class="cr">₪ '+fmt(r.histPaid)+'</span></td>'
+      +'<td>₪ '+fmt(r.selSub)+'</td><td><span class="cr">₪ '+fmt(r.selPaid)+'</span></td>'
+      +'<td class="bal">'+_adCurCell(r.current)+'</td></tr>';}).join('');
+  const foot='<tfoot><tr><td colspan="3">'+(en?'Total':'الإجمالي')+' ('+rows.length+')</td>'
+    +'<td>₪ '+fmt(tHist)+'</td><td>₪ '+fmt(tHistPaid)+'</td><td>₪ '+fmt(tSub)+'</td><td>₪ '+fmt(tPaid)+'</td><td></td></tr></tfoot>';
+
+  el.innerHTML='<div class="adr">'
+    +'<div class="adr-filters">'
+      +'<div class="card adr-yearcard"><span class="adr-yc-lbl"><i class="ti ti-calendar-stats"></i>'+(en?'Subscription years':'اشتراكات السنوات')+'</span><div class="adr-years">'+yearChips+'</div></div>'
+      +'<div class="tp-tabs" style="margin:0">'+chips+'</div>'
+    +'</div>'
     +(rows.length
-      ? '<div class="tw"><table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+bodyRows+'</tbody></table></div>'
-      : '<div class="card" style="text-align:center;color:var(--tx3)">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>');
+      ? '<div class="card adr-tablecard"><div class="tw"><table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+bodyRows+'</tbody>'+foot+'</table></div></div>'
+      : '<div class="card" style="text-align:center;color:var(--tx3)">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>')
+    +'</div>';
 }
 window.prtAnnualDebt=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
