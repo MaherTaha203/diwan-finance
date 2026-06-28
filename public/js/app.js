@@ -1337,13 +1337,22 @@ window.renderMemberStmt=function(){
     +'</div>'
   ) : '';
 
-  const canPrint = (window.can && can.print && can.print());
-  const actions = canPrint ? (
-    '<div class="as-actions">'
-    +'<button class="as-btn" onclick="window.exportMemberStmt(\'pdf\')"><i class="ti ti-file-type-pdf"></i>'+T('تصدير PDF','Export PDF')+'</button>'
-    +'<button class="as-btn" onclick="window.exportMemberStmt(\'excel\')"><i class="ti ti-file-spreadsheet"></i>'+T('تصدير Excel','Export Excel')+'</button>'
-    +'<button class="as-btn as-btn-pri" onclick="window.prtMemberStmt()"><i class="ti ti-printer"></i>'+T('طباعة الكشف','Print statement')+'</button>'
+  /* Print ▼ split button — all PDF/print paths use the official print template
+     (prtMemberStmt), never the on-screen layout. Excel uses the data exporter. */
+  const canPrint  = (window.can && can.print  && can.print());
+  const canExport = (window.can && can.export && can.export());
+  const actions = (canPrint || canExport) ? (
+    '<div class="as-actions"><div class="export-dropdown">'
+    +'<button class="as-btn as-btn-pri as-split" onclick="togglePageExport(event,\'ms-print-menu\')">'
+      +'<i class="ti ti-printer"></i><span>'+T('طباعة','Print')+'</span><i class="ti ti-chevron-down as-split-ar"></i>'
+    +'</button>'
+    +'<div class="export-dropdown-menu" id="ms-print-menu">'
+      +(canPrint?'<button class="export-dropdown-item" onclick="window.prtMemberStmt(\'print\')"><i class="ti ti-file-description"></i>'+T('طباعة كشف الحساب','Print statement')+'</button>':'')
+      +(canPrint?'<button class="export-dropdown-item" onclick="window.prtMemberStmt(\'pdf\')"><i class="ti ti-file-type-pdf"></i>'+T('تنزيل PDF','Download PDF')+'</button>':'')
+      +(canExport?'<button class="export-dropdown-item" onclick="window.exportMemberStmt(\'excel\')"><i class="ti ti-file-spreadsheet"></i>'+T('تصدير Excel','Export Excel')+'</button>':'')
+      +(canPrint?'<button class="export-dropdown-item" onclick="window.prtMemberStmt(\'pdf-print\')"><i class="ti ti-printer"></i>'+T('طباعة PDF','Print PDF')+'</button>':'')
     +'</div>'
+    +'</div></div>'
   ) : '';
 
   out.innerHTML =
@@ -1379,13 +1388,16 @@ window.renderMemberStmt=function(){
       +'<th class="as-num as-bal">'+T('الرصيد الجاري','Running balance')+'</th>'
     +'</tr></thead><tbody>'+bodyRows.join('')+'</tbody></table></div>'
 
+    /* Dynamic accounting summaries (presentation only — all values from the
+       existing engine; future subscription years are included automatically). */
     +'<div class="as-summary">'
       +'<div class="as-totals">'
-        +'<div class="as-t"><div class="as-k">'+T('إجمالي الاشتراكات (+)','Total subscriptions (+)')+'</div><div class="as-tv">₪ '+fmt(totSub)+'</div></div>'
-        +'<div class="as-t"><div class="as-k">'+T('إجمالي السداد (−)','Total payments (−)')+'</div><div class="as-tv">₪ '+fmt(totPay)+'</div></div>'
+        +'<div class="as-t"><div class="as-k">'+T('مجموع الاشتراكات بعد تشغيل النظام','Subscriptions after system launch')+'</div><div class="as-tv">₪ '+fmt(totSub)+'</div></div>'
+        +'<div class="as-t"><div class="as-k">'+T('مجموع السداد بعد تشغيل النظام','Payments after system launch')+'</div><div class="as-tv">₪ '+fmt(totPay)+'</div></div>'
+        +'<div class="as-t"><div class="as-k">'+T('مجموع السداد من الرصيد المرحل','Payments against carried balance')+'</div><div class="as-tv">₪ '+fmt(histPaid)+'</div></div>'
       +'</div>'
       +'<div class="as-final">'
-        +'<span class="as-final-k">'+T('الرصيد النهائي المستحق','Final balance')+'</span>'
+        +'<span class="as-final-k">'+T('الرصيد النهائي الحالي','Current final balance')+'</span>'
         +'<span class="as-final-v">₪ '+fmt(Math.abs(finBal))+'</span>'
         +'<span class="as-final-s">'+finStatus+'</span>'
       +'</div>'
@@ -2726,7 +2738,10 @@ window.downloadFundStatementPDF=function(fund){
   if(window.html2pdf){doPdf();}
   else{toast('\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644...','info');const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';s.onload=doPdf;document.head.appendChild(s);}
 };
-window.prtMemberStmt=function(){
+window.prtMemberStmt=function(mode){
+  /* mode: 'print' (default) · 'pdf' (download) · 'pdf-print' — ALL use the same
+     official A4 statement template below; only the guidance toast differs. */
+  mode=mode||'print';
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const mid=document.getElementById('ms-member')?.value;
   if(!mid){toast(window.t('errors.select_member'),'warn');return;}
@@ -2831,6 +2846,8 @@ window.prtMemberStmt=function(){
     +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_member')+'</div></div></div></div>'
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:printDate,page:window.t('stmt.page_info')});
   openPrintWin(css,body);
+  if(mode==='pdf') toast(_en?'In the print dialog choose “Save as PDF”':'في نافذة الطباعة اختر «حفظ كـ PDF»','info');
+  else if(mode==='pdf-print') toast(_en?'Generated from the official PDF template':'تم التوليد من قالب PDF الرسمي','info');
 };
 
 /* ═══ VIS-7: UNIFIED EXCEL STYLING (xlsx-js-style) ═══ */
