@@ -803,3 +803,30 @@ body.light .acct-stmt{
   .acct-stmt .as-split{width:100%;justify-content:center;}
   .acct-stmt .as-actions .export-dropdown-menu{left:0;right:0;min-width:0;}
 }
+
+/* ── Generalized statement shell — shared by fund statements, debt & delinquent reports
+   (additive; does not touch the member-statement rules above) ── */
+.acct-stmt .as-filters{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:12px 18px;border-bottom:1px solid var(--bd);}
+.acct-stmt .as-filters .as-fl-lbl{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--tx2);}
+.acct-stmt .as-filters .as-fl-lbl i{color:var(--gold);font-size:15px;}
+.acct-stmt .as-filters .tp-tabs,.acct-stmt .as-filters .adr-years{margin:0;}
+.acct-stmt .as-figs{display:flex;flex-wrap:wrap;gap:12px;padding:16px 18px;border-bottom:1px solid var(--bd);}
+.acct-stmt .as-fig{flex:1 1 150px;background:var(--bg3);border:1px solid var(--bd);border-radius:11px;padding:13px 14px;}
+.acct-stmt .as-fig .k{font-size:11px;color:var(--tx3);font-weight:600;margin-bottom:6px;}
+.acct-stmt .as-fig .v{font-size:18px;font-weight:800;color:var(--tx);font-feature-settings:"tnum" 1;}
+.acct-stmt .as-fig .s{font-size:10px;color:var(--tx3);margin-top:5px;line-height:1.5;}
+.acct-stmt .as-fig.green{border-color:rgba(0,200,150,.35);} .acct-stmt .as-fig.green .v{color:var(--acc);}
+.acct-stmt .as-fig.red{border-color:rgba(248,113,113,.40);} .acct-stmt .as-fig.red .v{color:var(--danger);}
+.acct-stmt .as-fig.teal .v{color:var(--as-acc);}
+/* ledger/report table — credit/debit/balance + totals footer + note column */
+.acct-stmt .as-table td.as-cr{color:#059669;font-weight:700;} body:not(.light) .acct-stmt .as-table td.as-cr{color:#34D399;}
+.acct-stmt .as-table td.as-dr{color:var(--danger);font-weight:700;}
+.acct-stmt .as-table td.as-note{color:var(--tx3);font-size:11px;white-space:normal;}
+/* shared cell classes reused by report builders (delinquent etc.) inside the shell */
+.acct-stmt .as-table .cr{color:#059669;font-weight:700;} body:not(.light) .acct-stmt .as-table .cr{color:#34D399;}
+.acct-stmt .as-table .dr{color:var(--danger);font-weight:700;}
+.acct-stmt .as-table .bal{font-weight:800;font-variant-numeric:tabular-nums;}
+.acct-stmt .as-table tfoot td{background:var(--navy2);color:#fff;font-weight:800;padding:11px 11px;}
+body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
+.acct-stmt .as-empty{padding:34px 18px;text-align:center;color:var(--tx3);font-size:13px;}
+@media (max-width:760px){ .acct-stmt .as-figs .as-fig{flex:1 1 calc(50% - 6px);} }

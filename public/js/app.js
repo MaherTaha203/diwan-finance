@@ -1171,58 +1171,69 @@ window.renderStmt=function(fund){
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
   const out=document.getElementById(fund+'-stmt-out');
-  const rows=FIN.fundLedger(fund,from,to,type);
-  if(!rows.length){out.innerHTML=`<div class="empty"><i class="ti ti-inbox"></i><div class="empty-t">${L.noData('ops')}</div></div>`;return;}
-  let bal=0,totalCr=0,totalDr=0;
-  const rowsHTML=rows.map(r=>{
-    bal+=r.cr-r.dr;totalCr+=r.cr;totalDr+=r.dr;
-    const balColor=bal>=0?'#00C896':'var(--danger)';
-    return`<div class="lr">
-      <span class="lr-date">${fdate(r.date)}</span>
-      <span class="lr-name">${esc(r.name)}</span>
-      <span class="lr-desc">${esc(r.desc)}</span>
-      <span class="lr-cr">${r.cr>0?'₪ '+fmt(r.cr):'—'}</span>
-      <span class="lr-dr">${r.dr>0?'₪ '+fmt(r.dr):r.type==='don'?'<span style="color:var(--don);font-size:10px">تبرع</span>':'—'}</span>
-      <span class="lr-bal" style="color:${balColor}">₪ ${fmt(bal)}</span>
-      <span class="lr-note">${esc(r.note||'')}</span>
-    </div>`;
-  }).join('');
-
+  const rows=FIN.fundLedger(fund,from,to,type);   /* FIN logic unchanged */
   const _en=window.LANG==='en';
   const isFood=fund==='food';
+  const fundLabel=isFood?(_en?'Food Fund':'صندوق الغداء'):(_en?'Diwan Fund':'صندوق الديوان');
+  const periodTxt=from&&to?`${fdate(from)} — ${fdate(to)}`:from?`${window.t('stmt.date_from')} ${fdate(from)}`:to?`${window.t('stmt.date_to')} ${fdate(to)}`:window.t('stmt.all_periods');
+  const printDate=new Date().toLocaleDateString('en-GB');
+  const actions=can.print()?('<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtStmt(\''+fund+'\')"><i class="ti ti-printer"></i>'+window.t('common.print')+'</button></div>'):'';
+  const head='<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
+    +'<div class="as-h">'+(_en?'Fund Statement':'كشف حساب الصندوق')+' · '+fundLabel+'</div>'
+    +'<div class="as-sub">'+(_en?'Finance ‹ Funds ‹ Statement':'المالية ‹ الصناديق ‹ كشف الصندوق')+'</div>'
+    +'</div></div>'+actions+'</div>'
+    +'<div class="as-meta">'
+      +'<div class="as-m"><div class="as-k">'+(_en?'Fund':'الصندوق')+'</div><div class="as-v">'+fundLabel+'</div></div>'
+      +'<div class="as-m"><div class="as-k">'+(_en?'Period':'الفترة')+'</div><div class="as-v">'+periodTxt+'</div></div>'
+      +'<div class="as-m"><div class="as-k">'+(_en?'Transactions':'عدد الحركات')+'</div><div class="as-v">'+rows.length+'</div></div>'
+      +'<div class="as-m"><div class="as-k">'+(_en?'Print date':'تاريخ الطباعة')+'</div><div class="as-v">'+printDate+'</div></div>'
+    +'</div>';
+  if(!rows.length){
+    out.innerHTML='<div class="acct-stmt">'+head+'<div class="as-empty">'+L.noData('ops')+'</div></div>';
+    return;
+  }
+  let bal=0,totalCr=0,totalDr=0;
+  const body=rows.map(r=>{
+    bal+=r.cr-r.dr;totalCr+=r.cr;totalDr+=r.dr;
+    return '<tr>'
+      +'<td class="as-c">'+fdate(r.date)+'</td>'
+      +'<td class="as-desc">'+esc(r.name||'—')+'</td>'
+      +'<td class="as-desc">'+esc(r.desc)+'</td>'
+      +'<td class="as-num as-cr">'+(r.cr>0?'₪ '+fmt(r.cr):(r.type==='don'?'<span style="color:var(--don);font-size:11px">'+(_en?'Donation':'تبرع')+'</span>':'—'))+'</td>'
+      +'<td class="as-num as-dr">'+(r.dr>0?'₪ '+fmt(r.dr):'—')+'</td>'
+      +'<td class="as-num as-bal">₪ '+fmt(bal)+'</td>'
+      +'<td class="as-note">'+esc(r.note||'')+'</td>'
+      +'</tr>';
+  }).join('');
   const curBal=isFood?FIN.foodBalance():bal;
   const curLbl=isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal');
-  const foodFigsHTML=isFood?`
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-        <div class="kpi" style="padding:12px"><div class="kpi-lbl">${_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'}</div><div class="kpi-val" style="font-size:16px;${FIN.foodDeficitRemaining()<0?'color:#e53935':''}">₪ ${fmt(FIN.foodDeficitRemaining())}</div></div>
-        <div class="kpi" style="padding:12px"><div class="kpi-lbl">${mcLabel('reserve')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(FIN.foodSettlementReserve())}</div></div>
-        <div class="kpi ${FIN.foodNetPosition()>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(FIN.foodNetPosition())}</div></div>
-      </div>`:'';
-  const fundLabel=fund==='food'?'صندوق الغداء':'صندوق الديوان';
-  out.innerHTML=`
-    <div class="card">
-      <div style="background:${fund==='food'?'var(--food)':'var(--diwan)'};color:#fff;padding:12px 16px;border-radius:var(--r);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:15px;font-weight:700">${fundLabel}</div>
-        <div style="font-size:12px;opacity:.8">${from&&to?`${fdate(from)} — ${fdate(to)}`:from?`${window.t('stmt.date_from')} ${fdate(from)}`:to?`${window.t('stmt.date_to')} ${fdate(to)}`:window.t('stmt.all_periods')}</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-        <div class="kpi green" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_income')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalCr)}</div></div>
-        <div class="kpi red" style="padding:12px"><div class="kpi-lbl">${window.t('stmt.total_expenses')}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(totalDr)}</div></div>
-        <div class="kpi ${curBal>=0?'green':'red'}" style="padding:12px"><div class="kpi-lbl">${curLbl}</div><div class="kpi-val" style="font-size:16px">₪ ${fmt(curBal)}</div>${isFood?`<div class="kpi-sub" style="font-size:10px;opacity:.85">${_en?'Operational':'تشغيلي'} ₪${fmt(bal)} + ${_en?'Debt Settle':'تسوية ذمم'} ₪${fmt(FIN.foodDebtSettlementTotal())} + ${_en?'Support':'دعم'} ₪${fmt(FIN.foodCurrentSupportTotal())}</div>`:''}</div>
-      </div>
-      ${foodFigsHTML}
-      <div class="ledger-hdr">
-        <span style="flex:0 0 85px">${window.t('common.date')}</span>
-        <span style="flex:0 0 120px">${window.t('stmt.donor_name')}</span>
-        <span style="flex:1">${window.t('stmt.desc')}</span>
-        <span style="flex:0 0 80px;text-align:left">${window.t('stmt.credit')} ₪</span>
-        <span style="flex:0 0 80px;text-align:left">${window.t('stmt.debit')} ₪</span>
-        <span style="flex:0 0 85px;text-align:left">${window.t('stmt.balance')} ₪</span>
-        <span style="flex:0 0 110px">${window.t('stmt.note')}</span>
-      </div>
-      <div class="scroll">${rowsHTML}</div>
-      ${can.print()?`<div style="margin-top:12px;text-align:left"><button class="btn ghost sm" onclick="window.prtStmt('${fund}')" data-requires-print="1"><i class="ti ti-printer"></i> ${window.t('common.print')}</button></div>`:''}
-    </div>`;
+  let figs='<div class="as-figs">'
+    +'<div class="as-fig green"><div class="k">'+window.t('stmt.total_income')+'</div><div class="v">₪ '+fmt(totalCr)+'</div></div>'
+    +'<div class="as-fig red"><div class="k">'+window.t('stmt.total_expenses')+'</div><div class="v">₪ '+fmt(totalDr)+'</div></div>'
+    +'<div class="as-fig '+(curBal>=0?'teal':'red')+'"><div class="k">'+curLbl+'</div><div class="v">₪ '+fmt(curBal)+'</div>'
+      +(isFood?'<div class="s">'+(_en?'Operational':'تشغيلي')+' ₪'+fmt(bal)+' + '+(_en?'Debt Settle':'تسوية ذمم')+' ₪'+fmt(FIN.foodDebtSettlementTotal())+' + '+(_en?'Support':'دعم')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+'</div>':'')
+    +'</div>';
+  if(isFood){
+    figs+='<div class="as-fig'+(FIN.foodDeficitRemaining()<0?' red':'')+'"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v">₪ '+fmt(FIN.foodDeficitRemaining())+'</div></div>'
+      +'<div class="as-fig"><div class="k">'+mcLabel('reserve')+'</div><div class="v">₪ '+fmt(FIN.foodSettlementReserve())+'</div></div>'
+      +'<div class="as-fig '+(FIN.foodNetPosition()>=0?'green':'red')+'"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v">₪ '+fmt(FIN.foodNetPosition())+'</div></div>';
+  }
+  figs+='</div>';
+  const tbl='<div class="as-tablewrap"><table class="as-table"><thead><tr>'
+    +'<th class="as-c">'+window.t('common.date')+'</th>'
+    +'<th>'+window.t('stmt.donor_name')+'</th>'
+    +'<th>'+window.t('stmt.desc')+'</th>'
+    +'<th class="as-num">'+window.t('stmt.credit')+' (+)</th>'
+    +'<th class="as-num">'+window.t('stmt.debit')+' (−)</th>'
+    +'<th class="as-num as-bal">'+window.t('stmt.balance')+'</th>'
+    +'<th>'+window.t('stmt.note')+'</th>'
+    +'</tr></thead><tbody>'+body+'</tbody>'
+    +'<tfoot><tr><td colspan="3">'+(_en?'Totals':'الإجمالي')+'</td><td class="as-num">₪ '+fmt(totalCr)+'</td><td class="as-num">₪ '+fmt(totalDr)+'</td><td class="as-num as-bal">₪ '+fmt(bal)+'</td><td></td></tr></tfoot>'
+    +'</table></div>';
+  out.innerHTML='<div class="acct-stmt">'+head+figs+tbl
+    +'<div class="as-foot"><span>'+(_en?'Transactions':'عدد الحركات')+': '+rows.length+' · '+(_en?'Currency':'العملة')+': ₪</span>'
+    +'<span>'+(_en?'Auto-generated statement — Diwan Al-Taha Finance':'كُشف حساب مُولّد آليًا — ديوان آل طه')+'</span></div>'
+    +'</div>';
 };
 
 /* ═══ MEMBER STATEMENT ═══ */
@@ -3011,28 +3022,36 @@ function renderAnnualDebt(){
     ? avail.map(y=>{const on=_adYears.has(y.year);return '<button class="adr-ychip'+(on?' on':'')+'" onclick="toggleAdYear('+y.year+')"><span class="ck"><i class="ti '+(on?'ti-square-check':'ti-square')+'"></i></span>'+y.year+'<span class="amt">('+fmt(y.due)+' ₪)</span></button>';}).join('')
     : '<span style="font-size:12px;color:var(--tx3)">'+(en?'No subscription years yet':'لا توجد سنوات اشتراك')+'</span>';
 
-  const head=['<th>'+(en?'Member No.':'رقم العضو')+'</th>','<th>'+(en?'Member Name':'اسم العضو')+'</th>','<th>'+(en?'Phone':'الهاتف')+'</th>',
-    '<th>'+(en?'Debt until 31/12/2024':'الذمم حتى 31/12/2024')+'</th>','<th>'+(en?'Paid until 31/12/2024':'المسدد حتى 31/12/2024')+'</th>',
-    '<th>'+(en?'Selected subscriptions':'اشتراكات السنوات المحددة')+'</th>','<th>'+(en?'Selected payments':'مدفوعات السنوات المحددة')+'</th>',
-    '<th>'+(en?'Current final balance':'الرصيد النهائي الحالي')+'</th>'].join('');
+  const head='<th>'+(en?'Member No.':'رقم العضو')+'</th><th>'+(en?'Member Name':'اسم العضو')+'</th><th>'+(en?'Phone':'الهاتف')+'</th>'
+    +'<th class="as-num">'+(en?'Debt until 31/12/2024':'الذمم حتى 31/12/2024')+'</th><th class="as-num">'+(en?'Paid until 31/12/2024':'المسدد حتى 31/12/2024')+'</th>'
+    +'<th class="as-num">'+(en?'Selected subscriptions':'اشتراكات السنوات المحددة')+'</th><th class="as-num">'+(en?'Selected payments':'مدفوعات السنوات المحددة')+'</th>'
+    +'<th class="as-num">'+(en?'Current final balance':'الرصيد النهائي الحالي')+'</th>';
+  /* screen-coloured final balance cell (same thresholds as the print _adCurCell) */
+  const curCell=c=> c>0.005?'<span class="as-dr">₪ '+fmt(c)+'</span>':c<-0.005?'<span class="as-cr">₪ '+fmt(-c)+(en?' credit':' دائن')+'</span>':'<span style="color:var(--tx3)">₪ 0</span>';
 
   let tHist=0,tHistPaid=0,tSub=0,tPaid=0;
   const bodyRows=rows.map(r=>{tHist+=r.hist;tHistPaid+=r.histPaid;tSub+=r.selSub;tPaid+=r.selPaid;
-    return '<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
-      +'<td>₪ '+fmt(r.hist)+'</td><td><span class="cr">₪ '+fmt(r.histPaid)+'</span></td>'
-      +'<td>₪ '+fmt(r.selSub)+'</td><td><span class="cr">₪ '+fmt(r.selPaid)+'</span></td>'
-      +'<td class="bal">'+_adCurCell(r.current)+'</td></tr>';}).join('');
+    return '<tr><td>'+esc(r.code)+'</td><td class="as-desc">'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
+      +'<td class="as-num">₪ '+fmt(r.hist)+'</td><td class="as-num as-cr">₪ '+fmt(r.histPaid)+'</td>'
+      +'<td class="as-num">₪ '+fmt(r.selSub)+'</td><td class="as-num as-cr">₪ '+fmt(r.selPaid)+'</td>'
+      +'<td class="as-num">'+curCell(r.current)+'</td></tr>';}).join('');
   const foot='<tfoot><tr><td colspan="3">'+(en?'Total':'الإجمالي')+' ('+rows.length+')</td>'
-    +'<td>₪ '+fmt(tHist)+'</td><td>₪ '+fmt(tHistPaid)+'</td><td>₪ '+fmt(tSub)+'</td><td>₪ '+fmt(tPaid)+'</td><td></td></tr></tfoot>';
+    +'<td class="as-num">₪ '+fmt(tHist)+'</td><td class="as-num">₪ '+fmt(tHistPaid)+'</td><td class="as-num">₪ '+fmt(tSub)+'</td><td class="as-num">₪ '+fmt(tPaid)+'</td><td></td></tr></tfoot>';
 
-  el.innerHTML='<div class="adr">'
-    +'<div class="adr-filters">'
-      +'<div class="card adr-yearcard"><span class="adr-yc-lbl"><i class="ti ti-calendar-stats"></i>'+(en?'Subscription years':'اشتراكات السنوات')+'</span><div class="adr-years">'+yearChips+'</div></div>'
-      +'<div class="tp-tabs" style="margin:0">'+chips+'</div>'
+  el.innerHTML='<div class="acct-stmt">'
+    +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
+      +'<div class="as-h">'+(en?'Annual Debt Report':'تقرير المديونية السنوية')+'</div>'
+      +'<div class="as-sub">'+(en?'Finance ‹ Members ‹ Debt report':'المالية ‹ الأعضاء ‹ تقرير المديونية')+'</div>'
+    +'</div></div>'
+    +(can.print()?'<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtAnnualDebt()"><i class="ti ti-printer"></i>'+(en?'Print':'طباعة')+'</button></div>':'')
     +'</div>'
+    +'<div class="as-filters"><span class="as-fl-lbl"><i class="ti ti-calendar-stats"></i>'+(en?'Subscription years':'اشتراكات السنوات')+'</span><div class="adr-years">'+yearChips+'</div></div>'
+    +'<div class="as-filters"><span class="as-fl-lbl"><i class="ti ti-filter"></i>'+(en?'Category':'التصنيف')+'</span><div class="tp-tabs">'+chips+'</div></div>'
     +(rows.length
-      ? '<div class="card adr-tablecard"><div class="tw"><table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+bodyRows+'</tbody>'+foot+'</table></div></div>'
-      : '<div class="card" style="text-align:center;color:var(--tx3)">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>')
+      ? '<div class="as-tablewrap"><table class="as-table"><thead><tr>'+head+'</tr></thead><tbody>'+bodyRows+'</tbody>'+foot+'</table></div>'
+      : '<div class="as-empty">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>')
+    +'<div class="as-foot"><span>'+(en?'Shown':'المعروض')+': '+rows.length+' / '+total+'</span>'
+    +'<span>'+(en?'Auto-generated report — Diwan Al-Taha Finance':'تقرير مُولّد آليًا — ديوان آل طه')+'</span></div>'
     +'</div>';
 }
 window.prtAnnualDebt=function(){
@@ -3108,9 +3127,20 @@ function renderDelinquent(){
   const yearSel='<select onchange="setDelYear(this.value)" style="height:34px;padding:0 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-weight:700;margin-inline-start:auto">'+yopts+'</select>';
   const head=_delHead(years).map(h=>'<th>'+h+'</th>').join('');
   const body=rows.map(r=>'<tr>'+_delRowCells(r,years)+'</tr>').join('');
-  el.innerHTML='<div class="tp-tabs" style="align-items:center">'+chips+yearSel+'</div>'
-    +(rows.length?'<div class="tw"><table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
-      :'<div class="card" style="text-align:center;color:var(--tx3)">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>');
+  el.innerHTML='<div class="acct-stmt">'
+    +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
+      +'<div class="as-h">'+(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين')+'</div>'
+      +'<div class="as-sub">'+(en?'Finance ‹ Members ‹ Delinquent report':'المالية ‹ الأعضاء ‹ تقرير المتأخرين')+'</div>'
+    +'</div></div>'
+    +(can.print()?'<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtDelinquent()"><i class="ti ti-printer"></i>'+(en?'Print':'طباعة')+'</button></div>':'')
+    +'</div>'
+    +'<div class="as-filters"><span class="as-fl-lbl"><i class="ti ti-filter"></i>'+(en?'Category':'التصنيف')+'</span><div class="tp-tabs">'+chips+'</div>'
+      +'<span class="as-fl-lbl" style="margin-inline-start:auto"><i class="ti ti-calendar"></i>'+(en?'Year':'السنة')+'</span>'+yearSel+'</div>'
+    +(rows.length?'<div class="as-tablewrap"><table class="as-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
+      :'<div class="as-empty">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>')
+    +'<div class="as-foot"><span>'+(en?'Shown':'المعروض')+': '+rows.length+' / '+total+'</span>'
+    +'<span>'+(en?'Auto-generated report — Diwan Al-Taha Finance':'تقرير مُولّد آليًا — ديوان آل طه')+'</span></div>'
+    +'</div>';
 }
 window.prtDelinquent=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
