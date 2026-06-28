@@ -1379,13 +1379,16 @@ window.renderMemberStmt=function(){
       +'<th class="as-num as-bal">'+T('الرصيد الجاري','Running balance')+'</th>'
     +'</tr></thead><tbody>'+bodyRows.join('')+'</tbody></table></div>'
 
+    /* Dynamic accounting summaries (presentation only — all values from the
+       existing engine; future subscription years are included automatically). */
     +'<div class="as-summary">'
       +'<div class="as-totals">'
-        +'<div class="as-t"><div class="as-k">'+T('إجمالي الاشتراكات (+)','Total subscriptions (+)')+'</div><div class="as-tv">₪ '+fmt(totSub)+'</div></div>'
-        +'<div class="as-t"><div class="as-k">'+T('إجمالي السداد (−)','Total payments (−)')+'</div><div class="as-tv">₪ '+fmt(totPay)+'</div></div>'
+        +'<div class="as-t"><div class="as-k">'+T('مجموع الاشتراكات بعد تشغيل النظام','Subscriptions after system launch')+'</div><div class="as-tv">₪ '+fmt(totSub)+'</div></div>'
+        +'<div class="as-t"><div class="as-k">'+T('مجموع السداد بعد تشغيل النظام','Payments after system launch')+'</div><div class="as-tv">₪ '+fmt(totPay)+'</div></div>'
+        +'<div class="as-t"><div class="as-k">'+T('مجموع السداد من الرصيد المرحل','Payments against carried balance')+'</div><div class="as-tv">₪ '+fmt(histPaid)+'</div></div>'
       +'</div>'
       +'<div class="as-final">'
-        +'<span class="as-final-k">'+T('الرصيد النهائي المستحق','Final balance')+'</span>'
+        +'<span class="as-final-k">'+T('الرصيد النهائي الحالي','Current final balance')+'</span>'
         +'<span class="as-final-v">₪ '+fmt(Math.abs(finBal))+'</span>'
         +'<span class="as-final-s">'+finStatus+'</span>'
       +'</div>'
