@@ -387,17 +387,7 @@ window.onMemberFromYearChange=function(mode){
     :'لا توجد سنوات تاريخية (السنة > 2024)';
 };
 
-/* ═══ UTILS ═══ */
-const today=()=>new Date().toISOString().slice(0,10);
-const fmt=n=>Math.round(Number(n||0)).toLocaleString('en-US');
-const fmtEN=n=>Math.round(Number(n||0)).toLocaleString('en-US');
-const fmtDEN=n=>Number(n||0).toFixed(2);
-const fmtD=n=>Number(n||0).toFixed(2);
-const fdate=d=>{if(!d)return'—';try{const dt=new Date(d);return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();}catch(e){return d;}};
-const gm=id=>DB.members.find(m=>m.id===id);
-const gmn=id=>gm(id)?.name||'—';
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const nextNo=(prefix,arr)=>prefix+'-'+String(arr.filter(x=>x.no?.startsWith(prefix)).length+1).padStart(5,'0');
+/* ═══ UTILS ═══ (extracted to /js/utils.js — Phase B Module 1) */
 
 /* ═══ FORM VALIDATION ═══ */
 function vf(inputId,validatorFn,errorId){
@@ -412,39 +402,7 @@ function vf(inputId,validatorFn,errorId){
 
 
 /* ═══ EXCHANGE RATES ═══ */
-async function fetchRates(){
-  try{
-    // استدعاء Edge Function لتحديث الأسعار
-    await fetch(
-      'https://ralifvemgapmsgrjgazh.supabase.co/functions/v1/super-function',
-      {
-        method:'POST',
-        headers:{
-          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4',
-          'Content-Type':'application/json'
-        }
-      }
-    );
-  }catch(e){console.warn('Edge function failed',e);}
-
-  // اقرأ الأسعار المحدّثة من Supabase
-  try{
-    const{data}=await SB.from('settings').select('key,value')
-      .in('key',['usd_rate','jod_rate']);
-    if(data){
-      data.forEach(s=>{
-        if(s.key==='usd_rate'&&parseFloat(s.value)>0)RATES.USD=parseFloat(s.value);
-        if(s.key==='jod_rate'&&parseFloat(s.value)>0)RATES.JOD=parseFloat(s.value);
-      });
-    }
-  }catch(e){console.warn('fetchRates error',e);}
-
-  updateRateDisplay();
-}
-function updateRateDisplay(){
-  const el=document.getElementById('rate-txt');
-  if(el) el.textContent='$'+RATES.USD.toFixed(2)+' | JOD '+RATES.JOD.toFixed(2);
-}
+/* fetchRates() + updateRateDisplay() — extracted to /js/data.js (Phase B Module 4) */
 window.calcILS=function(prefix){
   const cur=document.getElementById(prefix+'-currency')?.value||'ILS';
   const amt=parseFloat(document.getElementById(prefix+'-amount')?.value)||0;
@@ -513,60 +471,7 @@ function toast(msg,type='ok'){
 
   },3500);
 }
-/* ═══ PAGINATION ═══ */
-function mkPag(key,total){
-  if(!PS[key]) PS[key]=1;
-  const pages=Math.max(1,Math.ceil(total/PSZ));
-  PS[key]=Math.min(PS[key],pages);
-  const cur=PS[key];
-  const el=document.getElementById(key+'-pag');
-  if(!el) return;
-  const shown=Math.min(PSZ,total-(cur-1)*PSZ);
-  let h=`<span class="pi">${L.showing(shown,total)}</span>`;
-  h+=`<button class="pb" onclick="gp('${key}',${cur-1})" ${cur<=1?'disabled':''}><i class="ti ti-chevron-right"></i></button>`;
-  for(let i=Math.max(1,cur-2);i<=Math.min(pages,cur+2);i++)
-    h+=`<button class="pb${i===cur?' on':''}" onclick="gp('${key}',${i})">${i}</button>`;
-  h+=`<button class="pb" onclick="gp('${key}',${cur+1})" ${cur>=pages?'disabled':''}><i class="ti ti-chevron-left"></i></button>`;
-  el.innerHTML=h;
-}
-window.gp=(k,p)=>{PS[k]=p;D[k]?.render();};
-
-/* ═══ NAVIGATION ═══ */
-window.nav=function(p){
-  /* Block viewer from accessing restricted pages — even via DevTools console */
-  const ADMIN_PAGES=['audit','bk','users','settings','annual'];
-  if(ADMIN_PAGES.includes(p)&&!can.admin()){
-    toast(window.t('messages.access_denied'),'err');
-    return;
-  }
-  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
-  document.getElementById('pg-'+p)?.classList.add('on');
-  document.querySelector(`.nb[data-p="${p}"]`)?.classList.add('on');
-  document.querySelector('.main')?.scrollTo(0,0);
-  if(p==='audit') renderAudit();
-  if(p==='users') loadUsers();
-  if(p==='bk') renderSysInfo();
-  if(p==='annual') renderAnnual();
-  if(p==='annual-debt') renderAnnualDebt();
-  if(p==='delinquent') renderDelinquent();
-  if(p==='member-stmt') fillMemberSelect();
-  D[p]?.render();
-};
-document.querySelectorAll('.nb[data-p]').forEach(el=>el.addEventListener('click',()=>window.nav(el.dataset.p)));
-
-/* ═══ THEME ═══ */
-window.toggleTheme=function(){
-  document.body.classList.toggle('light');
-  const isLight=document.body.classList.contains('light');
-  const b=document.getElementById('theme-btn');
-  if(b){
-    const lbl=isLight?(window.LANG==='en'?'Dark':'داكن'):(window.LANG==='en'?'Light':'فاتح');
-    const ico=isLight?'ti-moon':'ti-sun';
-    b.innerHTML=`<i class="ti ${ico}"></i>${lbl}`;
-  }
-  localStorage.setItem('diwan_theme',isLight?'light':'dark');
-};
+/* ═══ PAGINATION · NAVIGATION · THEME ═══ (extracted to /js/ui-nav.js — Phase B Module 2) */
 
 /* ═══ AUTH ═══ */
 window.login=async function(){
@@ -771,26 +676,7 @@ async function checkSession(){
 }
 
 /* ═══ DATA LOADING ═══ */
-async function loadAll(){
-  try{
-    const[r1,r2,r3,r4,r5,r6,r7]=await Promise.all([
-      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support').order('receipt_date',{ascending:false}),
-      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version').order('payment_date',{ascending:false}),
-      SB.from('members').select(
-'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
-).order('name'),
-      SB.from('contacts').select('*').order('name'),
-      SB.from('annual_dues').select('*').order('year',{ascending:false}),
-      SB.from('audit_log').select('id,action,description,user_name,created_at').order('created_at',{ascending:false}).limit(50),
-      SB.from('member_subscriptions').select('id,member_id,year,due_amount_ils,paid_amount_ils,balance_ils,is_overridden,override_amount_ils,override_reason'),
-    ]);
-    DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
-    DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];DB.subscriptions=r7.data||[];DB._alloc=null;
-    await loadAttachCounts();
-    renderAll();
-  }catch(e){toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err');console.error(e);}
-}
-window.loadAll=loadAll;
+/* loadAll() — extracted to /js/data.js (Phase B Module 4) */
 
 function renderAll(){
   renderDash();
@@ -1657,17 +1543,7 @@ const ATTACH_CATS={
 let ATTACH_CTX=null; // {type:'receipt'|'payment', id, no, fund}
 
 /* Load counts for all current vouchers (one query per type, counts only) */
-async function loadAttachCounts(){
-  try{
-    ATTACH_COUNTS.receipt={};ATTACH_COUNTS.payment={};
-    const{data,error}=await SB.from('attachments').select('receipt_id,payment_id');
-    if(error||!data)return;
-    data.forEach(a=>{
-      if(a.receipt_id)ATTACH_COUNTS.receipt[a.receipt_id]=(ATTACH_COUNTS.receipt[a.receipt_id]||0)+1;
-      if(a.payment_id)ATTACH_COUNTS.payment[a.payment_id]=(ATTACH_COUNTS.payment[a.payment_id]||0)+1;
-    });
-  }catch(e){/* table may not exist yet */}
-}
+/* loadAttachCounts() — extracted to /js/data.js (Phase B Module 4) */
 function attachCount(type,id){return ATTACH_COUNTS[type]?.[id]||0;}
 
 /* Row button (paperclip + count) — visible to all roles */
@@ -2525,12 +2401,12 @@ function amountToWords(n){
    Matches the on-screen premium language: navy + gold + teal, soft rounded
    cards, navy table headers, tabular numerals, RTL. Layout/structure unchanged.
    ════════════════════════════════════════════════════════════════════════ */
-const PRINT_TOKENS=':root{--navy:#0F1B2D;--navy2:#16273D;--green:#0E9E84;--teal:#0E9E84;--teal-l:#34D6B4;--gold:#C6A46A;--gold-d:#A9854C;--danger:#DC3545;--gray:#6B7280;--bg:#F7F9FC;--bg2:#EEF2F7;--bd:#E2E8F0;--ink:#0F1B2D;--fa:"Cairo",Arial,sans-serif;--fe:"Inter",Arial,sans-serif}'
+const PRINT_TOKENS=':root{--navy:#0F1B2D;--navy2:#16273D;--green:#0E9E84;--teal:#0E9E84;--teal-l:#34D6B4;--teal-ink:#0A5C4C;--teal-acc:#0E7C66;--teal-bg:rgba(14,124,102,.09);--gold:#C6A46A;--gold-d:#A9854C;--danger:#DC3545;--gray:#6B7280;--bg:#F7F9FC;--bg2:#EEF2F7;--bd:#E2E8F0;--ink:#0F1B2D;--fa:"Cairo",Arial,sans-serif;--fe:"Inter",Arial,sans-serif}'
 +'*{box-sizing:border-box;margin:0;padding:0}'
 +'body{font-family:var(--fa);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}'
 /* ── Header ── */
-+'.dh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid var(--gold);padding-bottom:12px;position:relative}'
-+'.dh:after{content:"";position:absolute;left:0;right:0;bottom:-2.5px;height:2.5px;background:linear-gradient(90deg,var(--gold-d),var(--gold),var(--gold-d))}'
++'.dh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid var(--teal-acc);padding-bottom:12px;position:relative}'
++'.dh:after{content:"";position:absolute;left:0;right:0;bottom:-2.5px;height:2.5px;background:linear-gradient(90deg,var(--teal-acc),var(--teal),var(--teal-acc))}'
 +'.dh .org{display:flex;gap:11px;align-items:center}'
 +'.dh .logo{width:48px;height:48px;border-radius:11px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--navy)}.logo img{width:48px;height:48px;object-fit:contain;display:block}'
 +'.dh h1{font-size:18px;color:var(--navy);font-weight:800;line-height:1.2;letter-spacing:-.3px}'
@@ -2545,15 +2421,17 @@ const PRINT_TOKENS=':root{--navy:#0F1B2D;--navy2:#16273D;--green:#0E9E84;--teal:
 +'.cards{display:flex;gap:10px;margin-bottom:14px}'
 +'.card{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:11px 12px;text-align:center}'
 +'.card .k{font-size:10px;color:var(--gray);font-weight:600}.card .v{font-size:16px;font-weight:800;color:var(--navy);margin-top:5px;font-variant-numeric:tabular-nums}'
-+'.card .v.pos{color:var(--teal)}.card .v.neg{color:var(--danger)}'
++'.card .v.pos{color:var(--teal-ink)}.card .v.neg{color:var(--danger)}'
 /* ── Tables ── */
 +'table.dt{width:100%;border-collapse:collapse;font-size:10.5px;border:1px solid var(--bd);border-radius:10px;overflow:hidden}'
 +'table.dt thead th{background:var(--navy);color:#fff;padding:9px 7px;font-weight:700;font-size:10.5px;letter-spacing:.2px;border:1px solid var(--navy2)}'
 +'table.dt tbody td{padding:7px 6px;border:1px solid var(--bd);text-align:center}'
 +'table.dt tbody tr:nth-child(even){background:var(--bg)}'
-+'.cr{color:var(--teal);font-weight:700}.dr{color:var(--danger);font-weight:700}.bal{font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}'
-+'table.dt tr.final td{background:var(--navy);color:#fff;font-weight:800;font-size:12.5px;padding:10px}'
-+'table.dt tr.final .pos{color:var(--teal-l)}table.dt tr.final .neg{color:#ff9aa2}'
++'.cr{color:var(--teal-ink);font-weight:700}.dr{color:var(--danger);font-weight:700}.bal{font-weight:800;color:var(--teal-ink);font-variant-numeric:tabular-nums}'
++'table.dt td.bal{background:var(--teal-bg);border-inline-start:2px solid var(--teal-acc)}'
++'table.dt tr.final td{background:var(--teal-acc);color:#fff;font-weight:800;font-size:12.5px;padding:10px}'
++'table.dt tr.final td.bal{background:var(--teal-acc);border-inline-start:none}'
++'table.dt tr.final .pos{color:#CFF6E9}table.dt tr.final .neg{color:#ffd9d9}'
 /* ── Footer · signatures · QR ── */
 +'.dfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:22px}'
 +'.qr-u{width:92px;text-align:center}'
@@ -3607,110 +3485,8 @@ document.addEventListener('click',function(){document.querySelectorAll('.export-
 
 
 
-/* ═══ SESSION TIMEOUT — 45 min inactivity ═══ */
-const SESSION_TIMEOUT = 45 * 60 * 1000;
-const SESSION_WARNING = 2 * 60 * 1000;
-let sessionTimer = null;
-let warningTimer = null;
-let sessionWarningShown = false;
-
-function resetSessionTimer() {
-  if (sessionTimer) clearTimeout(sessionTimer);
-  if (warningTimer) clearTimeout(warningTimer);
-  sessionWarningShown = false;
-  hideSessionWarning();
-
-  warningTimer = setTimeout(() => {
-    showSessionWarning();
-  }, SESSION_TIMEOUT - SESSION_WARNING);
-
-  sessionTimer = setTimeout(() => {
-    window.logout();
-  }, SESSION_TIMEOUT);
-}
-
-function showSessionWarning() {
-  if (sessionWarningShown) return;
-  sessionWarningShown = true;
-  let overlay = document.getElementById('session-warn-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'session-warn-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;direction:rtl';
-    overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:380px;text-align:center;font-family:Cairo,sans-serif">'
-      + '<div style="font-size:40px;margin-bottom:12px">⏰</div>'
-      + '<div style="font-size:16px;font-weight:600;color:#0F1B2D;margin-bottom:8px">تنبيه انتهاء الجلسة</div>'
-      + '<div style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.7">ستنتهي الجلسة خلال دقيقتين بسبب عدم النشاط.</div>'
-      + '<div style="display:flex;gap:10px;justify-content:center">'
-      + '<button onclick="resetSessionTimer()" style="padding:10px 24px;background:#0F1B2D;color:#fff;border:none;border-radius:8px;font-family:Cairo;font-size:13px;font-weight:500;cursor:pointer">متابعة الجلسة</button>'
-      + '<button onclick="window.logout()" style="padding:10px 24px;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;font-family:Cairo;font-size:13px;cursor:pointer">تسجيل الخروج</button>'
-      + '</div></div>';
-    document.body.appendChild(overlay);
-  }
-  overlay.style.display = 'flex';
-}
-
-function hideSessionWarning() {
-  const overlay = document.getElementById('session-warn-overlay');
-  if (overlay) overlay.style.display = 'none';
-}
-
-function initSessionTimeout() {
-  ['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(evt => {
-    document.addEventListener(evt, () => {
-      if (!sessionWarningShown) resetSessionTimer();
-    }, { passive: true });
-  });
-  resetSessionTimer();
-}
-
-
-/* ═══ DOUBLE SUBMISSION GUARD ═══ */
-const _saving = {};
-function guardSave(key) {
-  if (_saving[key]) return false;
-  _saving[key] = true;
-  setTimeout(() => { _saving[key] = false; }, 3000);
-  return true;
-}
-function releaseSave(key) { _saving[key] = false; }
-
-/* ═══ CLOCK ═══ */
-function startClock(){
-  const el=document.getElementById('clock');
-  if(!el) return;
-  /* Always English digits regardless of UI language; slightly larger */
-  el.style.fontSize='14px';
-  el.style.fontWeight='600';
-  el.style.letterSpacing='0.5px';
-  const tick=()=>{
-    const now=new Date();
-    const hh=String(now.getHours()).padStart(2,'0');
-    const mm=String(now.getMinutes()).padStart(2,'0');
-    el.textContent=hh+':'+mm;
-  };
-  tick();
-  setInterval(tick,1000);
-}
-
-/* ═══ ENTER KEY NAVIGATION ═══ */
-function setupEnterNav(formId){
-  const form=document.getElementById(formId);
-  if(!form)return;
-  const fields=Array.from(form.querySelectorAll('input:not([type="hidden"]),select,textarea'));
-  fields.forEach((el,i)=>{
-    el.addEventListener('keydown',function(e){
-      if(e.key==='Enter'&&!e.shiftKey){
-        e.preventDefault();
-        const next=fields[i+1];
-        if(next) next.focus();
-      }
-    });
-  });
-}
-function setupAllForms(){
-  ['m-rec','m-pay','m-member','m-edit-rec','m-edit-pay','m-edit-member','m-invite','m-change-pass'].forEach(setupEnterNav);
-}
+/* ═══ SESSION TIMEOUT · DOUBLE SUBMISSION GUARD · CLOCK · ENTER KEY NAVIGATION ═══
+   (extracted to /js/ui-infra.js — Phase B Module 3) */
 
 /* ═══ FORGOT PASSWORD ═══ */
 window.forgotPassword = async function(){
@@ -3836,85 +3612,10 @@ window.changePassword = async function(){
   toast('✓ '+window.t('messages.pass_changed'), 'ok');
 };
 
-/* ═══ MOBILE NAVIGATION ═══ */
-function isMobile(){ return window.innerWidth <= 768; }
-
-function initMobile(){
-  const nav = document.getElementById('mobile-nav');
-  const menu = document.getElementById('mobile-menu');
-  if(!nav) return;
-  if(isMobile()){
-    nav.style.display = 'flex';
-    if(menu) menu.style.display = 'none';
-  } else {
-    nav.style.display = 'none';
-    if(menu) menu.style.display = 'none';
-  }
-}
-
-window.setMobileNav = function(el){
-  document.querySelectorAll('.mnb').forEach(m => m.classList.remove('on'));
-  if(el) el.classList.add('on');
-};
-
-window.toggleMobileMenu = function(){
-  const menu = document.getElementById('mobile-menu');
-  if(!menu) return;
-  const isOpen = menu.style.display === 'grid';
-  menu.style.display = isOpen ? 'none' : 'grid';
-  const btn = document.getElementById('mnb-more');
-  if(btn) btn.classList.toggle('on', !isOpen);
-};
-
-window.closeMobileMenu = function(){
-  const menu = document.getElementById('mobile-menu');
-  if(menu) menu.style.display = 'none';
-  const btn = document.getElementById('mnb-more');
-  if(btn) btn.classList.remove('on');
-};
-
-document.addEventListener('click', function(e){
-  const menu = document.getElementById('mobile-menu');
-  const btn = document.getElementById('mnb-more');
-  if(menu && btn && !menu.contains(e.target) && !btn.contains(e.target)){
-    window.closeMobileMenu();
-  }
-});
-
-window.addEventListener('resize', initMobile);
+/* ═══ MOBILE NAVIGATION ═══ (extracted to /js/ui-infra.js — Phase B Module 3) */
 
 /* ═══ SETTINGS & OPENING BALANCES ═══ */
-async function loadSettings(){
-  try{
-    const{data}=await SB.from('settings').select('*');
-    if(!data) return;
-    const map={};
-    data.forEach(s=>map[s.key]=s.value);
-    /* Phase 10 — Year-End Lock threshold (default: previous calendar year). */
-    window.LOCKED_THROUGH_YEAR = (map['locked_through_year']!=null && map['locked_through_year']!=='')
-      ? Number(map['locked_through_year']) : (new Date().getFullYear()-1);
-    const foodEl=document.getElementById('set-food-opening');
-    const diwanEl=document.getElementById('set-diwan-opening');
-    const usdEl=document.getElementById('set-usd-rate');
-    const jodEl=document.getElementById('set-jod-rate');
-    if(foodEl)  foodEl.value  = map['food_opening_balance']  || '0';
-    if(diwanEl) diwanEl.value = map['diwan_opening_balance'] || '0';
-    const fU=document.getElementById('set-food-opening-usd'),fJ=document.getElementById('set-food-opening-jod');
-    const dU=document.getElementById('set-diwan-opening-usd'),dJ=document.getElementById('set-diwan-opening-jod');
-    if(fU)fU.value=map['food_opening_usd']||'0'; if(fJ)fJ.value=map['food_opening_jod']||'0';
-    if(dU)dU.value=map['diwan_opening_usd']||'0'; if(dJ)dJ.value=map['diwan_opening_jod']||'0';
-    if(usdEl)   usdEl.value   = map['usd_rate']  || '3.70';
-    if(jodEl)   jodEl.value   = map['jod_rate']  || '5.00';
-    if(map['usd_rate'])  RATES.USD = parseFloat(map['usd_rate']);
-    if(map['jod_rate'])  RATES.JOD = parseFloat(map['jod_rate']);
-    window.FOOD_OPENING  = parseFloat(map['food_opening_balance']  || '0');
-    window.DIWAN_OPENING = parseFloat(map['diwan_opening_balance'] || '0');
-    window.FOOD_OPENING_USD  = parseFloat(map['food_opening_usd']  || '0');
-    window.FOOD_OPENING_JOD  = parseFloat(map['food_opening_jod']  || '0');
-    window.DIWAN_OPENING_USD = parseFloat(map['diwan_opening_usd'] || '0');
-    window.DIWAN_OPENING_JOD = parseFloat(map['diwan_opening_jod'] || '0');
-  }catch(e){ console.error('loadSettings error',e); }
-}
+/* loadSettings() — extracted to /js/data.js (Phase B Module 4) */
 
 window.saveSettings = async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط يمكنه تعديل الإعدادات','err');return;}
