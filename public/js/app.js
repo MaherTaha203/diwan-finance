@@ -387,17 +387,7 @@ window.onMemberFromYearChange=function(mode){
     :'لا توجد سنوات تاريخية (السنة > 2024)';
 };
 
-/* ═══ UTILS ═══ */
-const today=()=>new Date().toISOString().slice(0,10);
-const fmt=n=>Math.round(Number(n||0)).toLocaleString('en-US');
-const fmtEN=n=>Math.round(Number(n||0)).toLocaleString('en-US');
-const fmtDEN=n=>Number(n||0).toFixed(2);
-const fmtD=n=>Number(n||0).toFixed(2);
-const fdate=d=>{if(!d)return'—';try{const dt=new Date(d);return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();}catch(e){return d;}};
-const gm=id=>DB.members.find(m=>m.id===id);
-const gmn=id=>gm(id)?.name||'—';
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const nextNo=(prefix,arr)=>prefix+'-'+String(arr.filter(x=>x.no?.startsWith(prefix)).length+1).padStart(5,'0');
+/* ═══ UTILS ═══ (extracted to /js/utils.js — Phase B Module 1) */
 
 /* ═══ FORM VALIDATION ═══ */
 function vf(inputId,validatorFn,errorId){
