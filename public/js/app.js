@@ -530,6 +530,10 @@ function mkPag(key,total){
   el.innerHTML=h;
 }
 window.gp=(k,p)=>{PS[k]=p;D[k]?.render();};
+/* A-1 PERF: debounced search — coalesces full-table re-renders while typing.
+   Behaviour identical (same filter result); only intermediate keystroke renders
+   are skipped. ~200ms idle delay. One timer per table key. */
+window.searchDebounced=(()=>{const _t={};return k=>{clearTimeout(_t[k]);_t[k]=setTimeout(()=>{D[k]&&D[k].render();},200);};})();
 
 /* ═══ NAVIGATION ═══ */
 window.nav=function(p){
