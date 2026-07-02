@@ -925,3 +925,68 @@ body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
   #pg-dash .kribbon { grid-template-columns:repeat(2,1fr); }
   #pg-dash .kribbon .k:nth-child(odd) { border-inline-start:none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE LAUNCH OPTIMIZATION — native-app feel (mobile/tablet only)
+   Safe-area aware · touch targets · no wrap/overflow · sticky modal footer
+   Desktop is untouched (all rules are inside mobile media queries; the
+   two shared lines below are inert on desktop where the body can't scroll).
+   ═══════════════════════════════════════════════════════════════════ */
+html,body{ overscroll-behavior:none; }
+
+@media(max-width:768px){
+  /* ── Header: safe-area, compact icon-only actions, no logo wrap ── */
+  .top{
+    height:calc(50px + env(safe-area-inset-top));
+    padding-top:env(safe-area-inset-top);
+    padding-left:max(10px,env(safe-area-inset-left));
+    padding-right:max(10px,env(safe-area-inset-right));
+  }
+  .top-logo-text{ white-space:nowrap; }
+  .top .tbtn{ width:40px; min-height:40px; padding:0; gap:0; font-size:0; justify-content:center; }
+  .top .tbtn i{ font-size:18px; }
+  .top .uchip{ padding:0; width:40px; height:40px; justify-content:center; }
+  .top .uchip>div{ display:none; }            /* keep avatar, drop name/role text */
+  .top .uav{ width:30px; height:30px; font-size:12px; }
+  .top-actions{ gap:6px; }
+
+  /* ── Bottom action bar: safe-area + ≥48px touch targets ── */
+  #mobile-nav{
+    height:calc(56px + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    padding-left:max(4px,env(safe-area-inset-left));
+    padding-right:max(4px,env(safe-area-inset-right));
+  }
+  .mnb{ min-height:48px; justify-content:center; padding:5px 6px; border-radius:12px; }
+  .mnb i{ font-size:19px; } .mnb span{ font-size:9.5px; }
+
+  /* content clears the fixed bottom bar */
+  .main{ padding-bottom:calc(66px + env(safe-area-inset-bottom)); }
+  .pg{ padding-left:max(10px,env(safe-area-inset-left)); padding-right:max(10px,env(safe-area-inset-right)); }
+
+  /* ── Tables: horizontal scroll, never wrap data (fixes name wrapping) ── */
+  .tw{ overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
+  .tw table{ min-width:520px; }
+  .tw thead th, .tw tbody td{ white-space:nowrap; }
+
+  /* ── Modals: bottom sheet, sticky always-visible footer, keyboard-safe ── */
+  .ov{ align-items:flex-end; }
+  .modal{ max-height:calc(100dvh - 12px); }
+  .mft{
+    position:sticky; bottom:0; z-index:2;
+    background:var(--soft); border-top:1px solid var(--line);
+    padding-bottom:calc(14px + env(safe-area-inset-bottom));
+    box-shadow:0 -3px 10px rgba(0,0,0,.06);
+  }
+  .mhd{ position:sticky; top:0; z-index:2; }
+
+  /* ── Toasts above the bottom bar + safe area ── */
+  .tc{ bottom:calc(70px + env(safe-area-inset-bottom)); left:10px; right:10px; }
+}
+
+/* Landscape phones: shorter chrome so content keeps room */
+@media(max-width:900px) and (orientation:landscape) and (max-height:500px){
+  #mobile-nav{ height:calc(48px + env(safe-area-inset-bottom)); }
+  .mnb{ min-height:40px; } .mnb span{ display:none; }
+  .main{ padding-bottom:calc(56px + env(safe-area-inset-bottom)); }
+}
