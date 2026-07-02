@@ -37,65 +37,68 @@ function amountToWords(n){
    Matches the on-screen premium language: navy + gold + teal, soft rounded
    cards, navy table headers, tabular numerals, RTL. Layout/structure unchanged.
    ════════════════════════════════════════════════════════════════════════ */
-const PRINT_TOKENS=':root{--navy:#0F1B2D;--navy2:#16273D;--green:#0E9E84;--teal:#0E9E84;--teal-l:#34D6B4;--teal-ink:#0A5C4C;--teal-acc:#0E7C66;--teal-bg:rgba(14,124,102,.09);--gold:#C6A46A;--gold-d:#A9854C;--danger:#DC3545;--gray:#6B7280;--bg:#F7F9FC;--bg2:#EEF2F7;--bd:#E2E8F0;--ink:#0F1B2D;--fa:"Cairo",Arial,sans-serif;--fe:"Inter",Arial,sans-serif}'
+const PRINT_TOKENS=':root{--brand:#24425C;--brand-2:#2E5273;--accent:#2F6DB3;--navy:#24425C;--navy2:#2E5273;--rule:#C3CFDA;--line:#DDE3EA;--soft:#EEF1F5;--brand-soft:#E9EEF4;--pos:#1E7E46;--neg:#B3261E;--teal-ink:#1E7E46;--teal-acc:#2F6DB3;--teal-bg:#E9EEF4;--gold:#C3CFDA;--gold-d:#93A0AD;--danger:#B3261E;--gray:#5F6D7C;--faint:#93A0AD;--bg:#FAFBFC;--bg2:#EEF2F6;--bd:#DDE3EA;--ink:#1C2733;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
 +'*{box-sizing:border-box;margin:0;padding:0}'
 +'body{font-family:var(--fa);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}'
-/* ── Header ── */
-+'.dh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid var(--teal-acc);padding-bottom:12px;position:relative}'
-+'.dh:after{content:"";position:absolute;left:0;right:0;bottom:-2.5px;height:2.5px;background:linear-gradient(90deg,var(--teal-acc),var(--teal),var(--teal-acc))}'
++'.mono,.num{font-family:var(--fe);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}'
+/* ── Masthead: solid slate brand bar ── */
++'.dh{display:flex;justify-content:space-between;align-items:center;background:var(--brand);padding:13px 16px;border-radius:3px}'
 +'.dh .org{display:flex;gap:11px;align-items:center}'
-+'.dh .logo{width:48px;height:48px;border-radius:11px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--navy)}.logo img{width:48px;height:48px;object-fit:contain;display:block}'
-+'.dh h1{font-size:18px;color:var(--navy);font-weight:800;line-height:1.2;letter-spacing:-.3px}'
-+'.dh .org p{font-size:10px;color:var(--gray);margin-top:2px}'
++'.dh .logo{width:46px;height:46px;border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;padding:3px}.logo img{width:40px;height:40px;object-fit:contain;display:block}'
++'.dh h1{font-size:16px;color:#fff;font-weight:700;line-height:1.2;letter-spacing:0}'
++'.dh .org p{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px}'
 +'.dh .meta{text-align:left}'
-+'.dh .meta .tt{display:inline-block;background:var(--navy);color:#fff;font-size:13px;font-weight:700;padding:6px 16px;border-radius:7px;letter-spacing:.2px}'
-+'.dh .meta .no{font-size:13px;color:var(--navy);font-weight:800;margin-top:7px}'
-+'.dh .meta .sub{font-size:11px;color:var(--gray);margin-top:4px}'
-/* ── Period band ── */
-+'.period{text-align:center;margin:14px 0;font-size:12.5px;color:var(--navy);font-weight:600;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 12px}'
-/* ── Summary cards ── */
++'.dh .meta .tt{display:inline-block;background:rgba(255,255,255,.14);color:#fff;font-size:12.5px;font-weight:700;padding:5px 14px;border-radius:3px;letter-spacing:.2px}'
++'.dh .meta .no{font-size:12.5px;color:#fff;font-weight:700;margin-top:6px;font-family:var(--fe);font-variant-numeric:tabular-nums}'
++'.dh .meta .sub{font-size:10.5px;color:rgba(255,255,255,.75);margin-top:4px}'
+/* ── Period band → context strip ── */
++'.period{text-align:center;margin:12px 0;font-size:12px;color:var(--brand);font-weight:600;background:#fff;border:1px solid var(--line);border-radius:3px;padding:8px 12px}'
+/* ── Summary cards: white + 3px top rule ── */
 +'.cards{display:flex;gap:10px;margin-bottom:14px}'
-+'.card{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:11px 12px;text-align:center}'
-+'.card .k{font-size:10px;color:var(--gray);font-weight:600}.card .v{font-size:16px;font-weight:800;color:var(--navy);margin-top:5px;font-variant-numeric:tabular-nums}'
-+'.card .v.pos{color:var(--teal-ink)}.card .v.neg{color:var(--danger)}'
++'.card{flex:1;background:#fff;border:1px solid var(--line);border-top:3px solid var(--line);border-radius:3px;padding:10px 12px;text-align:center}'
++'.card:last-child{border-top-color:var(--accent)}'
++'.card .k{font-size:9px;color:var(--faint);font-weight:600}.card .v{font-size:15px;font-weight:700;color:var(--ink);margin-top:5px;font-family:var(--fe);font-variant-numeric:tabular-nums}'
++'.card .v.pos{color:var(--pos)}.card .v.neg{color:var(--neg)}'
 /* ── Tables ── */
-+'table.dt{width:100%;border-collapse:collapse;font-size:10.5px;border:1px solid var(--bd);border-radius:10px;overflow:hidden}'
-+'table.dt thead th{background:var(--navy);color:#fff;padding:9px 7px;font-weight:700;font-size:10.5px;letter-spacing:.2px;border:1px solid var(--navy2)}'
-+'table.dt tbody td{padding:7px 6px;border:1px solid var(--bd);text-align:center}'
++'table.dt{width:100%;border-collapse:collapse;font-size:10.5px;border:1px solid var(--line)}'
++'table.dt thead th{background:#EEF2F6;color:var(--gray);border-top:2px solid var(--brand);padding:7px;font-weight:700;font-size:10px;letter-spacing:.2px;border-bottom:1px solid var(--line)}'
++'table.dt thead th:not(:first-child),table.dt tbody td:not(:first-child){border-inline-start:1px solid var(--soft)}'
++'table.dt tbody td{padding:6px;border-bottom:1px solid var(--line);text-align:center}'
 +'table.dt tbody tr:nth-child(even){background:var(--bg)}'
-+'.cr{color:var(--teal-ink);font-weight:700}.dr{color:var(--danger);font-weight:700}.bal{font-weight:800;color:var(--teal-ink);font-variant-numeric:tabular-nums}'
-+'table.dt td.bal{background:var(--teal-bg);border-inline-start:2px solid var(--teal-acc)}'
-+'table.dt tr.final td{background:var(--teal-acc);color:#fff;font-weight:800;font-size:12.5px;padding:10px}'
-+'table.dt tr.final td.bal{background:var(--teal-acc);border-inline-start:none}'
-+'table.dt tr.final .pos{color:#CFF6E9}table.dt tr.final .neg{color:#ffd9d9}'
++'table.dt tfoot td{border-top:2px solid var(--rule);font-weight:700;padding:7px}'
++'.cr{color:var(--pos);font-weight:700}.dr{color:var(--neg);font-weight:700}.bal{font-weight:700;color:var(--ink);font-family:var(--fe);font-variant-numeric:tabular-nums}'
++'table.dt td.bal{background:var(--brand-soft);border-inline-start:2px solid var(--rule)}'
++'table.dt tr.final td{background:var(--brand);color:#fff;font-weight:700;font-size:12px;padding:9px}'
++'table.dt tr.final td.bal{background:var(--brand);border-inline-start:none}'
++'table.dt tr.final .pos{color:#BFE8D2}table.dt tr.final .neg{color:#F5C6C2}'
 /* ── Footer · signatures · QR ── */
 +'.dfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:22px}'
 +'.qr-u{width:92px;text-align:center}'
-+'.qr-u .box{width:64px;height:64px;border:1px solid var(--navy);border-radius:6px;margin:0 auto;padding:3px}'
++'.qr-u .box{width:64px;height:64px;border:1px solid var(--brand);border-radius:3px;margin:0 auto;padding:3px;background:#fff}'
 +'.qr-u .box>div,.qr-u .box img,.qr-u .box canvas{width:56px!important;height:56px!important}'
-+'.qr-u .cap{font-size:7px;color:var(--gray);margin-top:3px;word-break:break-all}'
-+'.qr-u .cap .tok{display:block;font-weight:700;color:var(--navy);font-size:7.5px;letter-spacing:.2px;margin-top:1px}'
++'.qr-u .cap{font-size:7px;color:var(--faint);margin-top:3px;word-break:break-all}'
++'.qr-u .cap .tok{display:block;font-weight:700;color:var(--brand);font-size:7.5px;letter-spacing:.2px;margin-top:1px;font-family:var(--fe)}'
 +'.sigs{display:flex;gap:42px}'
-+'.sig-u{text-align:center}.sig-u .line{width:124px;border-top:1.5px solid var(--navy);margin-top:36px;padding-top:5px;font-size:10px;color:var(--gray);text-align:center}'
-+'.pgfoot{border-top:1px solid var(--bd);margin-top:18px;padding-top:7px;display:flex;justify-content:space-between;font-size:8.5px;color:var(--gray)}'
++'.sig-u{text-align:center}.sig-u .line{width:124px;border-top:1.5px solid var(--brand);margin-top:36px;padding-top:5px;font-size:10px;color:var(--gray);text-align:center}'
++'.pgfoot{border-top:1px solid var(--line);margin-top:18px;padding-top:7px;display:flex;justify-content:space-between;font-size:9px;color:var(--faint)}'
 /* ── Vouchers ── */
 +'.page{background:#fff;position:relative;overflow:hidden}'
 +'.voucher{padding:14mm 12mm}'
-+'.rows{margin-top:16px;border:1px solid var(--bd);border-radius:10px;overflow:hidden}'
-+'.rows .row{display:flex;border-bottom:1px solid var(--bd);padding:9px 12px}.rows .row:last-child{border-bottom:none}.rows .row:nth-child(even){background:var(--bg)}'
-+'.rows .lbl{width:34%;color:var(--gray);font-size:11px;font-weight:700}'
-+'.rows .val{flex:1;color:var(--navy);font-size:12.5px;font-weight:600}'
-+'.amount{display:flex;justify-content:space-between;align-items:center;background:var(--navy);border-radius:10px;padding:14px 16px;margin-top:16px}'
-+'.amount .big{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums}.amount .big.cr{color:var(--teal-l)}.amount .big.dr{color:#ff9aa2}'
-+'.amount .words{font-size:11px;color:rgba(255,255,255,.82);max-width:58%;text-align:left}'
++'.rows{margin-top:16px;border:1px solid var(--line);border-radius:3px;overflow:hidden}'
++'.rows .row{display:flex;border-bottom:1px solid var(--line);padding:8px 12px}.rows .row:last-child{border-bottom:none}.rows .row:nth-child(even){background:var(--bg)}'
++'.rows .lbl{width:34%;color:var(--faint);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center}'
++'.rows .val{flex:1;color:var(--ink);font-size:11.5px;font-weight:700}'
++'.amount{display:flex;justify-content:space-between;align-items:center;background:var(--accent);border-radius:3px;padding:13px 16px;margin-top:16px}'
++'.amount .big{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;font-family:var(--fe);color:#fff}.amount .big.cr{color:#fff}.amount .big.dr{color:#fff}'
++'.amount .words{font-size:11px;color:rgba(255,255,255,.85);max-width:58%;text-align:left}'
 +'.wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}'
-+'.wm span{transform:rotate(-35deg);font-size:64px;font-weight:800;color:rgba(14,158,132,.06)}'
++'.wm span{transform:rotate(-35deg);font-size:64px;font-weight:800;color:rgba(36,66,92,.05)}'
 +'@page{size:A4 portrait;margin:0}'
 +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tfoot{display:table-footer-group}tr{page-break-inside:avoid}.dfoot,.cards,.amount,table.dt tr.final{page-break-inside:avoid}.dh,.period{page-break-after:avoid}}';
 
 function openPrintWin(css,body){
   const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
-    +'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Reem+Kufi:wght@400;500;700&display=swap" rel="stylesheet">'
+    +'<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">'
     +'<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>'
     +'<style>'+PRINT_TOKENS+css+'</style></head><body>'+body
     +'<script>window.onload=function(){'
@@ -400,4 +403,44 @@ window.prtMemberStmt=function(mode){
   openPrintWin(css,body);
   if(mode==='pdf') toast(_en?'In the print dialog choose “Save as PDF”':'في نافذة الطباعة اختر «حفظ كـ PDF»','info');
   else if(mode==='pdf-print') toast(_en?'Generated from the official PDF template':'تم التوليد من قالب PDF الرسمي','info');
+};
+
+/* ═══ §3 PRINT-BUTTON AUDIT ADDITIONS (presentation-only printers) ═══
+   Both print exactly the data the page displays — same source calls the
+   screen renderers use (FIN.memberBalance/balanceLabel for members,
+   DB.annual rows for annual dues). No new computation, openPrintWin +
+   the shared template, can.print() gated (and swept for viewers). */
+window.prtMembersList=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const q=(document.getElementById('q-members')?.value||'').toLowerCase();
+  const st=document.getElementById('f-member-status')?.value||'';
+  let d=DB.members.filter(m=>m.is_active);
+  if(q)d=d.filter(m=>m.name.toLowerCase().includes(q)||(m.phone||'').includes(q));
+  d=d.map(m=>({...m,bal:FIN.memberBalance(m.id)}));
+  if(st==='paid')d=d.filter(m=>m.bal===0);
+  else if(st==='due')d=d.filter(m=>m.bal>0);
+  else if(st==='credit')d=d.filter(m=>m.bal<0);
+  const _en=window.LANG==='en';
+  const rows=d.map((m,i)=>'<tr><td>'+(i+1)+'</td><td style="text-align:right">'+esc(m.name)+'</td><td class="mono">'+esc(m.phone||'—')+'</td>'
+    +'<td class="'+(m.bal>0?'dr':m.bal<0?'cr':'')+' mono">₪ '+fmt(Math.abs(m.bal))+'</td>'
+    +'<td>'+esc(FIN.balanceLabel(m.bal,false))+'</td></tr>').join('');
+  const body=reportHeader(_en?'Family Members List':'قائمة أعضاء العائلة',{sub:(_en?'Members: ':'عدد الأعضاء: ')+d.length})
+    +'<div class="period">'+(_en?'As displayed — filter: ':'كما هو معروض — الفلتر: ')+(st||(_en?'All':'الكل'))+(q?(' · '+esc(q)):'')+'</div>'
+    +'<table class="dt"><thead><tr><th>#</th><th>'+(_en?'Name':'الاسم')+'</th><th>'+(_en?'Phone':'الهاتف')+'</th><th>'+(_en?'Balance ₪':'الرصيد ₪')+'</th><th>'+(_en?'Status':'الحالة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+(_en?'Accountant':'المحاسب')+'</div></div></div></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString())});
+  openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
+};
+window.prtAnnual=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const _en=window.LANG==='en';
+  const rows=DB.annual.map(a=>'<tr><td class="mono">'+esc(String(a.year))+'</td><td class="mono">₪ '+fmt(a.amount)+'</td><td class="mono">'+esc(String(a.member_count))+'</td>'
+    +'<td class="mono">'+fmtDate2(a.applied_at?a.applied_at.slice(0,10):null)+'</td><td>'+esc(a.applied_by||'—')+'</td></tr>').join('');
+  const body=reportHeader(_en?'Annual Subscriptions Log':'سجل الاشتراكات السنوية',{sub:(_en?'Applied years: ':'السنوات المطبقة: ')+DB.annual.length})
+    +'<table class="dt" style="margin-top:12px"><thead><tr><th>'+(_en?'Year':'السنة')+'</th><th>'+(_en?'Amount ₪':'المبلغ ₪')+'</th><th>'+(_en?'Members':'عدد الأعضاء')+'</th><th>'+(_en?'Applied on':'تاريخ التطبيق')+'</th><th>'+(_en?'Applied by':'بواسطة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+(_en?'Accountant':'المحاسب')+'</div></div></div></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString())});
+  openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
 };

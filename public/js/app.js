@@ -277,12 +277,12 @@ const D={
       <td><b style="font-size:11px">${esc(r.no)}</b></td>
       <td style="color:var(--tx2)">${fdate(r.receipt_date)}</td>
       <td>${esc(r.payer_name||gmn(r.member_id))}</td>
-      <td class="num" style="color:#00C896">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="num pos-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
-        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')" title="${window.t('common.edit')}"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -308,7 +308,7 @@ const D={
       <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
-        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtPay('${p.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')" title="${window.t('common.edit')}"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -329,13 +329,13 @@ const D={
       <td><b style="font-size:11px">${esc(r.no)}</b></td>
       <td style="color:var(--tx2)">${fdate(r.receipt_date)}</td>
       <td>${esc(r.payer_name||gmn(r.member_id))}</td>
-      <td class="num" style="color:#00C896">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="num pos-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'diwan'}">${r.currency}</span></td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
-        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -364,7 +364,7 @@ const D={
       <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
-        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -391,7 +391,7 @@ const D={
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
-        ${can.print()?`<button class="btn ghost sm" style="color:#60A5FA" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
         ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
@@ -435,7 +435,7 @@ ${
 </td>
         <td><span class="badge ${cls}">${lbl}</span></td>
         <td class="tda">
-          <button class="btn ghost sm" style="color:#60A5FA" onclick="window.nav('member-stmt');setTimeout(()=>{document.getElementById('ms-member').value='${m.id}';window.renderMemberStmt();},80)" title="${window.t('members.member_stmt')}"><i class="ti ti-file-description"></i></button>
+          <button class="btn ghost sm ic-print" onclick="window.nav('member-stmt');setTimeout(()=>{document.getElementById('ms-member').value='${m.id}';window.renderMemberStmt();},80)" title="${window.t('members.member_stmt')}"><i class="ti ti-file-description"></i></button>
           ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editMember('${m.id}')" title="${window.t('common.edit')}"><i class="ti ti-edit"></i></button>`:''}
         </td></tr>`;
     }).join('');
@@ -906,7 +906,7 @@ function attachCount(type,id){return ATTACH_COUNTS[type]?.[id]||0;}
 window.attachBtn=function(type,id,no,fund){
   const n=attachCount(type,id);
   const badge=n>0?`<span style="background:var(--acc2,#059669);color:#fff;border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
-  return `<button class="btn ghost sm" style="color:#0F2B5B" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="${window.t('common.attachments')}"><i class="ti ti-paperclip"></i>${badge}</button>`;
+  return `<button class="btn ghost sm ic-attach" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="${window.t('common.attachments')}"><i class="ti ti-paperclip"></i>${badge}</button>`;
 };
 
 /* Open attachments modal for a voucher */
@@ -1720,13 +1720,13 @@ function applyTopbarStyles(){
   /* ── System title color ── */
   const titleEl=document.getElementById('app-title')||document.querySelector('.app-title,.sys-title,.brand-title,[id*="title"],[class*="brand"]');
   if(titleEl){
-    titleEl.style.color='#ffffff';
-    titleEl.style.textShadow='0 0 8px rgba(0,200,150,0.4)';
+    titleEl.style.color='';
+    titleEl.style.textShadow='';
   }
   /* Fallback: target any element whose text contains the app name */
   document.querySelectorAll('.navbar *,.topbar *,.header *,.top-bar *').forEach(el=>{
     if(el.children.length===0 && el.textContent.includes('نظام الإدارة المالية')){
-      el.style.color='#00C896';
+      el.style.color='';
       el.style.fontWeight='600';
     }
   });
@@ -1754,13 +1754,13 @@ function applyTopbarStyles(){
     clockEl.style.fontWeight='600';
     clockEl.style.letterSpacing='0.5px';
     clockEl.style.fontVariantNumeric='tabular-nums';
-    clockEl.style.fontFamily='monospace, sans-serif';
+    clockEl.style.fontFamily='var(--fmono)';
   }
 
   /* ── Rate display: enforce en-US numerals ── */
   const rateEl=document.getElementById('rate-txt');
   if(rateEl){
-    rateEl.style.fontFamily='monospace, sans-serif';
+    rateEl.style.fontFamily='var(--fmono)';
     rateEl.style.fontVariantNumeric='tabular-nums';
   }
 }
