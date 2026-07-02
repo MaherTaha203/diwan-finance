@@ -867,8 +867,8 @@ window.renderMemberStmt=function(){
 
   /* Print ▼ split button — all PDF/print paths use the official print template
      (prtMemberStmt), never the on-screen layout. Excel uses the data exporter. */
-  const canPrint  = (window.can && can.print  && can.print());
-  const canExport = (window.can && can.export && can.export());
+  const canPrint  = (typeof can!=='undefined' && can.print  && can.print());
+  const canExport = (typeof can!=='undefined' && can.export && can.export());
   const actions = (canPrint || canExport) ? (
     '<div class="as-actions"><div class="export-dropdown">'
     +'<button class="as-btn as-btn-pri as-split" onclick="togglePageExport(event,\'ms-print-menu\')">'
