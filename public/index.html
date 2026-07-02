@@ -2,7 +2,11 @@
 <html lang="ar" dir="rtl" id="html-root">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ديوان آل طه">
 <title>ديوان آل طه · الإدارة المالية</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -10,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/logo.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#0F1B2D">
+<meta name="theme-color" content="#24425C">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,10 +32,10 @@
 }
 
 #login-screen{position:fixed;inset:0;z-index:1000;display:flex;overflow:hidden}
-#login-page{display:flex;width:100%;min-height:100vh;direction:rtl}
+#login-page{display:flex;width:100%;min-height:100dvh;direction:rtl}
 
 /* ── LEFT PANEL — 60% Navy institutional ── */
-.lp{width:55%;min-height:100vh;background:var(--b-navy);position:relative;display:flex;flex-direction:column;padding:26px 36px 20px;overflow-y:auto;transition:background .3s}
+.lp{width:55%;min-height:100dvh;background:var(--b-navy);position:relative;display:flex;flex-direction:column;padding:26px 36px 20px;overflow-y:auto;transition:background .3s}
 .lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(198,164,106,.05) 0%,transparent 60%);pointer-events:none}
 
 /* Logo emblem */
@@ -76,7 +80,7 @@
 .lp-foot-text{font-size:11px;color:rgba(255,255,255,.24);line-height:1.75;font-family:'Cairo',sans-serif}
 
 /* ── RIGHT PANEL — 40% Cream form ── */
-.rp{width:45%;min-height:100vh;background:var(--b-cream);display:flex;align-items:center;justify-content:center;padding:30px 28px;position:relative}
+.rp{width:45%;min-height:100dvh;background:var(--b-cream);display:flex;align-items:center;justify-content:center;padding:30px 28px;position:relative}
 
 /* Login card — wider + more padding */
 .login-card{width:100%;max-width:520px;background:var(--b-white);border:.5px solid var(--b-border);border-radius:14px;padding:36px 38px;position:relative;box-shadow:0 2px 16px rgba(0,0,0,.04)}
@@ -126,9 +130,12 @@
 
 /* ── MOBILE ── */
 @media(max-width:768px){
-  #login-page{flex-direction:column}
+  #login-page{flex-direction:column;min-height:100dvh}
   .lp,.rp{width:100%;min-height:auto}
-  .lp{padding:16px 20px}
+  .lp{flex:none}
+  .rp{flex:1 1 auto}
+  .lp{padding:calc(16px + env(safe-area-inset-top)) 20px 16px}
+  .rp{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
   .lp-body{padding:4px 0}
   .lp-title{font-size:15px}
   .lp-inst{font-size:11px}
