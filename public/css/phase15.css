@@ -11,35 +11,35 @@
 .phase15 .field { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .5rem; }
 .phase15 .field > span { font-size: .85rem; color: #555; }
 .phase15 .field input,
-.phase15 .field select { padding: .5rem .6rem; border: 1px solid #d0d5dd; border-radius: 8px; font: inherit; }
-.phase15 .field input:focus { outline: 2px solid #1f4e78; outline-offset: 1px; }
-.phase15 .field--required > .field__label .req { color: #b42318; }
+.phase15 .field select { padding: .5rem .6rem; border: 1px solid #d0d5dd; border-radius: 4px; font: inherit; }
+.phase15 .field input:focus { outline: 2px solid rgba(47,109,179,.45); outline-offset: 1px; }
+.phase15 .field--required > .field__label .req { color: #B3261E; }
 .phase15 .field__hint { font-size: .8rem; color: #667085; margin: .1rem 0 .35rem; }
 
-.phase15 .sub { border: 1px solid #e4e7ec; border-radius: 10px; padding: .6rem .75rem; margin: .5rem 0; }
+.phase15 .sub { border: 1px solid #e4e7ec; border-radius: 6px; padding: .6rem .75rem; margin: .5rem 0; }
 .phase15 .sub legend { font-size: .85rem; color: #344054; padding: 0 .4rem; }
 .phase15 .check { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; }
 
 .phase15 .radio { display: flex; align-items: center; gap: .5rem; padding: .4rem 0; }
 
-.phase15 .preview { margin-top: .75rem; padding: .75rem; border: 1px dashed #98a2b3; border-radius: 10px; background: #f9fafb; }
-.phase15 .preview .warn { color: #b54708; font-size: .85rem; margin-top: .4rem; }
+.phase15 .preview { margin-top: .75rem; padding: .75rem; border: 1px dashed #98a2b3; border-radius: 6px; background: #f9fafb; }
+.phase15 .preview .warn { color: #B45309; font-size: .85rem; margin-top: .4rem; }
 
-.phase15 .rules { background: #f0f4f8; border-radius: 10px; padding: .6rem .9rem; margin: .6rem 0; }
+.phase15 .rules { background: #f0f4f8; border-radius: 6px; padding: .6rem .9rem; margin: .6rem 0; }
 .phase15 .rules h3 { margin: 0 0 .35rem; font-size: .95rem; }
 .phase15 .rules ol { margin: 0; padding-inline-start: 1.25rem; }
 
 .phase15 .actions { display: flex; gap: .5rem; margin-top: 1rem; }
-.phase15 .actions button { padding: .55rem 1rem; border-radius: 8px; border: 1px solid #1f4e78; background: #1f4e78; color: #fff; font: inherit; cursor: pointer; }
+.phase15 .actions button { padding: .55rem 1rem; border-radius: 4px; border: 1px solid #24425C; background: #24425C; color: #fff; font: inherit; cursor: pointer; }
 .phase15 .actions button[disabled] { opacity: .5; cursor: not-allowed; }
-.phase15 .actions button[data-act="preview"] { background: #fff; color: #1f4e78; }
+.phase15 .actions button[data-act="preview"] { background: #fff; color: #24425C; }
 
 .phase15 .empty { padding: 1.5rem; text-align: center; color: #667085; }
 .phase15 .status { min-height: 1.4rem; font-size: .9rem; color: #344054; }
 
 /* Food-fund report: two figures kept visually separate, never merged */
 .foodfund-figures { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; }
-.foodfund-figures .figure { border: 1px solid #e4e7ec; border-radius: 10px; padding: 1rem; }
+.foodfund-figures .figure { border: 1px solid #e4e7ec; border-radius: 6px; padding: 1rem; }
 .foodfund-figures .figure .label { font-size: .85rem; color: #667085; }
 .foodfund-figures .figure .value { font-size: 1.4rem; font-weight: 600; }
-.foodfund-figures .deficit .value { color: #b42318; }
+.foodfund-figures .deficit .value { color: #B3261E; }
