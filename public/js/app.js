@@ -1720,13 +1720,13 @@ function applyTopbarStyles(){
   /* ── System title color ── */
   const titleEl=document.getElementById('app-title')||document.querySelector('.app-title,.sys-title,.brand-title,[id*="title"],[class*="brand"]');
   if(titleEl){
-    titleEl.style.color='#ffffff';
-    titleEl.style.textShadow='0 0 8px rgba(0,200,150,0.4)';
+    titleEl.style.color='';
+    titleEl.style.textShadow='';
   }
   /* Fallback: target any element whose text contains the app name */
   document.querySelectorAll('.navbar *,.topbar *,.header *,.top-bar *').forEach(el=>{
     if(el.children.length===0 && el.textContent.includes('نظام الإدارة المالية')){
-      el.style.color='#00C896';
+      el.style.color='';
       el.style.fontWeight='600';
     }
   });
@@ -1754,13 +1754,13 @@ function applyTopbarStyles(){
     clockEl.style.fontWeight='600';
     clockEl.style.letterSpacing='0.5px';
     clockEl.style.fontVariantNumeric='tabular-nums';
-    clockEl.style.fontFamily='monospace, sans-serif';
+    clockEl.style.fontFamily='var(--fmono)';
   }
 
   /* ── Rate display: enforce en-US numerals ── */
   const rateEl=document.getElementById('rate-txt');
   if(rateEl){
-    rateEl.style.fontFamily='monospace, sans-serif';
+    rateEl.style.fontFamily='var(--fmono)';
     rateEl.style.fontVariantNumeric='tabular-nums';
   }
 }
