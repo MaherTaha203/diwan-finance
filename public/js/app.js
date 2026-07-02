@@ -642,8 +642,8 @@ function renderDash(){
       const cy=yrs.length?Math.max(...yrs.map(Number)):new Date().getFullYear();
       const subs=(DB.subscriptions||[]).filter(x=>Number(x.year)===cy);
       const paid=subs.filter(x=>Number(x.balance_ils||0)<=0).length, tot=subs.length||1;
-      const pct=Math.round(paid/tot*100), C=2*Math.PI*31;
-      _rg.innerHTML=`<div class="ringS"><svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="31" fill="none" stroke="var(--soft)" stroke-width="8"/><circle cx="38" cy="38" r="31" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pct/100)).toFixed(1)}"/></svg><div class="c mono">${pct}%</div></div>
+      const pct=Math.round(paid/tot*100), C=2*Math.PI*26;
+      _rg.innerHTML=`<div class="ringS"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--soft)" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pct/100)).toFixed(1)}"/></svg><div class="c mono">${pct}%</div></div>
         <div style="font-size:10.5px;color:var(--mut);line-height:1.9"><b class="mono" style="color:var(--ink)">${paid}</b> دفعوا · <b class="mono" style="color:var(--ink)">${tot-paid}</b> متبقّي (اشتراك ${cy})${_late3>0?`<br><span class="badge wr mono">${_late3} متأخرون +3س</span>`:''}</div>`;
     }
   }catch(e){console.warn('dash side column',e);}
