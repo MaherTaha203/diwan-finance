@@ -1,28 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-/* ═══ TOKENS ═══ */
+/* ═══ TOKENS — Premium Financial (flat executive ERP) ═══
+   Light is the product default (body.light — the stored default theme);
+   plain <body> is the slate dark variant of the same language.
+   Legacy var names are kept and remapped so every existing component
+   re-skins from one place; new spec names are aliased alongside. */
 :root {
-  --navy:#0F1B2D; --navy2:#16273D; --navy3:#1C3148;
-  --gold:#C6A46A; --gold-d:#A9854C; --gold-l:#DBC18C;
-  --acc:#00C896; --acc2:#059669;
-  --food:#D97706; --food-bg:#FFFBEB;
-  --diwan:#38BDF8; --diwan-bg:#EFF6FF;
-  --don:#A78BFA; --don-bg:#F5F3FF;
-  --danger:#F87171; --warn:#FCD34D;
-  --fn:'Cairo','Segoe UI',Tahoma,sans-serif;
-  --r:7px; --rl:12px; --tr-base:all .15s ease;
+  /* brand & accent (mode-independent) */
+  --brand:#24425C; --brand-2:#2E5273;
+  --navy:#24425C; --navy2:#2E5273; --navy3:#33465A;
+  --gold:#C3CFDA; --gold-d:#93A0AD; --gold-l:#DDE3EA;
+  --food:#B45309; --food-bg:rgba(180,83,9,.10);
+  --diwan:#2F6DB3; --diwan-bg:rgba(47,109,179,.12);
+  --don:#6D4FA3; --don-bg:rgba(109,79,163,.12);
+  --fn:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+  --fmono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:4px; --rl:6px; --tr-base:all .15s ease;
+  --sh:none;
 }
 body {
-  --bg:#0F1B2D; --bg2:#16273D; --bg3:#1C3148;
-  --tx:#E8F2FF; --tx2:#7A9AB8; --tx3:#4A6A88;
-  --bd:rgba(255,255,255,.08); --bd2:rgba(255,255,255,.14);
-  --card:#16273D; --sb:#0F1B2D;
+  /* dark variant — slate */
+  --canvas:#121B24; --bg:#121B24; --bg2:#18242F; --bg3:#1E2A36;
+  --tx:#E7EDF3; --ink:#E7EDF3; --tx2:#9AA8B5; --mut:#9AA8B5; --tx3:#647383; --faint:#647383;
+  --bd:#26333F; --line:#26333F; --bd2:#33465A; --rule:#33465A;
+  --soft:#1E2A36; --row:#15202A;
+  --card:#18242F; --sb:#24425C;
+  --brand-soft:#1C2B3A;
+  --accent:#5B95CF; --accent-soft:rgba(91,149,207,.14); --acc:#5B95CF; --acc2:#4CAF7A;
+  --pos:#4CAF7A; --pos-bg:rgba(76,175,122,.12);
+  --neg:#E57373; --neg-bg:rgba(229,115,115,.12); --danger:#E57373;
+  --warn:#E0A24C; --warn-bg:rgba(224,162,76,.12);
 }
 body.light {
-  --bg:#F0F4FA; --bg2:#FFFFFF; --bg3:#F7F9FC;
-  --tx:#0A1628; --tx2:#3D5A7A; --tx3:#7A9AB8;
-  --bd:rgba(0,0,0,.07); --bd2:rgba(0,0,0,.13);
-  --card:#FFFFFF; --sb:#FFFFFF;
+  /* light — the default premium surface */
+  --canvas:#F4F6F8; --bg:#F4F6F8; --bg2:#FFFFFF; --bg3:#EEF1F5;
+  --tx:#1C2733; --ink:#1C2733; --tx2:#5F6D7C; --mut:#5F6D7C; --tx3:#93A0AD; --faint:#93A0AD;
+  --bd:#DDE3EA; --line:#DDE3EA; --bd2:#C3CFDA; --rule:#C3CFDA;
+  --soft:#EEF1F5; --row:#FAFBFC;
+  --card:#FFFFFF; --sb:#24425C;
+  --brand-soft:#E9EEF4;
+  --accent:#2F6DB3; --accent-soft:rgba(47,109,179,.12); --acc:#2F6DB3; --acc2:#1E7E46;
+  --pos:#1E7E46; --pos-bg:rgba(30,126,70,.10);
+  --neg:#B3261E; --neg-bg:rgba(179,38,30,.09); --danger:#B3261E;
+  --warn:#B45309; --warn-bg:rgba(180,83,9,.10);
+}
+/* Financial figures: monospace, tabular, LTR inside RTL */
+.mono, .mono * {
+  font-family:var(--fmono) !important;
+  font-variant-numeric:tabular-nums;
+  direction:ltr; unicode-bidi:isolate;
 }
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html { font-size:14px; }
