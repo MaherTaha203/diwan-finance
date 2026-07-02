@@ -352,6 +352,9 @@
       <div class="kribbon" id="dash-kpis"></div>
       <div class="kchart"><div id="month-chart" class="dbars-wrap"></div></div>
     </div>
+    <!-- Treasury: first important surface after KPIs (approved reorder) -->
+    <div class="tp-tabs" id="treasury-tabs"></div>
+    <div id="treasury-panel"></div>
     <div class="dr2">
       <div class="dfl dpnl">
         <div class="dhd"><span class="dt2" data-i18n="dashboard.recent">آخر الحركات المالية</span><div class="da"><button class="btn gh sm" onclick="window.nav('diwan-rec')"><span data-i18n="common.view">عرض الكل</span></button></div></div>
@@ -364,8 +367,6 @@
       </div>
     </div>
     <div id="fund-summary" class="fsum" style="display:none"></div>
-    <div class="tp-tabs" id="treasury-tabs"></div>
-    <div id="treasury-panel"></div>
   </div>
 </div>
   <div class="pg" id="pg-food-rec">
@@ -419,7 +420,7 @@
     <div class="pag" id="members-pag"></div>
   </div>
   <div class="pg" id="pg-member-stmt">
-    <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div></div>
+    <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div><div class="ph-a"><button class="btn sm" onclick="window.prtMemberStmt('print')" title="طباعة الكشف الشخصي"><i class="ti ti-printer"></i><span>طباعة الكشف الشخصي</span></button></div></div>
     <div class="ftb"><div class="ftb-grp"><div class="ftb-ci wide"><label>العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div></div><div class="ftb-grp"><div class="ftb-ci"><label>من تاريخ</label><input type="date" id="ms-from" aria-label="من تاريخ"></div><div class="ftb-ci"><label>إلى تاريخ</label><input type="date" id="ms-to" aria-label="إلى تاريخ"></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض</button></div></div>
     <div id="ms-out"></div>
   </div>

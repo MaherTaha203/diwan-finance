@@ -564,7 +564,6 @@ function renderDash(){
       <div><div class="k">${_isEn?'Active members':'أعضاء نشطون'}</div><div class="v mono">${DB.members.filter(m=>m.is_active).length}</div></div>
     </div>
     <span class="sp"></span>
-    ${can.write()?`<button class="hbtn" onclick="window.openRec()"><i class="ti ti-plus"></i>${_isEn?'Record payment':'تسجيل دفعة'}</button>`:''}
     <span class="uc">${(CUR?.full_name||'م').charAt(0)}</span>`;
   /* ── KPI ribbon — four twins (same figures the old summary showed: fb/rd/np/db) ── */
   const _tot=Math.abs(fb)+Math.abs(rd)+Math.abs(np)+Math.abs(db)||1;
@@ -887,7 +886,7 @@ window.renderMemberStmt=function(){
   out.innerHTML =
   '<div class="acct-stmt">'
     +'<div class="as-top">'
-      +'<div class="as-title"><span class="as-brand"></span><div>'
+      +'<div class="as-title"><span class="as-brand">م</span><div>'
         +'<div class="as-h">'+T('كشف حساب العضو','Member Account Statement')+'</div>'
         +'<div class="as-sub">'+T('المالية ‹ الأعضاء ‹ كشف الحساب','Finance ‹ Members ‹ Account statement')+'</div>'
       +'</div></div>'
