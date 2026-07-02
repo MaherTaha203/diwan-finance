@@ -58,12 +58,18 @@ function hideSessionWarning() {
   if (overlay) overlay.style.display = 'none';
 }
 
+let _sessionListenersWired = false;
 function initSessionTimeout() {
-  ['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(evt => {
-    document.addEventListener(evt, () => {
-      if (!sessionWarningShown) resetSessionTimer();
-    }, { passive: true });
-  });
+  /* Leak fix: afterLogin() runs on every login — attach the activity
+     listeners once per page lifetime instead of stacking 5 more each time. */
+  if (!_sessionListenersWired) {
+    _sessionListenersWired = true;
+    ['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(evt => {
+      document.addEventListener(evt, () => {
+        if (!sessionWarningShown) resetSessionTimer();
+      }, { passive: true });
+    });
+  }
   resetSessionTimer();
 }
 
@@ -93,7 +99,10 @@ function startClock(){
     el.textContent=hh+':'+mm;
   };
   tick();
-  setInterval(tick,1000);
+  /* Leak fix: startClock() runs on every login — keep a single 1s interval
+     per page lifetime instead of stacking a new one each time. */
+  if (window._clockInterval) clearInterval(window._clockInterval);
+  window._clockInterval = setInterval(tick,1000);
 }
 
 /* ═══ ENTER KEY NAVIGATION ═══ */
@@ -102,6 +111,10 @@ function setupEnterNav(formId){
   if(!form)return;
   const fields=Array.from(form.querySelectorAll('input:not([type="hidden"]),select,textarea'));
   fields.forEach((el,i)=>{
+    /* Leak fix: openM() re-runs setupAllForms on every modal open — wire each
+       field once instead of stacking a duplicate keydown listener per open. */
+    if(el.dataset.enterNav==='1') return;
+    el.dataset.enterNav='1';
     el.addEventListener('keydown',function(e){
       if(e.key==='Enter'&&!e.shiftKey){
         e.preventDefault();

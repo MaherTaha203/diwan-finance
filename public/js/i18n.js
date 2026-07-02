@@ -9,6 +9,7 @@
 const translations = {
   ar: {
     common: {
+      required:'مطلوب',
       save:'حفظ', cancel:'إلغاء', edit:'تعديل', delete:'حذف',
       print:'طباعة', export:'تصدير', search:'بحث...', refresh:'تحديث',
       apply:'تطبيق', view:'عرض', close:'إغلاق', confirm:'تأكيد',
@@ -19,7 +20,7 @@ const translations = {
       amount:'المبلغ', currency:'العملة', method:'طريقة الدفع',
       status:'الحالة', name:'الاسم', phone:'الهاتف',
       all:'الكل', yes:'نعم', no:'لا',
-      export_dd:'تصدير ▼', number:'الرقم', amount_ils:'المبلغ ₪', view:'عرض', print:'طباعة',
+      export_dd:'تصدير ▼', number:'الرقم', amount_ils:'المبلغ ₪',
       from_date:'من تاريخ', to_date:'إلى تاريخ',
       opening_balance:'الرصيد الافتتاحي',
     },
@@ -91,6 +92,7 @@ const translations = {
       save_print:'حفظ وطباعة', save_only:'حفظ فقط',
     },
     payments: {
+      fund:'الصندوق',
       title_food:'مصاريف صندوق الغداء',
       title_diwan:'مصاريف صندوق الديوان',
       modal_food:'سند صرف الغداء',
@@ -332,6 +334,7 @@ const translations = {
 
   en: {
     common: {
+      required:'Required',
       save:'Save', cancel:'Cancel', edit:'Edit', delete:'Delete',
       print:'Print', export:'Export', search:'Search...', refresh:'Refresh',
       apply:'Apply', view:'View', close:'Close', confirm:'Confirm',
@@ -342,7 +345,7 @@ const translations = {
       amount:'Amount', currency:'Currency', method:'Payment Method',
       status:'Status', name:'Name', phone:'Phone',
       all:'All', yes:'Yes', no:'No',
-      export_dd:'Export ▼', number:'No.', amount_ils:'Amount ₪', view:'View', print:'Print',
+      export_dd:'Export ▼', number:'No.', amount_ils:'Amount ₪',
       from_date:'From Date', to_date:'To Date',
       opening_balance:'Opening Balance',
     },
@@ -414,6 +417,7 @@ const translations = {
       save_print:'Save & Print', save_only:'Save Only',
     },
    payments: {
+   fund:'Fund',
    title_food:'Food Fund Expenses',
    title_diwan:'Diwan Fund Expenses',
    modal_food:'Food Fund Payment Voucher',

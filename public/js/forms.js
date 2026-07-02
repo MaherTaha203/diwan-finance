@@ -139,14 +139,6 @@ window.onPayFundChange=function(){
   document.getElementById('pay-mtitle').textContent=fund==='food'?window.t('payments.modal_food'):window.t('payments.modal_diwan');
 };
 
-window.onDonPayerChange=function(){
-  const t=document.getElementById('don-payer-type')?.value||'member';
-  const memWrap=document.getElementById('don-member-wrap');
-  const otherWrap=document.getElementById('don-other-wrap');
-  if(memWrap) memWrap.style.display=t==='member'?'':'none';
-  if(otherWrap) otherWrap.style.display=t==='other'?'':'none';
-};
-
 window.onPayBenChange=function(){
   const t=document.getElementById('pay-beneficiary-type').value;
   document.getElementById('pay-member-wrap').style.display=t==='member'?'':'none';
