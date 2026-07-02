@@ -545,19 +545,50 @@ function renderDash(){
   if(dd)dd.textContent=new Date().toLocaleDateString('en-CA');
 
   const _isEn=window.LANG==='en';
-  document.getElementById('fund-summary').innerHTML=`
-    <div class="fsum-brand"><i class="ti ti-building-bank"></i><span>${_isEn?'Treasury':'الخزينة'}</span></div>
-    <div class="fsum-seg food"><span class="fsum-k">${_isEn?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'}</span><span class="fsum-v">₪ ${fmt(fb)}</span></div>
-    <div class="fsum-seg deficit"><span class="fsum-k">${_isEn?'Remaining Historical Deficit':'العجز التاريخي المتبقي'}</span><span class="fsum-v" style="${rd<0?'color:#e53935':''}">₪ ${fmt(rd)}</span></div>
-    <div class="fsum-seg net"><span class="fsum-k">${_isEn?'Net Food Fund Position':'صافي مركز صندوق الغداء'}</span><span class="fsum-v" style="${np<0?'color:#e53935':''}">₪ ${fmt(np)}</span></div>
-    <div class="fsum-seg diwan"><span class="fsum-k">${_isEn?'Diwan Fund Balance':'رصيد صندوق الديوان'}</span><span class="fsum-v">₪ ${fmt(db)}</span></div>
-  `;
+  /* ── Approved hybrid: hero band (greeting · status · today stats · action) ──
+     Presentation only: today figures are display sums over already-loaded DB rows. */
+  const _t0=today();
+  const _recToday=DB.receipts.filter(r=>!r.is_deleted&&r.receipt_date===_t0);
+  const _payToday=DB.payments.filter(p=>!p.is_deleted&&p.payment_date===_t0);
+  const _netToday=_recToday.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0)-_payToday.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+  const _hr=new Date().getHours();
+  const _greet=_isEn?(_hr<12?'Good morning':'Good evening'):(_hr<12?'صباح الخير':'مساء الخير');
+  const _uname=(CUR?.full_name||CU?.email||'').split(' ')[0]||'';
+  const _hero=document.getElementById('dash-hero');
+  if(_hero)_hero.innerHTML=`
+    <span class="lg">دط</span><b>${_greet}${_uname?'، '+esc(_uname):''}</b>
+    <span class="st"><i></i>${_isEn?'Data up to date':'البيانات محدّثة'} · <span class="mono">${new Date().toLocaleDateString('en-CA')}</span></span>
+    <div class="hstat">
+      <div><div class="k">${_isEn?'Net today':'صافي اليوم'}</div><div class="v ${_netToday>=0?'up':''} mono">${_netToday>=0?'+':'−'} ₪ ${fmt(Math.abs(_netToday))}</div></div>
+      <div><div class="k">${_isEn?"Today's vouchers":'سندات اليوم'}</div><div class="v mono">${_recToday.length+_payToday.length}</div></div>
+      <div><div class="k">${_isEn?'Active members':'أعضاء نشطون'}</div><div class="v mono">${DB.members.filter(m=>m.is_active).length}</div></div>
+    </div>
+    <span class="sp"></span>
+    ${can.write()?`<button class="hbtn" onclick="window.openRec()"><i class="ti ti-plus"></i>${_isEn?'Record payment':'تسجيل دفعة'}</button>`:''}
+    <span class="uc">${(CUR?.full_name||'م').charAt(0)}</span>`;
+  /* ── KPI ribbon — four twins (same figures the old summary showed: fb/rd/np/db) ── */
+  const _tot=Math.abs(fb)+Math.abs(rd)+Math.abs(np)+Math.abs(db)||1;
+  const _pct=v=>Math.round(Math.abs(v)/_tot*100);
+  const _kpis=document.getElementById('dash-kpis');
+  if(_kpis)_kpis.innerHTML=[
+    {t:_isEn?'Food Fund Balance':'رصيد صندوق الغداء',v:fb,g:false},
+    {t:_isEn?'Remaining Hist. Deficit':'العجز التاريخي المتبقي',v:rd,g:true},
+    {t:_isEn?'Net Food Position':'صافي مركز الغداء',v:np,g:false},
+    {t:_isEn?'Diwan Fund Balance':'رصيد صندوق الديوان',v:db,g:false},
+  ].map(k=>`<div class="k"><div class="t">${k.t}</div>
+      <div class="v mono ${k.v<0?'neg-t':''}">₪ ${k.v<0?'−':''}${fmt(Math.abs(k.v))}</div>
+      <div class="pline"><i class="${k.g?'g':''}" style="width:${_pct(k.v)}%"></i></div>
+      <div class="f"><b class="mono">${_pct(k.v)}%</b> ${_isEn?'of treasury total':'من إجمالي الخزينة'}</div>
+    </div>`).join('');
+  /* sidebar member counter (approved design) */
+  const _nbM=document.querySelector('.nb[data-p="members"]');
+  if(_nbM){let k=_nbM.querySelector('.k');if(!k){k=document.createElement('span');k.className='k';_nbM.appendChild(k);}k.textContent=DB.members.filter(m=>m.is_active).length;}
   renderTreasuryTabs();renderTreasuryPanel();
 
 
 
   const now=new Date();const months=[];
-  for(let i=5;i>=0;i--){
+  for(let i=11;i>=0;i--){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const food=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.receipt_date?.startsWith(k)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
@@ -565,26 +596,57 @@ function renderDash(){
     months.push({lbl:L.month(d.getMonth()),food,diwan});
   }
   const maxV=Math.max(...months.map(m=>m.food+m.diwan),1);
-  document.getElementById('month-chart').innerHTML=months.map(m=>`
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
-      <div style="font-size:9px;color:var(--tx3)">${m.food+m.diwan?'₪'+fmt(m.food+m.diwan):''}</div>
-      <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:72px;gap:1px">
-        <div style="width:100%;height:${Math.max(3,Math.round(m.food/maxV*58))}px;background:var(--food);border-radius:3px 3px 0 0;opacity:.8"></div>
-        <div style="width:100%;height:${Math.max(3,Math.round(m.diwan/maxV*58))}px;background:var(--diwan);border-radius:3px 3px 0 0;opacity:.8"></div>
-      </div>
-      <div style="font-size:9.5px;color:var(--tx3)">${m.lbl}</div>
-    </div>`).join('');
+  const _mx=months.reduce((a,m,i)=>((m.food+m.diwan)>(months[a].food+months[a].diwan)?i:a),0);
+  document.getElementById('month-chart').innerHTML=
+    `<div class="dbars">${months.map((m,i)=>`<i class="${i===_mx?'hl':''}" style="height:${Math.max(4,Math.round((m.food+m.diwan)/maxV*100))}%" title="₪ ${fmt(m.food+m.diwan)}"></i>`).join('')}</div>`
+    +`<div class="dbx">${months.map(m=>`<span>${m.lbl}</span>`).join('')}</div>`;
 
   const allOps=[
-    ...DB.receipts.filter(r=>!r.is_deleted).slice(0,5).map(r=>({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),amt:r.amount_ils||r.amount,type:'rec',fund:r.fund_type})),
-    ...DB.payments.filter(p=>!p.is_deleted).slice(0,5).map(p=>({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),amt:p.amount_ils||p.amount,type:'pay',fund:p.fund_type})),
+    ...DB.receipts.filter(r=>!r.is_deleted).slice(0,5).map(r=>({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),amt:r.amount_ils||r.amount,type:'rec',fund:r.fund_type,no:r.no})),
+    ...DB.payments.filter(p=>!p.is_deleted).slice(0,5).map(p=>({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),amt:p.amount_ils||p.amount,type:'pay',fund:p.fund_type,no:p.no})),
   ].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
   document.getElementById('recent-ops').innerHTML=allOps.length?allOps.map(op=>`
-    <div class="sr">
-      <span class="sr-l">${esc(op.name)}<br><small style="color:var(--tx3);font-size:10px">${fdate(op.date)} · <span class="badge ${op.fund}" style="font-size:9px;padding:1px 5px">${op.fund==='food'?'غداء':op.fund==='diwan'?'ديوان':'تبرع'}</span></small></span>
-      <span class="sr-v" style="color:${op.type==='rec'?'#00C896':'var(--danger)'}">₪ ${fmt(op.amt)}</span>
+    <div class="mv">
+      <span class="ic2 ${op.type==='rec'?'g':'r'}"><i class="ti ${op.type==='rec'?'ti-arrow-up':'ti-arrow-down'}"></i></span>
+      <div><b>${esc(op.name)}</b> — ${op.fund==='food'?'غداء':op.fund==='diwan'?'ديوان':'تبرع'}
+        <div class="dt mono">${op.no?esc(op.no)+' · ':''}${fdate(op.date)}</div></div>
+      <span class="amt ${op.type==='rec'?'pos-t':'neg-t'} mono">${op.type==='rec'?'+':'−'}${fmt(op.amt)}</span>
     </div>`).join('')
     :`<div class="empty" style="padding:14px"><div class="empty-t">${L.noData('ops')}</div></div>`;
+  /* ── Right column: today's work · alerts · collection ring ──
+     All read-only over already-loaded data / existing report engines. */
+  try{
+    const _dl=(typeof delinquentRows==='function')?delinquentRows():{rows:[]};
+    const _late3=_dl.rows.filter(r=>r.d&&r.d.unpaidCount>=3).length;
+    const _lateAll=_dl.rows.filter(r=>r.d&&r.d.isDelinquent).length;
+    const tasks=[];
+    if(_recToday.length+_payToday.length>0) tasks.push({t:`مراجعة سندات اليوم (${_recToday.length+_payToday.length})`,go:()=>"window.nav('diwan-rec')"});
+    if(_lateAll>0) tasks.push({t:`متابعة ${_lateAll} أعضاء متأخرين`,go:()=>"window.nav('delinquent')"});
+    tasks.push({t:'كشوف الأعضاء المدينين',go:()=>"window.nav('annual-debt')"});
+    tasks.push({t:'طباعة كشف صندوق',go:()=>"window.nav('food-stmt')"});
+    const _tk=document.getElementById('dash-tasks');
+    if(_tk){_tk.innerHTML=tasks.map(x=>`<div class="tsk"><span class="tt">${x.t}</span><button class="go" onclick="${x.go()}">فتح ›</button></div>`).join('');
+      const n=document.getElementById('dash-tasks-n'); if(n)n.textContent=tasks.length;}
+    const _al=document.getElementById('dash-alerts');
+    if(_al){
+      const alerts=[];
+      if(_late3>0) alerts.push(`<div class="alr"><div><b>${_late3} أعضاء</b> تجاوز تأخّرهم ٣ سنوات</div></div>`);
+      if(typeof window.LOCKED_THROUGH_YEAR==='number') alerts.push(`<div class="alr n"><div>السنة المالية مقفلة حتى <b class="mono">${window.LOCKED_THROUGH_YEAR}</b></div></div>`);
+      if(!alerts.length) alerts.push('<div class="alr n"><div>لا تنبيهات حالية</div></div>');
+      _al.innerHTML=alerts.join('');
+      const n=document.getElementById('dash-alerts-n'); if(n)n.textContent=String(_late3>0?(1+(typeof window.LOCKED_THROUGH_YEAR==='number'?1:0)):alerts.length);
+    }
+    const _rg=document.getElementById('dash-ring');
+    if(_rg){
+      const yrs=(typeof FIN.subscriptionYears==='function')?FIN.subscriptionYears():[];
+      const cy=yrs.length?Math.max(...yrs.map(Number)):new Date().getFullYear();
+      const subs=(DB.subscriptions||[]).filter(x=>Number(x.year)===cy);
+      const paid=subs.filter(x=>Number(x.balance_ils||0)<=0).length, tot=subs.length||1;
+      const pct=Math.round(paid/tot*100), C=2*Math.PI*26;
+      _rg.innerHTML=`<div class="ringS"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--soft)" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pct/100)).toFixed(1)}"/></svg><div class="c mono">${pct}%</div></div>
+        <div style="font-size:10.5px;color:var(--mut);line-height:1.9"><b class="mono" style="color:var(--ink)">${paid}</b> دفعوا · <b class="mono" style="color:var(--ink)">${tot-paid}</b> متبقّي (اشتراك ${cy})${_late3>0?`<br><span class="badge wr mono">${_late3} متأخرون +3س</span>`:''}</div>`;
+    }
+  }catch(e){console.warn('dash side column',e);}
 
   const _en=window.LANG==='en';
   document.getElementById('quick-actions').innerHTML=`
