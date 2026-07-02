@@ -344,58 +344,94 @@ window.prtMemberStmt=function(mode){
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Movement breakdown':'تفصيل الحركة')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
     +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donSplit(d)+'</td><td><span class="cr">₪ '+fmt(d.amount_ils||d.amount)+'</span></td></tr>').join('')
     +'</tbody></table>'):'';
-  const rowsHTML=st.rows.map(r=>{
-    const balTxt='₪ '+fmt(Math.abs(r.bal))+(r.bal>0?' '+window.t('stmt.debit_tag'):r.bal<0?' '+window.t('stmt.credit_tag'):'');
-    return '<tr>'
-      +'<td>'+(r.date==='—'?'—':fmtDate2(r.date))+'</td>'
-      +'<td>'+esc(r.no)+'</td>'
-      +'<td>'+esc(r.desc)+'</td>'
-      +'<td>'+(r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—')+'</td>'
-      +'<td>'+(r.cr>0?'<span class="cr">₪ '+fmt(r.cr)+'</span>':'—')+'</td>'
-      +'<td class="bal">'+balTxt+'</td></tr>';
-  }).join('');
-  const printDate=new Date().toLocaleDateString('en-GB').replace(/\//g,'/');
+  const printDate=new Date().toLocaleDateString('en-GB');
   const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`${window.t('stmt.date_from')} ${fmtDate2(from)}`:to?`${window.t('stmt.date_to')} ${fmtDate2(to)}`:window.t('stmt.all_periods');
 
-  /* ─── A1 REDESIGN (print, presentation only) — A4 portrait chronological statement.
-     Balances unchanged: the Final row is FIN.balanceLabel(finalBal). Dynamic years. */
-  const css='@page{size:A4 portrait;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
-    +'.grp td{background:var(--navy);color:#fff;text-align:right;font-weight:700;font-size:10.5px;padding:7px 9px}'
-    +'.grp .gtag{float:left;font-weight:600;font-size:9px;color:var(--gold)}'
-    +'.li td:first-child{text-align:right}'
-    +'.sub td{background:#eef2f7;font-weight:700;color:var(--navy)}.sub td:first-child{text-align:right}';
-  const _hd=Number(member.historical_balance_ils||0),_hp=Number(member.historical_payments_ils||0),_carried=_hd-_hp;
-  const _subs=(DB.subscriptions||[]).filter(s=>s.member_id===mid).sort((a,b)=>Number(a.year)-Number(b.year));
-  let _r=_carried;
-  const _yb=_subs.map(s=>{const d=Number(s.due_amount_ils||0),p=Number(s.paid_amount_ils||0);_r=_r+d-p;return{year:s.year,due:d,paid:p,bal:_r};});
-  const _cur=_r;
-  const _food=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===mid&&inRange(r.receipt_date));
-  const _ds=Number(_alloc.perMember[mid]||0);
-  const _balTd=v=>'<td class="bal">₪ '+fmt(Math.abs(v))+(v>0?' '+window.t('stmt.debit_tag'):v<0?' '+window.t('stmt.credit_tag'):'')+'</td>';
-  const grp=(t,tag)=>'<tr class="grp"><td colspan="4">'+t+(tag?'<span class="gtag">'+tag+'</span>':'')+'</td></tr>';
-  const li=(l,due,paid)=>'<tr class="li"><td>'+l+'</td><td>'+(due!==''&&due!=null?'<span class="dr">₪ '+fmt(due)+'</span>':'—')+'</td><td>'+(paid!==''&&paid!=null?'<span class="cr">₪ '+fmt(paid)+'</span>':'—')+'</td><td></td></tr>';
-  const sub=(l,v)=>'<tr class="sub"><td>'+l+'</td><td></td><td></td>'+_balTd(v)+'</tr>';
-  let tbl='<table class="dt"><thead><tr><th>'+window.t('stmt.desc')+'</th><th>'+(_en?'Dues / Subscription':'ذمم / اشتراك')+'</th><th>'+(_en?'Paid':'مدفوع')+'</th><th>'+window.t('stmt.balance')+'</th></tr></thead><tbody>';
-  tbl+=grp(_en?'Carried balance before 2025':'رصيد مُرحّل قبل 2025',_en?'Prior':'رصيد سابق');
-  tbl+=li(_en?'Dues until 31/12/2024':'ذمم مستحقة حتى 31/12/2024',_hd,'');
-  tbl+=li(_en?'Paid until 31/12/2024':'مدفوعات حتى 31/12/2024','',_hp);
-  tbl+=sub(_en?'Carried balance':'الرصيد المُرحّل',_carried);
-  _yb.forEach(y=>{
-    tbl+=grp((_en?'Year ':'سنة ')+y.year);
-    tbl+=li((_en?'Subscription ':'اشتراك ')+y.year,y.due,'');
-    tbl+=li((_en?'Payment ':'دفعة ')+y.year,'',y.paid>0?y.paid:'');
-    tbl+=sub((_en?'Balance after ':'الرصيد بعد ')+y.year,y.bal);
+  /* Print mirrors the on-screen ledger 1:1 (presentation only). Every value
+     comes from FIN.memberStatement / the member record — identical to the
+     screen build in renderMemberStmt; only the markup/CSS is print-styled. */
+  const refFromNotes=txt=>{
+    if(!txt) return '';
+    const s=String(txt);
+    let m=s.match(/(?:إيصال|ايصال|سند|receipt|rcpt|ref|مرجع|رقم|no\.?|#)[^\d]{0,24}(\d{1,9})/i);
+    if(m) return m[1];
+    m=s.match(/^\s*#?\s*(\d{1,9})\s*$/);
+    return m?m[1]:'';
+  };
+  const _hd=Number(member.historical_balance_ils||0), _hp=Number(member.historical_payments_ils||0), _carried=_hd-_hp;
+  const moves=st.rows.filter(r=>r.date!=='—');
+  let totSub=0, totPay=0;
+  const balTxt=v=>'₪ '+fmt(Math.abs(v))+(v<0?(_en?' Cr':' دائن'):'');
+  let tbody='<tr>'
+    +'<td>—</td><td class="ds">'+(_en?'Carried balance before 31/12/2024':'رصيد مُرحّل قبل 31/12/2024')+'</td>'
+    +'<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>'
+    +'<td class="bal">'+balTxt(_carried)+'</td></tr>';
+  moves.forEach(r=>{
+    totSub+=Number(r.dr||0); totPay+=Number(r.cr||0);
+    const isReceipt=r.no&&r.no!=='—';
+    const year=(r.date&&r.date!=='—')?String(r.date).slice(0,4):'—';
+    const sysNo=isReceipt?esc(r.no):'—';
+    const refNo=isReceipt?(refFromNotes(r.desc)||'—'):'—';
+    const desc=isReceipt?(_en?'Payment · Food contribution':'سداد · مساهمة غذاء'):esc(r.desc);
+    const bal=Number(r.bal||0);
+    tbody+='<tr>'
+      +'<td>'+fmtDate2(r.date)+'</td>'
+      +'<td class="ds">'+desc+'</td>'
+      +'<td>'+year+'</td>'
+      +'<td class="mono">'+sysNo+'</td>'
+      +'<td class="mono">'+refNo+'</td>'
+      +'<td>'+(r.dr>0?'₪ '+fmt(r.dr):'—')+'</td>'
+      +'<td>'+(r.cr>0?'₪ '+fmt(r.cr):'—')+'</td>'
+      +'<td class="bal">'+balTxt(bal)+'</td></tr>';
   });
-  tbl+=sub(_en?'Current balance':'الرصيد الحالي',_cur);
-  if(_food.length||_ds>0){
-    tbl+=grp(_en?'System transactions':'حركات النظام',_en?'Receipts & vouchers':'إيصالات وسندات');
-    _food.forEach(r=>tbl+=li(fmtDate2(r.receipt_date)+' · '+esc(r.notes||(_en?'Food contribution':'مساهمة غداء')),'',r.amount_ils||r.amount));
-    if(_ds>0) tbl+=li(_en?'Debt settlement from donation (Item 9)':'تسوية ذمة من تبرع (البند 9)','',_ds);
-  }
-  tbl+='<tr class="final"><td colspan="3">'+(_en?'Final current balance':'الرصيد النهائي الحالي')+'</td><td class="'+(finalBal<=0?'pos':'neg')+'">'+FIN.balanceLabel(finalBal,true)+'</td></tr></tbody></table>';
+  const tbl='<table class="dt msdt"><thead><tr>'
+    +'<th>'+(_en?'Date':'التاريخ')+'</th>'
+    +'<th>'+(_en?'Description':'البيان')+'</th>'
+    +'<th>'+(_en?'Year':'السنة')+'</th>'
+    +'<th>'+(_en?'System no.':'رقم النظام')+'</th>'
+    +'<th>'+(_en?'Reference no.':'الرقم المرجعي')+'</th>'
+    +'<th>'+(_en?'Subscription (+)':'اشتراك (+)')+'</th>'
+    +'<th>'+(_en?'Payment (−)':'سداد (−)')+'</th>'
+    +'<th>'+(_en?'Running balance':'الرصيد الجاري')+'</th>'
+    +'</tr></thead><tbody>'+tbody+'</tbody></table>';
+
+  const finBal=Number(st.finalBalance||0);
+  const finStatus=finBal>0?(_en?'Outstanding — member owes':'على العضو مستحقات')
+                 :finBal<0?(_en?'Credit balance — owed to member':'للعضو رصيد دائن')
+                 :(_en?'Fully settled':'الحساب مسدد بالكامل');
+  const metaHTML='<div class="msmeta">'
+    +'<div class="mc"><div class="mk">'+(_en?'Member name':'اسم العضو')+'</div><div class="mv">'+esc(member.name)+'</div></div>'
+    +'<div class="mc"><div class="mk">'+(_en?'Member no.':'رقم العضو')+'</div><div class="mv mono">'+esc(member.member_code||'—')+'</div></div>'
+    +'<div class="mc"><div class="mk">'+(_en?'Registration':'تاريخ التسجيل')+'</div><div class="mv mono">'+(member.active_from_year||'—')+'</div></div>'
+    +'<div class="mc"><div class="mk">'+(_en?'Print date':'تاريخ الطباعة')+'</div><div class="mv mono">'+printDate+'</div></div>'
+    +'</div>';
+  const openHTML='<div class="msopen"><span>'+(_en?'Carried balance before 31/12/2024':'الرصيد المرحّل قبل 31/12/2024')+'</span><span class="mono">'+balTxt(_carried)+'</span></div>';
+  const sumHTML='<div class="cards">'
+    +'<div class="card"><div class="k">'+(_en?'Subscriptions after system launch':'مجموع الاشتراكات بعد تشغيل النظام')+'</div><div class="v">₪ '+fmt(totSub)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'Payments after system launch':'مجموع السداد بعد تشغيل النظام')+'</div><div class="v">₪ '+fmt(totPay)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'Payments against carried balance':'مجموع السداد من الرصيد المرحل')+'</div><div class="v">₪ '+fmt(_hp)+'</div></div>'
+    +'</div>';
+  const finalHTML='<div class="msfinal"><span class="fk">'+(_en?'Current final balance':'الرصيد النهائي الحالي')+'</span><span class="fv mono">₪ '+fmt(Math.abs(finBal))+'</span><span class="fs">'+finStatus+'</span></div>';
+
+  const css='@page{size:A4 portrait;margin:9mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
+    +'.msmeta{display:flex;gap:8px;margin:10px 0}'
+    +'.msmeta .mc{flex:1;border:1px solid var(--line);border-radius:3px;padding:6px 9px;text-align:center}'
+    +'.msmeta .mk{font-size:8.5px;color:var(--faint);font-weight:600}'
+    +'.msmeta .mv{font-size:11px;color:var(--ink);font-weight:700;margin-top:3px}'
+    +'.msopen{display:flex;justify-content:space-between;align-items:center;background:var(--brand-soft);border:1px solid var(--rule);border-radius:3px;padding:8px 12px;margin:10px 0;font-size:11.5px;font-weight:700;color:var(--brand)}'
+    +'table.msdt{font-size:9.5px}table.msdt td.ds{text-align:right}'
+    +'.msfinal{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--brand);color:#fff;border-radius:3px;padding:11px 16px;margin-top:12px}'
+    +'.msfinal .fk{font-size:12px;font-weight:600}'
+    +'.msfinal .fv{font-size:17px;font-weight:800}'
+    +'.msfinal .fs{font-size:10.5px;color:rgba(255,255,255,.82);margin-inline-start:auto}';
+
   const body=reportHeader(window.t('members.member_stmt'),{sub:window.t('stmt.member_label')+' '+esc(member.name)+(member.member_code?' · '+esc(member.member_code):'')})
     +'<div class="period">'+window.t('stmt.period_label')+' '+periodLabel+' '+window.t('stmt.active_since')+' '+(member.active_from_year||'—')+(member.phone?' · ☎ '+esc(member.phone):'')+'</div>'
+    +metaHTML
+    +openHTML
     +tbl
+    +sumHTML
+    +finalHTML
     +donsHTML
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_member')+'</div></div></div></div>'
