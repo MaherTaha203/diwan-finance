@@ -9,6 +9,7 @@
 const translations = {
   ar: {
     common: {
+      required:'مطلوب',
       save:'حفظ', cancel:'إلغاء', edit:'تعديل', delete:'حذف',
       print:'طباعة', export:'تصدير', search:'بحث...', refresh:'تحديث',
       apply:'تطبيق', view:'عرض', close:'إغلاق', confirm:'تأكيد',
@@ -91,6 +92,7 @@ const translations = {
       save_print:'حفظ وطباعة', save_only:'حفظ فقط',
     },
     payments: {
+      fund:'الصندوق',
       title_food:'مصاريف صندوق الغداء',
       title_diwan:'مصاريف صندوق الديوان',
       modal_food:'سند صرف الغداء',
@@ -332,6 +334,7 @@ const translations = {
 
   en: {
     common: {
+      required:'Required',
       save:'Save', cancel:'Cancel', edit:'Edit', delete:'Delete',
       print:'Print', export:'Export', search:'Search...', refresh:'Refresh',
       apply:'Apply', view:'View', close:'Close', confirm:'Confirm',
@@ -414,6 +417,7 @@ const translations = {
       save_print:'Save & Print', save_only:'Save Only',
     },
    payments: {
+   fund:'Fund',
    title_food:'Food Fund Expenses',
    title_diwan:'Diwan Fund Expenses',
    modal_food:'Food Fund Payment Voucher',

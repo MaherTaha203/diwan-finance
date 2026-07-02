@@ -1856,9 +1856,15 @@ function renderSettingsSummary(){
 }
 
 /* ═══ DATA PROTECTION ═══ */
+let _dataProtectionWired=false;
 function applyDataProtection(){
   const role=CUR?.role||'viewer';
   if(role==='viewer'){
+    /* Leak fix: runs on every viewer login — attach the protection listeners
+       once per page lifetime instead of stacking 4 more each login.
+       (As before, they stay active until reload once a viewer has logged in.) */
+    if(_dataProtectionWired) return;
+    _dataProtectionWired=true;
     document.addEventListener('contextmenu',e=>e.preventDefault());
     document.addEventListener('copy',e=>{e.preventDefault();toast(window.t?window.t('errors.no_permission'):'غير مسموح بالنسخ','warn');});
     document.addEventListener('cut',e=>e.preventDefault());
