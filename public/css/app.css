@@ -142,13 +142,13 @@ body {
 .btn.green{background:var(--pos-bg);color:var(--pos);border-color:transparent}
 .tw { border:1px solid var(--bd); border-radius:var(--rl); overflow:hidden; overflow-x:auto; -webkit-overflow-scrolling:touch; }
 table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:500px; }
-thead th { background:var(--navy2); color:rgba(255,255,255,.8); padding:10px 13px; text-align:right; font-weight:500; font-size:11px; letter-spacing:.03em; white-space:nowrap; position:sticky; top:0; z-index:1; }
-body.light thead th{background:var(--navy)}
-tbody td { padding:9px 13px; border-bottom:1px solid var(--bd); vertical-align:middle; }
+thead th { background:var(--soft); color:var(--mut); border-top:2px solid var(--brand); border-bottom:1px solid var(--line); padding:0 12px; height:32px; text-align:right; font-weight:700; font-size:10.5px; letter-spacing:.03em; white-space:nowrap; position:sticky; top:0; z-index:1; }
+thead th:not(:first-child), tbody td:not(:first-child) { border-inline-start:1px solid var(--soft); }
+tbody td { padding:6px 12px; border-bottom:1px solid var(--line); vertical-align:middle; }
 tbody tr:last-child td{border-bottom:none}
-tbody tr:nth-child(even){background:rgba(255,255,255,.018)} body.light tbody tr:nth-child(even){background:rgba(0,0,0,.02)}
-tbody tr:hover td{background:rgba(255,255,255,.04)} body.light tbody tr:hover td{background:rgba(0,0,0,.03)}
-.tda{display:flex;gap:3px;align-items:center} .num{font-variant-numeric:tabular-nums;text-align:left !important;font-weight:600}
+tbody tr:nth-child(even){background:var(--row)}
+tbody tr:hover td{background:var(--soft)}
+.tda{display:flex;gap:3px;align-items:center} .num{font-family:var(--fmono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;text-align:left !important;font-weight:600}
 .badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:3px; font-size:10.5px; font-weight:700; white-space:nowrap; }
 .badge.food{background:var(--food-bg);color:var(--food)}
 .badge.diwan{background:var(--diwan-bg);color:var(--diwan)}
@@ -435,8 +435,8 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .tp-tab{padding:8px 18px;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer;border:1px solid var(--bd,#e2e8f0);background:var(--cardb,#fff);color:var(--tx3,#6B7280)}
 .tp-tab.on{background:#0F1B2D;color:#fff;border-color:#0F1B2D}
 .tp{background:var(--cardb,#fff);border:1px solid var(--bd,#e2e8f0);border-radius:18px;overflow:hidden;box-shadow:0 14px 40px rgba(28,43,58,.12);margin-bottom:18px}
-.tp-hero{background:linear-gradient(140deg,#0F1B2D,#1C3148);padding:24px 30px 22px;position:relative}
-.tp-hero:after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:linear-gradient(90deg,#C6A46A,#DBC18C,#C6A46A)}
+.tp-hero{background:var(--brand);padding:24px 30px 22px;position:relative}
+.tp-hero:after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:var(--accent)}
 .tp-hero .tp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
 .tp-hero .tp-tag{background:rgba(198,164,106,.15);border:1px solid rgba(198,164,106,.5);color:#C6A46A;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px}
 .tp-hero .tp-cap{color:rgba(255,255,255,.65);font-size:13px;font-weight:600}
@@ -455,10 +455,10 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .tp-flow .nd.cur{background:var(--bg2,#F8FAFC);border:1px solid var(--bd,#e2e8f0);border-radius:14px}
 .tp-flow .ar{display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:130px;padding:0 6px}
 .tp-flow .ar .op{font-size:11px;font-weight:700}.tp-flow .ar .op.up{color:#00C896}.tp-flow .ar .op.dn{color:#DC3545}
-.tp-flow .ar .ln{width:100%;height:2px;background:linear-gradient(90deg,#00C896,#C6A46A,#DC3545);margin:7px 0;border-radius:2px}
+.tp-flow .ar .ln{width:100%;height:2px;background:var(--rule);margin:7px 0;border-radius:2px}
 /* food two-balance */
 .tp-food{display:flex;gap:14px;padding:20px 26px;align-items:stretch}
-.tp-prev{flex:0 0 38%;border:1.5px dashed #cbd3dc;border-radius:14px;padding:15px 17px;background:repeating-linear-gradient(135deg,rgba(0,0,0,.012) 0 10px,transparent 10px 20px);position:relative}
+.tp-prev{flex:0 0 38%;border:1.5px dashed var(--rule);border-radius:var(--rl);padding:15px 17px;background:var(--row);position:relative}
 .tp-prev .lk{position:absolute;top:11px;left:13px;font-size:10px;color:#9aa3ad}
 .tp-prev .t{font-size:11px;color:var(--tx3,#6B7280);font-weight:700;margin-bottom:7px}
 .tp-prev .v{font-size:24px;font-weight:800;color:#5a6877}.tp-prev .v.neg{color:#DC3545}
@@ -504,7 +504,7 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .ftb-ci{display:flex;flex-direction:column;gap:2px}
 .ftb-ci label{font-size:9px;font-weight:600;color:var(--tx2);line-height:1.1;letter-spacing:.02em}
 .ftb-ci input,.ftb-ci select{height:34px;padding:0 9px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12px;font-family:var(--fn);outline:none;transition:border .13s}
-.ftb-ci input:focus,.ftb-ci select:focus{border-color:rgba(0,200,150,.5);box-shadow:0 0 0 2px rgba(0,200,150,.07)}
+.ftb-ci input:focus,.ftb-ci select:focus{border-color:var(--accent);box-shadow:none}
 .ftb-ci.wide select{min-width:170px}
 .ftb-act{margin-inline-start:auto;display:flex;border:1px solid var(--bd2);border-radius:8px;overflow:hidden}
 .ftb-act .btn{height:34px;border-radius:0;border:none;border-inline-start:1px solid var(--bd2);font-size:12px}
@@ -525,7 +525,7 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 
 /* 3 · Integrated treasury summary (replaces floating fund cards) — connected, balances only */
 #pg-dash .fsum{ display:flex; align-items:stretch; background:var(--cardb); border:1px solid var(--bd2); border-radius:14px; box-shadow:var(--sh1); overflow:hidden; margin-bottom:14px; }
-#pg-dash .fsum-brand{ display:flex; align-items:center; gap:8px; padding:0 18px; background:linear-gradient(140deg,#0F1B2D,#1C3148); color:#fff; font-weight:800; font-size:13px; font-family:var(--fn); white-space:nowrap; }
+#pg-dash .fsum-brand{ display:flex; align-items:center; gap:8px; padding:0 18px; background:var(--brand); color:#fff; font-weight:800; font-size:13px; font-family:var(--fn); white-space:nowrap; }
 #pg-dash .fsum-brand i{ color:var(--gold); font-size:18px; }
 #pg-dash .fsum-seg{ flex:1; padding:12px 18px; border-inline-start:1px solid var(--bd2); display:flex; flex-direction:column; gap:4px; position:relative; }
 #pg-dash .fsum-seg::before{ content:""; position:absolute; inset-inline-start:0; top:12px; bottom:12px; width:3px; border-radius:3px; background:var(--tx3); }
