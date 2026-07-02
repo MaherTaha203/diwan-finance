@@ -605,7 +605,7 @@ window.openStmtSelector=function(){
     const en=window.LANG==='en';
     const opt=(p,ar,eng,ic)=>`<button class="ssel-item" onclick="window.closeStmtSelector();window.nav('${p}')"><i class="ti ${ic}"></i><span>${en?eng:ar}</span></button>`;
     ov.innerHTML=`<div class="modal ssel" style="max-width:460px">
-      <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-file-description"></i></span>${en?'Account Statement':'اختر نوع الكشف'}</span><button class="btn ghost" onclick="window.closeStmtSelector()"><i class="ti ti-x"></i></button></div>
+      <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-file-description"></i></span>${en?'Account Statement':'اختر نوع الكشف'}</span><button class="btn ghost" onclick="window.closeStmtSelector()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
       <div class="ssel-grid">
         ${opt('member-stmt','كشف حساب عضو','Member Statement','ti-user')}
         ${opt('diwan-stmt','كشف صندوق الديوان','Diwan Fund Statement','ti-building-bank')}
@@ -1074,7 +1074,7 @@ function ensureAttachModals(){
   const wrap=document.createElement('div');
   wrap.innerHTML=`
   <div class="modal" id="m-attach" style="display:none;max-width:520px">
-    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-paperclip"></i></span><span id="attach-title">المرفقات</span></span><button class="btn ghost" onclick="window.closeAttach()"><i class="ti ti-x"></i></button></div>
+    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-paperclip"></i></span><span id="attach-title">المرفقات</span></span><button class="btn ghost" onclick="window.closeAttach()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd">
       <div id="attach-upload-wrap" style="border:1px dashed var(--bd2);border-radius:9px;padding:12px;margin-bottom:12px">
         <div class="fi full"><label>نوع المستند <span class="req">*</span></label>
@@ -1089,7 +1089,7 @@ function ensureAttachModals(){
     </div>
   </div>
   <div class="modal" id="m-attach-view" style="display:none;max-width:640px">
-    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-eye"></i></span><span id="attach-view-title">معاينة</span></span><button class="btn ghost" onclick="window.closeAttachView()"><i class="ti ti-x"></i></button></div>
+    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-eye"></i></span><span id="attach-view-title">معاينة</span></span><button class="btn ghost" onclick="window.closeAttachView()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd"><div id="attach-view-body"></div>
       <div style="text-align:center;margin-top:10px"><button class="btn primary" id="attach-view-dl"><i class="ti ti-download"></i>تنزيل</button></div>
     </div>

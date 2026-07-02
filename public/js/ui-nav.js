@@ -18,10 +18,10 @@ function mkPag(key,total){
   if(!el) return;
   const shown=Math.min(PSZ,total-(cur-1)*PSZ);
   let h=`<span class="pi">${L.showing(shown,total)}</span>`;
-  h+=`<button class="pb" onclick="gp('${key}',${cur-1})" ${cur<=1?'disabled':''}><i class="ti ti-chevron-right"></i></button>`;
+  h+=`<button class="pb" aria-label="الصفحة السابقة" onclick="gp('${key}',${cur-1})" ${cur<=1?'disabled':''}><i class="ti ti-chevron-right"></i></button>`;
   for(let i=Math.max(1,cur-2);i<=Math.min(pages,cur+2);i++)
     h+=`<button class="pb${i===cur?' on':''}" onclick="gp('${key}',${i})">${i}</button>`;
-  h+=`<button class="pb" onclick="gp('${key}',${cur+1})" ${cur>=pages?'disabled':''}><i class="ti ti-chevron-left"></i></button>`;
+  h+=`<button class="pb" aria-label="الصفحة التالية" onclick="gp('${key}',${cur+1})" ${cur>=pages?'disabled':''}><i class="ti ti-chevron-left"></i></button>`;
   el.innerHTML=h;
 }
 window.gp=(k,p)=>{PS[k]=p;D[k]?.render();};
@@ -52,7 +52,11 @@ window.nav=function(p){
   if(p==='member-stmt') fillMemberSelect();
   D[p]?.render();
 };
-document.querySelectorAll('.nb[data-p]').forEach(el=>el.addEventListener('click',()=>window.nav(el.dataset.p)));
+document.querySelectorAll('.nb[data-p]').forEach(el=>{
+  el.addEventListener('click',()=>window.nav(el.dataset.p));
+  /* A11y: sidebar items are divs with role=button — support Enter/Space like a real button. */
+  el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); window.nav(el.dataset.p); } });
+});
 
 /* ═══ THEME ═══ */
 window.toggleTheme=function(){
