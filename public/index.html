@@ -345,22 +345,27 @@
 
 <div class="main">
   <div class="pg on" id="pg-dash">
-  <div class="ph">
-    <div><div class="ph-t" data-i18n="dashboard.title">لوحة التحكم</div><div class="ph-s" id="dash-date"></div></div>
-    <div class="ph-a">
-      <button class="btn sm" onclick="window.loadAll()"><i class="ti ti-refresh"></i>تحديث</button>
-    </div>
-  </div>
-  <div id="fund-summary" class="fsum"></div>
-  <div class="qa-wrap">
-    <div class="qa-title"><i class="ti ti-bolt"></i>إجراءات سريعة</div>
+  <div class="dband"><div class="dhero" id="dash-hero"></div></div>
+  <div class="dbody">
     <div id="quick-actions" class="qa-bar"></div>
-  </div>
-  <div class="tp-tabs" id="treasury-tabs"></div>
-  <div id="treasury-panel"></div>
-  <div class="dash-bottom">
-    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-chart-histogram"></i>الحركات الشهرية</span></div><div id="month-chart" style="height:96px;display:flex;align-items:flex-end;gap:6px;padding-top:8px"></div></div>
-    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-clock"></i>آخر الحركات</span></div><div id="recent-ops"></div></div>
+    <div class="dfl dpnl draised">
+      <div class="kribbon" id="dash-kpis"></div>
+      <div class="kchart"><div id="month-chart" class="dbars-wrap"></div></div>
+    </div>
+    <div class="dr2">
+      <div class="dfl dpnl">
+        <div class="dhd"><span class="dt2" data-i18n="dashboard.recent">آخر الحركات المالية</span><div class="da"><button class="btn gh sm" onclick="window.nav('diwan-rec')"><span data-i18n="common.view">عرض الكل</span></button></div></div>
+        <div class="dbd" id="recent-ops"></div>
+      </div>
+      <div class="dcol">
+        <div class="dfl dpnl"><div class="dhd"><span class="dt2">عمل اليوم</span><span class="da badge ac" id="dash-tasks-n"></span></div><div class="dbd" id="dash-tasks"></div></div>
+        <div class="dfl dpnl"><div class="dhd"><span class="dt2">تنبيهات</span><span class="da badge wr" id="dash-alerts-n"></span></div><div class="dbd" id="dash-alerts"></div></div>
+        <div class="dfl dpnl"><div class="dhd"><span class="dt2">نسبة التحصيل</span></div><div class="dbd dring" id="dash-ring"></div></div>
+      </div>
+    </div>
+    <div id="fund-summary" class="fsum" style="display:none"></div>
+    <div class="tp-tabs" id="treasury-tabs"></div>
+    <div id="treasury-panel"></div>
   </div>
 </div>
   <div class="pg" id="pg-food-rec">
