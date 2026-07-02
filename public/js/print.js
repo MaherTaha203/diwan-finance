@@ -404,3 +404,43 @@ window.prtMemberStmt=function(mode){
   if(mode==='pdf') toast(_en?'In the print dialog choose “Save as PDF”':'في نافذة الطباعة اختر «حفظ كـ PDF»','info');
   else if(mode==='pdf-print') toast(_en?'Generated from the official PDF template':'تم التوليد من قالب PDF الرسمي','info');
 };
+
+/* ═══ §3 PRINT-BUTTON AUDIT ADDITIONS (presentation-only printers) ═══
+   Both print exactly the data the page displays — same source calls the
+   screen renderers use (FIN.memberBalance/balanceLabel for members,
+   DB.annual rows for annual dues). No new computation, openPrintWin +
+   the shared template, can.print() gated (and swept for viewers). */
+window.prtMembersList=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const q=(document.getElementById('q-members')?.value||'').toLowerCase();
+  const st=document.getElementById('f-member-status')?.value||'';
+  let d=DB.members.filter(m=>m.is_active);
+  if(q)d=d.filter(m=>m.name.toLowerCase().includes(q)||(m.phone||'').includes(q));
+  d=d.map(m=>({...m,bal:FIN.memberBalance(m.id)}));
+  if(st==='paid')d=d.filter(m=>m.bal===0);
+  else if(st==='due')d=d.filter(m=>m.bal>0);
+  else if(st==='credit')d=d.filter(m=>m.bal<0);
+  const _en=window.LANG==='en';
+  const rows=d.map((m,i)=>'<tr><td>'+(i+1)+'</td><td style="text-align:right">'+esc(m.name)+'</td><td class="mono">'+esc(m.phone||'—')+'</td>'
+    +'<td class="'+(m.bal>0?'dr':m.bal<0?'cr':'')+' mono">₪ '+fmt(Math.abs(m.bal))+'</td>'
+    +'<td>'+esc(FIN.balanceLabel(m.bal,false))+'</td></tr>').join('');
+  const body=reportHeader(_en?'Family Members List':'قائمة أعضاء العائلة',{sub:(_en?'Members: ':'عدد الأعضاء: ')+d.length})
+    +'<div class="period">'+(_en?'As displayed — filter: ':'كما هو معروض — الفلتر: ')+(st||(_en?'All':'الكل'))+(q?(' · '+esc(q)):'')+'</div>'
+    +'<table class="dt"><thead><tr><th>#</th><th>'+(_en?'Name':'الاسم')+'</th><th>'+(_en?'Phone':'الهاتف')+'</th><th>'+(_en?'Balance ₪':'الرصيد ₪')+'</th><th>'+(_en?'Status':'الحالة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+(_en?'Accountant':'المحاسب')+'</div></div></div></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString())});
+  openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
+};
+window.prtAnnual=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const _en=window.LANG==='en';
+  const rows=DB.annual.map(a=>'<tr><td class="mono">'+esc(String(a.year))+'</td><td class="mono">₪ '+fmt(a.amount)+'</td><td class="mono">'+esc(String(a.member_count))+'</td>'
+    +'<td class="mono">'+fmtDate2(a.applied_at?a.applied_at.slice(0,10):null)+'</td><td>'+esc(a.applied_by||'—')+'</td></tr>').join('');
+  const body=reportHeader(_en?'Annual Subscriptions Log':'سجل الاشتراكات السنوية',{sub:(_en?'Applied years: ':'السنوات المطبقة: ')+DB.annual.length})
+    +'<table class="dt" style="margin-top:12px"><thead><tr><th>'+(_en?'Year':'السنة')+'</th><th>'+(_en?'Amount ₪':'المبلغ ₪')+'</th><th>'+(_en?'Members':'عدد الأعضاء')+'</th><th>'+(_en?'Applied on':'تاريخ التطبيق')+'</th><th>'+(_en?'Applied by':'بواسطة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">'+(_en?'Accountant':'المحاسب')+'</div></div></div></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString())});
+  openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
+};
