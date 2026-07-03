@@ -811,20 +811,28 @@ function closeExportMenu() {
 }
 document.addEventListener('click', function(){ closeExportMenu(); });
 
-/* Dynamic member count on login */
+/* Live member count on the login screen.
+   Source of truth: the real active-member count cached by the app after every
+   data load (renderAll), so it reflects add/delete on this device. The public
+   REST count is only a fallback for a device that has never synced, and a 0
+   (RLS restricts the members table pre-auth) is never allowed to overwrite a
+   real value. No member data is exposed — only the aggregate count. */
 async function updateLoginMemberCount() {
+  var el = document.getElementById('lp-mem-count');
+  if(!el) return;
+  // 1) Prefer the last real count synced on THIS device (updates on add/delete)
+  var cached = parseInt(localStorage.getItem('diwan_member_count'), 10);
+  if(Number.isFinite(cached) && cached >= 0) { el.textContent = cached; return; }
+  // 2) Never-synced device: try a public count; ignore errors/0, keep the fallback
   try {
     var url = 'https://ralifvemgapmsgrjgazh.supabase.co/rest/v1/members?select=id&is_active=eq.true&limit=1';
     var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4';
     var res = await fetch(url, {
       headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Prefer': 'count=exact' }
     });
-    var count = res.headers.get('content-range');
-    if(count) {
-      var total = count.split('/')[1];
-      var el = document.getElementById('lp-mem-count');
-      if(el && total) el.textContent = total;
-    }
+    var cr = res.headers.get('content-range');
+    var total = cr ? parseInt(cr.split('/')[1], 10) : NaN;
+    if(Number.isFinite(total) && total > 0) el.textContent = total;   // >0 only: 0 = RLS-blocked, keep fallback
   } catch(e) { /* silent */ }
 }
 
