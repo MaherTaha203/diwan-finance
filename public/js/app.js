@@ -250,6 +250,10 @@ function toast(msg,type='ok'){
 
 function renderAll(){
   renderDash();
+  /* Cache the live active-member count so the pre-auth login screen can show
+     the real figure (updates on every add/delete, which re-run loadAll→renderAll).
+     A count only — no member data — and never blocks rendering. */
+  try{ localStorage.setItem('diwan_member_count', String(DB.members.filter(m=>m.is_active).length)); }catch(e){}
   const active=document.querySelector('.pg.on')?.id?.replace('pg-','');
   if(active&&D[active]) D[active].render();
   if(active==='settings'){loadSettings().then(renderSettingsSummary);}
