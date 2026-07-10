@@ -352,25 +352,46 @@
 
 <div class="main">
   <div class="pg on" id="pg-dash">
-  <div class="dband"><div class="dhero" id="dash-hero"></div></div>
+  <!-- Compact hero: greeting · today stats · freshness · primary action + إجراء جديد ▾ (approved) -->
+  <div class="dband">
+    <div class="dhero" id="dash-hero"></div>
+    <div class="flabel onband"><span>نظرة عامة</span></div>
+  </div>
   <div class="dbody">
-    <div id="quick-actions" class="qa-bar"></div>
+    <!-- Section: الخزينة — KPIs + collection ring + trend chart (approved hierarchy) -->
+    <div class="flabel"><span>الخزينة</span></div>
     <div class="dfl dpnl draised">
-      <div class="kribbon" id="dash-kpis"></div>
+      <div class="kwrap">
+        <div class="kribbon" id="dash-kpis">
+          <div class="k"><div class="dsk" style="height:11px;width:62%"></div><div class="dsk" style="height:18px;width:78%;margin:6px 0"></div><div class="dsk" style="height:3px"></div><div class="dsk" style="height:9px;width:50%;margin-top:4px"></div></div>
+          <div class="k"><div class="dsk" style="height:11px;width:62%"></div><div class="dsk" style="height:18px;width:78%;margin:6px 0"></div><div class="dsk" style="height:3px"></div><div class="dsk" style="height:9px;width:50%;margin-top:4px"></div></div>
+          <div class="k"><div class="dsk" style="height:11px;width:62%"></div><div class="dsk" style="height:18px;width:78%;margin:6px 0"></div><div class="dsk" style="height:3px"></div><div class="dsk" style="height:9px;width:50%;margin-top:4px"></div></div>
+          <div class="k"><div class="dsk" style="height:11px;width:62%"></div><div class="dsk" style="height:18px;width:78%;margin:6px 0"></div><div class="dsk" style="height:3px"></div><div class="dsk" style="height:9px;width:50%;margin-top:4px"></div></div>
+        </div>
+        <div class="kside">
+          <div class="kside-h">نسبة التحصيل</div>
+          <div class="dring" id="dash-ring"></div>
+        </div>
+      </div>
       <div class="kchart"><div id="month-chart" class="dbars-wrap"></div></div>
     </div>
     <!-- Treasury: first important surface after KPIs (approved reorder) -->
     <div class="tp-tabs" id="treasury-tabs"></div>
     <div id="treasury-panel"></div>
+    <!-- Section: النشاط — recent movements + today's work / alerts -->
+    <div class="flabel"><span>النشاط</span></div>
     <div class="dr2">
       <div class="dfl dpnl">
         <div class="dhd"><span class="dt2" data-i18n="dashboard.recent">آخر الحركات المالية</span><div class="da"><button class="btn gh sm" onclick="window.nav('diwan-rec')"><span data-i18n="common.view">عرض الكل</span></button></div></div>
-        <div class="dbd" id="recent-ops"></div>
+        <div class="dbd" id="recent-ops">
+          <div class="mv"><span class="dsk" style="width:24px;height:24px;border-radius:7px;flex:none"></span><div style="flex:1"><div class="dsk" style="height:11px;width:55%"></div><div class="dsk" style="height:8px;width:32%;margin-top:4px"></div></div><span class="dsk" style="width:40px;height:12px"></span></div>
+          <div class="mv"><span class="dsk" style="width:24px;height:24px;border-radius:7px;flex:none"></span><div style="flex:1"><div class="dsk" style="height:11px;width:48%"></div><div class="dsk" style="height:8px;width:28%;margin-top:4px"></div></div><span class="dsk" style="width:40px;height:12px"></span></div>
+          <div class="mv"><span class="dsk" style="width:24px;height:24px;border-radius:7px;flex:none"></span><div style="flex:1"><div class="dsk" style="height:11px;width:60%"></div><div class="dsk" style="height:8px;width:30%;margin-top:4px"></div></div><span class="dsk" style="width:40px;height:12px"></span></div>
+        </div>
       </div>
       <div class="dfl dpnl dside">
         <div class="dsec"><div class="dsh"><span class="dt2">عمل اليوم</span><span class="badge ac" id="dash-tasks-n"></span></div><div id="dash-tasks"></div></div>
         <div class="dsec"><div class="dsh"><span class="dt2">تنبيهات</span><span class="badge wr" id="dash-alerts-n"></span></div><div id="dash-alerts"></div></div>
-        <div class="dsec"><div class="dsh"><span class="dt2">نسبة التحصيل</span></div><div class="dring" id="dash-ring"></div></div>
       </div>
     </div>
     <div id="fund-summary" class="fsum" style="display:none"></div>
@@ -688,6 +709,8 @@
 </div>
 
 <!-- Mobile Nav -->
+<!-- Mobile FAB: one-tap primary action (write users only; shown via applyPerms). CSS reveals it on phones. -->
+<button id="fab" class="fab" style="display:none" onclick="window.openRec()" aria-label="سند قبض جديد"><i class="ti ti-plus"></i></button>
 <div id="mobile-nav" style="display:none">
   <div class="mnb on" onclick="window.nav('dash');setMobileNav(this)"><i class="ti ti-layout-dashboard"></i><span>الرئيسية</span></div>
   <div class="mnb" onclick="window.nav('food-stmt');setMobileNav(this)"><i class="ti ti-tools-kitchen-2"></i><span>الغداء</span></div>
