@@ -32,14 +32,14 @@ function getMemberStatus(balance){
     return {
       text: L.credit(),
       cls : 'blue',
-      color : '#2563EB'
+      color : 'var(--diwan)'
     };
   }
 
   return {
     text: L.paid(),
     cls : 'green',
-    color : '#00C896'
+    color : 'var(--pos)'
   };
 }
 
@@ -430,8 +430,8 @@ else if(st==='credit')
         <td style="color:var(--tx2)">${esc(m.phone||'—')}</td>
        <td class="num" style="color:${
   m.bal > 0 ? 'var(--danger)' :
-  m.bal < 0 ? '#2563EB' :
-  '#00C896'
+  m.bal < 0 ? 'var(--diwan)' :
+  'var(--pos)'
 }">
 ${
   `₪ ${fmt(Math.abs(m.bal))}`
@@ -979,7 +979,7 @@ function attachCount(type,id){return ATTACH_COUNTS[type]?.[id]||0;}
 /* Row button (paperclip + count) — visible to all roles */
 window.attachBtn=function(type,id,no,fund){
   const n=attachCount(type,id);
-  const badge=n>0?`<span style="background:var(--acc2,#059669);color:#fff;border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
+  const badge=n>0?`<span style="background:var(--pos,#059669);color:var(--card,#fff);border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
   return `<button class="btn ghost sm ic-attach" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="${window.t('common.attachments')}"><i class="ti ti-paperclip"></i>${badge}</button>`;
 };
 
