@@ -23,6 +23,7 @@
 }
 body {
   /* dark variant — navy (brand-tinted #24425C family; deep navy, not black) */
+  color-scheme:dark;  /* native controls (date picker, <select> popups, scrollbars, spinners) follow dark */
   --canvas:#132A44; --bg:#132A44; --bg2:#1B3452; --bg3:#22405E;
   --tx:#EAF0F6; --ink:#EAF0F6; --tx2:#A6B4C2; --mut:#A6B4C2; --tx3:#A6B4C2; --faint:#A6B4C2;
   --bd:#2C4A6A; --line:#2C4A6A; --bd2:#3A5A7C; --rule:#3A5A7C;
@@ -39,6 +40,7 @@ body {
 }
 body.light {
   /* light — the default premium surface */
+  color-scheme:light;  /* native controls follow light */
   --canvas:#F4F6F8; --bg:#F4F6F8; --bg2:#FFFFFF; --bg3:#EEF1F5;
   --tx:#1C2733; --ink:#1C2733; --tx2:#5F6D7C; --mut:#5F6D7C; --tx3:#5F6D7C; --faint:#5F6D7C;
   --bd:#DDE3EA; --line:#DDE3EA; --bd2:#C3CFDA; --rule:#C3CFDA;
