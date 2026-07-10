@@ -136,8 +136,9 @@ function applyPerms(){
   }
 
   /* ── Write-gated buttons (desktop) ── */
+  /* 'fab' (mobile quick-action) is write-gated here; CSS reveals it only on phones. */
   ['btn-food-rec','btn-diwan-rec','btn-don','btn-food-pay','btn-diwan-pay','btn-add-member',
-   'dash-btn-rec','dash-btn-pay'].forEach(id=>{
+   'dash-btn-rec','dash-btn-pay','fab'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display=w?'':'none';
   });
 

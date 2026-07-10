@@ -32,14 +32,14 @@ function getMemberStatus(balance){
     return {
       text: L.credit(),
       cls : 'blue',
-      color : '#2563EB'
+      color : 'var(--diwan)'
     };
   }
 
   return {
     text: L.paid(),
     cls : 'green',
-    color : '#00C896'
+    color : 'var(--pos)'
   };
 }
 
@@ -430,8 +430,8 @@ else if(st==='credit')
         <td style="color:var(--tx2)">${esc(m.phone||'—')}</td>
        <td class="num" style="color:${
   m.bal > 0 ? 'var(--danger)' :
-  m.bal < 0 ? '#2563EB' :
-  '#00C896'
+  m.bal < 0 ? 'var(--diwan)' :
+  'var(--pos)'
 }">
 ${
   `₪ ${fmt(Math.abs(m.bal))}`
@@ -559,6 +559,23 @@ function renderDash(){
   const _greet=_isEn?(_hr<12?'Good morning':'Good evening'):(_hr<12?'صباح الخير':'مساء الخير');
   const _uname=(CUR?.full_name||CU?.email||'').split(' ')[0]||'';
   const _hero=document.getElementById('dash-hero');
+  /* Freshness stamp — data was just loaded; surface "as of HH:MM" (perceived-performance signal). */
+  const _asOf=new Date().toLocaleTimeString(_isEn?'en-GB':'en-GB',{hour:'2-digit',minute:'2-digit'});
+  const _canW=can.write();
+  /* Compact hero: primary سند قبض stays one tap; the rest fold into إجراء جديد ▾ (all names preserved). */
+  const _heroActs=_canW?`
+      <button class="pri" onclick="window.openRec()"><i class="ti ti-plus"></i>${_isEn?'Receipt Voucher':'سند قبض'}</button>
+      <div class="export-dropdown hmenu">
+        <button class="menu" onclick="togglePageExport(event,'dash-new-menu')">${_isEn?'New action':'إجراء جديد'} <i class="ti ti-chevron-down"></i></button>
+        <div class="export-dropdown-menu" id="dash-new-menu">
+          <button class="export-dropdown-item" onclick="window.openPay()"><i class="ti ti-minus"></i>${_isEn?'Payment Voucher':'سند صرف'}</button>
+          <button class="export-dropdown-item" onclick="window.openRec('diwan')"><i class="ti ti-receipt"></i>${_isEn?'Diwan Receipt':'إيصال ديوان'}</button>
+          <button class="export-dropdown-item" onclick="window.openRec('food')"><i class="ti ti-receipt"></i>${_isEn?'Food Receipt':'إيصال غداء'}</button>
+          <button class="export-dropdown-item" onclick="window.openM('member')"><i class="ti ti-user-plus"></i>${_isEn?'New Member':'عضو جديد'}</button>
+          <button class="export-dropdown-item" onclick="window.openStmtSelector()"><i class="ti ti-file-description"></i>${_isEn?'Account Statement':'كشف حساب'}</button>
+        </div>
+      </div>`
+    :`<button class="pri" onclick="window.openStmtSelector()"><i class="ti ti-file-description"></i>${_isEn?'Account Statement':'كشف حساب'}</button>`;
   if(_hero)_hero.innerHTML=`
     <span class="lg">دط</span><b>${_greet}${_uname?'، '+esc(_uname):''}</b>
     <span class="st"><i></i>${_isEn?'Data up to date':'البيانات محدّثة'} · <span class="mono">${new Date().toLocaleDateString('en-CA')}</span></span>
@@ -568,7 +585,8 @@ function renderDash(){
       <div><div class="k">${_isEn?'Active members':'أعضاء نشطون'}</div><div class="v mono">${DB.members.filter(m=>m.is_active).length}</div></div>
     </div>
     <span class="sp"></span>
-    <span class="uc">${(CUR?.full_name||'م').charAt(0)}</span>`;
+    <span class="stale mono">${_isEn?'as of':'محدّث حتى'} ${_asOf}</span>
+    ${_heroActs}`;
   /* ── KPI ribbon — four twins (same figures the old summary showed: fb/rd/np/db) ── */
   const _tot=Math.abs(fb)+Math.abs(rd)+Math.abs(np)+Math.abs(db)||1;
   const _pct=v=>Math.round(Math.abs(v)/_tot*100);
@@ -650,16 +668,7 @@ function renderDash(){
         <div style="font-size:10.5px;color:var(--mut);line-height:1.9"><b class="mono" style="color:var(--ink)">${paid}</b> دفعوا · <b class="mono" style="color:var(--ink)">${tot-paid}</b> متبقّي (اشتراك ${cy})${_late3>0?`<br><span class="badge wr mono">${_late3} متأخرون +3س</span>`:''}</div>`;
     }
   }catch(e){console.warn('dash side column',e);}
-
-  const _en=window.LANG==='en';
-  document.getElementById('quick-actions').innerHTML=`
-    ${can.write()?`<button class="qa-btn rec" onclick="window.openRec()"><i class="ti ti-plus"></i><span>${_en?'Receipt Voucher':'سند قبض'}</span></button>`:''}
-    ${can.write()?`<button class="qa-btn pay" onclick="window.openPay()"><i class="ti ti-minus"></i><span>${_en?'Payment Voucher':'سند صرف'}</span></button>`:''}
-    ${can.write()?`<button class="qa-btn diwan" onclick="window.openRec('diwan')"><i class="ti ti-receipt"></i><span>${_en?'Diwan Receipt':'إيصال ديوان'}</span></button>`:''}
-    ${can.write()?`<button class="qa-btn food" onclick="window.openRec('food')"><i class="ti ti-receipt"></i><span>${_en?'Food Receipt':'إيصال غداء'}</span></button>`:''}
-    ${can.write()?`<button class="qa-btn member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i><span>${_en?'New Member':'عضو جديد'}</span></button>`:''}
-    <button class="qa-btn stmt" onclick="window.openStmtSelector()"><i class="ti ti-file-description"></i><span>${_en?'Account Statement':'كشف حساب'}</span></button>
-  `;
+  /* Quick actions now live in the compact hero (primary سند قبض + إجراء جديد ▾ menu). */
 }
 
 /* Account Statement selector (visual nav only — opens existing statement pages) */
@@ -970,7 +979,7 @@ function attachCount(type,id){return ATTACH_COUNTS[type]?.[id]||0;}
 /* Row button (paperclip + count) — visible to all roles */
 window.attachBtn=function(type,id,no,fund){
   const n=attachCount(type,id);
-  const badge=n>0?`<span style="background:var(--acc2,#059669);color:#fff;border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
+  const badge=n>0?`<span style="background:var(--pos,#059669);color:var(--card,#fff);border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
   return `<button class="btn ghost sm ic-attach" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="${window.t('common.attachments')}"><i class="ti ti-paperclip"></i>${badge}</button>`;
 };
 
