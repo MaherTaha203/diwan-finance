@@ -105,7 +105,28 @@
     },
 
     /* ---- allocation order (member payments): strict, from MODEL2 ---- */
-    allocationOrder(){ const m=M(); return m?m.ALLOCATION_ORDER.map(s=>s.key):[]; }
+    allocationOrder(){ const m=M(); return m?m.ALLOCATION_ORDER.map(s=>s.key):[]; },
+
+    /* ---- composed treasury view (P2-D): openings + movements + overflow rule.
+       Overflow is a READ-TIME rule (no rows written): once the deficit reaches
+       zero, any excess automatically counts in the Food treasury. Openings come
+       from window.TREASURY_OPENINGS — the single formal mapping. ---- */
+    deficitInflows(){
+      return R2(classifiedRows()
+        .filter(r=>r.destination_treasury==='historical_deficit'&&(eventDef(r.movement_type)||{}).cash===true&&!(eventDef(r.movement_type)||{}).outflow)
+        .reduce((s,r)=>s+amountOf(r),0));
+    },
+    composed(){
+      const OP=(typeof window!=='undefined'&&window.TREASURY_OPENINGS)||{food:0,diwan:0,historical_deficit:0};
+      const rem=R2(Number(OP.historical_deficit||0)+FIN2.historicalDeficitTreasury());
+      const overflow=Math.max(0,rem);
+      return {
+        food: R2(Number(OP.food||0)+FIN2.foodTreasury()+overflow),
+        diwan: R2(Number(OP.diwan||0)+FIN2.diwanTreasury()),
+        historical_deficit_remaining: R2(Math.min(0,rem)),
+        overflow_to_food: R2(overflow)
+      };
+    }
   };
 
   if(typeof window!=='undefined') window.FIN2 = FIN2;

@@ -377,9 +377,10 @@ const D={
     const q=(document.getElementById('q-don')?.value||'').toLowerCase();
     let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     if(q)d=d.filter(r=>(r.payer_name||gmn(r.member_id)||'').toLowerCase().includes(q));
-    const tot=d.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const _cash=d.filter(r=>r.movement_type==='donation_cash').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('don-sub');
-    if(sub)sub.textContent=`${d.length} تبرع — ₪ ${fmt(tot)}`;
+    if(sub)sub.textContent=`${d.length} تبرع — نقدي ₪ ${fmt(_cash)} · عيني/خدمي (توثيقي) ₪ ${fmt(_doc)}`;
     if(!PS['don'])PS['don']=1;
     mkPag('don',d.length);
     const page=d.slice((PS['don']-1)*PSZ,PS['don']*PSZ);
@@ -392,7 +393,16 @@ const D={
       <td>${esc(r.payer_name||gmn(r.member_id))}</td>
       <td class="num" style="color:var(--don)">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'don'}">${r.currency}</span></td>
-      <td><span class="badge ${r.donation_display_fund==='food'?'food':'diwan'}">${r.donation_display_fund==='food'?L.fundLabel('food'):L.fundLabel('diwan')}</span>${r.donation_display_fund==='food'&&r.food_donation_allocation?`<span class="badge gray" style="font-size:9px;margin-inline-start:3px">${r.food_donation_allocation==='reduce_deficit'?(window.LANG==='en'?'Deficit':'عجز'):(window.LANG==='en'?'Support':'دعم')}</span>`:''}</td>
+      <td>${(function(){
+        /* P2-D — the authoritative classification (owner-approved layer). */
+        const en=window.LANG==='en';
+        const dl={food:en?'Food':'الغداء',diwan:en?'Diwan':'الديوان',historical_deficit:en?'Hist. Deficit':'العجز التاريخي'};
+        if(r.movement_type==='donation_cash')
+          return `<span class="badge ${r.destination_treasury==='food'?'food':r.destination_treasury==='diwan'?'diwan':'wr'}">${en?'Cash':'نقدي'} ← ${dl[r.destination_treasury]||'—'}</span>`;
+        if(r.movement_type==='donation_inkind')
+          return `<span class="badge gray">${en?'In-kind / Service (record only)':'عيني/خدمي — توثيقي'}</span>`;
+        return `<span class="badge gray">${en?'Unclassified':'غير مُصنَّف'}</span>`;
+      })()}</td>
       <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
@@ -467,7 +477,9 @@ function tpCurrency(fund){
 function tpFmtCur(sym,cur){return (cur==='ILS'?'₪ ':cur==='USD'?'$ ':'JD ')+fmt(Math.round(sym*100)/100);}
 function renderTreasuryTabs(){
   const el=document.getElementById('treasury-tabs');if(!el)return;
-  const tabs=[['diwan','صندوق الديوان'],['food','صندوق الغداء'],['donation','التبرعات']];
+  /* P2-D — the new model: three CASH treasuries + the donation REGISTERS view.
+     The old "donation treasury" tab no longer exists (it was never cash). */
+  const tabs=[['diwan','خزينة الديوان'],['food','خزينة الغداء'],['deficit','خزينة العجز التاريخي'],['registers','سجلّ التبرعات']];
   el.innerHTML=tabs.map(([k,l])=>`<div class="tp-tab ${TP_FUND===k?'on':''}" onclick="window.selectTreasuryFund('${k}')">${l}</div>`).join('');
 }
 window.toggleTreasuryCurrency=function(){
@@ -490,8 +502,8 @@ function tpCurrencyRows(fund,nat){
 function renderTreasuryPanel(){
   const el=document.getElementById('treasury-panel');if(!el)return;
   const fund=TP_FUND;
-  const fundName=fund==='food'?'صندوق الغداء':fund==='diwan'?'صندوق الديوان':'صندوق التبرعات';
-  const nat=tpCurrency(fund);
+  const fundName=fund==='food'?'خزينة الغداء':fund==='diwan'?'خزينة الديوان':fund==='deficit'?'خزينة العجز التاريخي':'سجلّ التبرعات';
+  const nat=tpCurrency(fund==='deficit'||fund==='registers'?'diwan':fund);
   const upd='محدث وفق أسعار الصرف اليومية';
   const ratesLine=`USD ${RATES.USD.toFixed(3)} · JOD ${RATES.JOD.toFixed(3)} · ${today()}`;
   let middle='', total=0, neg=false, cap='الرصيد الإجمالي الكلي', rule='';
@@ -527,12 +539,38 @@ function renderTreasuryPanel(){
         <div class="sg"><div class="l">${mcLabel('current')}</div><div class="n up">₪ ${fmt(a.currentSupportTotal)}</div></div></div>
         <div class="rs"><div class="l">رصيد الصندوق الحالي = الإجمالي</div><div class="n">₪ ${fmt(total)}</div></div></div>
     </div>`;
+  } else if(fund==='deficit'){
+    /* P2-D — the Historical Deficit is a REAL cash treasury (new model).
+       Composition reads TREASURY_OPENINGS (the single formal mapping); the value
+       is identical to the legacy FIN.foodDeficitRemaining() figure. */
+    const op=Number((window.TREASURY_OPENINGS||{}).historical_deficit||0);
+    const comp=FIN2.composed();
+    const inflow=FIN2.deficitInflows();            /* gross: collections + directed donations */
+    const settled=FIN2.deficitSettlementTotal();
+    total=comp.historical_deficit_remaining; neg=total<0;
+    cap='المتبقّي من العجز التاريخي';
+    rule='القاعدة: العجز الأصلي + تحصيل الذمم والتبرعات الموجَّهة − تسويات العجز · عند بلوغ الصفر يتحوّل الفائض لخزينة الغداء';
+    middle=`<div class="tp-flow">
+      <div class="nd prev"><div class="t">العجز الأصلي (الافتتاحي)</div><div class="v neg">₪ ${fmt(op)}</div><div class="s">قبل 2025</div></div>
+      <div class="ar"><div class="op up">+ تحصيل وتبرعات موجَّهة ₪ ${fmt(inflow)}</div><div class="ln"></div><div class="op dn">− تسويات العجز ₪ ${fmt(settled)}${comp.overflow_to_food>0?` · فائض محوَّل للغداء ₪ ${fmt(comp.overflow_to_food)}`:''}</div></div>
+      <div class="nd cur"><div class="t">المتبقّي من العجز</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
+    </div>`;
   } else {
-    /* P1 — authoritative donation total from FIN (single source). Value-identical
-       to the previous inline Σ(non-deleted donation receipts). */
-    total=FIN.donBalance(); neg=false; cap='الرصيد الإجمالي الكلي';
-    rule='القاعدة: إجمالي التبرعات المستلمة';
-    middle=`<div class="tp-flow"><div class="nd cur" style="flex:1"><div class="t">رصيد الصندوق الحالي</div><div class="v">₪ ${fmt(total)}</div><div class="s">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').length} تبرعات</div></div></div>`;
+    /* P2-D — the donation REGISTERS: references only, never cash, no balance. */
+    const cash=FIN2.cashDonationRegister();
+    const cashSum=FIN._r2(cash.reduce((s,x)=>s+Number(x.amount||0),0));
+    const ink=FIN2.inkindRegister();
+    const inkSum=FIN._r2(ink.reduce((s,x)=>s+Number(x.estimated_value||0),0));
+    total=0; neg=false; cap='سجلّات مرجعية — لا تمثّل نقداً';
+    rule='القاعدة: التبرع النقدي حركة في خزينته + قيد مرجعي هنا · العيني/الخدمي قيمة توثيقية بلا أثر نقدي';
+    const dl={food:'الغداء',diwan:'الديوان',historical_deficit:'العجز التاريخي'};
+    const byDest={}; cash.forEach(x=>{byDest[x.destination_treasury]=FIN._r2((byDest[x.destination_treasury]||0)+Number(x.amount||0));});
+    middle=`<div class="tp-flow" style="flex-wrap:wrap">
+      <div class="nd cur" style="flex:1;min-width:180px"><div class="t">سجلّ التبرعات النقدية</div><div class="v">₪ ${fmt(cashSum)}</div>
+        <div class="s">${cash.length} قيدًا · ${Object.keys(byDest).map(k=>dl[k]+' ₪'+fmt(byDest[k])).join(' · ')||'—'}</div></div>
+      <div class="nd prev" style="flex:1;min-width:180px"><div class="t">السجلّ العيني والخدمي (توثيقي)</div><div class="v">₪ ${fmt(inkSum)}</div>
+        <div class="s">${ink.length} قيود · لا يدخل أي خزينة</div></div>
+    </div>`;
   }
 
   el.innerHTML=`<div class="tp">
@@ -540,10 +578,10 @@ function renderTreasuryPanel(){
       <div class="tp-cap">${cap}</div><div class="tp-total${neg?' neg':''}">₪ ${fmt(total)}</div>
       <div class="tp-rule">${rule}</div><div class="tp-upd">${upd}</div></div>
     ${middle}
-    <div class="tp-cs${TP_CUR_OPEN?' open':''}">
+    ${(fund==='deficit'||fund==='registers')?'':`<div class="tp-cs${TP_CUR_OPEN?' open':''}">
       <div class="tp-cs-h" onclick="window.toggleTreasuryCurrency()"><div class="ht">أرصدة العملات</div><div class="tp-cs-ar">${TP_CUR_OPEN?'▲':'▼'}</div></div>
       <div class="tp-cs-body"><div class="tp-cs-rates">${ratesLine}</div>${tpCurrencyRows(fund,nat)}</div>
-    </div>
+    </div>`}
     <div class="tp-ft"><span>ديوان آل طه — diwan-finance.com</span><span>الأسعار من إعدادات النظام (يدوية)</span></div>
   </div>`;
 }
@@ -598,10 +636,10 @@ function renderDash(){
   const _pct=v=>Math.round(Math.abs(v)/_tot*100);
   const _kpis=document.getElementById('dash-kpis');
   if(_kpis)_kpis.innerHTML=[
-    {t:_isEn?'Food Fund Balance':'رصيد صندوق الغداء',v:fb,g:false},
-    {t:_isEn?'Remaining Hist. Deficit':'العجز التاريخي المتبقي',v:rd,g:true},
+    {t:_isEn?'Food Treasury':'خزينة الغداء',v:fb,g:false},
+    {t:_isEn?'Historical Deficit Treasury':'خزينة العجز التاريخي',v:rd,g:true},
     {t:_isEn?'Net Food Position':'صافي مركز الغداء',v:np,g:false},
-    {t:_isEn?'Diwan Fund Balance':'رصيد صندوق الديوان',v:db,g:false},
+    {t:_isEn?'Diwan Treasury':'خزينة الديوان',v:db,g:false},
   ].map(k=>`<div class="k"><div class="t">${k.t}</div>
       <div class="v mono ${k.v<0?'neg-t':''}">₪ ${k.v<0?'−':''}${fmt(Math.abs(k.v))}</div>
       <div class="pline"><i class="${k.g?'g':''}" style="width:${_pct(k.v)}%"></i></div>

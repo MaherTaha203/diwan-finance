@@ -92,15 +92,27 @@ window.onRecFundChange=function(){
     if(optContact)optContact.style.display='none';
     if(optManual)optManual.style.display='none';
     if(ptSel)ptSel.value='member';
-    window.onDonDisplayChange();
+    window.onDonKindChange();
   }
   window.onPayerTypeChange();
+};
+/* P2-D — cash vs in-kind/service donation kind (the system never guesses). */
+window.onDonKindChange=function(){
+  const kind=document.getElementById('rec-don-kind')?.value||'cash';
+  const cat=document.getElementById('rec-don-category-wrap');
+  const disp=document.getElementById('rec-don-display-wrap');
+  const alloc=document.getElementById('rec-don-alloc-wrap');
+  if(cat)cat.style.display=kind==='inkind'?'':'none';
+  if(disp)disp.style.display=kind==='inkind'?'none':'';
+  if(alloc&&kind==='inkind')alloc.style.display='none';
+  if(kind!=='inkind')window.onDonDisplayChange();
 };
 /* Show/hide allocation_type selector based on donation target fund */
 window.onDonDisplayChange=function(){
   const display=document.getElementById('rec-don-display')?.value;
   const allocWrap=document.getElementById('rec-don-alloc-wrap');
-  if(allocWrap) allocWrap.style.display=display==='food'?'':'none';
+  const kind=document.getElementById('rec-don-kind')?.value||'cash';
+  if(allocWrap) allocWrap.style.display=(display==='food'&&kind!=='inkind')?'':'none';
   /* Reset allocation to default when switching away from food */
   if(display!=='food'){
     const allocSel=document.getElementById('rec-don-alloc-type');

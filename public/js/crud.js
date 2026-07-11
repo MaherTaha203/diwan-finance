@@ -46,6 +46,7 @@ window.saveRec=async function(print=false){
   const notes=document.getElementById('rec-notes').value;
   const donDisplay=document.getElementById('rec-don-display')?.value||null;
   const allocationType=document.getElementById('rec-don-alloc-type')?.value||'support_current';
+  const donKind=document.getElementById('rec-don-kind')?.value||'cash';   /* P2-D: cash | inkind */
   const saveContact=document.getElementById('rec-save-contact')?.checked||false;
 
   const v1=fund==='donation'?vf('rec-member',v=>!!v,'e-rec-member'):
@@ -69,9 +70,11 @@ window.saveRec=async function(print=false){
     await loadAll();
   }
 
-  /* ITEM 9 — Food Fund Donation: member debt priority allocation + confirmation. */
+  /* ITEM 9 — Food Fund Donation: member debt priority allocation + confirmation.
+     ق3: NEVER for in-kind — a documentation value must not settle real debt nor
+     enter the legacy cash allocator. */
   let finalAllocType=null;
-  if(fund==='donation'&&donDisplay==='food'){
+  if(fund==='donation'&&donDisplay==='food'&&donKind!=='inkind'){
     finalAllocType=allocationType||'support_current';
     const memberDebtNow=(payerType==='member'&&memberId)?Math.max(0,FIN.memberStatement(memberId).finalBalance):0;
     const debtSettled=Math.min(memberDebtNow,amountILS);
@@ -90,16 +93,41 @@ window.saveRec=async function(print=false){
       if(!window.confirm(msg)) return;
     }
   }
+  /* P2-D — classification AT CAPTURE (closes the unclassified-voucher window).
+     The system never guesses: donation kind/destination come from explicit form
+     fields; food/diwan shapes are deterministic per the ratified ق2/model. */
+  let cls;
+  if(fund==='food'){
+    cls = payerType==='member'
+      ? {movement_type:'subscription_payment',destination_treasury:'food',movement_reason:'member_food_payment'}
+      : {movement_type:'donation_cash',destination_treasury:'food',movement_reason:'nonmember_food_donation'};
+  } else if(fund==='diwan'){
+    cls = {movement_type:'donation_cash',destination_treasury:'diwan',movement_reason:'diwan_donation'};
+  } else if(donKind==='inkind'){
+    cls = {movement_type:'donation_inkind',destination_treasury:null,movement_reason:'inkind_at_capture',
+           register_category:document.getElementById('rec-don-category')?.value||'other'};
+  } else {
+    const dest = donDisplay==='diwan' ? 'diwan' : (allocationType==='reduce_deficit' ? 'historical_deficit' : 'food');
+    cls = {movement_type:'donation_cash',destination_treasury:dest,movement_reason:'donation_at_capture'};
+    /* overflow rule: money beyond the remaining deficit flows to Food automatically (read-time rule) */
+    if(dest==='historical_deficit'&&window.FIN2){
+      const rem=Math.abs(Math.min(0,(window.TREASURY_OPENINGS?.historical_deficit||0)+FIN2.historicalDeficitTreasury()));
+      const over=FIN2.overflowDue(rem,amountILS);
+      if(over>0&&!window.confirm('العجز المتبقي ₪'+fmt(rem)+' أقل من التبرع. الفائض ₪'+fmt(over)+' سيتحوّل تلقائياً لخزينة الغداء. متابعة؟')) return;
+    }
+  }
   const no=nextNo('REC',DB.receipts);
   const{data,error}=await SB.from('receipts').insert({
     no,verification_token:genVerificationToken(),fund_type:fund,receipt_date:date,
+    movement_type:cls.movement_type,destination_treasury:cls.destination_treasury,
+    movement_reason:cls.movement_reason,register_category:cls.register_category||null,
     payer_type:payerType,
     member_id:payerType==='member'?memberId:null,
     contact_id:finalContactId,
     payer_name:payerName,
     amount,currency,amount_ils:amountILS,exchange_rate:rate,
     payment_method:method,notes,
-    donation_display_fund:fund==='donation'?donDisplay:null,
+    donation_display_fund:(fund==='donation'&&donKind!=='inkind')?donDisplay:null,   /* ق3: in-kind never enters legacy display/allocator */
     food_donation_allocation:finalAllocType,
     current_addition:null,
     created_by:CUR?.full_name||CU?.email,
@@ -142,6 +170,10 @@ window.savePay=async function(print=false){
   const no=nextNo('PAY',DB.payments);
   const{data,error}=await SB.from('payments').insert({
     no,verification_token:genVerificationToken(),fund_type:fund,payment_date:date,
+    /* P2-D — classification at capture: an expense of its treasury */
+    movement_type:fund==='food'?'food_expense':'diwan_expense',
+    destination_treasury:fund==='food'?'food':'diwan',
+    movement_reason:fund==='food'?'food_expense':'diwan_expense',
     beneficiary_type:benType,
     member_id:benType==='member'?memberId:null,
     beneficiary_name:benName,
@@ -238,6 +270,19 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return false;}
   if(!reason||!String(reason).trim()){toast('سبب إعادة التصنيف إلزامي','err');return false;}
   if(!newClass||!newClass.movement_type){toast('تصنيف جديد غير صالح','err');return false;}
+  /* P2-D — validate against the ratified model: movement_type must be a MODEL2
+     event; a cash donation may only target an approved destination; non-cash
+     events must NOT carry a cash destination. The system never guesses. */
+  const M2=window.MODEL2;
+  if(!M2){toast('نموذج التصنيف غير مُحمَّل — أُلغيت العملية','err');return false;}   /* fail-closed */
+  {
+    const ev=M2.EVENTS[newClass.movement_type];
+    if(!ev){toast('نوع الحركة ليس من أحداث النموذج المعتمد','err');return false;}
+    if(newClass.movement_type==='donation_cash'&&!M2.DONATION_DESTINATIONS.includes(newClass.destination_treasury)){
+      toast('وجهة التبرع النقدي يجب أن تكون إحدى الخزائن الثلاث','err');return false;}
+    if(ev.cash===false&&newClass.destination_treasury){
+      toast('حدث غير نقدي لا يحمل وجهة خزينة','err');return false;}
+  }
   const table=kind==='payment'?'payments':'receipts';
   const{data:row,error:rErr}=await SB.from(table).select('*').eq('id',voucherId).single();
   if(rErr||!row){toast('السند غير موجود','err');return false;}
