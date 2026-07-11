@@ -453,7 +453,7 @@ const translations = {
       title:'Donations Registry', new:'New Donation',
       donor:'Donor', show_in:'Show In', classification:'Classification',
       no_data:'No donations found',
-      info:'Donations appear in the directed fund statement as zero — they do not affect balances',
+      info:'A cash donation enters its treasury and is referenced here · in-kind/service value is documentation only and never enters a treasury',
     },
     members: {
       title:'Family Members', new:'New Member',

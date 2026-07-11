@@ -377,9 +377,10 @@ const D={
     const q=(document.getElementById('q-don')?.value||'').toLowerCase();
     let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     if(q)d=d.filter(r=>(r.payer_name||gmn(r.member_id)||'').toLowerCase().includes(q));
-    const tot=d.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const _cash=d.filter(r=>r.movement_type==='donation_cash').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('don-sub');
-    if(sub)sub.textContent=`${d.length} تبرع — ₪ ${fmt(tot)}`;
+    if(sub)sub.textContent=`${d.length} تبرع — نقدي ₪ ${fmt(_cash)} · عيني/خدمي (توثيقي) ₪ ${fmt(_doc)}`;
     if(!PS['don'])PS['don']=1;
     mkPag('don',d.length);
     const page=d.slice((PS['don']-1)*PSZ,PS['don']*PSZ);
@@ -543,14 +544,15 @@ function renderTreasuryPanel(){
        Composition reads TREASURY_OPENINGS (the single formal mapping); the value
        is identical to the legacy FIN.foodDeficitRemaining() figure. */
     const op=Number((window.TREASURY_OPENINGS||{}).historical_deficit||0);
-    const inflow=FIN2.historicalDeficitTreasury()+FIN2.deficitSettlementTotal(); /* collections + directed donations */
+    const comp=FIN2.composed();
+    const inflow=FIN2.deficitInflows();            /* gross: collections + directed donations */
     const settled=FIN2.deficitSettlementTotal();
-    total=FIN._r2(op+FIN2.historicalDeficitTreasury()); neg=total<0;
+    total=comp.historical_deficit_remaining; neg=total<0;
     cap='المتبقّي من العجز التاريخي';
     rule='القاعدة: العجز الأصلي + تحصيل الذمم والتبرعات الموجَّهة − تسويات العجز · عند بلوغ الصفر يتحوّل الفائض لخزينة الغداء';
     middle=`<div class="tp-flow">
       <div class="nd prev"><div class="t">العجز الأصلي (الافتتاحي)</div><div class="v neg">₪ ${fmt(op)}</div><div class="s">قبل 2025</div></div>
-      <div class="ar"><div class="op up">+ تحصيل وتبرعات موجَّهة ₪ ${fmt(inflow)}</div><div class="ln"></div><div class="op dn">− تسويات العجز ₪ ${fmt(settled)}</div></div>
+      <div class="ar"><div class="op up">+ تحصيل وتبرعات موجَّهة ₪ ${fmt(inflow)}</div><div class="ln"></div><div class="op dn">− تسويات العجز ₪ ${fmt(settled)}${comp.overflow_to_food>0?` · فائض محوَّل للغداء ₪ ${fmt(comp.overflow_to_food)}`:''}</div></div>
       <div class="nd cur"><div class="t">المتبقّي من العجز</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
   } else {
