@@ -75,8 +75,17 @@
                    linked_receipt:r.no||null, status:r.is_deleted?'void':'active' }));
     },
     inkindRegister(){
-      /* dedicated table added in P2-C; empty until then. Never holds cash. */
-      return (typeof DB!=='undefined'&&Array.isArray(DB.inkind_donations)) ? DB.inkind_donations.slice() : [];
+      /* In-Kind & Services Register: dedicated table (P2-C, for new entries) PLUS
+         historical vouchers reclassified as donation_inkind (ق3). Estimated value
+         is DOCUMENTATION only — these rows never touch any cash treasury. */
+      const table=(typeof DB!=='undefined'&&Array.isArray(DB.inkind_donations)) ? DB.inkind_donations.slice() : [];
+      /* donation_inkind rows have destination_treasury=null BY DESIGN (no cash
+         destination), so filter liveRows by movement_type directly. */
+      const legacy=liveRows().filter(r=>r.movement_type==='donation_inkind')
+        .map(r=>({ reference_no:r.no||null, date:r.receipt_date||null, donor:r.payer_name||null,
+                   category:r.register_category||'other', estimated_value:amountOf(r),
+                   description:r.notes||'', status:'active' }));
+      return table.concat(legacy);
     },
 
     /* ---- deficit settlement events (cash OUT of the deficit treasury) ---- */

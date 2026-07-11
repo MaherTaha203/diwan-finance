@@ -37,7 +37,10 @@ eq(FIN2.diwanTreasury(),70,'diwan = 70');
 eq(FIN2.historicalDeficitTreasury(),-90,'deficit = +100 -40 -150 = -90');
 eq(FIN2.deficitSettlementTotal(),40,'settlement total = 40 (cash OUT)');
 eq(FIN2.cashDonationRegister().length,2,'cash register = 2 donations');
-eq(FIN2.inkindRegister().length,0,'in-kind register empty until P2-C');
+/* ق3: a classified donation_inkind voucher appears in the In-Kind register with
+   its documentation value, while contributing ZERO cash to any treasury. */
+eq(FIN2.inkindRegister().length,1,'classified donation_inkind listed in the in-kind register');
+eq(FIN2.inkindRegister()[0].estimated_value,500,'in-kind register carries the documentation value');
 eq(FIN2.foodTreasury()+FIN2.diwanTreasury()+FIN2.historicalDeficitTreasury(),300,'total classified cash = 300 (in-kind excluded)');
 
 /* 3) overflow rule + 4) allocation order */

@@ -225,6 +225,46 @@ async function recordVoucherVersion(kind,preRow,postRow,reason,newVer){
     snapshot:postRow,edit_reason:reason,edited_by:editor,edited_at:nowIso});
   if(nErr) throw new Error(nErr.message);
 }
+/* ═══ P2-C — CLASSIFICATION LOCK ═══════════════════════════════════════════
+   After the migration, a voucher's financial classification (movement_type /
+   destination_treasury / source_treasury / movement_reason / register_category)
+   is part of financial history. NO normal edit path touches these fields —
+   saveRec/savePay/saveEditRec/saveEditPay never read or write them. The ONE
+   sanctioned exception is this admin-only function: explicit reason required,
+   previous AND new classification preserved as an immutable voucher_versions
+   snapshot, and a mandatory audit-log entry (date + user + reason). Nothing is
+   overwritten silently. (No UI calls this yet; exposing it is a P2-D decision.) */
+window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return false;}
+  if(!reason||!String(reason).trim()){toast('سبب إعادة التصنيف إلزامي','err');return false;}
+  if(!newClass||!newClass.movement_type){toast('تصنيف جديد غير صالح','err');return false;}
+  const table=kind==='payment'?'payments':'receipts';
+  const{data:row,error:rErr}=await SB.from(table).select('*').eq('id',voucherId).single();
+  if(rErr||!row){toast('السند غير موجود','err');return false;}
+  const prev={movement_type:row.movement_type||null,destination_treasury:row.destination_treasury||null,
+              source_treasury:row.source_treasury||null,movement_reason:row.movement_reason||null,
+              register_category:row.register_category||null};
+  const next={movement_type:newClass.movement_type,
+              destination_treasury:newClass.destination_treasury??null,
+              source_treasury:newClass.source_treasury??null,
+              movement_reason:newClass.reason||newClass.movement_reason||null,
+              register_category:newClass.register_category??null};
+  const editor=CUR?.full_name||CU?.email||'admin';
+  const newVer=Number(row.version||1)+1;
+  /* immutable evidence FIRST: full pre/post snapshot + the reason */
+  await recordVoucherVersion(kind==='payment'?'payment':'receipt',row,
+    Object.assign({},row,next,{version:newVer}),
+    'إعادة تصنيف استثنائية · Reclassification — '+String(reason).trim(),newVer);
+  const{error:uErr}=await SB.from(table).update(Object.assign({},next,{version:newVer})).eq('id',voucherId);
+  if(uErr){toast('فشل التحديث: '+uErr.message,'err');return false;}
+  await logAction('reclassify',
+    `إعادة تصنيف ${row.no}: ${prev.movement_type||'—'}→${next.movement_type}`+
+    ` · ${prev.destination_treasury||'—'}→${next.destination_treasury||'—'} · السبب: ${String(reason).trim()}`,
+    table,voucherId);
+  await loadAll();
+  toast('✓ أُعيد التصنيف مع حفظ الأثر الكامل','ok');
+  return true;
+};
 async function fetchVoucherHistory(kind,voucherId){
   const{data}=await SB.from('voucher_versions').select('*')
     .eq('voucher_kind',kind).eq('voucher_id',voucherId).order('version_no',{ascending:true});
