@@ -46,6 +46,7 @@ window.saveRec=async function(print=false){
   const notes=document.getElementById('rec-notes').value;
   const donDisplay=document.getElementById('rec-don-display')?.value||null;
   const allocationType=document.getElementById('rec-don-alloc-type')?.value||'support_current';
+  const donKind=document.getElementById('rec-don-kind')?.value||'cash';   /* P2-D: cash | inkind */
   const saveContact=document.getElementById('rec-save-contact')?.checked||false;
 
   const v1=fund==='donation'?vf('rec-member',v=>!!v,'e-rec-member'):
@@ -69,9 +70,11 @@ window.saveRec=async function(print=false){
     await loadAll();
   }
 
-  /* ITEM 9 — Food Fund Donation: member debt priority allocation + confirmation. */
+  /* ITEM 9 — Food Fund Donation: member debt priority allocation + confirmation.
+     ق3: NEVER for in-kind — a documentation value must not settle real debt nor
+     enter the legacy cash allocator. */
   let finalAllocType=null;
-  if(fund==='donation'&&donDisplay==='food'){
+  if(fund==='donation'&&donDisplay==='food'&&donKind!=='inkind'){
     finalAllocType=allocationType||'support_current';
     const memberDebtNow=(payerType==='member'&&memberId)?Math.max(0,FIN.memberStatement(memberId).finalBalance):0;
     const debtSettled=Math.min(memberDebtNow,amountILS);
@@ -93,7 +96,6 @@ window.saveRec=async function(print=false){
   /* P2-D — classification AT CAPTURE (closes the unclassified-voucher window).
      The system never guesses: donation kind/destination come from explicit form
      fields; food/diwan shapes are deterministic per the ratified ق2/model. */
-  const donKind=document.getElementById('rec-don-kind')?.value||'cash';
   let cls;
   if(fund==='food'){
     cls = payerType==='member'
@@ -125,7 +127,7 @@ window.saveRec=async function(print=false){
     payer_name:payerName,
     amount,currency,amount_ils:amountILS,exchange_rate:rate,
     payment_method:method,notes,
-    donation_display_fund:fund==='donation'?donDisplay:null,
+    donation_display_fund:(fund==='donation'&&donKind!=='inkind')?donDisplay:null,   /* ق3: in-kind never enters legacy display/allocator */
     food_donation_allocation:finalAllocType,
     current_addition:null,
     created_by:CUR?.full_name||CU?.email,

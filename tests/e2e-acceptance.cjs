@@ -103,9 +103,14 @@ const HARNESS=(seed)=>{
     ok('S5 overflow '+R2(9000+t0.defRem)+' auto-flows to food', t1.over===R2(9000+t0.defRem)&&t1.food===R2(t0.food+t1.over), JSON.stringify({over:t1.over,food:[t0.food,t1.food]}));
     ok('S5 diwan untouched', t1.diwan===t0.diwan, '');
 
-    /* S6 — in-kind fridge: register only, ZERO treasury impact */
-    t0=T(); const r6=await newReceipt('donation',{payerType:'member',memberId,amount:1200,kind:'inkind',category:'equipment'});
+    /* S6 — in-kind fridge: register only, ZERO treasury impact (both engines) */
+    t0=T(); const legacyStmt0=R2(FIN.memberStatement(memberId).finalBalance);
+    const legacyFood0=R2(FIN.foodBalance()), legacyNet0=R2(FIN.foodNetPosition());
+    const r6=await newReceipt('donation',{payerType:'member',memberId,amount:1200,kind:'inkind',category:'equipment'});
     t1=T();
+    ok('S6 CROSS-ENGINE: legacy member statement unchanged by in-kind', R2(FIN.memberStatement(memberId).finalBalance)===legacyStmt0, legacyStmt0+' -> '+R2(FIN.memberStatement(memberId).finalBalance));
+    ok('S6 CROSS-ENGINE: legacy foodBalance/netPosition unchanged', R2(FIN.foodBalance())===legacyFood0&&R2(FIN.foodNetPosition())===legacyNet0, JSON.stringify({food:[legacyFood0,R2(FIN.foodBalance())],net:[legacyNet0,R2(FIN.foodNetPosition())]}));
+    ok('S6 in-kind row carries NO legacy display/alloc fields', !r6.donation_display_fund&&!r6.food_donation_allocation, JSON.stringify({disp:r6.donation_display_fund,alloc:r6.food_donation_allocation}));
     ok('S6 in-kind classified donation_inkind (no destination)', r6.movement_type==='donation_inkind'&&!r6.destination_treasury, r6.movement_type);
     ok('S6 in-kind register +1', t1.inkN===t0.inkN+1, t0.inkN+'->'+t1.inkN);
     ok('S6 ALL treasuries unchanged', t1.food===t0.food&&t1.diwan===t0.diwan&&t1.defRem===t0.defRem&&t1.cashN===t0.cashN, JSON.stringify(t1));
