@@ -500,7 +500,9 @@ function renderTreasuryPanel(){
     const opening=Number(window.DIWAN_OPENING||0);
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
-    total=opening+income-expense; neg=total<0;
+    /* P1 — the authoritative total comes from FIN (single source); income/expense
+       remain only to render the flow breakdown below. Value-identical to opening+income-expense. */
+    total=FIN.diwanBalance(); neg=total<0;
     rule='القاعدة: الكلي = الرصيد الأولي السابق + إجمالي المقبوضات − إجمالي المصروفات';
     middle=`<div class="tp-flow">
       <div class="nd prev"><div class="t">الرصيد الأولي السابق</div><div class="v">₪ ${fmt(opening)}</div><div class="s">يشارك في الحساب</div></div>
@@ -526,8 +528,9 @@ function renderTreasuryPanel(){
         <div class="rs"><div class="l">رصيد الصندوق الحالي = الإجمالي</div><div class="n">₪ ${fmt(total)}</div></div></div>
     </div>`;
   } else {
-    const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    total=income; neg=false; cap='الرصيد الإجمالي الكلي';
+    /* P1 — authoritative donation total from FIN (single source). Value-identical
+       to the previous inline Σ(non-deleted donation receipts). */
+    total=FIN.donBalance(); neg=false; cap='الرصيد الإجمالي الكلي';
     rule='القاعدة: إجمالي التبرعات المستلمة';
     middle=`<div class="tp-flow"><div class="nd cur" style="flex:1"><div class="t">رصيد الصندوق الحالي</div><div class="v">₪ ${fmt(total)}</div><div class="s">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').length} تبرعات</div></div></div>`;
   }
