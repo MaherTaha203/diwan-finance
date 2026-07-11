@@ -54,6 +54,8 @@ window.saveRec=async function(print=false){
   const v2=vf('rec-amount',v=>parseFloat(v)>0,'e-rec-amount');
   const v3=vf('rec-date',v=>!!v,'e-rec-date');
   if(!v1||!v2||!v3)return;
+  /* P0 — year-end lock also restricts CREATE (mirrors the edit/cancel guards). */
+  if(voucherLocked(date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إنشاء سند بتاريخ ضمن سنة مقفلة','err'); return; }
 
   let payerName='';
   if(payerType==='member') payerName=gmn(memberId);
@@ -133,6 +135,8 @@ window.savePay=async function(print=false){
   const v2=vf('pay-amount',v=>parseFloat(v)>0,'e-pay-amount');
   const v3=vf('pay-date',v=>!!v,'e-pay-date');
   if(!v1||!v2||!v3)return;
+  /* P0 — year-end lock also restricts CREATE (mirrors the edit/cancel guards). */
+  if(voucherLocked(date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إنشاء سند بتاريخ ضمن سنة مقفلة','err'); return; }
 
   const benName=benType==='member'?gmn(memberId):benNameInput;
   const no=nextNo('PAY',DB.payments);
