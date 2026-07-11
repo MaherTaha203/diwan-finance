@@ -1402,80 +1402,32 @@ window.exportPDF=function(type){
 /* ═══ EXPORT CSV / BACKUP ═══ */
 window.doBackup=function(){
   if(!can.export()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية التصدير','err');return;}
-  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  /* P0 — stamp the export with a schema marker and drop the runtime-only
+     allocation memo (_alloc) so a future safe-restore can validate the file. */
+  const {_alloc,...tables}=DB;
+  const payload={_meta:{app:'diwan-finance',schema:1,exported_at:new Date().toISOString(),
+                        by:CUR?.full_name||CU?.email||null},...tables};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='diwan_backup_'+today()+'.json';a.click();
   toast(window.t('messages.exported'),'ok');
 };
 /* ═══ BACKUP RESTORE ═══ */
+/* P0 — SAFETY: the in-browser restore was disabled.
+   The previous implementation deleted every row of members/receipts/payments/
+   contacts and then re-inserted from the file, with NO transaction and NO abort
+   on error: any failed insert (schema drift, RLS, FK, a truncated file) left the
+   live database permanently wiped, reported only as a "partial" toast. That is an
+   unacceptable data-loss and history-rewrite path for a production financial
+   ledger. Backup EXPORT (doBackup) is unaffected. A safe restore — transactional,
+   server-side, history-preserving — is scoped for a later phase. */
 window.doRestore=async function(){
   if(!can.admin()){toast(window.t('errors.admin_only'),'err');return;}
-  const input=document.createElement('input');
-  input.type='file';input.accept='.json';
-  input.onchange=async function(e){
-    const file=e.target.files[0];
-    if(!file){return;}
-    try{
-      const text=await file.text();
-      const backup=JSON.parse(text);
-      
-      /* Validate structure */
-      const requiredTables=['members','receipts','payments'];
-      const missingTables=requiredTables.filter(t=>!backup[t]||!Array.isArray(backup[t]));
-      if(missingTables.length>0){
-        toast(window.t('errors.invalid_file_tables')+' ('+missingTables.join(', ')+')','err');
-        return;
-      }
-      
-      /* Show preview */
-      const stats='\nأعضاء: '+backup.members.length
-        +'\nإيصالات: '+(backup.receipts||[]).length
-        +'\nمدفوعات: '+(backup.payments||[]).length
-        +'\nاشتراكات: '+(backup.annual_dues||[]).length;
-      
-      const confirmed=confirm('هل تريد استعادة هذه النسخة؟\n\n⚠️ سيتم استبدال جميع البيانات الحالية!'+stats);
-      if(!confirmed){return;}
-      
-      /* Double confirm */
-      const doubleConfirm=confirm('تأكيد نهائي: هذا الإجراء لا يمكن التراجع عنه.\n\nاكتب "نعم" للمتابعة.');
-      if(!doubleConfirm){return;}
-      
-      toast(window.t('messages.restoring'),'info');
-      
-      /* Restore each table */
-      const tables=['members','receipts','payments','annual_dues','contacts','settings'];
-      let errors=[];
-      
-      for(const table of tables){
-        if(!backup[table]||!Array.isArray(backup[table]))continue;
-        
-        /* Delete existing */
-        const{error:delErr}=await SB.from(table).delete().neq('id','00000000-0000-0000-0000-000000000000');
-        if(delErr)errors.push(table+' delete: '+delErr.message);
-        
-        /* Insert from backup in batches */
-        const rows=backup[table];
-        const batchSize=100;
-        for(let i=0;i<rows.length;i+=batchSize){
-          const batch=rows.slice(i,i+batchSize);
-          const{error:insErr}=await SB.from(table).insert(batch);
-          if(insErr)errors.push(table+' insert: '+insErr.message);
-        }
-      }
-      
-      if(errors.length>0){
-        toast(window.t('messages.restore_partial')+': '+errors.join('; '),'warn');
-      }else{
-        toast('✓ '+window.t('messages.restore_success'),'ok');
-      }
-      
-      await logAction('restore','استعادة نسخة احتياطية ('+file.name+')','system',null);
-      await loadAll();
-      
-    }catch(e){
-      toast(window.t('errors.file_error')+': '+e.message,'err');
-    }
-  };
-  input.click();
+  const msg='🔒 الاستعادة داخل المتصفح معطّلة لحماية البيانات.\n\n'
+    +'كانت العملية تحذف كل السجلات ثم تعيد إدخالها دون معاملة واحدة، وأي فشل يترك '
+    +'قاعدة البيانات فارغة نهائيًا. النسخ الاحتياطي (تصدير) ما زال يعمل.\n\n'
+    +'للاستعادة الآمنة يرجى الرجوع إلى مسؤول النظام.';
+  alert(msg);
+  await logAction('restore','محاولة استعادة — العملية معطّلة لأسباب أمنية (P0)','system',null);
 };
 
 
@@ -1899,6 +1851,9 @@ window.saveSettings = async function(){
   RATES.USD = usdRate;
   RATES.JOD = jodRate;
   await logAction('edit',`تحديث الإعدادات — رصيد الغداء: ₪${fmt(foodOpening)} | رصيد الديوان: ₪${fmt(diwanOpening)}`,'settings',null);
+  /* P0 — opening balances feed the allocation kernel; drop the memoized result
+     so FIN.allocateFoodDonations() recomputes against the new openings. */
+  DB._alloc=null;
   renderSettingsSummary();
   updateRateDisplay();
   renderDash();
