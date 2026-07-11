@@ -500,7 +500,9 @@ function renderTreasuryPanel(){
     const opening=Number(window.DIWAN_OPENING||0);
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
-    total=opening+income-expense; neg=total<0;
+    /* P1 — the authoritative total comes from FIN (single source); income/expense
+       remain only to render the flow breakdown below. Value-identical to opening+income-expense. */
+    total=FIN.diwanBalance(); neg=total<0;
     rule='القاعدة: الكلي = الرصيد الأولي السابق + إجمالي المقبوضات − إجمالي المصروفات';
     middle=`<div class="tp-flow">
       <div class="nd prev"><div class="t">الرصيد الأولي السابق</div><div class="v">₪ ${fmt(opening)}</div><div class="s">يشارك في الحساب</div></div>
@@ -526,8 +528,9 @@ function renderTreasuryPanel(){
         <div class="rs"><div class="l">رصيد الصندوق الحالي = الإجمالي</div><div class="n">₪ ${fmt(total)}</div></div></div>
     </div>`;
   } else {
-    const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    total=income; neg=false; cap='الرصيد الإجمالي الكلي';
+    /* P1 — authoritative donation total from FIN (single source). Value-identical
+       to the previous inline Σ(non-deleted donation receipts). */
+    total=FIN.donBalance(); neg=false; cap='الرصيد الإجمالي الكلي';
     rule='القاعدة: إجمالي التبرعات المستلمة';
     middle=`<div class="tp-flow"><div class="nd cur" style="flex:1"><div class="t">رصيد الصندوق الحالي</div><div class="v">₪ ${fmt(total)}</div><div class="s">${DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').length} تبرعات</div></div></div>`;
   }
@@ -1410,16 +1413,36 @@ window.exportPDF=function(type){
 /* ═══ A2 ANNUAL DEBT · A3 DELINQUENT · DONATION STATEMENT PRINT ═══
    (extracted to /js/reports.js — Phase B Module 8) */
 /* ═══ EXPORT CSV / BACKUP ═══ */
-window.doBackup=function(){
+/* P0 — a backup must be a COMPLETE, lossless snapshot. The old export dumped the
+   partial in-memory DB (7 tables, audit capped at 50 rows, and NO settings — so
+   opening balances, rates and the year-lock were silently lost, which made the
+   restored Diwan balance and historical deficit wrong). This fetches every table
+   fresh with full rows. Financial-critical tables must all succeed or the backup
+   aborts (no silent partial); supporting tables are best-effort and any that fail
+   are listed in _meta.incomplete. */
+window.BACKUP_TABLES_CRITICAL=['members','receipts','payments','member_subscriptions','annual_dues','settings','contacts'];
+window.BACKUP_TABLES_SUPPORTING=['attachments','vouchers','voucher_versions','user_roles','audit_log'];
+window.doBackup=async function(){
   if(!can.export()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية التصدير','err');return;}
-  /* P0 — stamp the export with a schema marker and drop the runtime-only
-     allocation memo (_alloc) so a future safe-restore can validate the file. */
-  const {_alloc,...tables}=DB;
-  const payload={_meta:{app:'diwan-finance',schema:1,exported_at:new Date().toISOString(),
-                        by:CUR?.full_name||CU?.email||null},...tables};
+  const payload={_meta:{app:'diwan-finance',schema:2,exported_at:new Date().toISOString(),
+                        by:CUR?.full_name||CU?.email||null,
+                        tables:[...window.BACKUP_TABLES_CRITICAL,...window.BACKUP_TABLES_SUPPORTING],incomplete:[]}};
+  try{
+    for(const t of window.BACKUP_TABLES_CRITICAL){
+      const {data,error}=await SB.from(t).select('*');
+      if(error) throw new Error(t+': '+error.message);
+      payload[t]=data||[];
+    }
+  }catch(e){ toast((window.t?window.t('errors.save_error'):'خطأ في التصدير')+': '+e.message,'err'); return; }
+  for(const t of window.BACKUP_TABLES_SUPPORTING){
+    try{ const {data,error}=await SB.from(t).select('*'); if(error) throw error; payload[t]=data||[]; }
+    catch(e){ payload[t]=[]; payload._meta.incomplete.push(t); }
+  }
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='diwan_backup_'+today()+'.json';a.click();
-  toast(window.t('messages.exported'),'ok');
+  if(payload._meta.incomplete.length)
+    toast((window.t?window.t('messages.exported'):'تم التصدير')+' — جداول مساعدة تعذّرت: '+payload._meta.incomplete.join(', '),'warn');
+  else toast(window.t('messages.exported'),'ok');
 };
 /* ═══ BACKUP RESTORE ═══ */
 /* P0 — SAFETY: the in-browser restore was disabled.
