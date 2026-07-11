@@ -74,7 +74,11 @@ window.saveRec=async function(print=false){
      ق3: NEVER for in-kind — a documentation value must not settle real debt nor
      enter the legacy cash allocator. */
   let finalAllocType=null;
-  if(fund==='donation'&&donDisplay==='food'&&donKind!=='inkind'){
+  /* ق4 — member-linked deficit-directed cash donation = historical debt COLLECTION:
+     skip the Item-9 debt-settlement preview (it no longer applies to this case). */
+  const isQ4Collection = fund==='donation'&&donKind!=='inkind'&&donDisplay==='food'
+                         &&allocationType==='reduce_deficit'&&payerType==='member'&&!!memberId;
+  if(fund==='donation'&&donDisplay==='food'&&donKind!=='inkind'&&!isQ4Collection){
     finalAllocType=allocationType||'support_current';
     const memberDebtNow=(payerType==='member'&&memberId)?Math.max(0,FIN.memberStatement(memberId).finalBalance):0;
     const debtSettled=Math.min(memberDebtNow,amountILS);
@@ -108,7 +112,9 @@ window.saveRec=async function(print=false){
            register_category:document.getElementById('rec-don-category')?.value||'other'};
   } else {
     const dest = donDisplay==='diwan' ? 'diwan' : (allocationType==='reduce_deficit' ? 'historical_deficit' : 'food');
-    cls = {movement_type:'donation_cash',destination_treasury:dest,movement_reason:'donation_at_capture'};
+    cls = isQ4Collection
+      ? {movement_type:'historical_debt_collection',destination_treasury:'historical_deficit',movement_reason:'q4_member_deficit_collection'}
+      : {movement_type:'donation_cash',destination_treasury:dest,movement_reason:'donation_at_capture'};
     /* overflow rule: money beyond the remaining deficit flows to Food automatically (read-time rule) */
     if(dest==='historical_deficit'&&window.FIN2){
       const rem=Math.abs(Math.min(0,(window.TREASURY_OPENINGS?.historical_deficit||0)+FIN2.historicalDeficitTreasury()));

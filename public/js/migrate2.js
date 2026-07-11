@@ -37,8 +37,8 @@
     'REC-00003': {kind:'service', category:'maintenance',            evidence:'مقابل أعمال صيانة مواسير ونقل خزانات'},
     'REC-00004': {kind:'inkind',  category:'other',                  evidence:'مقابل فاتورة مواد وأدوات تنظيف'},
     'REC-00031': {kind:'service', category:'professional_services',  evidence:'شراء domain + تصميم وإنشاء النظام'},
-    /* the one live cash donation (paper voucher 00115) — directed to the deficit */
-    'REC-00058': {kind:'cash', destination:'historical_deficit',     evidence:'سند قبض يدوي رقم 00115'},
+    /* ق4 (2026-07-11): member-linked deficit cash = historical debt COLLECTION */
+    'REC-00058': {kind:'collection', destination:'historical_deficit', evidence:'سند قبض يدوي رقم 00115 · مربوط بالعضو — ق4'},
     /* deleted rows — financially inert; categorized for completeness only */
     'REC-00025': {kind:'service', category:'maintenance', deleted:true},
     'REC-00007': {kind:'inkind',  category:'other',       deleted:true},
@@ -74,6 +74,9 @@
       }
       if(led.kind==='cash'){
         return {movement_type:'donation_cash', destination_treasury:led.destination, source_treasury:null, reason:'owner_ledger_cash'};
+      }
+      if(led.kind==='collection'){   /* ق4 */
+        return {movement_type:'historical_debt_collection', destination_treasury:led.destination, source_treasury:null, reason:'owner_ledger_q4_collection'};
       }
       /* inkind/service: documentation value only — ZERO treasury effect */
       return {movement_type:'donation_inkind', destination_treasury:null, source_treasury:null,

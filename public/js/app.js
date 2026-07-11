@@ -906,7 +906,7 @@ window.renderMemberStmt=function(){
                   : T('الحساب مسدد بالكامل','Fully settled');
 
   /* Donation transparency (do NOT affect the balance) — retained for auditors. */
-  const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid);
+  const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&r.movement_type!=='historical_debt_collection'); /* ق4: collections live in the main ledger */
   const donSplit=d=>{
     const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
     if(d.donation_display_fund!=='food') return T('تبرع ديوان','Diwan Donation')+' ₪'+fmt(d.amount_ils||d.amount);
@@ -1600,7 +1600,7 @@ window.exportMemberStmt=function(format){
 
   /* EXCEL */
   if(format==='excel'){
-    const _dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
+    const _dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&r.movement_type!=='historical_debt_collection'&&inRange(r.receipt_date)); /* ق4 */
     const _alloc=FIN.allocateFoodDonations();
     const _donRows=[];
     if(_dons.length){
