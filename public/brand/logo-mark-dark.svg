@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="490 182 552 418" role="img" aria-label="ديوان آل طه — Diwan Al-Taha">
+  <defs>
+    <pattern id="brick" width="116" height="50" patternUnits="userSpaceOnUse" patternTransform="translate(653 366)">
+      <rect width="116" height="50" fill="#E3D4B3"/>
+      <g stroke="#F2E9D5" stroke-width="3">
+        <line x1="0" y1="0" x2="116" y2="0"/><line x1="0" y1="25" x2="116" y2="25"/><line x1="0" y1="50" x2="116" y2="50"/>
+        <line x1="0" y1="0" x2="0" y2="25"/><line x1="116" y1="0" x2="116" y2="25"/><line x1="58" y1="25" x2="58" y2="50"/>
+      </g>
+    </pattern>
+    <clipPath id="roofClip"><path d="M790 384 L886 462 L694 462 Z"/></clipPath>
+    <linearGradient id="domeG" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E3D4B4"/><stop offset="55%" stop-color="#E0D0AC"/><stop offset="100%" stop-color="#D2C09A"/>
+    </linearGradient>
+  </defs>
+  <g id="Diwan-Al-Taha">
+    <g id="building">
+      <path id="dome" d="M685 366 A200 200 0 0 1 955 366 Z" fill="url(#domeG)"/>
+      <rect id="wall" x="653" y="366" width="347" height="223" fill="url(#brick)"/>
+      <rect id="wall-edge" x="653" y="366" width="347" height="223" fill="none" stroke="#CDBB92" stroke-width="2.5"/>
+      <g id="window">
+        <rect x="900" y="476" width="50" height="65" rx="3" fill="#F4EBD8" stroke="#D9C9A6" stroke-width="4"/>
+        <g transform="translate(925 508.5)" fill="none" stroke="#CDBC96" stroke-width="2.6">
+          <circle r="5.5"/>
+          <path transform="rotate(0)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/><path transform="rotate(45)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/><path transform="rotate(90)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/><path transform="rotate(135)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/><path transform="rotate(180)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/><path transform="rotate(225)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/><path transform="rotate(270)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/><path transform="rotate(315)" d="M0 -6 C3.4 -11 3.4 -17 0 -21 C-3.4 -17 -3.4 -11 0 -6 Z"/>
+        </g>
+      </g>
+      <g id="porch">
+        <rect x="710" y="460" width="12" height="129" rx="3" fill="#F2EEE7"/>
+        <rect x="856" y="460" width="12" height="129" rx="3" fill="#F2EEE7"/>
+        <rect x="704" y="583" width="24" height="8" rx="2.5" fill="#F2EEE7"/>
+        <rect x="850" y="583" width="24" height="8" rx="2.5" fill="#F2EEE7"/>
+        <g id="door">
+          <path d="M763 589 V510 A28 30 0 0 1 819 510 V589 Z" fill="#F4EBD8" stroke="#D9C9A6" stroke-width="4"/>
+          <g stroke="#D9C9A6" stroke-width="1.8" opacity="0.85" fill="none"><path d="M782 485 V589"/><path d="M800 485 V589"/></g>
+          <circle cx="777" cy="540" r="3.6" fill="#F2EEE7"/>
+        </g>
+        <g id="roof">
+          <path d="M790 382 L890 464 L690 464 Z" fill="#B34D2B"/>
+          <g clip-path="url(#roofClip)">
+            <path d="M790 386 L838 432 L742 432 Z" fill="#C96A43"/>
+            <g stroke="#8E3A1F" stroke-width="2.4">
+              <line x1="690" y1="446" x2="890" y2="446"/><line x1="700" y1="428" x2="880" y2="428"/>
+              <line x1="716" y1="412" x2="864" y2="412"/><line x1="732" y1="398" x2="848" y2="398"/>
+            </g>
+            <g stroke="#8E3A1F" stroke-width="1.8">
+              <line x1="726" y1="446" x2="726" y2="464"/><line x1="758" y1="446" x2="758" y2="464"/><line x1="790" y1="446" x2="790" y2="464"/><line x1="822" y1="446" x2="822" y2="464"/><line x1="854" y1="446" x2="854" y2="464"/>
+              <line x1="742" y1="428" x2="742" y2="446"/><line x1="774" y1="428" x2="774" y2="446"/><line x1="806" y1="428" x2="806" y2="446"/><line x1="838" y1="428" x2="838" y2="446"/>
+              <line x1="758" y1="412" x2="758" y2="428"/><line x1="790" y1="412" x2="790" y2="428"/><line x1="822" y1="412" x2="822" y2="428"/>
+              <line x1="774" y1="398" x2="774" y2="412"/><line x1="806" y1="398" x2="806" y2="412"/>
+            </g>
+          </g>
+          <path d="M690 464 q10 7 20 0 q10 7 20 0 q10 7 20 0 q10 7 20 0 q10 7 20 0 q10 7 20 0 q10 7 20 0 q10 7 20 0 q10 7 20 0 q10 7 20 0 l0 4 h-200 z" fill="#9C4023"/>
+          <circle cx="790" cy="380" r="5" fill="#F2EEE7"/>
+        </g>
+      </g>
+    </g>
+    <g id="tree" fill="#F2EEE7">
+      <path d="M602 589 C600 566 598 540 602 514 C605 492 608 468 607 444 C606 420 606 396 610 374 C612 360 615 348 620 338 L630 340 C627 352 625 364 625 378 C625 400 628 424 628 448 C628 476 624 506 623 534 C622 556 623 574 626 589 Z"/>
+      <path d="M606 589 C599 579 589 573 576 570 C568 569 561 570 556 572 C568 574 578 578 586 583 C592 586 599 588 604 589 Z"/>
+      <path d="M622 589 C629 579 639 573 652 570 C660 569 667 570 672 572 C660 574 650 578 642 583 C636 586 629 588 624 589 Z"/>
+      <g stroke="#F2EEE7" stroke-width="9" fill="none" stroke-linecap="round">
+        <path d="M616 356 C596 336 570 322 542 316"/><path d="M618 344 C608 316 608 288 618 262"/>
+        <path d="M622 348 C644 326 672 312 702 308"/><path d="M612 376 C586 364 558 360 530 364"/>
+        <path d="M624 368 C650 356 678 352 706 356"/><path d="M619 310 C616 286 618 262 626 242"/>
+        <path d="M621 306 C638 286 660 272 686 264"/><path d="M617 306 C602 284 582 268 558 260"/>
+      </g>
+      <g id="leaves">
+      <g transform="translate(508 306) rotate(58) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(512 272) rotate(46) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(528 246) rotate(36) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(554 224) rotate(24) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(584 206) rotate(12) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(616 196) rotate(2) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(648 193) rotate(-7) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(676 199) rotate(-17) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(703 210) rotate(-28) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(726 227) rotate(-40) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(744 250) rotate(-52) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(751 278) rotate(-64) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(546 280) rotate(32) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(576 256) rotate(19) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(610 243) rotate(5) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(644 241) rotate(-9) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(677 252) rotate(-24) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(703 270) rotate(-38) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(719 296) rotate(-52) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(562 306) rotate(28) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(594 287) rotate(14) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(627 276) rotate(2) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(662 281) rotate(-15) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(689 297) rotate(-31) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(545 336) rotate(42) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(577 321) rotate(23) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(609 313) rotate(7) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(643 315) rotate(-11) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(671 329) rotate(-30) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(566 357) rotate(46) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(602 346) rotate(16) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      <g transform="translate(636 345) rotate(-8) scale(1.6)"><path d="M0 0 C4.5 -6.6 10.5 -6.6 15 0 C10.5 6.6 4.5 6.6 0 0 Z"/></g>
+      </g>
+    </g>
+    <rect x="500" y="586" width="535" height="6" rx="3" fill="#F2EEE7"/>
+  </g>
+</svg>
