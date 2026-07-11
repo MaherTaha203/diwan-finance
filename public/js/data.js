@@ -48,8 +48,8 @@ function updateRateDisplay(){
 async function loadAll(){
   try{
     const[r1,r2,r3,r4,r5,r6,r7]=await Promise.all([
-      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support').order('receipt_date',{ascending:false}),
-      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version').order('payment_date',{ascending:false}),
+      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support,movement_type,destination_treasury,source_treasury,movement_reason,register_category').order('receipt_date',{ascending:false}),
+      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version,movement_type,destination_treasury,source_treasury,movement_reason').order('payment_date',{ascending:false}),
       SB.from('members').select(
 'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
 ).order('name'),
@@ -106,6 +106,16 @@ async function loadSettings(){
     if(map['jod_rate'])  RATES.JOD = parseFloat(map['jod_rate']);
     window.FOOD_OPENING  = parseFloat(map['food_opening_balance']  || '0');
     window.DIWAN_OPENING = parseFloat(map['diwan_opening_balance'] || '0');
+    /* P2-D — SINGLE formal mapping of legacy openings onto the new-model treasuries
+       (Fable 5 carry-forward #3). food_opening_balance is the ORIGINAL HISTORICAL
+       DEFICIT and opens the Historical-Deficit treasury; the Food treasury opens at 0
+       (its legacy "opening" was memo-only); diwan_opening_balance opens Diwan.
+       Every FIN2-composed display reads THIS map — nowhere else. */
+    window.TREASURY_OPENINGS = {
+      food: 0,
+      diwan: window.DIWAN_OPENING,
+      historical_deficit: window.FOOD_OPENING
+    };
     window.FOOD_OPENING_USD  = parseFloat(map['food_opening_usd']  || '0');
     window.FOOD_OPENING_JOD  = parseFloat(map['food_opening_jod']  || '0');
     window.DIWAN_OPENING_USD = parseFloat(map['diwan_opening_usd'] || '0');

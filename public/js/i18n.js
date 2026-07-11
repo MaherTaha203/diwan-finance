@@ -116,9 +116,9 @@ const translations = {
     },
     donations: {
       title:'سجل التبرعات', new:'تبرع جديد',
-      donor:'المتبرع', show_in:'يُظهر في',
+      donor:'المتبرع', show_in:'يُظهر في', classification:'التصنيف',
       no_data:'لا توجد تبرعات',
-      info:'التبرعات تظهر في كشف الصندوق الموجَّهة إليه بقيمة صفر — لا تؤثر على الأرصدة',
+      info:'التبرع النقدي يدخل خزينته ويُقيَّد هنا مرجعياً · العيني/الخدمي قيمة توثيقية لا تدخل أي خزينة',
     },
     members: {
       title:'أعضاء العائلة', new:'عضو جديد',
@@ -451,7 +451,7 @@ const translations = {
 
     donations: {
       title:'Donations Registry', new:'New Donation',
-      donor:'Donor', show_in:'Show In',
+      donor:'Donor', show_in:'Show In', classification:'Classification',
       no_data:'No donations found',
       info:'Donations appear in the directed fund statement as zero — they do not affect balances',
     },
@@ -1023,7 +1023,7 @@ window.applyLang = function() {
     'food-pay-body':   [t('payments.payment_no'), t('common.date'), t('payments.beneficiary'), t('common.amount'), t('payments.method'), t('common.notes'), t('common.actions')],
     'diwan-rec-body':  [t('receipts.receipt_no'), t('common.date'), t('receipts.payer'), t('common.amount'), t('common.currency'), t('payments.method'), t('common.notes'), t('common.actions')],
     'diwan-pay-body':  [t('payments.payment_no'), t('common.date'), t('payments.beneficiary'), t('common.amount'), t('payments.expense_type'), t('payments.method'), t('common.notes'), t('common.actions')],
-    'don-body':        [t('receipts.receipt_no'), t('common.date'), t('donations.donor'), t('common.amount'), t('common.currency'), t('donations.show_in'), t('common.notes'), t('common.actions')],
+    'don-body':        [t('receipts.receipt_no'), t('common.date'), t('donations.donor'), t('common.amount'), t('common.currency'), t('donations.classification'), t('common.notes'), t('common.actions')],
     'members-body':    ['#', t('common.name'), t('common.phone'), t('members.food_balance'), t('common.status'), t('common.actions')],
   };
   Object.entries(thMap).forEach(([bodyId, headers]) => {

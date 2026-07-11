@@ -238,6 +238,18 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return false;}
   if(!reason||!String(reason).trim()){toast('سبب إعادة التصنيف إلزامي','err');return false;}
   if(!newClass||!newClass.movement_type){toast('تصنيف جديد غير صالح','err');return false;}
+  /* P2-D — validate against the ratified model: movement_type must be a MODEL2
+     event; a cash donation may only target an approved destination; non-cash
+     events must NOT carry a cash destination. The system never guesses. */
+  const M2=window.MODEL2;
+  if(M2){
+    const ev=M2.EVENTS[newClass.movement_type];
+    if(!ev){toast('نوع الحركة ليس من أحداث النموذج المعتمد','err');return false;}
+    if(newClass.movement_type==='donation_cash'&&!M2.DONATION_DESTINATIONS.includes(newClass.destination_treasury)){
+      toast('وجهة التبرع النقدي يجب أن تكون إحدى الخزائن الثلاث','err');return false;}
+    if(ev.cash===false&&newClass.destination_treasury){
+      toast('حدث غير نقدي لا يحمل وجهة خزينة','err');return false;}
+  }
   const table=kind==='payment'?'payments':'receipts';
   const{data:row,error:rErr}=await SB.from(table).select('*').eq('id',voucherId).single();
   if(rErr||!row){toast('السند غير موجود','err');return false;}
