@@ -397,6 +397,8 @@ const D={
         /* P2-D — the authoritative classification (owner-approved layer). */
         const en=window.LANG==='en';
         const dl={food:en?'Food':'الغداء',diwan:en?'Diwan':'الديوان',historical_deficit:en?'Hist. Deficit':'العجز التاريخي'};
+        if(r.movement_type==='historical_debt_collection')
+          return `<span class="badge wr">${en?'Debt Collection':'تحصيل ذمة تاريخية'} ← ${dl.historical_deficit}</span>`;
         if(r.movement_type==='donation_cash')
           return `<span class="badge ${r.destination_treasury==='food'?'food':r.destination_treasury==='diwan'?'diwan':'wr'}">${en?'Cash':'نقدي'} ← ${dl[r.destination_treasury]||'—'}</span>`;
         if(r.movement_type==='donation_inkind')
