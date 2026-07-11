@@ -7,8 +7,10 @@
    these definitions happens in P2-B; data migration happens in P2-C; system-wide
    wiring in P2-D. Removing this file (and its <script> tag) fully reverts P2-A.
 
-   Naming note: values are stable machine keys; Arabic/English labels are for
-   later UI use and carry no behavior. Nothing here is authoritative yet. ────── */
+   Naming note: the KEYS of TREASURIES / REGISTERS / EVENTS / CLASSIFICATION are
+   the stable machine identifiers. `contains`, `note`, and *_ar/*_en labels are
+   human-readable DOCUMENTATION only (they are NOT EVENTS keys and must not be
+   used for event→treasury mapping). Nothing here is authoritative yet. ──────── */
 (function(){
   'use strict';
 
@@ -57,14 +59,19 @@
   const EVENTS = {
     subscription_payment:        {key:'subscription_payment',        label_ar:'دفعة اشتراك',            treasury:'food',               cash:true},
     historical_debt_collection:  {key:'historical_debt_collection',  label_ar:'تحصيل ذمة تاريخية',       treasury:'historical_deficit', cash:true},
-    /* NOT an operational expense — documents settlement/delivery to beneficiaries. */
-    historical_deficit_settlement:{key:'historical_deficit_settlement',label_ar:'تسوية عجز تاريخي',      treasury:'historical_deficit', cash:true, decreases_deficit:true, operational_expense:false},
+    /* NOT an operational expense — documents settlement/delivery to beneficiaries.
+       Cash OUT of the deficit treasury (pays historical creditors); decreases the
+       remaining deficit. `outflow:true` per the EVENTS cash-direction convention. */
+    historical_deficit_settlement:{key:'historical_deficit_settlement',label_ar:'تسوية عجز تاريخي',      treasury:'historical_deficit', cash:true, outflow:true, decreases_deficit:true, operational_expense:false},
     donation_cash:               {key:'donation_cash',               label_ar:'تبرع نقدي',              treasury:'ADMIN_SELECTED',     cash:true, register:'cash_donation'},
     donation_inkind:             {key:'donation_inkind',             label_ar:'تبرع عيني/خدمي',         treasury:null,                 cash:false, register:'inkind'},
     food_expense:                {key:'food_expense',                label_ar:'مصروف غداء',             treasury:'food',               cash:true, outflow:true},
     diwan_expense:               {key:'diwan_expense',               label_ar:'مصروف ديوان',            treasury:'diwan',              cash:true, outflow:true},
-    overflow_transfer:           {key:'overflow_transfer',           label_ar:'تحويل فائض العجز للغداء', treasury:'food',               cash:true, automatic:true, source_treasury:'historical_deficit'},
-    refund:                      {key:'refund',                      label_ar:'استرداد',               treasury:'ADMIN_SELECTED',     cash:true, outflow:true},
+    overflow_transfer:           {key:'overflow_transfer',           label_ar:'تحويل فائض العجز للغداء', treasury:'food',               cash:true, automatic:true, source_treasury:'historical_deficit', trigger:'remaining_deficit<=0'},
+    /* Refund reverses the ORIGINAL receipt; its treasury is derived from the linked
+       origin (FEM-01 E-14), never freely chosen — the admin cannot refund from a
+       treasury the money never entered. */
+    refund:                      {key:'refund',                      label_ar:'استرداد',               treasury:'FROM_LINKED_ORIGIN', cash:true, outflow:true, reverses:'linked_receipt'},
     reclassification:            {key:'reclassification',            label_ar:'إعادة تصنيف',            treasury:null,                 cash:false, corrects_classification_only:true}
   };
 
@@ -94,7 +101,9 @@
     note:'لا يُخفى شيء في الإيصال'
   };
 
-  window.MODEL2 = Object.freeze({
+  /* Deep-freeze so nested definitions (e.g. treasury.contains) are immutable too. */
+  const deepFreeze=o=>{ if(o&&typeof o==='object'&&!Object.isFrozen(o)){ Object.freeze(o); Object.keys(o).forEach(k=>deepFreeze(o[k])); } return o; };
+  window.MODEL2 = deepFreeze({
     version:2, status:'DEFINED_INERT_P2A',
     TREASURIES, REGISTERS, EVENTS, CLASSIFICATION,
     ALLOCATION_ORDER, DONATION_DESTINATIONS, RECEIPT_TRANSPARENCY
