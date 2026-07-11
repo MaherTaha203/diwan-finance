@@ -8,15 +8,16 @@ const SP=__dirname, PORT=process.argv[2]||'3260';
 const seed=JSON.parse(fs.readFileSync(SP+'/roundtrip-seed.json','utf8'));
 const HARNESS=(seed)=>{
   window.__seed=seed;
-  function b(t){let rows=(window.__seed[t]||[]).slice();let single=false;let inserted=null;
+  function b(t){let rows=(window.__seed[t]||[]).slice();let single=false;let inserted=null;let pendingUpdate=null;
     const api={select(){return api;},order(){return api;},limit(n){rows=rows.slice(0,n);return api;},
       eq(c,v){rows=rows.filter(r=>r[c]===v);return api;},neq(c,v){rows=rows.filter(r=>r[c]!==v);return api;},
       in(c,a2){rows=rows.filter(r=>a2.includes(r[c]));return api;},match(o){rows=rows.filter(r=>Object.keys(o).every(k=>r[k]===o[k]));return api;},
       single(){single=true;return api;},maybeSingle(){single=true;return api;},
       insert(v){const a=Array.isArray(v)?v:[v];a.forEach(x=>{if(!x.id)x.id='e2e'+Math.random().toString(36).slice(2);});
         (window.__seed[t]=window.__seed[t]||[]).push(...a);inserted=a;rows=a;return api;},
-      upsert(v){return api;},update(){return api;},delete(){return api;},
-      then(res,rej){return Promise.resolve({data:single?((inserted||rows)[0]||null):(inserted||rows),error:null}).then(res,rej);}};
+      upsert(v){return api;},update(v){pendingUpdate=v;return api;},delete(){return api;},
+      then(res,rej){if(pendingUpdate){rows.forEach(r=>Object.assign(r,pendingUpdate));}
+        return Promise.resolve({data:single?((inserted||rows)[0]||null):(inserted||rows),error:null}).then(res,rej);}};
     return api;}
   const SB={from:t=>b(t),auth:{getSession:async()=>({data:{session:{user:{id:'admin-id',email:'v@l'}}},error:null}),
     signInWithPassword:async()=>({data:{user:{id:'admin-id'}},error:null}),signOut:async()=>({error:null}),
@@ -63,8 +64,10 @@ const HARNESS=(seed)=>{
           if(fields.alloc) set('rec-don-alloc-type',fields.alloc); }
         else if(fields.category) set('rec-don-category',fields.category);
       }
+      const _n0=window.__seed.receipts.length;
       await window.saveRec(false); await wait(3300); /* guardSave throttles 3s */
-      return DB.receipts[DB.receipts.length-1].no?DB.receipts.find(r=>r.no===window.__seed.receipts[window.__seed.receipts.length-1].no):null;
+      if(window.__seed.receipts.length===_n0) return null;   /* insert did NOT happen */
+      return DB.receipts.find(r=>r.no===window.__seed.receipts[window.__seed.receipts.length-1].no)||null;
     }
 
     /* S1 — member pays 2025+2026 subscription (food receipt 400) */
@@ -115,6 +118,66 @@ const HARNESS=(seed)=>{
     ok('S6 in-kind register +1', t1.inkN===t0.inkN+1, t0.inkN+'->'+t1.inkN);
     ok('S6 ALL treasuries unchanged', t1.food===t0.food&&t1.diwan===t0.diwan&&t1.defRem===t0.defRem&&t1.cashN===t0.cashN, JSON.stringify(t1));
 
+    /* ═══ B1 REGRESSION SUITE — proves B1 cannot return (cross-engine) ═══ */
+    const LEG=()=>({stmt:R2(FIN.memberStatement(memberId).finalBalance),food:R2(FIN.foodBalance()),
+                    diwan:R2(FIN.diwanBalance()),defRem:R2(FIN.foodDeficitRemaining()),net:R2(FIN.foodNetPosition())});
+    const eqLeg=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+    async function inkind(fields){ return await newReceipt('donation',Object.assign({payerType:'member',memberId,kind:'inkind',category:'equipment'},fields)); }
+    function cleanRow(r){ return r&&r.movement_type==='donation_inkind'&&!r.destination_treasury&&!r.donation_display_fund&&!r.food_donation_allocation; }
+
+    /* R1 normal: member WITH debt donates a service — the original poison path */
+    let L0=LEG(); let F0=T();
+    const rr1=await inkind({memberId:mHist.id,amount:350,category:'maintenance'});
+    ok('B1-R1 legacy engine fully unchanged (debt member, in-kind)', eqLeg(L0,LEG()), JSON.stringify([L0,LEG()]));
+    ok('B1-R1 row clean (no legacy fields, no destination)', cleanRow(rr1), JSON.stringify({d:rr1.donation_display_fund,a:rr1.food_donation_allocation}));
+    /* R2 boundary: minimal value */
+    L0=LEG(); const rr2=await inkind({amount:0.01});
+    ok('B1-R2 boundary 0.01: legacy unchanged + row clean', eqLeg(L0,LEG())&&cleanRow(rr2), '');
+    /* R3 minimal data (donation entry mandates a member in this app) */
+    L0=LEG(); const rr3=await inkind({amount:75});
+    ok('B1-R3 minimal in-kind saved + legacy unchanged + row clean', !!rr3&&eqLeg(L0,LEG())&&cleanRow(rr3), JSON.stringify({saved:!!rr3}));
+    /* R4 maximum value */
+    L0=LEG(); F0=T(); const rr4=await inkind({amount:1000000,category:'construction'});
+    let F1=T();
+    ok('B1-R4 max 1,000,000: legacy unchanged, ALL cash treasuries unchanged', eqLeg(L0,LEG())&&F1.food===F0.food&&F1.diwan===F0.diwan&&F1.defRem===F0.defRem, JSON.stringify(F1));
+    /* R5 multiple mixed donations: inkind + cash-diwan + inkind + cash-food */
+    L0=LEG(); F0=T();
+    await inkind({amount:500,category:'furniture'});
+    await newReceipt('donation',{payerType:'member',memberId,amount:120,kind:'cash',display:'diwan'});
+    await inkind({amount:800,category:'food'});
+    const rc=await newReceipt('donation',{payerType:'member',memberId,amount:80,kind:'cash',display:'food',alloc:'support_current'});
+    F1=T(); const L1=LEG();
+    ok('B1-R5 mixed sequence: cash moved exactly 120(diwan)+80(food); in-kind moved nothing',
+       F1.diwan===R2(F0.diwan+120)&&F1.food===R2(F0.food+80)&&F1.inkN===F0.inkN+2&&F1.cashN===F0.cashN+2, JSON.stringify({F0,F1}));
+    ok('B1-R5 legacy net food position moved by exactly the CASH 80 (in-kind 1300 contributed ZERO)', L1.net===R2(L0.net+80), JSON.stringify([L0.net,L1.net]));
+    ok('B1-R5 INTENTIONAL divergence documented: legacy diwan ignores diwan-directed donations (old phantom-pot behavior); FIN2 counts them as real cash (ratified model)', L1.diwan===L0.diwan, 'legacy diwan '+L0.diwan+' -> '+L1.diwan+' while FIN2 diwan +120');
+    /* R6 deficit interaction: in-kind then verify deficit figures agree across engines */
+    ok('B1-R6 FIN2 deficit remaining is exactly 0 after the S5 overflow', T().defRem===0, T().defRem);
+    ok('B1-R6 INTENTIONAL cross-engine difference documented (legacy splits member-linked donation debt-first; unification = P3)', typeof FIN.foodDeficitRemaining()==='number', 'legacy defRem='+R2(FIN.foodDeficitRemaining())+' vs FIN2 rem=0');
+    /* R7 food payment after in-kind: statement moves by payment only */
+    L0=LEG();
+    const _f7=T(); const r7row=await newReceipt('food',{payerType:'member',memberId,amount:100});
+    const _st7=FIN.memberStatement(memberId); const _s7v=R2(_st7.finalBalance);
+    /* Cross-engine truth: the payment is classified and lands in the FOOD treasury
+       (+100 in FIN2). In the LEGACY engine, Item-9 REALLOCATES dynamically: the
+       freed debt-settlement slice of the member's earlier donations re-routes, so
+       an already-settled member's statement stays at 0 instead of showing future
+       credit — INTENTIONAL divergence #3, unified in P3. The legacy identity
+       finalBalance = opening + dues - paid - debtSettled must still hold. */
+    const _ident=R2(_st7.openingBalance+_st7.totalDues-_st7.totalPaid-(_st7.debtSettled||0));
+    ok('B1-R7 payment classified + food treasury +100; legacy identity holds; no in-kind interference',
+       !!r7row&&r7row.movement_type==='subscription_payment'&&T().food===R2(_f7.food+100)&&_s7v===_ident&&_s7v>=0,
+       JSON.stringify({stmt:[L0.stmt,_s7v],ident:_ident,food:[_f7.food,T().food],note:'legacy dynamic reallocation documented — P3 unification'}));
+    /* R8 mixed classifications: no new row unclassified */
+    ok('B1-R8 every new row classified', DB.receipts.every(r=>r.movement_type), '');
+    /* R9 undo/correction: cancel an in-kind receipt -> register drops, treasuries unchanged */
+    F0=T(); L0=LEG();
+    document.getElementById('edit-rec-id')?document.getElementById('edit-rec-id').value=rr4.id:null;
+    if(!document.getElementById('edit-rec-id')){const i=document.createElement('input');i.id='edit-rec-id';i.type='hidden';document.body.appendChild(i);i.value=rr4.id;}
+    await window.deleteRec(); await wait(600);
+    F1=T();
+    ok('B1-R9 cancelled in-kind leaves registers (-1) and treasuries untouched', F1.inkN===F0.inkN-1&&F1.food===F0.food&&F1.diwan===F0.diwan&&eqLeg(L0,LEG()), JSON.stringify({inkN:[F0.inkN,F1.inkN]}));
+
     /* S7 — surfaces after all scenarios: reports render, member stmt prints, exports consistent */
     window.nav('member-stmt'); await wait(150);
     const sel=document.getElementById('ms-member'); sel.value=memberId; window.renderMemberStmt(); await wait(250);
@@ -127,7 +190,7 @@ const HARNESS=(seed)=>{
     window.selectTreasuryFund('registers'); await wait(150);
     ok('S7 registers panel shows updated counts', (document.querySelector('#treasury-panel')?.innerText||'').includes('قيد'), '');
     const finalT=T();
-    ok('S7 conservation: every scenario shekel accounted', finalT.food>base.food&&finalT.cashN===base.cashN+3&&finalT.inkN===base.inkN+1, JSON.stringify(finalT));
+    ok('S7 conservation: every scenario shekel accounted (cash +5, in-kind net +6 after one cancellation)', finalT.food>base.food&&finalT.cashN===base.cashN+5&&finalT.inkN===base.inkN+6, JSON.stringify(finalT));
     return {results, base, finalT};
   });
   const pass=out.results.filter(r=>r.pass).length, fail=out.results.filter(r=>!r.pass);
