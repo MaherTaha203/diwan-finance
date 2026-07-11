@@ -592,7 +592,9 @@ function renderDash(){
     <span class="stale mono">${_isEn?'as of':'محدّث حتى'} ${_asOf}</span>
     ${_heroActs}`;
   /* ── KPI ribbon — four twins (same figures the old summary showed: fb/rd/np/db) ── */
-  const _tot=Math.abs(fb)+Math.abs(rd)+Math.abs(np)+Math.abs(db)||1;
+  /* Correction — the bar-width base excludes np: net position ≡ fb + rd, so
+     including it double-counted fb and rd. Base = the independent figures only. */
+  const _tot=Math.abs(fb)+Math.abs(rd)+Math.abs(db)||1;
   const _pct=v=>Math.round(Math.abs(v)/_tot*100);
   const _kpis=document.getElementById('dash-kpis');
   if(_kpis)_kpis.innerHTML=[
@@ -665,8 +667,10 @@ function renderDash(){
     if(_rg){
       const yrs=(typeof FIN.subscriptionYears==='function')?FIN.subscriptionYears():[];
       const cy=yrs.length?Math.max(...yrs.map(Number)):new Date().getFullYear();
+      /* Correction — settled status comes from FIN.memberDelinquency (due vs paid),
+         the single source of truth, NOT the stored balance_ils column. */
       const subs=(DB.subscriptions||[]).filter(x=>Number(x.year)===cy);
-      const paid=subs.filter(x=>Number(x.balance_ils||0)<=0).length, tot=subs.length||1;
+      const paid=subs.filter(x=>{const d=FIN.memberDelinquency(x.member_id).byYear[cy];return d?d.settled:(Number(x.due_amount_ils||0)<=0);}).length, tot=subs.length||1;
       const pct=Math.round(paid/tot*100), C=2*Math.PI*26;
       _rg.innerHTML=`<div class="ringS"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--soft)" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pct/100)).toFixed(1)}"/></svg><div class="c mono">${pct}%</div></div>
         <div style="font-size:10.5px;color:var(--mut);line-height:1.9"><b class="mono" style="color:var(--ink)">${paid}</b> دفعوا · <b class="mono" style="color:var(--ink)">${tot-paid}</b> متبقّي (اشتراك ${cy})${_late3>0?`<br><span class="badge wr mono">${_late3} متأخرون +3س</span>`:''}</div>`;
