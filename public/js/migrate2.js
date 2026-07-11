@@ -29,7 +29,8 @@
            | 'cash' (money physically entered a treasury).
      Non-cash entries have ZERO treasury effect: they become donation_inkind
      records whose value is documentation only (In-Kind & Services Register).
-     PENDING OWNER APPROVAL of Appendix A before any actual write. */
+     OWNER-APPROVED 2026-07-11 — permanent audit record:
+     docs/evidence/APPENDIX_A_RECLASSIFICATION_LEDGER.md */
   const DONATION_LEDGER = {
     /* live rows — the former +1,863.72 (evidence: notes say «مقابل أعمال/فاتورة/شراء») */
     'REC-00026': {kind:'service', category:'maintenance',            evidence:'مقابل أعمال شبك ماتور كهرباء'},
