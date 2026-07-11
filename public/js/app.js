@@ -256,6 +256,7 @@ function renderAll(){
   try{ localStorage.setItem('diwan_member_count', String(DB.members.filter(m=>m.is_active).length)); }catch(e){}
   const active=document.querySelector('.pg.on')?.id?.replace('pg-','');
   if(active&&D[active]) D[active].render();
+  if(active==='bk') renderSysInfo();   /* P0 — the backup panel isn't in D{}; refresh it after every load so it never stays on stale/pre-load zeros */
   if(active==='settings'){loadSettings().then(renderSettingsSummary);}
   fillMemberSelect();fillMemberDropdowns();fillContactDropdown();
   /* Re-sweep after every render so dynamically injected buttons are hidden for viewers */
@@ -1329,6 +1330,15 @@ function renderAuditGrid(){
 }
 function renderSysInfo(){
   const el=document.getElementById('sys-info');if(!el)return;
+  /* P0 — never render an unloaded database as real zeros. Before the first
+     successful loadAll, DB is empty while opening balances may already be set,
+     which printed "0 members / 0 receipts" next to a live treasury figure.
+     Show a neutral loading state instead; renderAll re-invokes this once data
+     arrives. A genuinely empty (but loaded) database still shows real zeros. */
+  if(!DB._loaded){
+    el.innerHTML='<div class="sr"><span class="sr-l">جارٍ تحميل بيانات النظام…</span><span class="sr-v">—</span></div>';
+    return;
+  }
   const totRec=DB.receipts.filter(r=>!r.is_deleted).length;
   const totPay=DB.payments.filter(p=>!p.is_deleted).length;
   el.innerHTML=`
