@@ -46,4 +46,21 @@ eq(FIN2.overflowDue(0,100),100,'overflow rem 0 -> 100');
 eq(FIN2.overflowDue(500,300),0,'overflow 300 < rem 500 -> 0');
 eq(FIN2.allocationOrder(),['subscription_2025','subscription_2026','historical_debt','future_credit'],'allocation order');
 
+/* 5) edge cases (added per Fable 5 P2-B review) */
+// (a) a soft-deleted CLASSIFIED row must be excluded from treasuries
+global.DB.receipts=[{id:'d1',amount_ils:999,is_deleted:true,movement_type:'historical_debt_collection',destination_treasury:'historical_deficit'}];
+global.DB.payments=[];
+eq(FIN2.historicalDeficitTreasury(),0,'soft-deleted classified row excluded from treasury');
+eq(FIN2.isClassified(),false,'soft-deleted only -> no live classified rows');
+// (b) donation_cash directed to historical_deficit (ratified directed-deficit donation)
+global.DB.receipts=[{id:'dd1',no:'DD',amount_ils:250,is_deleted:false,movement_type:'donation_cash',destination_treasury:'historical_deficit',payer_name:'x'}];
+eq(FIN2.historicalDeficitTreasury(),250,'donation_cash -> historical_deficit increases the deficit pot');
+eq(FIN2.cashDonationRegister().length,1,'directed-deficit cash donation still recorded in the register');
+// (c) refund is a cash OUTflow from its (resolved) origin treasury
+global.DB.receipts=[]; global.DB.payments=[{id:'rf1',amount_ils:60,is_deleted:false,movement_type:'refund',destination_treasury:'food'}];
+eq(FIN2.foodTreasury(),-60,'refund -> cash OUT of origin treasury (food -60)');
+// (d) reclassification is non-cash: no treasury effect even with a destination present
+global.DB.receipts=[{id:'rc1',amount_ils:500,is_deleted:false,movement_type:'reclassification',destination_treasury:'food'}]; global.DB.payments=[];
+eq(FIN2.foodTreasury(),0,'reclassification is non-cash -> no treasury effect');
+
 console.log(ok?'\nALL PASS':'\nFAILURES'); process.exit(ok?0:1);

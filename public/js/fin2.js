@@ -62,7 +62,10 @@
     diwanTreasury(){         return FIN2.treasuryBalance('diwan'); },
     historicalDeficitTreasury(){ return FIN2.treasuryBalance('historical_deficit'); },
 
-    /* ---- registers: references only, NEVER a cash balance ---- */
+    /* ---- registers: references only, NEVER a cash balance ----
+       Lists LIVE cash-donation references. Whether a voided donation should remain
+       visible as status:'void' (FAS-01 م.7 — records are permanent) is a display
+       decision deferred to P2-D; today the register is empty on production data. */
     cashDonationRegister(){
       return classifiedRows()
         .filter(r=>{ const ev=eventDef(r.movement_type); return ev&&ev.register==='cash_donation'; })
