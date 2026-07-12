@@ -66,6 +66,12 @@ const FIN={
       .filter(r => !r.is_deleted && r.fund_type==='food' && r.member_id===memberId && inRange(r.receipt_date))
       .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:r.notes||'مساهمة', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'paid'}));
 
+    /* ق4 — member-linked deficit collections reduce the member's OWN historical
+       debt: a paid (credit) row in his statement for the full amount. */
+    DB.receipts
+      .filter(r => !r.is_deleted && r.movement_type==='historical_debt_collection' && r.member_id===memberId && inRange(r.receipt_date))
+      .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:'تحصيل ذمة تاريخية · Historical Debt Collection', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'paid'}));
+
     /* ITEM 9 — Debt Settlement from the member's food donations (debt-priority). */
     const debtSettled = Number(FIN.allocateFoodDonations().perMember[memberId] || 0);
     if(debtSettled > 0){
@@ -139,7 +145,10 @@ const FIN={
        subset only. Manual-allocated vouchers are carved out; their stored split
        (debt/historical/current) is the accounting source for those vouchers. When no
        manual vouchers exist the result is value-identical to the previous behaviour. */
-    const foodDon=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food')
+    /* ق4 (2026-07-11) — member-linked deficit COLLECTIONS are not donations for the
+       Item-9 allocator: they settle the member's own historical debt in his
+       statement instead (no double-count through debt-priority here). */
+    const foodDon=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.movement_type!=='historical_debt_collection')
       .slice().sort((a,b)=>(new Date(a.receipt_date)-new Date(b.receipt_date))||String(a.id).localeCompare(String(b.id)));
     const autoRows=foodDon.filter(r=>r.manual_allocation!==true);
     const manualRows=foodDon.filter(r=>r.manual_allocation===true);
@@ -164,7 +173,10 @@ const FIN={
   foodDebtSettlementTotal(){ return FIN._r2(FIN.allocateFoodDonations().debtSettlementTotal); },
   foodCurrentSupportTotal(){ return FIN._r2(FIN.allocateFoodDonations().currentSupportTotal); },
   foodSettlementReserve(){ return FIN._r2(FIN.allocateFoodDonations().reserveTotal); },
-  foodDeficitRemaining(){ return FIN._r2(Number(window.FOOD_OPENING||0)+FIN.allocateFoodDonations().reserveTotal); },
+  /* ق4 — historical debt collections feed the deficit alongside directed donations,
+     keeping this legacy figure unified with the new deficit-treasury tab. */
+  _histCollections(){ return FIN._r2(DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0)); },
+  foodDeficitRemaining(){ return FIN._r2(Number(window.FOOD_OPENING||0)+FIN.allocateFoodDonations().reserveTotal+FIN._histCollections()); },
   foodNetPosition(){ return FIN._r2(FIN.foodBalance()+FIN.foodDeficitRemaining()); },
   foodHistorical(){ return Number(window.FOOD_OPENING||0); },  /* original deficit constant (reference) */
   diwanBalance(){

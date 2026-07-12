@@ -328,7 +328,7 @@ window.prtMemberStmt=function(mode){
     }
     return _en?'Diwan Donation':'تبرع ديوان';
   };
-  const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&inRange(r.receipt_date));
+  const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&r.movement_type!=='historical_debt_collection'&&inRange(r.receipt_date)); /* ق4 */
   const _alloc=FIN.allocateFoodDonations();
   const donSplit=d=>{
     const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};

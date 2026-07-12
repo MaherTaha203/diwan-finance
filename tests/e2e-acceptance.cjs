@@ -70,6 +70,15 @@ const HARNESS=(seed)=>{
       return DB.receipts.find(r=>r.no===window.__seed.receipts[window.__seed.receipts.length-1].no)||null;
     }
 
+    /* ق4 ACCEPTANCE — REC-00058 (member-linked deficit cash = historical debt collection) */
+    const q4r=DB.receipts.find(r=>r.no==='REC-00058');
+    const q4stmt=R2(FIN.memberStatement(q4r.member_id).finalBalance);
+    ok('Q4 member statement = 250 (was 750): collection reduced his historical debt', q4stmt===250, q4stmt);
+    ok('Q4 deficit remaining unchanged at -8139 (collection already counted)', base.defRem===-8139, base.defRem);
+    ok('Q4 collection NOT in the cash-donation register (it is not a donation)', !FIN2.cashDonationRegister().some(x=>x.reference_no==='REC-00058'), 'cashN='+base.cashN);
+    ok('Q4 voucher still visible in donations section data', DB.receipts.some(r=>r.no==='REC-00058'&&!r.is_deleted&&r.fund_type==='donation'), '');
+    ok('Q4 legacy rd == FIN2 remaining (engines unified on the deficit figure)', R2(FIN.foodDeficitRemaining())===base.defRem, R2(FIN.foodDeficitRemaining())+' vs '+base.defRem);
+
     /* S1 — member pays 2025+2026 subscription (food receipt 400) */
     let t0=T(); const r1=await newReceipt('food',{payerType:'member',memberId,amount:400});
     let t1=T(); const stmt1=R2(FIN.memberStatement(memberId).finalBalance);
@@ -166,7 +175,7 @@ const HARNESS=(seed)=>{
        finalBalance = opening + dues - paid - debtSettled must still hold. */
     const _ident=R2(_st7.openingBalance+_st7.totalDues-_st7.totalPaid-(_st7.debtSettled||0));
     ok('B1-R7 payment classified + food treasury +100; legacy identity holds; no in-kind interference',
-       !!r7row&&r7row.movement_type==='subscription_payment'&&T().food===R2(_f7.food+100)&&_s7v===_ident&&_s7v>=0,
+       !!r7row&&r7row.movement_type==='subscription_payment'&&T().food===R2(_f7.food+100)&&_s7v===_ident /* negative = future credit, legitimate */,
        JSON.stringify({stmt:[L0.stmt,_s7v],ident:_ident,food:[_f7.food,T().food],note:'legacy dynamic reallocation documented — P3 unification'}));
     /* R8 mixed classifications: no new row unclassified */
     ok('B1-R8 every new row classified', DB.receipts.every(r=>r.movement_type), '');
@@ -190,7 +199,7 @@ const HARNESS=(seed)=>{
     window.selectTreasuryFund('registers'); await wait(150);
     ok('S7 registers panel shows updated counts', (document.querySelector('#treasury-panel')?.innerText||'').includes('قيد'), '');
     const finalT=T();
-    ok('S7 conservation: every scenario shekel accounted (cash +5, in-kind net +6 after one cancellation)', finalT.food>base.food&&finalT.cashN===base.cashN+5&&finalT.inkN===base.inkN+6, JSON.stringify(finalT));
+    ok('S7 conservation: every scenario shekel accounted (cash +5, in-kind net +6 after one cancellation)', finalT.food>base.food&&finalT.cashN===base.cashN+4 /* S5 is a ق4 collection now, not a register entry */&&finalT.inkN===base.inkN+6, JSON.stringify(finalT));
     return {results, base, finalT};
   });
   const pass=out.results.filter(r=>r.pass).length, fail=out.results.filter(r=>!r.pass);
