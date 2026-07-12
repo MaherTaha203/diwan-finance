@@ -38,8 +38,10 @@
      this unifies former engine divergence #2 by owner ruling. Without FIN
      (node unit tests) the behaviour stays neutral, exactly as before. */
   function q5Settled(r){
-    if(!(r&&r.movement_type==='donation_cash'&&r.fund_type==='donation'
-         &&r.donation_display_fund==='food'&&r.member_id)) return 0;
+    /* destination must be food: a reclassified dest=historical_deficit row must
+       never debit food for cash that never entered it (Fable 5 note B-1). */
+    if(!(r&&r.movement_type==='donation_cash'&&r.destination_treasury==='food'
+         &&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.member_id)) return 0;
     /* FIN is a top-level `const` (global lexical binding, NOT window.FIN) */
     const F=(typeof FIN!=='undefined'&&FIN&&FIN.allocateFoodDonations)?FIN:null;
     if(!F) return 0;
