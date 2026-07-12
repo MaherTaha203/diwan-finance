@@ -42,7 +42,10 @@ const HARNESS=(seed)=>{
   await p.goto('http://localhost:'+PORT+'/index.html',{waitUntil:'load',timeout:25000}).catch(()=>{});
   await p.waitForFunction(()=>{const a=document.getElementById('app');return a&&getComputedStyle(a).display!=='none';},{timeout:15000}).catch(()=>{});
   await p.waitForTimeout(1200);
-  const shot=async n=>{await p.waitForTimeout(350);await p.screenshot({path:OUT+'/'+n+'.png'});console.log('shot',n);};
+  const shot=async(n,full)=>{await p.waitForTimeout(350);
+    if(full){await p.locator('#food-stmt-out .acct-stmt').screenshot({path:OUT+'/'+n+'.png'});}
+    else{await p.screenshot({path:OUT+'/'+n+'.png'});}
+    console.log('shot',n);};
 
   const S={}; const num=async fn=>await p.evaluate(fn);
   const T=()=>({food:FIN2.composed().food,defRem:FIN2.composed().historical_deficit_remaining,
@@ -99,7 +102,7 @@ const HARNESS=(seed)=>{
   S.afterA=await num(T);
   S.afterA_member=await p.evaluate(id=>Math.round(FIN.memberStatement(id).finalBalance*100)/100,A.id);
   await gotoMember(A.id);          await shot('05-A-after-member-stmt');
-  await gotoFoodStmt();            await shot('06-A-after-food-stmt');
+  await gotoFoodStmt();            await shot('06-A-after-food-stmt',true);
   await gotoTreasury('deficit');   await shot('07-A-after-deficit-tab');
   await gotoTreasury('registers'); await shot('08-A-after-registers-tab');
   await gotoDon();                 await shot('09-A-after-donations-badge');
@@ -112,12 +115,13 @@ const HARNESS=(seed)=>{
   await gotoTreasury('deficit');   await shot('11-B-after-deficit-unchanged');
   await gotoTreasury('food');      await shot('12-B-after-food-tab');
   await gotoMember('q5-m-nodebt'); await shot('13-B-member-stmt-zero');
+  await gotoFoodStmt();            await shot('16-B-after-food-stmt',true);
 
   /* ── SCENARIO C — donor from OUTSIDE the family gives 500 for food ── */
   await newReceipt('food',{payerType:'manual',payerName:'متبرع خارجي — ق5 (تجريبي)',amount:500});
   S.afterC=await num(T);
   await gotoTreasury('registers'); await shot('14-C-after-registers-tab');
-  await gotoFoodStmt();            await shot('15-C-after-food-stmt');
+  await gotoFoodStmt();            await shot('15-C-after-food-stmt',true);
 
   /* ── functional assertions (the numbers behind the pictures) ── */
   const R=[]; const ok=(n,c,d)=>R.push({n,pass:!!c,d:String(d??'')});
