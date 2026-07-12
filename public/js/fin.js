@@ -103,13 +103,18 @@ const FIN={
 
   foodBalance(){
     /* ITEM 9 — Current Food Fund Balance = operational food receipts
-       + Debt Settlement movements + Current Support donations − operational expenses.
+       + Current Support donations − operational expenses.
        reduce_deficit donations feed the Settlement Reserve (not the current balance);
-       only the post-debt over-settlement overflow becomes Current Support. */
+       only the post-debt over-settlement overflow becomes Current Support.
+       ق5 (2026-07-12) — the debt-settled slice of a member's food donation is
+       deficit money (custody in the food box, accounted to the deficit treasury),
+       so it no longer enters the current balance; it reduces the deficit instead.
+       Conservation: foodNetPosition is value-identical (the slice moved between
+       its two terms). */
     const a=FIN.allocateFoodDonations();
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount||0),0);
-    return FIN._r2(income+a.debtSettlementTotal+a.currentSupportTotal-expense);
+    return FIN._r2(income+a.currentSupportTotal-expense);
   },
   _r2(n){ return Math.round((Number(n||0)+Number.EPSILON)*100)/100; },
   /* A3 — read-only subscription projections (no accounting; same source as memberStatement). */
@@ -174,9 +179,11 @@ const FIN={
   foodCurrentSupportTotal(){ return FIN._r2(FIN.allocateFoodDonations().currentSupportTotal); },
   foodSettlementReserve(){ return FIN._r2(FIN.allocateFoodDonations().reserveTotal); },
   /* ق4 — historical debt collections feed the deficit alongside directed donations,
-     keeping this legacy figure unified with the new deficit-treasury tab. */
+     keeping this legacy figure unified with the new deficit-treasury tab.
+     ق5 — the debt-settled slice of member food donations also feeds the deficit
+     (it left foodBalance; see foodBalance note — net position unchanged). */
   _histCollections(){ return FIN._r2(DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0)); },
-  foodDeficitRemaining(){ return FIN._r2(Number(window.FOOD_OPENING||0)+FIN.allocateFoodDonations().reserveTotal+FIN._histCollections()); },
+  foodDeficitRemaining(){ const a=FIN.allocateFoodDonations(); return FIN._r2(Number(window.FOOD_OPENING||0)+a.reserveTotal+a.debtSettlementTotal+FIN._histCollections()); },
   foodNetPosition(){ return FIN._r2(FIN.foodBalance()+FIN.foodDeficitRemaining()); },
   foodHistorical(){ return Number(window.FOOD_OPENING||0); },  /* original deficit constant (reference) */
   diwanBalance(){
@@ -207,8 +214,14 @@ const FIN={
         .forEach(p=>rows.push({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),desc:L.expense(p.expense_type),cr:0,dr:Number(p.amount_ils||p.amount),type:'dr',id:p.id,no:p.no}));
     }
     if(!typeFilter||typeFilter==='don'){
+      /* ق5 — a member donation that settles his debt is named for what it is:
+         «تبرع سداد عجز تاريخي» (cash in the food box, earmarked for the deficit). */
+      const perRec=fund==='food'?FIN.allocateFoodDonations().perReceipt:{};
       DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund===fund&&inRange(r.receipt_date))
-        .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:'تبرع',cr:0,dr:0,type:'don',id:r.id,no:r.no,note:`تبرع ₪${fmt(r.amount_ils||r.amount)} — ${r.notes||''}`}));
+        .forEach(r=>{
+          const q5=(perRec[r.id]||{}).debtSettled>0;
+          rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:q5?'تبرع سداد عجز تاريخي':'تبرع',cr:0,dr:0,type:'don',id:r.id,no:r.no,note:`تبرع ₪${fmt(r.amount_ils||r.amount)} — ${r.notes||''}`});
+        });
     }
     rows.sort((a,b)=>new Date(a.date)-new Date(b.date));
     return rows;
