@@ -1,0 +1,104 @@
+{
+  "A": {
+    "id": "5318fef8-3374-44db-a5ce-511845080561",
+    "name": "إيهاب سهيل عارف",
+    "bal": 1600
+  },
+  "S": {
+    "base": {
+      "food": 1694.04,
+      "defRem": -8139,
+      "regN": 7,
+      "regS": 4700,
+      "legFood": 1694.04,
+      "legDef": -8139,
+      "net": -6444.96
+    },
+    "afterA": {
+      "food": 1694.04,
+      "defRem": -7639,
+      "regN": 7,
+      "regS": 4700,
+      "legFood": 1694.04,
+      "legDef": -7639,
+      "net": -5944.96
+    },
+    "afterA_member": 1100,
+    "afterB": {
+      "food": 2194.04,
+      "defRem": -7639,
+      "regN": 8,
+      "regS": 5200,
+      "legFood": 2194.04,
+      "legDef": -7639,
+      "net": -5444.96
+    },
+    "afterB_member": 0,
+    "afterC": {
+      "food": 2694.04,
+      "defRem": -7639,
+      "regN": 9,
+      "regS": 5700,
+      "legFood": 2694.04,
+      "legDef": -7639,
+      "net": -4944.96
+    }
+  },
+  "R": [
+    {
+      "n": "baseline = production (1694.04 / -8139 / 7=4700)",
+      "pass": true,
+      "d": "{\"food\":1694.04,\"defRem\":-8139,\"regN\":7,\"regS\":4700,\"legFood\":1694.04,\"legDef\":-8139,\"net\":-6444.96}"
+    },
+    {
+      "n": "A: food balance UNCHANGED (500 fully settles debt slice)",
+      "pass": true,
+      "d": "[1694.04,1694.04]"
+    },
+    {
+      "n": "A: deficit fell by exactly 500 (-8139 -> -7639)",
+      "pass": true,
+      "d": "-7639"
+    },
+    {
+      "n": "A: member debt fell by exactly 500",
+      "pass": true,
+      "d": "1600 -> 1100"
+    },
+    {
+      "n": "A: cash-donation register UNCHANGED (7=4700)",
+      "pass": true,
+      "d": "7=4700"
+    },
+    {
+      "n": "A: net moved by exactly the cash 500 (counted ONCE)",
+      "pass": true,
+      "d": "-6444.96 -> -5944.96"
+    },
+    {
+      "n": "B: food +500, deficit UNCHANGED, register +1 (8=5200)",
+      "pass": true,
+      "d": "{\"food\":2194.04,\"defRem\":-7639,\"regN\":8,\"regS\":5200,\"legFood\":2194.04,\"legDef\":-7639,\"net\":-5444.96}"
+    },
+    {
+      "n": "B: no-debt member balance stays 0",
+      "pass": true,
+      "d": "0"
+    },
+    {
+      "n": "B: net moved by exactly the cash 500",
+      "pass": true,
+      "d": ""
+    },
+    {
+      "n": "C: food +500, register +1 (9=5700), deficit unchanged",
+      "pass": true,
+      "d": "{\"food\":2694.04,\"defRem\":-7639,\"regN\":9,\"regS\":5700,\"legFood\":2694.04,\"legDef\":-7639,\"net\":-4944.96}"
+    },
+    {
+      "n": "C: net moved by exactly the cash 500",
+      "pass": true,
+      "d": ""
+    }
+  ]
+}
