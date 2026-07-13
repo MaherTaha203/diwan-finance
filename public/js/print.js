@@ -150,6 +150,7 @@ function buildRecVoucher(r){
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(r.receipt_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(r.fund_type)+'</div></div>'
+    +(r.movement_type==='diwan_operational_income'?'<div class="row"><div class="lbl">نوع الحدث</div><div class="val">إيراد الديوان التشغيلي</div></div>':r.movement_type==='diwan_cash_donation'?'<div class="row"><div class="lbl">نوع الحدث</div><div class="val">تبرع نقدي للديوان</div></div>':'')
     +'<div class="row"><div class="lbl">استلمنا من</div><div class="val">'+esc(r.payer_name||gmn(r.member_id))+'</div></div>'
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(meth)+'</div></div>'
     +cur+note
