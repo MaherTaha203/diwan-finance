@@ -1057,7 +1057,7 @@ html,body{ overscroll-behavior:none; }
    under 820px (dot cells + selected-day card + FAB). */
 .res-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .res-nav{display:flex;align-items:center;gap:7px}
-#res-month-label{font-size:15px;font-weight:700;color:var(--tx);min-width:112px;text-align:center}
+#res-month-label{font-size:15px;font-weight:700;color:var(--tx);min-width:150px;text-align:center;white-space:nowrap}
 #res-month-label b{color:var(--accent);font-family:var(--fmono);font-variant-numeric:tabular-nums}
 .res-pills{display:flex;gap:6px;flex-wrap:wrap}
 .res-pill{font-size:10.5px;font-weight:500;padding:4px 12px;border-radius:99px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx2);cursor:pointer;transition:all .13s}
@@ -1082,6 +1082,7 @@ html,body{ overscroll-behavior:none; }
 .res-dd-empty{padding:12px;text-align:center;font-size:11px;color:var(--tx2)}
 .res-head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
 .res-head div{font-size:10px;font-weight:700;color:var(--tx2);text-align:center;letter-spacing:.04em}
+.res-head .dws{display:none}
 .res-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .res-day{min-height:86px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px 8px;position:relative;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:background .13s,border-color .13s,opacity .13s}
 .res-day:hover{background:var(--bg3);border-color:var(--bd2)}
@@ -1137,6 +1138,8 @@ html,body{ overscroll-behavior:none; }
   #pg-reservations .ph-a{flex-direction:column;align-items:stretch}
   .res-search{min-width:0}
   #btn-res-add{display:none}
+  .res-head .dwf{display:none}
+  .res-head .dws{display:inline}
   .res-day{min-height:44px;padding:4px;align-items:center;justify-content:center}
   .res-day .res-dn{justify-content:center}
   .res-day .res-rv .res-name{display:none}
