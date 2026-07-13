@@ -509,7 +509,7 @@
     <div class="pag" id="members-pag"></div>
   </div>
   <div class="pg" id="pg-member-stmt">
-    <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div><div class="ph-a"><button class="btn sm" onclick="window.prtMemberStmt('print')" title="طباعة الكشف الشخصي"><i class="ti ti-printer"></i><span>طباعة الكشف الشخصي</span></button></div></div>
+    <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div><div class="ph-a"><button class="btn sm" onclick="window.reconcileReport()" title="تقرير مطابقة الأرصدة"><i class="ti ti-scale"></i><span>مطابقة الأرصدة</span></button><button class="btn sm" onclick="window.prtMemberStmt('print')" title="طباعة الكشف الشخصي"><i class="ti ti-printer"></i><span>طباعة الكشف الشخصي</span></button></div></div>
     <div class="ftb"><div class="ftb-grp"><div class="ftb-ci wide"><label>العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div></div><div class="ftb-grp"><div class="ftb-ci"><label>من تاريخ</label><input type="date" id="ms-from" aria-label="من تاريخ"></div><div class="ftb-ci"><label>إلى تاريخ</label><input type="date" id="ms-to" aria-label="إلى تاريخ"></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض</button></div></div>
     <div id="ms-out"></div>
   </div>
@@ -725,6 +725,7 @@
       <i class="ti ti-device-floppy"></i>
       حفظ
     </button>
+    <button class="btn ghost" onclick="window.openReclassify('receipt',document.getElementById('edit-rec-id').value)" title="تصحيح التصنيف المحاسبي"><i class="ti ti-replace"></i>إعادة تصنيف</button>
     <button class="btn ghost" onclick="window.showVoucherHistory('receipt',document.getElementById('edit-rec-id').value)">
       <i class="ti ti-history"></i>
       السجل
@@ -757,6 +758,17 @@
     <div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-history"></i></span>سجل نسخ السند</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd"><div id="vhist-body"></div></div>
     <div class="mft"><button class="btn" onclick="window.closeM()">إغلاق</button></div>
+  </div>
+
+  <div class="modal" id="m-reclass" style="display:none;max-width:480px">
+    <div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-replace"></i></span>إعادة تصنيف محاسبي</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <div class="fi full"><label>السند</label><div id="rcl-info" style="font-size:12px;color:var(--tx2)">—</div></div>
+      <div class="fi full"><label>التصنيف الجديد (نوع الحدث) <span class="req">*</span></label><select id="rcl-type"></select></div>
+      <div class="fi full"><label>الوجهة (للتبرع النقدي العام فقط)</label><select id="rcl-dest"><option value="">— تلقائي / ثابت —</option><option value="food">صندوق الغداء</option><option value="diwan">خزينة الديوان</option><option value="historical_deficit">حساب تسوية العجز</option></select><div style="font-size:10.5px;color:var(--tx3);margin-top:4px">تصحيحُ تصنيفٍ فقط — لا يتغيّر المبلغ ولا التاريخ ولا العضو ولا هوية الحدث. تُحفَظ نسخةٌ ثابتةٌ قبل/بعد في سجل التدقيق.</div></div>
+      <div class="fi full"><label>السبب <span class="req">*</span></label><input type="text" id="rcl-reason" placeholder="سبب التصحيح الإداري"></div>
+    </div>
+    <div class="mft"><button class="btn" onclick="window.closeM()">إلغاء</button><button class="btn primary" onclick="window.doReclassify()">اعتماد إعادة التصنيف</button></div>
   </div>
 
   <!-- Invite User -->

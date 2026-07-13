@@ -302,14 +302,28 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
   {
     const ev=M2.EVENTS[newClass.movement_type];
     if(!ev){toast('نوع الحركة ليس من أحداث النموذج المعتمد','err');return false;}
-    if(newClass.movement_type==='donation_cash'&&!M2.DONATION_DESTINATIONS.includes(newClass.destination_treasury)){
-      toast('وجهة التبرع النقدي يجب أن تكون إحدى الخزائن الثلاث','err');return false;}
+    /* Domain 4 (FA-01 hardening) — the transitional donation_cash chooses any of
+       the three donation treasuries; every OTHER cash event has a FIXED treasury
+       in the model, so its destination must equal it (blocks a wrong-treasury
+       reclassification that would move money incorrectly). */
+    if(newClass.movement_type==='donation_cash'){
+      if(!M2.DONATION_DESTINATIONS.includes(newClass.destination_treasury)){
+        toast('وجهة التبرع النقدي يجب أن تكون إحدى الخزائن الثلاث','err');return false;}
+    } else if(ev.cash===true && ev.treasury){
+      if(newClass.destination_treasury && newClass.destination_treasury!==ev.treasury){
+        toast('وجهة هذا الحدث ثابتةٌ دستورياً: '+ev.treasury,'err');return false;}
+    }
     if(ev.cash===false&&newClass.destination_treasury){
       toast('حدث غير نقدي لا يحمل وجهة خزينة','err');return false;}
   }
   const table=kind==='payment'?'payments':'receipts';
   const{data:row,error:rErr}=await SB.from(table).select('*').eq('id',voucherId).single();
   if(rErr||!row){toast('السند غير موجود','err');return false;}
+  /* Domain 4 (ratified matrix) — never reclassify a voucher in a closed fiscal
+     period, and never touch amount/date/member (this path writes classification
+     fields only, so those are structurally immutable here). */
+  if(voucherLocked(row.receipt_date||row.payment_date)){
+    toast('🔒 السنة المالية مقفلة — لا يُعاد تصنيف سندٍ فيها','err');return false;}
   const prev={movement_type:row.movement_type||null,destination_treasury:row.destination_treasury||null,
               source_treasury:row.source_treasury||null,movement_reason:row.movement_reason||null,
               register_category:row.register_category||null};
@@ -333,6 +347,30 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
   await loadAll();
   toast('✓ أُعيد التصنيف مع حفظ الأثر الكامل','ok');
   return true;
+};
+/* Domain 4 — reclassification admin UI (invokes the governed reclassifyVoucher).
+   Single Admin creates+approves this release (separation of duties designed, not
+   yet activated); the operation is classification-only and fully audited. */
+window.openReclassify=function(kind,id){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  const row=(kind==='payment'?DB.payments:DB.receipts).find(x=>x.id===id); if(!row){toast('السند غير موجود','err');return;}
+  window.__rclKind=kind; window.__rclId=id;
+  const M2=window.MODEL2; if(!M2){toast('نموذج التصنيف غير مُحمَّل','err');return;}
+  const sel=document.getElementById('rcl-type');
+  if(sel) sel.innerHTML=Object.values(M2.EVENTS).map(e=>`<option value="${e.key}"${e.key===row.movement_type?' selected':''}>${esc(e.label_ar)} · ${esc(e.key)}</option>`).join('');
+  const info=document.getElementById('rcl-info');
+  if(info) info.textContent=`${row.no} · ₪${fmt(row.amount_ils||row.amount)} · ${row.receipt_date||row.payment_date} · الحالي: ${row.movement_type||'—'} → ${row.destination_treasury||'—'}`;
+  const dsel=document.getElementById('rcl-dest'); if(dsel) dsel.value=row.destination_treasury||'';
+  const rsn=document.getElementById('rcl-reason'); if(rsn) rsn.value='';
+  window.openM('reclass');
+};
+window.doReclassify=async function(){
+  const kind=window.__rclKind, id=window.__rclId;
+  const mt=document.getElementById('rcl-type')?.value;
+  const dest=document.getElementById('rcl-dest')?.value||null;
+  const reason=document.getElementById('rcl-reason')?.value;
+  const ok=await window.reclassifyVoucher(kind,id,{movement_type:mt,destination_treasury:dest},reason);
+  if(ok) window.closeM();
 };
 async function fetchVoucherHistory(kind,voucherId){
   const{data}=await SB.from('voucher_versions').select('*')

@@ -315,3 +315,43 @@ window.prtDonStmt=function(){
   openPrintWin(css,body);
 };
 
+/* ═══ Domain 4 — Balance Reconciliation (read-only consistency tool) ═══
+   Proves every surface reads the SAME figure: the legacy engine (FIN) and the
+   new-model engine (FIN2) must agree on each treasury/account on the production
+   envelope. Read-only; touches no data. Answers the DoD questions
+   «هل جميع الكشوف متطابقة؟ / هل يوجد أي اختلاف بين أي سطحين؟». */
+window.reconcileRows=function(){
+  const F=window.FIN, F2=window.FIN2; if(!F||!F2) return [];
+  const r2=n=>Math.round((Number(n)||0)*100)/100;
+  const c=F2.composed?F2.composed():{};
+  const reg=F2.cashDonationRegister?F2.cashDonationRegister():[];
+  const memSum=r2((DB.members||[]).filter(m=>m.is_active!==false)
+    .reduce((s,m)=>s+Number(F.memberStatement(m.id).finalBalance||0),0));
+  const rows=[
+    {k:'خزينة الغداء',              legacy:r2(F.foodBalance()),            neo:r2(c.food)},
+    {k:'خزينة الديوان',             legacy:r2(F.diwanBalance()),           neo:r2(c.diwan)},
+    {k:'حساب تسوية العجز (المتبقّي)', legacy:r2(F.foodDeficitRemaining()),   neo:r2(c.historical_deficit_remaining)},
+  ].map(x=>Object.assign(x,{match:Math.abs(x.legacy-x.neo)<0.005}));
+  /* single-engine references (shown for traceability; no second surface to diff) */
+  rows.push({k:'سجل التبرعات النقدية (عدد · مجموع)',legacy:reg.length+' · '+r2(reg.reduce((s,x)=>s+Number(x.amount||0),0)),neo:'—',match:true,ref:true});
+  rows.push({k:'مجموع أرصدة حسابات الأعضاء',legacy:memSum,neo:'—',match:true,ref:true});
+  return rows;
+};
+window.reconcileReport=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const rows=window.reconcileRows();
+  const allMatch=rows.filter(r=>!r.ref).every(r=>r.match);
+  const body=reportHeader('تقرير مطابقة الأرصدة · Balance Reconciliation',{sub:'المالية ‹ الحسابات ‹ المطابقة'})
+    +'<div class="period">'+(allMatch?'✓ جميع الأرقام متطابقة بين المحرّكين — لا اختلاف بين أي سطحين':'⚠ يوجد اختلاف — راجع الصفوف المميّزة')+' · '+fmtDate2(new Date().toISOString())+'</div>'
+    +'<table class="dt"><thead><tr><th>الحساب / الخزينة</th><th>المحرّك القديم (FIN)</th><th>المحرّك الجديد (FIN2)</th><th>الحالة</th></tr></thead><tbody>'
+    +rows.map(r=>'<tr>'+'<td>'+esc(r.k)+'</td>'
+        +'<td>'+(typeof r.legacy==='number'?'₪ '+fmt(r.legacy):esc(String(r.legacy)))+'</td>'
+        +'<td>'+(r.ref?'—':(typeof r.neo==='number'?'₪ '+fmt(r.neo):esc(String(r.neo))))+'</td>'
+        +'<td>'+(r.ref?'مرجعيّ':(r.match?'✓ متطابق':'⚠ اختلاف'))+'</td></tr>').join('')
+    +'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع الديوان</div></div></div></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString())});
+  openPrintWin('@page{size:A4;margin:12mm}body{font-family:var(--fa);direction:rtl;background:#fff}',body);
+};
+
