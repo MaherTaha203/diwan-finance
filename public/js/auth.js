@@ -40,14 +40,14 @@ async function afterLogin(){
   /* Fail-closed: only users provisioned with a valid role row may enter.
      No default-viewer fallback — an unknown/self-registered account is denied. */
   const rawRole=role?.role;
-  if(!role||(rawRole!=='admin'&&rawRole!=='viewer')){
+  if(!role||(rawRole!=='admin'&&rawRole!=='viewer'&&rawRole!=='reservation')){
     await SB.auth.signOut();CU=null;CUR=null;
     showLoginErr('لا تملك صلاحية الوصول إلى النظام. الرجاء التواصل مع مسؤول النظام.');
     const lb=document.getElementById('login-btn');
     if(lb){lb.disabled=false;lb.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
     return;
   }
-  const safeRole=(rawRole==='admin')?'admin':'viewer';
+  const safeRole=(rawRole==='admin')?'admin':(rawRole==='reservation'?'reservation':'viewer');
   CUR={...role,role:safeRole,full_name:role.full_name||CU.email};
 
   const ini=(CUR.full_name||CU.email).charAt(0).toUpperCase();
@@ -71,6 +71,16 @@ if(typeof window.applyLang === 'function'){
 }else{
   console.warn('applyLang not ready yet');
 }
+  if(CUR.role==='reservation'){
+    /* Module R single-purpose role: finance tables are RLS-blocked for this
+       role, so skip finance loads entirely and land on the calendar. */
+    startClock();
+    initSessionTimeout();
+    await logAction('login','تسجيل دخول','auth',null);
+    applyLoginLang();
+    window.nav('reservations');
+    return;
+  }
   await loadSettings();
   await fetchRates();
   await loadAll();
@@ -97,6 +107,14 @@ window.logout=async function(){
 
 function applyPerms(){
   const w=can.write(),a=can.admin();
+  const rsv=CUR?.role==='reservation';
+  /* Module R: reservation-manager sees ONLY the calendar (CSS lockdown);
+     the calendar item itself is admin+reservation only (design Q1: viewer=no). */
+  document.body.classList.toggle('role-reservation',rsv);
+  const nbRes=document.getElementById('nb-reservations');
+  if(nbRes)nbRes.style.display=(a||rsv)?'':'none';
+  const sbRes=document.getElementById('sbsec-reservations');
+  if(sbRes)sbRes.style.display=(a||rsv)?'':'none';
 
   /* ══════════════════════════════════════════════════
    * VIEWER LOCKDOWN — inject a global CSS rule that

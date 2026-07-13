@@ -10,7 +10,7 @@ window.DIWAN_OPENING_USD=0;window.DIWAN_OPENING_JOD=0;
 const PSZ=20,PS={};
 
 /* ── ROLE MODEL: admin | viewer ONLY ── */
-const ROLES={admin:'مدير',viewer:'عارض'};
+const ROLES={admin:'مدير',viewer:'عارض',reservation:'مدير الحجوزات'};
 
 const EXPENSE_TYPES={food_expense:'مصاريف إطعام',electricity:'كهرباء',water:'ماء',cleaning:'تنظيف',maintenance:'صيانة',other:'أخرى'};
 const METHOD_LABELS={cash:'نقد',check:'شيك',transfer:'تحويل بنكي',online:'أونلاين'};

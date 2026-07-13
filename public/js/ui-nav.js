@@ -32,6 +32,12 @@ window.searchDebounced=(()=>{const _t={};return k=>{clearTimeout(_t[k]);_t[k]=se
 
 /* ═══ NAVIGATION ═══ */
 window.nav=function(p){
+  /* Reservation manager: single-page role — any other route bounces back
+     to the calendar (Module R). RLS is the real wall; this is the UX. */
+  if(CUR&&CUR.role==='reservation'&&p!=='reservations'){
+    toast(window.t('messages.access_denied'),'warn');
+    p='reservations';
+  }
   /* Block viewer from accessing restricted pages — even via DevTools console */
   const ADMIN_PAGES=['audit','bk','users','settings','annual'];
   if(ADMIN_PAGES.includes(p)&&!can.admin()){
@@ -50,6 +56,8 @@ window.nav=function(p){
   if(p==='annual-debt') renderAnnualDebt();
   if(p==='delinquent') renderDelinquent();
   if(p==='member-stmt') fillMemberSelect();
+  if(p==='reservations') window.resOnShow();
+  document.body.classList.toggle('pg-res-on',p==='reservations');
   D[p]?.render();
 };
 document.querySelectorAll('.nb[data-p]').forEach(el=>{
