@@ -73,22 +73,26 @@ window.onRecFundChange=function(){
   const mico=document.getElementById('rec-mico');
   const title=document.getElementById('rec-mtitle');
   const donWrap=document.getElementById('rec-don-fund-wrap');
+  const dtWrap=document.getElementById('rec-diwan-type-wrap');   /* Domain 1 — FE-004/FE-005 */
   const ptSel=document.getElementById('rec-payer-type');
   const optContact=document.getElementById('opt-contact');
   const optManual=document.getElementById('opt-manual');
   if(fund==='food'){
     if(mico){mico.className='mico food';} if(title)title.textContent=window.t('receipts.modal_food');
     if(donWrap)donWrap.style.display='none';
+    if(dtWrap)dtWrap.style.display='none';
     if(optContact)optContact.style.display='none';
     if(optManual)optManual.style.display='';
   } else if(fund==='diwan'){
     if(mico){mico.className='mico diwan';} if(title)title.textContent=window.t('receipts.modal_diwan');
     if(donWrap)donWrap.style.display='none';
+    if(dtWrap)dtWrap.style.display='';   /* Domain 1 — operational income vs cash donation */
     if(optContact)optContact.style.display='';
     if(optManual)optManual.style.display='';
   } else if(fund==='donation'){
     if(mico){mico.className='mico don';} if(title)title.textContent=window.t('dashboard.new_donation');
     if(donWrap)donWrap.style.display='';
+    if(dtWrap)dtWrap.style.display='none';
     if(optContact)optContact.style.display='none';
     if(optManual)optManual.style.display='none';
     if(ptSel)ptSel.value='member';

@@ -106,7 +106,13 @@ window.saveRec=async function(print=false){
       ? {movement_type:'subscription_payment',destination_treasury:'food',movement_reason:'member_food_payment'}
       : {movement_type:'donation_cash',destination_treasury:'food',movement_reason:'nonmember_food_donation'};
   } else if(fund==='diwan'){
-    cls = {movement_type:'donation_cash',destination_treasury:'diwan',movement_reason:'diwan_donation'};
+    /* Domain 1 (FA-01 FE-004/FE-005) — two distinct primary events, both to the diwan
+       treasury. Operational income (exchange) is excluded from the cash-donation
+       register (no register property); cash donation (contribution) carries it. */
+    const diwanType=document.getElementById('rec-diwan-type')?.value||'donation';
+    cls = diwanType==='operational'
+      ? {movement_type:'diwan_operational_income',destination_treasury:'diwan',movement_reason:'diwan_operational_income'}
+      : {movement_type:'diwan_cash_donation',   destination_treasury:'diwan',movement_reason:'diwan_cash_donation'};
   } else if(donKind==='inkind'){
     cls = {movement_type:'donation_inkind',destination_treasury:null,movement_reason:'inkind_at_capture',
            register_category:document.getElementById('rec-don-category')?.value||'other'};

@@ -95,11 +95,24 @@ const HARNESS=(seed)=>{
     ok('S2 historical-debt member payment -> food treasury (ق2)', t1.food===R2(t0.food+300)&&t1.defRem===t0.defRem, JSON.stringify({food:[t0.food,t1.food],def:[t0.defRem,t1.defRem]}));
     ok('S2 member balance reduced in statement', s2after===R2(s2base-300), s2base+' -> '+s2after);
 
-    /* S3 — cash donation -> FOOD only */
-    t0=T(); const r3=await newReceipt('donation',{payerType:'member',memberId,amount:150,kind:'cash',display:'food',alloc:'support_current'});
+    /* S3 — ق5 case-1: member WITH debt donates cash -> food (support_current).
+       The Item-9 debt-settled slice is DEFICIT money (custody in the food box,
+       accounted to the deficit treasury); only the surplus enters the food
+       balance; the voucher never enters the cash-donation register; the member's
+       statement drops by the settled slice. Conservation: net position +amount. */
+    t0=T();
+    const s3debt=Math.max(0,R2(FIN.memberStatement(memberId).finalBalance));
+    const s3net0=R2(FIN.foodNetPosition());
+    const r3=await newReceipt('donation',{payerType:'member',memberId,amount:150,kind:'cash',display:'food',alloc:'support_current'});
     t1=T();
-    ok('S3 cash donation -> food only', r3.movement_type==='donation_cash'&&r3.destination_treasury==='food'&&t1.food===R2(t0.food+150)&&t1.diwan===t0.diwan&&t1.defRem===t0.defRem, JSON.stringify({d:r3.destination_treasury}));
-    ok('S3 cash register +1', t1.cashN===t0.cashN+1&&t1.cashS===R2(t0.cashS+150), t0.cashN+'->'+t1.cashN);
+    const s3settled=R2(Math.min(s3debt,150)), s3surplus=R2(150-s3settled);
+    ok('S3/ق5 classification unchanged (donation_cash -> food): the split is a READ-TIME rule', r3.movement_type==='donation_cash'&&r3.destination_treasury==='food', JSON.stringify({mt:r3.movement_type,d:r3.destination_treasury}));
+    ok('S3/ق5 settled slice '+s3settled+' -> DEFICIT; surplus '+s3surplus+' -> food; diwan untouched', t1.defRem===R2(t0.defRem+s3settled)&&t1.food===R2(t0.food+s3surplus)&&t1.diwan===t0.diwan, JSON.stringify({def:[t0.defRem,t1.defRem],food:[t0.food,t1.food]}));
+    ok('S3/ق5 debt-settling donation NOT in the cash-donation register', s3settled>0&&t1.cashN===t0.cashN&&t1.cashS===t0.cashS, t0.cashN+'->'+t1.cashN);
+    ok('S3/ق5 member statement dropped by exactly the settled slice', R2(FIN.memberStatement(memberId).finalBalance)===R2(s3debt-s3settled), s3debt+' -> '+R2(FIN.memberStatement(memberId).finalBalance));
+    ok('S3/ق5 food statement names it «تبرع سداد عجز تاريخي»', FIN.fundLedger('food',null,null,'don').some(x=>x.no===r3.no&&x.desc==='تبرع سداد عجز تاريخي'), '');
+    ok('S3/ق5 conservation: legacy net food position moved by exactly the cash 150', R2(FIN.foodNetPosition())===R2(s3net0+150), s3net0+' -> '+R2(FIN.foodNetPosition()));
+    ok('S3/ق5 engines unified on food & deficit (former divergence #2 closed by owner ruling)', R2(FIN.foodBalance())===t1.food&&R2(FIN.foodDeficitRemaining())===t1.defRem, JSON.stringify({leg:[R2(FIN.foodBalance()),R2(FIN.foodDeficitRemaining())],fin2:[t1.food,t1.defRem]}));
 
     /* S4 — cash donation -> DIWAN only */
     t0=T(); const r4=await newReceipt('donation',{payerType:'member',memberId,amount:200,kind:'cash',display:'diwan'});
@@ -156,13 +169,20 @@ const HARNESS=(seed)=>{
     await inkind({amount:800,category:'food'});
     const rc=await newReceipt('donation',{payerType:'member',memberId,amount:80,kind:'cash',display:'food',alloc:'support_current'});
     F1=T(); const L1=LEG();
-    ok('B1-R5 mixed sequence: cash moved exactly 120(diwan)+80(food); in-kind moved nothing',
-       F1.diwan===R2(F0.diwan+120)&&F1.food===R2(F0.food+80)&&F1.inkN===F0.inkN+2&&F1.cashN===F0.cashN+2, JSON.stringify({F0,F1}));
+    /* ق5 — register expectation is dynamic: if Item-9 settles member debt with
+       this donation it is a debt-settling movement (register-excluded, case-1);
+       with the member in credit it is a real donation (register, case-2). The
+       food treasury moves +80 either way (surplus directly, or settled slice via
+       the deficit overflow — the deficit is already 0 here). */
+    const rcSettled=R2(((FIN.allocateFoodDonations().perReceipt[rc.id])||{}).debtSettled||0);
+    const rcReg=rcSettled>0?1:2;
+    ok('B1-R5 mixed sequence: cash moved exactly 120(diwan)+80(food); in-kind moved nothing; register +'+rcReg+' (ق5'+(rcSettled>0?' case-1: food one excluded':' case-2: no debt, real donation')+')',
+       F1.diwan===R2(F0.diwan+120)&&F1.food===R2(F0.food+80)&&F1.inkN===F0.inkN+2&&F1.cashN===F0.cashN+rcReg, JSON.stringify({F0,F1,rcSettled}));
     ok('B1-R5 legacy net food position moved by exactly the CASH 80 (in-kind 1300 contributed ZERO)', L1.net===R2(L0.net+80), JSON.stringify([L0.net,L1.net]));
     ok('B1-R5 INTENTIONAL divergence documented: legacy diwan ignores diwan-directed donations (old phantom-pot behavior); FIN2 counts them as real cash (ratified model)', L1.diwan===L0.diwan, 'legacy diwan '+L0.diwan+' -> '+L1.diwan+' while FIN2 diwan +120');
     /* R6 deficit interaction: in-kind then verify deficit figures agree across engines */
     ok('B1-R6 FIN2 deficit remaining is exactly 0 after the S5 overflow', T().defRem===0, T().defRem);
-    ok('B1-R6 INTENTIONAL cross-engine difference documented (legacy splits member-linked donation debt-first; unification = P3)', typeof FIN.foodDeficitRemaining()==='number', 'legacy defRem='+R2(FIN.foodDeficitRemaining())+' vs FIN2 rem=0');
+    ok('B1-R6 INTENTIONAL cross-engine difference documented (legacy defRem stays uncapped past zero; FIN2 caps at 0 + overflow — P3; debt-first split itself is UNIFIED since ق5)', typeof FIN.foodDeficitRemaining()==='number', 'legacy defRem='+R2(FIN.foodDeficitRemaining())+' vs FIN2 rem=0');
     /* R7 food payment after in-kind: statement moves by payment only */
     L0=LEG();
     const _f7=T(); const r7row=await newReceipt('food',{payerType:'member',memberId,amount:100});
@@ -199,7 +219,8 @@ const HARNESS=(seed)=>{
     window.selectTreasuryFund('registers'); await wait(150);
     ok('S7 registers panel shows updated counts', (document.querySelector('#treasury-panel')?.innerText||'').includes('قيد'), '');
     const finalT=T();
-    ok('S7 conservation: every scenario shekel accounted (cash +5, in-kind net +6 after one cancellation)', finalT.food>base.food&&finalT.cashN===base.cashN+4 /* S5 is a ق4 collection now, not a register entry */&&finalT.inkN===base.inkN+6, JSON.stringify(finalT));
+    /* register deltas: S3 ق5-excluded (0) · S4 diwan (+1) · S5 ق4 collection (0) · R5 (+rcReg) */
+    ok('S7 conservation: every scenario shekel accounted (register +'+(1+rcReg)+', in-kind net +6 after one cancellation)', finalT.food>base.food&&finalT.cashN===base.cashN+1+rcReg&&finalT.inkN===base.inkN+6, JSON.stringify(finalT));
     return {results, base, finalT};
   });
   const pass=out.results.filter(r=>r.pass).length, fail=out.results.filter(r=>!r.pass);

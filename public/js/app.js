@@ -399,8 +399,13 @@ const D={
         const dl={food:en?'Food':'الغداء',diwan:en?'Diwan':'الديوان',historical_deficit:en?'Hist. Deficit':'العجز التاريخي'};
         if(r.movement_type==='historical_debt_collection')
           return `<span class="badge wr">${en?'Debt Collection':'تحصيل ذمة تاريخية'} ← ${dl.historical_deficit}</span>`;
-        if(r.movement_type==='donation_cash')
+        if(r.movement_type==='donation_cash'){
+          /* ق5 — a donation whose Item-9 slice settles the donor-member's debt */
+          const sp=(FIN.allocateFoodDonations().perReceipt[r.id]||{});
+          if(r.donation_display_fund==='food'&&r.member_id&&sp.debtSettled>0)
+            return `<span class="badge wr">${en?'Deficit-Settling Donation':'تبرع سداد عجز تاريخي'}</span>`;
           return `<span class="badge ${r.destination_treasury==='food'?'food':r.destination_treasury==='diwan'?'diwan':'wr'}">${en?'Cash':'نقدي'} ← ${dl[r.destination_treasury]||'—'}</span>`;
+        }
         if(r.movement_type==='donation_inkind')
           return `<span class="badge gray">${en?'In-kind / Service (record only)':'عيني/خدمي — توثيقي'}</span>`;
         return `<span class="badge gray">${en?'Unclassified':'غير مُصنَّف'}</span>`;
@@ -532,12 +537,12 @@ function renderTreasuryPanel(){
     const operational=FIN._r2(income-expense);
     total=FIN.foodBalance(); neg=total<0;
     cap='رصيد صندوق الغداء الحالي';
-    rule='القاعدة: الرصيد الحالي = تشغيلي + تسوية الذمم + الدعم الحالي · العجز التاريخي يُعرض منفصلاً ولا يُجمع';
+    /* ق5 — تسوية الذمم من التبرعات نقدٌ مخصص للعجز (حيازته هنا): تُعرض ضمن جانب العجز لا ضمن الرصيد الحالي */
+    rule='القاعدة: الرصيد الحالي = تشغيلي + الدعم الحالي · تسوية الذمم من التبرعات تُخصَّص للعجز التاريخي (ق5) · العجز يُعرض منفصلاً ولا يُجمع';
     middle=`<div class="tp-food">
-      <div class="tp-prev"><div class="t">العجز التاريخي المتبقي · Remaining Historical Deficit</div><div class="v${remDeficit<0?' neg':''}">₪ ${fmt(remDeficit)}</div><div class="ro">${mcLabel('reserve')}: ₪${fmt(reserve)} · يُعرض منفصلاً ولا يدخل في الرصيد الحالي</div></div>
+      <div class="tp-prev"><div class="t">العجز التاريخي المتبقي · Remaining Historical Deficit</div><div class="v${remDeficit<0?' neg':''}">₪ ${fmt(remDeficit)}</div><div class="ro">${mcLabel('reserve')}: ₪${fmt(reserve)} · ${mcLabel('debt')} من التبرعات (ق5): ₪${fmt(a.debtSettlementTotal)} · يُعرض منفصلاً ولا يدخل في الرصيد الحالي</div></div>
       <div class="tp-op"><div class="t">رصيد الصندوق الحالي</div>
         <div class="of"><div class="sg"><div class="l">${mcLabel('operational')}</div><div class="n">₪ ${fmt(operational)}</div></div><span class="x">+</span>
-        <div class="sg"><div class="l">${mcLabel('debt')}</div><div class="n up">₪ ${fmt(a.debtSettlementTotal)}</div></div><span class="x">+</span>
         <div class="sg"><div class="l">${mcLabel('current')}</div><div class="n up">₪ ${fmt(a.currentSupportTotal)}</div></div></div>
         <div class="rs"><div class="l">رصيد الصندوق الحالي = الإجمالي</div><div class="n">₪ ${fmt(total)}</div></div></div>
     </div>`;
@@ -551,10 +556,10 @@ function renderTreasuryPanel(){
     const settled=FIN2.deficitSettlementTotal();
     total=comp.historical_deficit_remaining; neg=total<0;
     cap='المتبقّي من العجز التاريخي';
-    rule='القاعدة: العجز الأصلي + تحصيل الذمم والتبرعات الموجَّهة − تسويات العجز · عند بلوغ الصفر يتحوّل الفائض لخزينة الغداء';
+    rule='القاعدة: العجز الأصلي + تحصيل الذمم والتبرعات الموجَّهة وتسويات الذمم من التبرعات (ق5) − تسويات العجز · عند بلوغ الصفر يتحوّل الفائض لخزينة الغداء';
     middle=`<div class="tp-flow">
       <div class="nd prev"><div class="t">العجز الأصلي (الافتتاحي)</div><div class="v neg">₪ ${fmt(op)}</div><div class="s">قبل 2025</div></div>
-      <div class="ar"><div class="op up">+ تحصيل وتبرعات موجَّهة ₪ ${fmt(inflow)}</div><div class="ln"></div><div class="op dn">− تسويات العجز ₪ ${fmt(settled)}${comp.overflow_to_food>0?` · فائض محوَّل للغداء ₪ ${fmt(comp.overflow_to_food)}`:''}</div></div>
+      <div class="ar"><div class="op up">+ تحصيل وتبرعات موجَّهة وتسويات ذمم ₪ ${fmt(inflow)}</div><div class="ln"></div><div class="op dn">− تسويات العجز ₪ ${fmt(settled)}${comp.overflow_to_food>0?` · فائض محوَّل للغداء ₪ ${fmt(comp.overflow_to_food)}`:''}</div></div>
       <div class="nd cur"><div class="t">المتبقّي من العجز</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
   } else {
@@ -789,11 +794,11 @@ window.renderStmt=function(fund){
     +'<div class="as-fig green"><div class="k">'+window.t('stmt.total_income')+'</div><div class="v">₪ '+fmt(totalCr)+'</div></div>'
     +'<div class="as-fig red"><div class="k">'+window.t('stmt.total_expenses')+'</div><div class="v">₪ '+fmt(totalDr)+'</div></div>'
     +'<div class="as-fig '+(curBal>=0?'teal':'red')+'"><div class="k">'+curLbl+'</div><div class="v">₪ '+fmt(curBal)+'</div>'
-      +(isFood?'<div class="s">'+(_en?'Operational':'تشغيلي')+' ₪'+fmt(bal)+' + '+(_en?'Debt Settle':'تسوية ذمم')+' ₪'+fmt(FIN.foodDebtSettlementTotal())+' + '+(_en?'Support':'دعم')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+'</div>':'')
+      +(isFood?'<div class="s">'+(_en?'Operational':'تشغيلي')+' ₪'+fmt(bal)+' + '+(_en?'Support':'دعم')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+(_en?'Debt Settle → Deficit (Q5)':'تسوية الذمم ← العجز (ق5)')+' ₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>':'')
     +'</div>';
   if(isFood){
     figs+='<div class="as-fig'+(FIN.foodDeficitRemaining()<0?' red':'')+'"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v">₪ '+fmt(FIN.foodDeficitRemaining())+'</div></div>'
-      +'<div class="as-fig"><div class="k">'+mcLabel('reserve')+'</div><div class="v">₪ '+fmt(FIN.foodSettlementReserve())+'</div></div>'
+      +'<div class="as-fig"><div class="k">'+mcLabel('reserve')+' + '+mcLabel('debt')+'</div><div class="v">₪ '+fmt(FIN._r2(FIN.foodSettlementReserve()+FIN.foodDebtSettlementTotal()))+'</div></div>'
       +'<div class="as-fig '+(FIN.foodNetPosition()>=0?'green':'red')+'"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v">₪ '+fmt(FIN.foodNetPosition())+'</div></div>';
   }
   figs+='</div>';
@@ -1522,6 +1527,7 @@ window.exportCSV=function(type){
       [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FIN.foodBalance(),'','',''],
       [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FIN.foodDeficitRemaining(),'','',''],
       [mcLabel('reserve'),'','',FIN.foodSettlementReserve(),'','',''],
+      [(_en?'Debt Settlement → Deficit (Q5)':'تسوية ذمم من تبرعات ← العجز (ق5)'),'','',FIN.foodDebtSettlementTotal(),'','',''],
       [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FIN.foodNetPosition(),'','',''],
       ['','','','','','','']
     ];
@@ -1551,8 +1557,10 @@ window.exportCSV=function(type){
     h=['رقم','التاريخ','المستفيد','المبلغ ₪','طريقة الصرف','ملاحظات'];
     rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),p.amount_ils||p.amount,p.payment_method,p.notes]);
   }else if(type==='diwan-rec'){
-    h=['رقم','التاريخ','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
-    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').map(r=>[r.no,r.receipt_date,r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
+    /* Domain 1 — surface the FE-004/FE-005 split on the diwan export too (additive column). */
+    const _det=mt=>mt==='diwan_operational_income'?'إيراد تشغيلي':mt==='diwan_cash_donation'?'تبرع نقدي':'—';
+    h=['رقم','التاريخ','نوع الحدث','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
+    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').map(r=>[r.no,r.receipt_date,_det(r.movement_type),r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
   }else if(type==='diwan-pay'){
     h=['رقم','التاريخ','المستفيد','المبلغ ₪','الفئة','ملاحظات'];
     rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),p.amount_ils||p.amount,L.expense(p.expense_type),p.notes]);
