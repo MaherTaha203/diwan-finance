@@ -395,6 +395,8 @@
   <div class="nb" role="button" tabindex="0" data-p="diwan-rec"><i class="ti ti-receipt"></i>إيصالات الديوان</div>
   <div class="nb" role="button" tabindex="0" data-p="diwan-pay"><i class="ti ti-cash"></i>مصاريف الديوان</div>
   <div class="nb" role="button" tabindex="0" data-p="diwan-stmt"><i class="ti ti-file-description"></i>كشف الديوان</div>
+  <div class="sb-sec" data-i18n="nav.reservations_sec" id="sbsec-reservations">الديوان — الحجوزات</div>
+  <div class="nb" role="button" tabindex="0" data-p="reservations" id="nb-reservations"><i class="ti ti-calendar-event"></i>تقويم الحجوزات</div>
   <div class="sb-sec" data-i18n="nav.donations_sec">التبرعات</div>
   <div class="nb" role="button" tabindex="0" data-p="don"><i class="ti ti-heart"></i>سجل التبرعات</div>
   <div class="sb-sec" data-i18n="nav.members_sec">الأعضاء</div>
@@ -501,6 +503,40 @@
     <div class="tw"><table><thead><tr><th data-i18n="common.number">الرقم</th><th data-i18n="common.date">التاريخ</th><th data-i18n="donations.donor">المتبرع</th><th data-i18n="common.amount_ils">المبلغ ₪</th><th data-i18n="common.currency">العملة</th><th data-i18n="donations.classification">التصنيف</th><th data-i18n="common.notes">ملاحظات</th><th data-i18n="common.actions">إجراءات</th></tr></thead><tbody id="don-body"></tbody></table></div>
     <div class="pag" id="don-pag"></div>
   </div>
+  <!-- ── Module R: Diwan Reservation Calendar ── -->
+  <div class="pg" id="pg-reservations">
+    <div class="ph">
+      <div><div class="ph-t" data-i18n="reservations.title">تقويم الحجوزات</div><div class="ph-s" data-i18n="reservations.subtitle">حجز واحد لكل يوم · التقويم الميلادي · الأسبوع يبدأ السبت</div></div>
+      <div class="ph-a">
+        <div class="res-search"><i class="ti ti-search"></i><input id="res-q" type="text" placeholder="بحث فوري: اسم، هاتف، تاريخ، نوع…" data-i18n-placeholder="reservations.search_ph" oninput="window.resSearch()" autocomplete="off"><div id="res-q-dd" class="res-dd" style="display:none"></div></div>
+        <button class="btn primary" id="btn-res-add" onclick="window.resOpenAddToday()"><i class="ti ti-plus"></i><span data-i18n="reservations.new">حجز جديد</span></button>
+      </div>
+    </div>
+    <div class="res-bar">
+      <div class="res-nav">
+        <button class="pb" onclick="window.resNext()" aria-label="الشهر التالي"><i class="ti ti-chevron-left"></i></button>
+        <div id="res-month-label"></div>
+        <button class="pb" onclick="window.resPrev()" aria-label="الشهر السابق"><i class="ti ti-chevron-right"></i></button>
+        <button class="btn sm" onclick="window.resGoToday()"><span data-i18n="reservations.today">اليوم</span></button>
+      </div>
+      <div class="res-pills">
+        <span class="res-pill" data-f="today" onclick="window.resSetFilter('today')" data-i18n="reservations.f_today">اليوم</span>
+        <span class="res-pill" data-f="week" onclick="window.resSetFilter('week')" data-i18n="reservations.f_week">هذا الأسبوع</span>
+        <span class="res-pill on" data-f="month" onclick="window.resSetFilter('month')" data-i18n="reservations.f_month">هذا الشهر</span>
+        <span class="res-pill" data-f="reserved" onclick="window.resSetFilter('reserved')" data-i18n="reservations.f_reserved">محجوز</span>
+        <span class="res-pill" data-f="available" onclick="window.resSetFilter('available')" data-i18n="reservations.f_available">متاح</span>
+      </div>
+    </div>
+    <div class="res-legend">
+      <span><i class="res-lg r"></i><span data-i18n="reservations.lg_reserved">محجوز</span></span>
+      <span><i class="res-lg a"></i><span data-i18n="reservations.lg_available">متاح</span></span>
+      <span><i class="res-lg t"></i><span data-i18n="reservations.lg_today">اليوم</span></span>
+      <span><i class="res-lg p"></i><span data-i18n="reservations.lg_past">ماضٍ (للاطلاع فقط)</span></span>
+    </div>
+    <div id="res-err"></div>
+    <div id="res-cal"></div>
+    <div id="res-daycard" style="display:none"></div>
+  </div>
   <div class="pg" id="pg-members">
     <div class="ph"><div><div class="ph-t" data-i18n="members.title">أعضاء العائلة</div><div class="ph-s" id="members-sub"></div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-members')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-members"><button class="export-dropdown-item" onclick="window.exportPageExcel('members')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('members')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><button class="btn sm" onclick="window.prtMembersList()" title="طباعة"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><button class="btn sm primary" id="btn-add-member" onclick="window.openM('member')"><i class="ti ti-user-plus"></i><span data-i18n="members.new">عضو جديد</span></button></div></div>
     <div class="tb"><div class="sw"><i class="ti ti-search"></i><input class="si" id="q-members" placeholder="بحث بالاسم..." data-i18n-placeholder="members.search_ph" oninput="searchDebounced('members')"></div><select class="fs" id="f-member-status" aria-label="فلترة حسب الحالة" onchange="D['members'].render()"><option value="" data-i18n="members.filter_all">الكل</option><option value="paid" data-i18n="members.filter_paid">مسدَّد</option><option value="due" data-i18n="members.filter_late">عليه رصيد</option></select></div>
@@ -554,6 +590,53 @@
 
 <!-- MODALS -->
 <div class="ov" id="ov">
+  <!-- Module R: reservation form (add + edit share one form) -->
+  <div class="modal" id="m-res-form" style="display:none;max-width:460px">
+    <div class="mhd"><span class="mtt" id="m-res-form-title"><i class="ti ti-calendar-plus"></i>حجز جديد</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <input type="hidden" id="res-f-id">
+      <div class="fi"><label data-i18n="reservations.f_date">التاريخ <em>*</em></label><input type="date" id="res-f-date"><div class="ferr" id="res-f-date-err"></div></div>
+      <div class="fi"><label data-i18n="reservations.f_name">اسم الزبون <em>*</em></label><input type="text" id="res-f-name" placeholder="الاسم الكامل" data-i18n-placeholder="reservations.f_name_ph" maxlength="80"><div class="ferr" id="res-f-name-err"></div></div>
+      <div class="fi"><label data-i18n="reservations.f_phone">رقم الهاتف <em>*</em></label><input type="text" id="res-f-phone" placeholder="05XXXXXXXX" inputmode="numeric" dir="ltr" maxlength="14"><div class="ferr" id="res-f-phone-err"></div></div>
+      <div class="fi"><label data-i18n="reservations.f_type">نوع الحجز <em>*</em></label>
+        <select class="fs" id="res-f-type" style="width:100%">
+          <option value="">اختر النوع…</option>
+          <option value="wedding">زفاف</option>
+          <option value="engagement">خطوبة</option>
+          <option value="henna">حنّاء</option>
+          <option value="wedding_lunch">غداء عرس</option>
+          <option value="evening_party">سهرة</option>
+          <option value="talbeh">طلبة</option>
+          <option value="small_party">حفلة صغيرة</option>
+          <option value="large_party_two_floors">حفلة كبيرة (طابقان)</option>
+          <option value="birthday">عيد ميلاد</option>
+          <option value="graduation">تخرج</option>
+          <option value="lecture">محاضرة</option>
+          <option value="general">عام</option>
+        </select><div class="ferr" id="res-f-type-err"></div></div>
+      <div class="fi"><label data-i18n="common.notes">ملاحظات</label><textarea id="res-f-notes" rows="2" placeholder="اختياري — عدد الضيوف، تجهيزات خاصة…" data-i18n-placeholder="reservations.f_notes_ph"></textarea></div>
+    </div>
+    <div class="mft"><button class="btn" onclick="window.closeM()" data-i18n="common.cancel">إلغاء</button><button class="btn primary" id="res-f-save" onclick="window.resSave()"><i class="ti ti-check"></i>حفظ الحجز</button></div>
+  </div>
+  <!-- Module R: reservation details -->
+  <div class="modal" id="m-res-view" style="display:none;max-width:460px">
+    <div class="mhd"><span class="mtt"><i class="ti ti-calendar-event"></i><span data-i18n="reservations.details">تفاصيل الحجز</span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd" id="res-v-body"></div>
+    <div class="mft">
+      <button class="btn danger" id="res-v-del"><i class="ti ti-trash"></i><span data-i18n="reservations.cancel_res">إلغاء الحجز</span></button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="window.closeM()" data-i18n="common.close">إغلاق</button>
+      <button class="btn primary" id="res-v-edit"><i class="ti ti-edit"></i><span data-i18n="common.edit">تعديل</span></button>
+    </div>
+  </div>
+  <!-- Module R: cancel confirmation -->
+  <div class="modal" id="m-res-del" style="display:none;max-width:420px">
+    <div class="mhd"><span class="mtt"><i class="ti ti-trash"></i><span data-i18n="reservations.cancel_title">تأكيد إلغاء الحجز</span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd">
+      <div class="ibox" style="align-items:flex-start"><i class="ti ti-alert-triangle"></i><span><b id="res-d-text"></b><br><span style="font-size:11px;opacity:.8" data-i18n="reservations.cancel_note">إلغاء ناعم: يُخفى الحجز من التقويم ويبقى في سجل العمليات، ويعود اليوم متاحًا فورًا.</span></span></div>
+    </div>
+    <div class="mft"><button class="btn" onclick="window.closeM()" data-i18n="reservations.keep">تراجع</button><button class="btn danger" id="res-d-confirm"><i class="ti ti-trash"></i><span data-i18n="reservations.confirm_cancel">تأكيد الإلغاء</span></button></div>
+  </div>
   <!-- Receipt Modal -->
   <div class="modal" id="m-rec" style="display:none;max-width:580px">
     <div class="mhd"><span class="mtt"><span class="mico green" id="rec-mico"><i class="ti ti-receipt"></i></span><span id="rec-mtitle">سند قبض جديد</span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
@@ -776,6 +859,7 @@
 <!-- Mobile Nav -->
 <!-- Mobile FAB: one-tap primary action (write users only; shown via applyPerms). CSS reveals it on phones. -->
 <button id="fab" class="fab" style="display:none" onclick="window.openRec()" aria-label="سند قبض جديد"><i class="ti ti-plus"></i></button>
+<button id="res-fab" onclick="window.resOpenAddToday()" aria-label="حجز جديد"><i class="ti ti-plus"></i></button>
 <div id="mobile-nav" style="display:none">
   <div class="mnb on" onclick="window.nav('dash');setMobileNav(this)"><i class="ti ti-layout-dashboard"></i><span>الرئيسية</span></div>
   <div class="mnb" onclick="window.nav('food-stmt');setMobileNav(this)"><i class="ti ti-tools-kitchen-2"></i><span>الغداء</span></div>
@@ -946,6 +1030,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/auth.js?v=2.1"></script>
 <script defer src="/js/forms.js?v=2.1"></script>
 <script defer src="/js/crud.js?v=2.1"></script>
+<script defer src="/js/reservations.js?v=1.0"></script>
 <script defer src="/js/print.js?v=2.1"></script>
 <script defer src="/js/reports.js?v=2.1"></script>
 <script defer src="/js/app.js?v=2.1"></script>
