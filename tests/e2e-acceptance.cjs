@@ -179,7 +179,7 @@ const HARNESS=(seed)=>{
     ok('B1-R5 mixed sequence: cash moved exactly 120(diwan)+80(food); in-kind moved nothing; register +'+rcReg+' (ق5'+(rcSettled>0?' case-1: food one excluded':' case-2: no debt, real donation')+')',
        F1.diwan===R2(F0.diwan+120)&&F1.food===R2(F0.food+80)&&F1.inkN===F0.inkN+2&&F1.cashN===F0.cashN+rcReg, JSON.stringify({F0,F1,rcSettled}));
     ok('B1-R5 legacy net food position moved by exactly the CASH 80 (in-kind 1300 contributed ZERO)', L1.net===R2(L0.net+80), JSON.stringify([L0.net,L1.net]));
-    ok('B1-R5 INTENTIONAL divergence documented: legacy diwan ignores diwan-directed donations (old phantom-pot behavior); FIN2 counts them as real cash (ratified model)', L1.diwan===L0.diwan, 'legacy diwan '+L0.diwan+' -> '+L1.diwan+' while FIN2 diwan +120');
+    ok('B1-R5 Foundation-B CLOSED the legacy-diwan divergence: FIN.diwanBalance now delegates to FIN2 and counts the diwan-directed donation (+120), one canonical source', L1.diwan===R2(L0.diwan+120), 'diwan '+L0.diwan+' -> '+L1.diwan+' (unified with FIN2 +120)');
     /* R6 deficit interaction: in-kind then verify deficit figures agree across engines */
     ok('B1-R6 FIN2 deficit remaining is exactly 0 after the S5 overflow', T().defRem===0, T().defRem);
     ok('B1-R6 INTENTIONAL cross-engine difference documented (legacy defRem stays uncapped past zero; FIN2 caps at 0 + overflow — P3; debt-first split itself is UNIFIED since ق5)', typeof FIN.foodDeficitRemaining()==='number', 'legacy defRem='+R2(FIN.foodDeficitRemaining())+' vs FIN2 rem=0');

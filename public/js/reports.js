@@ -321,7 +321,10 @@ window.prtDonStmt=function(){
    envelope. Read-only; touches no data. Answers the DoD questions
    «هل جميع الكشوف متطابقة؟ / هل يوجد أي اختلاف بين أي سطحين؟». */
 window.reconcileRows=function(){
-  const F=window.FIN, F2=window.FIN2; if(!F||!F2) return [];
+  /* FIN is a top-level `const` (global lexical binding, NOT window.FIN) — read it
+     directly, exactly as fin2.js does. (Bug fix: the earlier window.FIN reference
+     was always undefined, so this returned []; now it genuinely reconciles.) */
+  const F=(typeof FIN!=='undefined'&&FIN)||null, F2=window.FIN2; if(!F||!F2) return [];
   const r2=n=>Math.round((Number(n)||0)*100)/100;
   const c=F2.composed?F2.composed():{};
   const reg=F2.cashDonationRegister?F2.cashDonationRegister():[];
@@ -341,9 +344,13 @@ window.reconcileReport=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const rows=window.reconcileRows();
   const allMatch=rows.filter(r=>!r.ref).every(r=>r.match);
-  const body=reportHeader('تقرير مطابقة الأرصدة · Balance Reconciliation',{sub:'المالية ‹ الحسابات ‹ المطابقة'})
-    +'<div class="period">'+(allMatch?'✓ جميع الأرقام متطابقة بين المحرّكين — لا اختلاف بين أي سطحين':'⚠ يوجد اختلاف — راجع الصفوف المميّزة')+' · '+fmtDate2(new Date().toISOString())+'</div>'
-    +'<table class="dt"><thead><tr><th>الحساب / الخزينة</th><th>المحرّك القديم (FIN)</th><th>المحرّك الجديد (FIN2)</th><th>الحالة</th></tr></thead><tbody>'
+  /* Foundation-B — the two independent engine paths were unified into ONE
+     canonical source (FinContract → FIN2). FIN's treasury functions now delegate
+     to it, so this report verifies the single source stays self-consistent
+     (the FIN delegate and FIN2 read the same figure). */
+  const body=reportHeader('تقرير مطابقة الأرصدة · Balance Reconciliation',{sub:'المالية ‹ الحسابات ‹ المطابقة (مصدرٌ واحد)'})
+    +'<div class="period">'+(allMatch?'✓ مصدرٌ قانونيٌّ واحدٌ لأرصدة الخزائن (FinContract → FIN2) — متّسقٌ تماماً، لا اختلاف بين أي سطحين':'⚠ يوجد اختلاف — راجع الصفوف المميّزة')+' · '+fmtDate2(new Date().toISOString())+'</div>'
+    +'<table class="dt"><thead><tr><th>الحساب / الخزينة</th><th>عبر FIN (مُفوِّض)</th><th>المصدر القانوني (FIN2)</th><th>الحالة</th></tr></thead><tbody>'
     +rows.map(r=>'<tr>'+'<td>'+esc(r.k)+'</td>'
         +'<td>'+(typeof r.legacy==='number'?'₪ '+fmt(r.legacy):esc(String(r.legacy)))+'</td>'
         +'<td>'+(r.ref?'—':(typeof r.neo==='number'?'₪ '+fmt(r.neo):esc(String(r.neo))))+'</td>'
