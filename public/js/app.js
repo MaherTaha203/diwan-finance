@@ -1716,14 +1716,21 @@ window.exportPagePDF=function(type){
     return window.downloadFundStatementPDF(fund);
   }
   else if(type==='don'){
+    /* Domain 3 (\u00a74.2) \u2014 mirror prtDonStmt: the printed CASH total must never
+       conflate the in-kind documentary value. Cash = non-in-kind; in-kind is
+       summed and shown SEPARATELY, its rows labelled documentary. */
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
-    let total=0;
+    const _ink=r=>r.movement_type==='donation_inkind';
+    let cashTot=0,inkTot=0;
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
     d.forEach(r=>{
-      const amt=Number(r.amount_ils||r.amount||0);total+=amt;
-      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${(r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.food_donation_allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'')}</td><td>${esc(r.notes||'')}</td></tr>`;
+      const amt=Number(r.amount_ils||r.amount||0); if(_ink(r))inkTot+=amt; else cashTot+=amt;
+      const dir=_ink(r)
+        ? (window.LANG==='en'?'In-kind/Service \u00b7 documentary':'\u0639\u064a\u0646\u064a/\u062e\u062f\u0645\u064a \u00b7 \u062a\u0648\u062b\u064a\u0642\u064a')+(r.register_category?' ('+esc(r.register_category)+')':'')
+        : (r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.food_donation_allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'');
+      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${dir}</td><td>${esc(r.notes||'')}</td></tr>`;
     });
-    tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length})</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+    tableHTML+=`<tr class="final"><td colspan="3">${window.LANG==='en'?'Cash Total (in-kind excluded \u2014 \u00a74.2)':'\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0646\u0642\u062f\u064a (\u0627\u0644\u0639\u064a\u0646\u064a \u0645\u0633\u062a\u0628\u0639\u064e\u062f \u2014 \u00a74.2)'}</td><td>\u20aa ${fmt(cashTot)}</td><td>${window.LANG==='en'?'in-kind: \u20aa':'\u0639\u064a\u0646\u064a \u062a\u0648\u062b\u064a\u0642\u064a: \u20aa'} ${fmt(inkTot)}</td><td></td></tr></tbody></table>`;
   }
   else if(type==='members'){
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th></tr></thead><tbody>';
