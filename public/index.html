@@ -8,12 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ديوان آل طه">
 <title>ديوان آل طه · الإدارة المالية</title>
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico" sizes="any" id="brand-ico">
+<link rel="icon" type="image/png" sizes="48x48" href="/brand/light/Favicon/favicon-48x48.png" id="brand-i48">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/light/Favicon/favicon-32x32.png" id="brand-i32">
+<link rel="icon" type="image/png" sizes="16x16" href="/brand/light/Favicon/favicon-16x16.png" id="brand-i16">
+<link rel="icon" type="image/svg+xml" href="/brand/light/Favicon/favicon.svg" id="brand-svg">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" id="brand-apple">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#24425C">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
@@ -258,7 +258,7 @@
     <!-- LEFT PANEL — Institutional -->
     <div class="lp">
       <div class="lp-logo">
-        <div class="lp-emblem"><img src="/brand/derived/logo-white-128.png" alt="" style="width:40px;height:40px;display:block;border-radius:9px"></div>
+        <div class="lp-emblem"><img data-brand="mark" data-brand-variant="night" src="/brand/night/PNG/logo-256.png" alt="" style="width:40px;height:40px;display:block"></div>
         <div><span class="lp-org" id="lp-org">ديوان آل طه</span><span class="lp-org-en">DIWAN AL-TAHA</span></div>
       </div>
 
@@ -366,7 +366,7 @@
 <div id="app" style="display:none">
 <div class="top">
   <div class="top-logo">
-    <div class="top-logo-ico"><img src="/brand/derived/logo-white-128.png" alt="ديوان آل طه" width="32" height="32" style="border-radius:7px"></div>
+    <div class="top-logo-ico"><img data-brand="mark" data-brand-variant="night" src="/brand/night/PNG/logo-256.png" alt="ديوان آل طه" width="32" height="32"></div>
     <div><div class="top-logo-text">ديوان آل طه</div><div class="top-logo-sub">نظام الإدارة المالية</div></div>
   </div>
   <div class="top-actions">
@@ -932,6 +932,7 @@ async function updateLoginMemberCount() {
 })();
 </script>
 
+<script defer src="/js/brand-assets.js?v=1.0"></script>
 <script defer src="/js/utils.js?v=2.1"></script>
 <script defer src="/js/i18n.js?v=2.1"></script>
 <script defer src="/js/foodDonationAllocation.js?v=2.1"></script>
