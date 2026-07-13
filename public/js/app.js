@@ -528,7 +528,7 @@ function renderTreasuryPanel(){
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     /* P1 — the authoritative total comes from FIN (single source); income/expense
        remain only to render the flow breakdown below. Value-identical to opening+income-expense. */
-    total=FIN.diwanBalance(); neg=total<0;
+    total=FinContract.diwanBalance(); neg=total<0;
     rule='القاعدة: الكلي = الرصيد الأولي السابق + إجمالي المقبوضات − إجمالي المصروفات';
     middle=`<div class="tp-flow">
       <div class="nd prev"><div class="t">الرصيد الأولي السابق</div><div class="v">₪ ${fmt(opening)}</div><div class="s">يشارك في الحساب</div></div>
@@ -536,13 +536,13 @@ function renderTreasuryPanel(){
       <div class="nd cur"><div class="t">رصيد الصندوق الحالي = الكلي</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
   } else if(fund==='food'){
-    const remDeficit=FIN.foodDeficitRemaining();
+    const remDeficit=FinContract.foodDeficitRemaining();
     const reserve=FIN.foodSettlementReserve();
     const a=FIN.allocateFoodDonations();
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     const operational=FIN._r2(income-expense);
-    total=FIN.foodBalance(); neg=total<0;
+    total=FinContract.foodBalance(); neg=total<0;
     cap='رصيد صندوق الغداء الحالي';
     /* ق5 — تسوية الذمم من التبرعات نقدٌ مخصص للعجز (حيازته هنا): تُعرض ضمن جانب العجز لا ضمن الرصيد الحالي */
     rule='القاعدة: الرصيد الحالي = تشغيلي + الدعم الحالي · تسوية الذمم من التبرعات تُخصَّص للعجز التاريخي (ق5) · العجز يُعرض منفصلاً ولا يُجمع';
@@ -556,7 +556,7 @@ function renderTreasuryPanel(){
   } else if(fund==='deficit'){
     /* P2-D — the Historical Deficit is a REAL cash treasury (new model).
        Composition reads TREASURY_OPENINGS (the single formal mapping); the value
-       is identical to the legacy FIN.foodDeficitRemaining() figure. */
+       is identical to the legacy FinContract.foodDeficitRemaining() figure. */
     const op=Number((window.TREASURY_OPENINGS||{}).historical_deficit||0);
     const comp=FIN2.composed();
     const inflow=FIN2.deficitInflows();            /* gross: collections + directed donations */
@@ -600,7 +600,7 @@ function renderTreasuryPanel(){
   </div>`;
 }
 function renderDash(){
-  const fb=FIN.foodBalance(),rd=FIN.foodDeficitRemaining(),np=FIN.foodNetPosition(),db=FIN.diwanBalance();
+  const fb=FinContract.foodBalance(),rd=FinContract.foodDeficitRemaining(),np=FinContract.foodNetPosition(),db=FinContract.diwanBalance();
   const dd=document.getElementById('dash-date');
   if(dd)dd.textContent=new Date().toLocaleDateString('en-CA');
 
@@ -795,7 +795,7 @@ window.renderStmt=function(fund){
       +'<td class="as-note">'+esc(r.note||'')+'</td>'
       +'</tr>';
   }).join('');
-  const curBal=isFood?FIN.foodBalance():bal;
+  const curBal=isFood?FinContract.foodBalance():bal;
   const curLbl=isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal');
   let figs='<div class="as-figs">'
     +'<div class="as-fig green"><div class="k">'+window.t('stmt.total_income')+'</div><div class="v">₪ '+fmt(totalCr)+'</div></div>'
@@ -804,9 +804,9 @@ window.renderStmt=function(fund){
       +(isFood?'<div class="s">'+(_en?'Operational':'تشغيلي')+' ₪'+fmt(bal)+' + '+(_en?'Support':'دعم')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+(_en?'Debt Settle → Deficit (Q5)':'تسوية الذمم ← العجز (ق5)')+' ₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>':'')
     +'</div>';
   if(isFood){
-    figs+='<div class="as-fig'+(FIN.foodDeficitRemaining()<0?' red':'')+'"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v">₪ '+fmt(FIN.foodDeficitRemaining())+'</div></div>'
+    figs+='<div class="as-fig'+(FinContract.foodDeficitRemaining()<0?' red':'')+'"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v">₪ '+fmt(FinContract.foodDeficitRemaining())+'</div></div>'
       +'<div class="as-fig"><div class="k">'+mcLabel('reserve')+' + '+mcLabel('debt')+'</div><div class="v">₪ '+fmt(FIN._r2(FIN.foodSettlementReserve()+FIN.foodDebtSettlementTotal()))+'</div></div>'
-      +'<div class="as-fig '+(FIN.foodNetPosition()>=0?'green':'red')+'"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v">₪ '+fmt(FIN.foodNetPosition())+'</div></div>';
+      +'<div class="as-fig '+(FinContract.foodNetPosition()>=0?'green':'red')+'"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v">₪ '+fmt(FinContract.foodNetPosition())+'</div></div>';
   }
   figs+='</div>';
   const tbl='<div class="as-tablewrap"><table class="as-table"><thead><tr>'
@@ -1404,8 +1404,8 @@ function renderSysInfo(){
     <div class="sr"><span class="sr-l">عدد الأعضاء</span><span class="sr-v">${DB.members.filter(m=>m.is_active).length}</span></div>
     <div class="sr"><span class="sr-l">عدد الإيصالات</span><span class="sr-v">${totRec}</span></div>
     <div class="sr"><span class="sr-l">عدد سندات الصرف</span><span class="sr-v">${totPay}</span></div>
-    <div class="sr"><span class="sr-l">رصيد صندوق الغداء</span><span class="sr-v" style="color:var(--food)">₪ ${fmt(FIN.foodBalance())}</span></div>
-    <div class="sr"><span class="sr-l">رصيد صندوق الديوان</span><span class="sr-v" style="color:var(--diwan)">₪ ${fmt(FIN.diwanBalance())}</span></div>
+    <div class="sr"><span class="sr-l">رصيد صندوق الغداء</span><span class="sr-v" style="color:var(--food)">₪ ${fmt(FinContract.foodBalance())}</span></div>
+    <div class="sr"><span class="sr-l">رصيد صندوق الديوان</span><span class="sr-v" style="color:var(--diwan)">₪ ${fmt(FinContract.diwanBalance())}</span></div>
     <div class="sr"><span class="sr-l">سعر الدولار</span><span class="sr-v">₪ ${RATES.USD.toFixed(2)}</span></div>
     <div class="sr"><span class="sr-l">سعر الدينار الأردني</span><span class="sr-v">₪ ${RATES.JOD.toFixed(2)}</span></div>
   `;
@@ -1531,11 +1531,11 @@ window.exportCSV=function(type){
     h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
     const _en=window.LANG==='en';
     const summary=[
-      [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FIN.foodBalance(),'','',''],
-      [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FIN.foodDeficitRemaining(),'','',''],
+      [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FinContract.foodBalance(),'','',''],
+      [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FinContract.foodDeficitRemaining(),'','',''],
       [mcLabel('reserve'),'','',FIN.foodSettlementReserve(),'','',''],
       [(_en?'Debt Settlement → Deficit (Q5)':'تسوية ذمم من تبرعات ← العجز (ق5)'),'','',FIN.foodDebtSettlementTotal(),'','',''],
-      [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FIN.foodNetPosition(),'','',''],
+      [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FinContract.foodNetPosition(),'','',''],
       ['','','','','','','']
     ];
     rows=[...summary,...stmtRows.map(r=>{bal+=r.cr-r.dr;return[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',bal,r.note||''];})];
@@ -1969,9 +1969,9 @@ function renderSettingsSummary(){
   const summaryEl   = document.getElementById('settings-bal-summary');
   if(!summaryCard||!summaryEl) return;
   summaryCard.style.display = '';
-  const foodOp = FIN.foodBalance();          /* operational only */
-  const foodRemDeficit = FIN.foodDeficitRemaining();  /* live remaining deficit, shown separately */
-  const diwanBal = FIN.diwanBalance();        /* unchanged: opening + movements */
+  const foodOp = FinContract.foodBalance();          /* operational only */
+  const foodRemDeficit = FinContract.foodDeficitRemaining();  /* live remaining deficit, shown separately */
+  const diwanBal = FinContract.diwanBalance();        /* unchanged: opening + movements */
   summaryEl.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
       <div class="kpi food" style="padding:14px">

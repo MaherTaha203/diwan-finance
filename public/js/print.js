@@ -252,7 +252,7 @@ window.buildFundStatementHTML=function(fund){
   const balCls=bal>=0?'pos':'neg';
   const isFood=fund==='food';
   const _en=window.LANG==='en';
-  const curBal=isFood?FIN.foodBalance():bal;
+  const curBal=isFood?FinContract.foodBalance():bal;
   const curCls=curBal>=0?'pos':'neg';
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const body=reportHeader(window.t('stmt.print_title')+' '+fundLabel,{sub:window.t('stmt.currency_note')})
@@ -263,9 +263,9 @@ window.buildFundStatementHTML=function(fund){
     +'<div class="card"><div class="k">'+window.t('stmt.total_out')+'</div><div class="v neg">₪ '+fmt(totDr)+'</div></div>'
     +'<div class="card"><div class="k">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal'))+'</div><div class="v '+curCls+'">₪ '+fmt(curBal)+'</div></div></div>'
     +(isFood?('<div class="cards">'
-      +'<div class="card"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v '+(FIN.foodDeficitRemaining()<0?'neg':'pos')+'">₪ '+fmt(FIN.foodDeficitRemaining())+'</div></div>'
+      +'<div class="card"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v '+(FinContract.foodDeficitRemaining()<0?'neg':'pos')+'">₪ '+fmt(FinContract.foodDeficitRemaining())+'</div></div>'
       +'<div class="card"><div class="k">'+mcLabel('reserve')+'</div><div class="v">₪ '+fmt(FIN.foodSettlementReserve())+'</div></div>'
-      +'<div class="card"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v '+(FIN.foodNetPosition()>=0?'pos':'neg')+'">₪ '+fmt(FIN.foodNetPosition())+'</div></div></div>'
+      +'<div class="card"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v '+(FinContract.foodNetPosition()>=0?'pos':'neg')+'">₪ '+fmt(FinContract.foodNetPosition())+'</div></div></div>'
       +'<div style="font-size:10px;color:#666;margin:2px 0 6px">'+(_en?'Current Food Fund Balance = Operational ':'رصيد صندوق الغداء الحالي = تشغيلي ')+'₪'+fmt(bal)+' + '+mcLabel('current')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+mcLabel('debt')+(_en?' → Deficit (Q5) ':' ← العجز (ق5) ')+'₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>'):'')
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.donor_name')+'</th><th>'+window.t('stmt.desc')+'</th><th>'+window.t('stmt.col_in')+'</th><th>'+window.t('stmt.col_out')+'</th><th>'+window.t('stmt.balance')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML

@@ -83,7 +83,7 @@ window.saveRec=async function(print=false){
     const memberDebtNow=(payerType==='member'&&memberId)?Math.max(0,FIN.memberStatement(memberId).finalBalance):0;
     const debtSettled=Math.min(memberDebtNow,amountILS);
     const remainder=FIN._r2(amountILS-debtSettled);
-    const remDeficit=Math.max(0,-FIN.foodDeficitRemaining());
+    const remDeficit=Math.max(0,-FinContract.foodDeficitRemaining());
     let toDeficit=0,toCurrent=0;
     if(finalAllocType==='reduce_deficit'){ toDeficit=Math.min(remainder,remDeficit); toCurrent=FIN._r2(remainder-toDeficit); }
     else { toCurrent=remainder; }
