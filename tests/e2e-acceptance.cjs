@@ -106,7 +106,7 @@ const HARNESS=(seed)=>{
     const r3=await newReceipt('donation',{payerType:'member',memberId,amount:150,kind:'cash',display:'food',alloc:'support_current'});
     t1=T();
     const s3settled=R2(Math.min(s3debt,150)), s3surplus=R2(150-s3settled);
-    ok('S3/ق5 classification unchanged (donation_cash -> food): the split is a READ-TIME rule', r3.movement_type==='donation_cash'&&r3.destination_treasury==='food', JSON.stringify({mt:r3.movement_type,d:r3.destination_treasury}));
+    ok('S3/ق5 classified FE-002 (food_cash_donation -> food); the ق5 split stays a READ-TIME rule', r3.movement_type==='food_cash_donation'&&r3.destination_treasury==='food', JSON.stringify({mt:r3.movement_type,d:r3.destination_treasury}));
     ok('S3/ق5 settled slice '+s3settled+' -> DEFICIT; surplus '+s3surplus+' -> food; diwan untouched', t1.defRem===R2(t0.defRem+s3settled)&&t1.food===R2(t0.food+s3surplus)&&t1.diwan===t0.diwan, JSON.stringify({def:[t0.defRem,t1.defRem],food:[t0.food,t1.food]}));
     ok('S3/ق5 debt-settling donation NOT in the cash-donation register', s3settled>0&&t1.cashN===t0.cashN&&t1.cashS===t0.cashS, t0.cashN+'->'+t1.cashN);
     ok('S3/ق5 member statement dropped by exactly the settled slice', R2(FIN.memberStatement(memberId).finalBalance)===R2(s3debt-s3settled), s3debt+' -> '+R2(FIN.memberStatement(memberId).finalBalance));

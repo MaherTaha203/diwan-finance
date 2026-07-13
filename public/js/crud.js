@@ -102,9 +102,13 @@ window.saveRec=async function(print=false){
      fields; food/diwan shapes are deterministic per the ratified ق2/model. */
   let cls;
   if(fund==='food'){
+    /* Domain 2 (FA-01 FE-002) — a non-member food donation is captured as its
+       dedicated type `food_cash_donation` (forward-only). Register unions by the
+       `cash_donation` property, so behaviour/treasury/register are byte-identical
+       to the transitional `donation_cash`; existing vouchers are untouched. */
     cls = payerType==='member'
       ? {movement_type:'subscription_payment',destination_treasury:'food',movement_reason:'member_food_payment'}
-      : {movement_type:'donation_cash',destination_treasury:'food',movement_reason:'nonmember_food_donation'};
+      : {movement_type:'food_cash_donation',destination_treasury:'food',movement_reason:'nonmember_food_donation'};
   } else if(fund==='diwan'){
     /* Domain 1 (FA-01 FE-004/FE-005) — two distinct primary events, both to the diwan
        treasury. Operational income (exchange) is excluded from the cash-donation
@@ -118,9 +122,17 @@ window.saveRec=async function(print=false){
            register_category:document.getElementById('rec-don-category')?.value||'other'};
   } else {
     const dest = donDisplay==='diwan' ? 'diwan' : (allocationType==='reduce_deficit' ? 'historical_deficit' : 'food');
+    /* Domain 2 (FA-01 FE-002/FE-007) — activate the dedicated donation types by
+       destination, forward-only: food ⇒ food_cash_donation, deficit ⇒
+       deficit_cash_donation. Diwan-directed donations stay `donation_cash`
+       (Domain 1's diwan_cash_donation is captured via the diwan receipt form; not
+       reopened here). All carry register:'cash_donation' ⇒ byte-identical. */
+    const _donType = dest==='food' ? 'food_cash_donation'
+                   : dest==='historical_deficit' ? 'deficit_cash_donation'
+                   : 'donation_cash';
     cls = isQ4Collection
       ? {movement_type:'historical_debt_collection',destination_treasury:'historical_deficit',movement_reason:'q4_member_deficit_collection'}
-      : {movement_type:'donation_cash',destination_treasury:dest,movement_reason:'donation_at_capture'};
+      : {movement_type:_donType,destination_treasury:dest,movement_reason:'donation_at_capture'};
     /* overflow rule: money beyond the remaining deficit flows to Food automatically (read-time rule) */
     if(dest==='historical_deficit'&&window.FIN2){
       const rem=Math.abs(Math.min(0,(window.TREASURY_OPENINGS?.historical_deficit||0)+FIN2.historicalDeficitTreasury()));

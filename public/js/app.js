@@ -377,7 +377,7 @@ const D={
     const q=(document.getElementById('q-don')?.value||'').toLowerCase();
     let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     if(q)d=d.filter(r=>(r.payer_name||gmn(r.member_id)||'').toLowerCase().includes(q));
-    const _cash=d.filter(r=>r.movement_type==='donation_cash').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const _cash=d.filter(r=>FIN2.isCashDonation(r.movement_type)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('don-sub');
     if(sub)sub.textContent=`${d.length} تبرع — نقدي ₪ ${fmt(_cash)} · عيني/خدمي (توثيقي) ₪ ${fmt(_doc)}`;
@@ -399,7 +399,7 @@ const D={
         const dl={food:en?'Food':'الغداء',diwan:en?'Diwan':'الديوان',historical_deficit:en?'Hist. Deficit':'العجز التاريخي'};
         if(r.movement_type==='historical_debt_collection')
           return `<span class="badge wr">${en?'Debt Collection':'تحصيل ذمة تاريخية'} ← ${dl.historical_deficit}</span>`;
-        if(r.movement_type==='donation_cash'){
+        if(FIN2.isCashDonation(r.movement_type)){
           /* ق5 — a donation whose Item-9 slice settles the donor-member's debt */
           const sp=(FIN.allocateFoodDonations().perReceipt[r.id]||{});
           if(r.donation_display_fund==='food'&&r.member_id&&sp.debtSettled>0)
@@ -486,7 +486,7 @@ function renderTreasuryTabs(){
   const el=document.getElementById('treasury-tabs');if(!el)return;
   /* P2-D — the new model: three CASH treasuries + the donation REGISTERS view.
      The old "donation treasury" tab no longer exists (it was never cash). */
-  const tabs=[['diwan','خزينة الديوان'],['food','خزينة الغداء'],['deficit','خزينة العجز التاريخي'],['registers','سجلّ التبرعات']];
+  const tabs=[['diwan','خزينة الديوان'],['food','خزينة الغداء'],['deficit','حساب تسوية العجز التاريخي'],['registers','سجلّ التبرعات']];
   el.innerHTML=tabs.map(([k,l])=>`<div class="tp-tab ${TP_FUND===k?'on':''}" onclick="window.selectTreasuryFund('${k}')">${l}</div>`).join('');
 }
 window.toggleTreasuryCurrency=function(){
@@ -509,7 +509,7 @@ function tpCurrencyRows(fund,nat){
 function renderTreasuryPanel(){
   const el=document.getElementById('treasury-panel');if(!el)return;
   const fund=TP_FUND;
-  const fundName=fund==='food'?'خزينة الغداء':fund==='diwan'?'خزينة الديوان':fund==='deficit'?'خزينة العجز التاريخي':'سجلّ التبرعات';
+  const fundName=fund==='food'?'خزينة الغداء':fund==='diwan'?'خزينة الديوان':fund==='deficit'?'حساب تسوية العجز التاريخي':'سجلّ التبرعات';
   const nat=tpCurrency(fund==='deficit'||fund==='registers'?'diwan':fund);
   const upd='محدث وفق أسعار الصرف اليومية';
   const ratesLine=`USD ${RATES.USD.toFixed(3)} · JOD ${RATES.JOD.toFixed(3)} · ${today()}`;
@@ -644,7 +644,7 @@ function renderDash(){
   const _kpis=document.getElementById('dash-kpis');
   if(_kpis)_kpis.innerHTML=[
     {t:_isEn?'Food Treasury':'خزينة الغداء',v:fb,g:false},
-    {t:_isEn?'Historical Deficit Treasury':'خزينة العجز التاريخي',v:rd,g:true},
+    {t:_isEn?'Historical Deficit Settlement Account':'حساب تسوية العجز التاريخي',v:rd,g:true},
     {t:_isEn?'Net Food Position':'صافي مركز الغداء',v:np,g:false},
     {t:_isEn?'Diwan Treasury':'خزينة الديوان',v:db,g:false},
   ].map(k=>`<div class="k"><div class="t">${k.t}</div>
