@@ -64,6 +64,13 @@
        remaining deficit. `outflow:true` per the EVENTS cash-direction convention. */
     historical_deficit_settlement:{key:'historical_deficit_settlement',label_ar:'تسوية عجز تاريخي',      treasury:'historical_deficit', cash:true, outflow:true, decreases_deficit:true, operational_expense:false},
     donation_cash:               {key:'donation_cash',               label_ar:'تبرع نقدي',              treasury:'ADMIN_SELECTED',     cash:true, register:'cash_donation'},
+    /* FA-01 (Financial Events Catalog) — per-destination primary donation/income events.
+       All Reserved (forward-only; no existing voucher carries them; zero numeric impact).
+       Register union is by the `register` property, never by a literal movement_type. */
+    diwan_operational_income:    {key:'diwan_operational_income',    label_ar:'إيراد الديوان التشغيلي',  treasury:'diwan',              cash:true, revenue_class:'exchange', event_id:'FE-004'},
+    diwan_cash_donation:         {key:'diwan_cash_donation',         label_ar:'تبرع نقدي للديوان',       treasury:'diwan',              cash:true, register:'cash_donation', revenue_class:'contribution', event_id:'FE-005'},
+    food_cash_donation:          {key:'food_cash_donation',          label_ar:'تبرع نقدي للغداء',        treasury:'food',               cash:true, register:'cash_donation', revenue_class:'contribution', event_id:'FE-002'},
+    deficit_cash_donation:       {key:'deficit_cash_donation',       label_ar:'تبرع نقدي موجَّه للعجز',   treasury:'historical_deficit', cash:true, register:'cash_donation', revenue_class:'contribution', event_id:'FE-007'},
     donation_inkind:             {key:'donation_inkind',             label_ar:'تبرع عيني/خدمي',         treasury:null,                 cash:false, register:'inkind'},
     food_expense:                {key:'food_expense',                label_ar:'مصروف غداء',             treasury:'food',               cash:true, outflow:true},
     diwan_expense:               {key:'diwan_expense',               label_ar:'مصروف ديوان',            treasury:'diwan',              cash:true, outflow:true},
