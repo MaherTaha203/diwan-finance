@@ -47,6 +47,7 @@ function resFmtLong(iso) {
   return `${RES_DAYNAMES_AR[dt.getDay()]} ${dt.getDate()} ${RES_MONTHS_AR[dt.getMonth()]} ${dt.getFullYear()}`;
 }
 const resT = (ar, en) => resEn() ? en : ar;
+const escAttr = s => esc(s).replace(/"/g, '&quot;');
 
 /* ── entry points ── */
 window.resOnShow = async function () {
@@ -61,7 +62,8 @@ window.resOnShow = async function () {
 };
 
 async function resEnsureYear(y) {
-  if (RES.loadedYears[y] || RES.loading) { if (RES.loadedYears[y]) return; }
+  if (RES.loadedYears[y]) return;
+  if (RES.loading) return;              // a fetch is in flight; caller re-renders after it lands
   RES.loading = true; RES.error = false;
   const { data, error } = await SB.from('reservations')
     .select('*')
@@ -155,7 +157,7 @@ function resRender() {
       if (RES.filter === 'week' && (c.iso < wkA || c.iso > wkB)) cls += ' dim';
     }
     const aria = `${resFmtLong(c.iso)} — ${r ? resTypeLabel(r.res_type) + ' · ' + r.customer_name : resT('متاح', 'Available')}`;
-    grid += `<div class="${cls}" ${c.out ? '' : `role="gridcell" tabindex="0" aria-label="${esc(aria)}"
+    grid += `<div class="${cls}" ${c.out ? '' : `role="gridcell" tabindex="0" aria-label="${escAttr(aria)}"
       onclick="window.resDayClick('${c.iso}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.resDayClick('${c.iso}')}"`}>
       <div class="res-dn"><span class="num">${c.d}</span>${isToday && !c.out ? `<span class="res-today-chip">${resT('اليوم', 'Today')}</span>` : ''}</div>
       ${r && !c.out ? `<div class="res-rv"><span class="res-badge">${esc(resTypeLabel(r.res_type))}</span><span class="res-name">${esc(r.customer_name)}</span></div>`
@@ -168,8 +170,11 @@ function resRender() {
     <div class="res-grid" role="grid">${grid}</div>`;
   resRenderDayCard();
 }
+const RES_DOW_AR_SHORT = ['سبت','أحد','اثن','ثلا','أرب','خمس','جمع'];
 function resDowHead() {
-  return (resEn() ? RES_DOW_EN : RES_DOW_AR).map(d => `<div>${d}</div>`).join('');
+  const full = resEn() ? RES_DOW_EN : RES_DOW_AR;
+  const short = resEn() ? RES_DOW_EN : RES_DOW_AR_SHORT;
+  return full.map((d, i) => `<div><span class="dwf">${d}</span><span class="dws">${short[i]}</span></div>`).join('');
 }
 
 /* ── day interactions ── */
@@ -410,3 +415,14 @@ document.addEventListener('click', e => {
   const dd = document.getElementById('res-q-dd');
   if (dd && !e.target.closest('.res-search')) dd.style.display = 'none';
 });
+
+/* Language switch: applyLang() translates data-i18n nodes only — the grid,
+   month label, weekday headers and type badges are JS-rendered, so wrap
+   applyLang to re-render the calendar with the new language. */
+if (typeof window.applyLang === 'function') {
+  const _resApplyLang = window.applyLang;
+  window.applyLang = function () {
+    _resApplyLang();
+    if (RES.inited) resRender();
+  };
+}
