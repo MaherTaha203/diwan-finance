@@ -377,6 +377,13 @@ const D={
     const q=(document.getElementById('q-don')?.value||'').toLowerCase();
     let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     if(q)d=d.filter(r=>(r.payer_name||gmn(r.member_id)||'').toLowerCase().includes(q));
+    /* Domain 3 — filter by donation category/destination (search ownership). */
+    const _ft=document.getElementById('f-don-type')?.value||'';
+    if(_ft==='inkind') d=d.filter(r=>r.movement_type==='donation_inkind');
+    else if(_ft==='cash') d=d.filter(r=>FIN2.isCashDonation(r.movement_type));
+    else if(_ft==='cash-food') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='food');
+    else if(_ft==='cash-diwan') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='diwan');
+    else if(_ft==='cash-deficit') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='historical_deficit');
     const _cash=d.filter(r=>FIN2.isCashDonation(r.movement_type)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('don-sub');
@@ -1773,7 +1780,12 @@ window.exportPageExcel=function(type){
   else if(type==='don'){
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u062a\u0628\u0631\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u064a\u0638\u0647\u0631 \u0641\u064a','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),(r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.food_donation_allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),r.notes||'']));
+    /* Domain 3 (Display Principle) — mark in-kind rows as documentary, never blank/cash. */
+    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),
+      r.movement_type==='donation_inkind'
+        ? (window.LANG==='en'?'In-kind/Service · documentary':'عيني/خدمي · توثيقي')+(r.register_category?' ('+r.register_category+')':'')
+        : (r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.food_donation_allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),
+      r.notes||'']));
   }
   else if(type==='members'){
     wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
