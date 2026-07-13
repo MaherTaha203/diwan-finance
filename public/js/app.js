@@ -1557,8 +1557,10 @@ window.exportCSV=function(type){
     h=['رقم','التاريخ','المستفيد','المبلغ ₪','طريقة الصرف','ملاحظات'];
     rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),p.amount_ils||p.amount,p.payment_method,p.notes]);
   }else if(type==='diwan-rec'){
-    h=['رقم','التاريخ','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
-    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').map(r=>[r.no,r.receipt_date,r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
+    /* Domain 1 — surface the FE-004/FE-005 split on the diwan export too (additive column). */
+    const _det=mt=>mt==='diwan_operational_income'?'إيراد تشغيلي':mt==='diwan_cash_donation'?'تبرع نقدي':'—';
+    h=['رقم','التاريخ','نوع الحدث','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
+    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').map(r=>[r.no,r.receipt_date,_det(r.movement_type),r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
   }else if(type==='diwan-pay'){
     h=['رقم','التاريخ','المستفيد','المبلغ ₪','الفئة','ملاحظات'];
     rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),p.amount_ils||p.amount,L.expense(p.expense_type),p.notes]);
