@@ -86,17 +86,28 @@ if(typeof window.applyLang === 'function'){
        role, so skip finance loads entirely and land on the calendar. */
     startClock();
     initSessionTimeout();
-    await logAction('login','تسجيل دخول','auth',null);
+    logAction('login','تسجيل دخول','auth',null).catch(()=>{}); /* audit in background — never blocks the UI */
     applyLoginLang();
     window.nav('reservations');
     return;
   }
-  await loadSettings();
-  await fetchRates();
-  await loadAll();
+  /* PERF (slow-login fix): the old flow was six SEQUENTIAL network stages —
+     settings → edge-function rate refresh (cold start + external API, the
+     dominant cost) → rates read → 7-table fetch → attachment counts → audit
+     insert — before the dashboard could render. Now: settings and the full
+     data fetch run IN PARALLEL and render fires once when both are ready
+     (numbers always computed with settings loaded, exactly as before);
+     the rate refresh and the audit insert run in the background. Rates are
+     already correct at render time — loadSettings seeds RATES from the
+     stored fallback rates; fetchRates only refreshes them on arrival. */
+  let _loadOk=true;
+  try{ await Promise.all([loadSettings(), loadAllData()]); }
+  catch(e){ _loadOk=false; toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err'); console.error(e); }
+  if(_loadOk) renderAll();
+  fetchRates(); /* background refresh — updates RATES + display when done */
   startClock();
   initSessionTimeout();
-  await logAction('login','تسجيل دخول','auth',null);
+  logAction('login','تسجيل دخول','auth',null).catch(()=>{});
   initMobile();
   applyDataProtection();
   applyLoginLang();
