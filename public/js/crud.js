@@ -83,7 +83,7 @@ window.saveRec=async function(print=false){
     const memberDebtNow=(payerType==='member'&&memberId)?Math.max(0,FIN.memberStatement(memberId).finalBalance):0;
     const debtSettled=Math.min(memberDebtNow,amountILS);
     const remainder=FIN._r2(amountILS-debtSettled);
-    const remDeficit=Math.max(0,-FIN.foodDeficitRemaining());
+    const remDeficit=Math.max(0,-FinContract.foodDeficitRemaining());
     let toDeficit=0,toCurrent=0;
     if(finalAllocType==='reduce_deficit'){ toDeficit=Math.min(remainder,remDeficit); toCurrent=FIN._r2(remainder-toDeficit); }
     else { toCurrent=remainder; }
@@ -102,9 +102,13 @@ window.saveRec=async function(print=false){
      fields; food/diwan shapes are deterministic per the ratified ق2/model. */
   let cls;
   if(fund==='food'){
+    /* Domain 2 (FA-01 FE-002) — a non-member food donation is captured as its
+       dedicated type `food_cash_donation` (forward-only). Register unions by the
+       `cash_donation` property, so behaviour/treasury/register are byte-identical
+       to the transitional `donation_cash`; existing vouchers are untouched. */
     cls = payerType==='member'
       ? {movement_type:'subscription_payment',destination_treasury:'food',movement_reason:'member_food_payment'}
-      : {movement_type:'donation_cash',destination_treasury:'food',movement_reason:'nonmember_food_donation'};
+      : {movement_type:'food_cash_donation',destination_treasury:'food',movement_reason:'nonmember_food_donation'};
   } else if(fund==='diwan'){
     /* Domain 1 (FA-01 FE-004/FE-005) — two distinct primary events, both to the diwan
        treasury. Operational income (exchange) is excluded from the cash-donation
@@ -118,9 +122,17 @@ window.saveRec=async function(print=false){
            register_category:document.getElementById('rec-don-category')?.value||'other'};
   } else {
     const dest = donDisplay==='diwan' ? 'diwan' : (allocationType==='reduce_deficit' ? 'historical_deficit' : 'food');
+    /* Domain 2 (FA-01 FE-002/FE-007) — activate the dedicated donation types by
+       destination, forward-only: food ⇒ food_cash_donation, deficit ⇒
+       deficit_cash_donation. Diwan-directed donations stay `donation_cash`
+       (Domain 1's diwan_cash_donation is captured via the diwan receipt form; not
+       reopened here). All carry register:'cash_donation' ⇒ byte-identical. */
+    const _donType = dest==='food' ? 'food_cash_donation'
+                   : dest==='historical_deficit' ? 'deficit_cash_donation'
+                   : 'donation_cash';
     cls = isQ4Collection
       ? {movement_type:'historical_debt_collection',destination_treasury:'historical_deficit',movement_reason:'q4_member_deficit_collection'}
-      : {movement_type:'donation_cash',destination_treasury:dest,movement_reason:'donation_at_capture'};
+      : {movement_type:_donType,destination_treasury:dest,movement_reason:'donation_at_capture'};
     /* overflow rule: money beyond the remaining deficit flows to Food automatically (read-time rule) */
     if(dest==='historical_deficit'&&window.FIN2){
       const rem=Math.abs(Math.min(0,(window.TREASURY_OPENINGS?.historical_deficit||0)+FIN2.historicalDeficitTreasury()));
@@ -290,14 +302,28 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
   {
     const ev=M2.EVENTS[newClass.movement_type];
     if(!ev){toast('نوع الحركة ليس من أحداث النموذج المعتمد','err');return false;}
-    if(newClass.movement_type==='donation_cash'&&!M2.DONATION_DESTINATIONS.includes(newClass.destination_treasury)){
-      toast('وجهة التبرع النقدي يجب أن تكون إحدى الخزائن الثلاث','err');return false;}
+    /* Domain 4 (FA-01 hardening) — the transitional donation_cash chooses any of
+       the three donation treasuries; every OTHER cash event has a FIXED treasury
+       in the model, so its destination must equal it (blocks a wrong-treasury
+       reclassification that would move money incorrectly). */
+    if(newClass.movement_type==='donation_cash'){
+      if(!M2.DONATION_DESTINATIONS.includes(newClass.destination_treasury)){
+        toast('وجهة التبرع النقدي يجب أن تكون إحدى الخزائن الثلاث','err');return false;}
+    } else if(ev.cash===true && ev.treasury){
+      if(newClass.destination_treasury && newClass.destination_treasury!==ev.treasury){
+        toast('وجهة هذا الحدث ثابتةٌ دستورياً: '+ev.treasury,'err');return false;}
+    }
     if(ev.cash===false&&newClass.destination_treasury){
       toast('حدث غير نقدي لا يحمل وجهة خزينة','err');return false;}
   }
   const table=kind==='payment'?'payments':'receipts';
   const{data:row,error:rErr}=await SB.from(table).select('*').eq('id',voucherId).single();
   if(rErr||!row){toast('السند غير موجود','err');return false;}
+  /* Domain 4 (ratified matrix) — never reclassify a voucher in a closed fiscal
+     period, and never touch amount/date/member (this path writes classification
+     fields only, so those are structurally immutable here). */
+  if(voucherLocked(row.receipt_date||row.payment_date)){
+    toast('🔒 السنة المالية مقفلة — لا يُعاد تصنيف سندٍ فيها','err');return false;}
   const prev={movement_type:row.movement_type||null,destination_treasury:row.destination_treasury||null,
               source_treasury:row.source_treasury||null,movement_reason:row.movement_reason||null,
               register_category:row.register_category||null};
@@ -321,6 +347,30 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
   await loadAll();
   toast('✓ أُعيد التصنيف مع حفظ الأثر الكامل','ok');
   return true;
+};
+/* Domain 4 — reclassification admin UI (invokes the governed reclassifyVoucher).
+   Single Admin creates+approves this release (separation of duties designed, not
+   yet activated); the operation is classification-only and fully audited. */
+window.openReclassify=function(kind,id){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  const row=(kind==='payment'?DB.payments:DB.receipts).find(x=>x.id===id); if(!row){toast('السند غير موجود','err');return;}
+  window.__rclKind=kind; window.__rclId=id;
+  const M2=window.MODEL2; if(!M2){toast('نموذج التصنيف غير مُحمَّل','err');return;}
+  const sel=document.getElementById('rcl-type');
+  if(sel) sel.innerHTML=Object.values(M2.EVENTS).map(e=>`<option value="${e.key}"${e.key===row.movement_type?' selected':''}>${esc(e.label_ar)} · ${esc(e.key)}</option>`).join('');
+  const info=document.getElementById('rcl-info');
+  if(info) info.textContent=`${row.no} · ₪${fmt(row.amount_ils||row.amount)} · ${row.receipt_date||row.payment_date} · الحالي: ${row.movement_type||'—'} → ${row.destination_treasury||'—'}`;
+  const dsel=document.getElementById('rcl-dest'); if(dsel) dsel.value=row.destination_treasury||'';
+  const rsn=document.getElementById('rcl-reason'); if(rsn) rsn.value='';
+  window.openM('reclass');
+};
+window.doReclassify=async function(){
+  const kind=window.__rclKind, id=window.__rclId;
+  const mt=document.getElementById('rcl-type')?.value;
+  const dest=document.getElementById('rcl-dest')?.value||null;
+  const reason=document.getElementById('rcl-reason')?.value;
+  const ok=await window.reclassifyVoucher(kind,id,{movement_type:mt,destination_treasury:dest},reason);
+  if(ok) window.closeM();
 };
 async function fetchVoucherHistory(kind,voucherId){
   const{data}=await SB.from('voucher_versions').select('*')

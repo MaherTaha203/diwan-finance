@@ -258,15 +258,27 @@ window.prtDonStmt=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const _en=window.LANG==='en';
   const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
-  const tot=rows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-  const toFood=rows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-  const toDiwan=tot-toFood;
+  /* Domain 3 (§4.2 enforcement) — the printed CASH total must never conflate the
+     in-kind documentary value. Split: cash donations vs in-kind/service (FE-008,
+     documentary only, no cash). The in-kind value is shown SEPARATELY, never in
+     the cash total or the cash directions. Constitutional display correction
+     (FM-01 §8/§9.2 phase 3); treasuries and the cash register are untouched. */
+  const _isInkind=r=>r.movement_type==='donation_inkind';
+  const cashRows=rows.filter(r=>!_isInkind(r));
+  const inkindRows=rows.filter(_isInkind);
+  const cashTot=cashRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+  const inkindTot=inkindRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+  const toFood=cashRows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+  const toDiwan=cashTot-toFood;
   /* ITEM 9 — recognized donation portions (after member debt settlement). */
   const foodDeficit=FIN.foodSettlementReserve();   // Historical Deficit Donation -> Reserve
   const foodSupport=FIN.foodCurrentSupportTotal(); // Current Support Donation
   const foodDebt=FIN.foodDebtSettlementTotal();    // Debt Settlement (NOT a donation)
   const _dalloc=FIN.allocateFoodDonations();
   const donDir=r=>{
+    /* Domain 3 (Display Principle) — an in-kind/service donation is documentary,
+       never a diwan-directed cash donation; label it by its category. */
+    if(_isInkind(r)) return (_en?'In-kind/Service · documentary':'عيني/خدمي · توثيقي')+(r.register_category?' ('+esc(r.register_category)+')':'');
     if(r.donation_display_fund!=='food') return window.t('receipts.fund_diwan');
     const sp=_dalloc.perReceipt[r.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
     const parts=[];
@@ -288,17 +300,65 @@ window.prtDonStmt=function(){
     +'<div class="period">'+window.t('stmt.count_label')+' '+rows.length+'</div>'
     +'<div class="cards">'
     +'<div class="card"><div class="k">'+window.t('stmt.donation_count')+'</div><div class="v">'+rows.length+'</div></div>'
-    +'<div class="card"><div class="k">'+window.t('stmt.total_donations')+'</div><div class="v pos">₪ '+fmt(tot)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'Cash Donations (Total)':'التبرعات النقدية (الإجمالي)')+'</div><div class="v pos">₪ '+fmt(cashTot)+'</div></div>'
+    +'<div class="card"><div class="k">'+(_en?'In-kind/Service · documentary value (not cash)':'عيني/خدمي · قيمة توثيقية (ليست نقداً)')+'</div><div class="v">₪ '+fmt(inkindTot)+'</div></div>'
     +'<div class="card"><div class="k">'+(_en?'Debt Settlement':'تسوية ذمم')+'</div><div class="v">₪ '+fmt(foodDebt)+'</div></div>'
     +'<div class="card"><div class="k">'+(_en?'Food — Deficit Settlement':'الغداء — تسوية العجز')+'</div><div class="v">₪ '+fmt(foodDeficit)+'</div></div>'
     +'<div class="card"><div class="k">'+(_en?'Food — Current Support':'الغداء — دعم حالي')+'</div><div class="v">₪ '+fmt(foodSupport)+'</div></div>'
     +'<div class="card"><div class="k">'+window.t('stmt.to_diwan')+'</div><div class="v">₪ '+fmt(toDiwan)+'</div></div></div>'
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+window.t('donations.donor')+'</th><th>'+window.t('common.amount')+'</th><th>'+window.t('common.currency')+'</th><th>'+window.t('stmt.direction')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
-    +'<tr class="final"><td colspan="3">الإجمالي · Total</td><td class="pos">₪ '+fmt(tot)+'</td><td colspan="3"></td></tr></tbody></table>'
+    +'<tr class="final"><td colspan="3">'+(_en?'Cash Total (in-kind excluded — §4.2)':'الإجمالي النقدي (العيني مستبعَد — §4.2)')+'</td><td class="pos">₪ '+fmt(cashTot)+'</td><td colspan="3">'+(_en?'in-kind documentary: ₪':'قيمة عينية توثيقية: ₪')+' '+fmt(inkindTot)+'</td></tr></tbody></table>'
     +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
     +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   openPrintWin(css,body);
+};
+
+/* ═══ Domain 4 — Balance Reconciliation (read-only consistency tool) ═══
+   Proves every surface reads the SAME figure: the legacy engine (FIN) and the
+   new-model engine (FIN2) must agree on each treasury/account on the production
+   envelope. Read-only; touches no data. Answers the DoD questions
+   «هل جميع الكشوف متطابقة؟ / هل يوجد أي اختلاف بين أي سطحين؟». */
+window.reconcileRows=function(){
+  /* FIN is a top-level `const` (global lexical binding, NOT window.FIN) — read it
+     directly, exactly as fin2.js does. (Bug fix: the earlier window.FIN reference
+     was always undefined, so this returned []; now it genuinely reconciles.) */
+  const F=(typeof FIN!=='undefined'&&FIN)||null, F2=window.FIN2; if(!F||!F2) return [];
+  const r2=n=>Math.round((Number(n)||0)*100)/100;
+  const c=F2.composed?F2.composed():{};
+  const reg=F2.cashDonationRegister?F2.cashDonationRegister():[];
+  const memSum=r2((DB.members||[]).filter(m=>m.is_active!==false)
+    .reduce((s,m)=>s+Number(F.memberStatement(m.id).finalBalance||0),0));
+  const rows=[
+    {k:'خزينة الغداء',              legacy:r2(F.foodBalance()),            neo:r2(c.food)},
+    {k:'خزينة الديوان',             legacy:r2(F.diwanBalance()),           neo:r2(c.diwan)},
+    {k:'حساب تسوية العجز (المتبقّي)', legacy:r2(F.foodDeficitRemaining()),   neo:r2(c.historical_deficit_remaining)},
+  ].map(x=>Object.assign(x,{match:Math.abs(x.legacy-x.neo)<0.005}));
+  /* single-engine references (shown for traceability; no second surface to diff) */
+  rows.push({k:'سجل التبرعات النقدية (عدد · مجموع)',legacy:reg.length+' · '+r2(reg.reduce((s,x)=>s+Number(x.amount||0),0)),neo:'—',match:true,ref:true});
+  rows.push({k:'مجموع أرصدة حسابات الأعضاء',legacy:memSum,neo:'—',match:true,ref:true});
+  return rows;
+};
+window.reconcileReport=function(){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const rows=window.reconcileRows();
+  const allMatch=rows.filter(r=>!r.ref).every(r=>r.match);
+  /* Foundation-B — the two independent engine paths were unified into ONE
+     canonical source (FinContract → FIN2). FIN's treasury functions now delegate
+     to it, so this report verifies the single source stays self-consistent
+     (the FIN delegate and FIN2 read the same figure). */
+  const body=reportHeader('تقرير مطابقة الأرصدة · Balance Reconciliation',{sub:'المالية ‹ الحسابات ‹ المطابقة (مصدرٌ واحد)'})
+    +'<div class="period">'+(allMatch?'✓ مصدرٌ قانونيٌّ واحدٌ لأرصدة الخزائن (FinContract → FIN2) — متّسقٌ تماماً، لا اختلاف بين أي سطحين':'⚠ يوجد اختلاف — راجع الصفوف المميّزة')+' · '+fmtDate2(new Date().toISOString())+'</div>'
+    +'<table class="dt"><thead><tr><th>الحساب / الخزينة</th><th>عبر FIN (مُفوِّض)</th><th>المصدر القانوني (FIN2)</th><th>الحالة</th></tr></thead><tbody>'
+    +rows.map(r=>'<tr>'+'<td>'+esc(r.k)+'</td>'
+        +'<td>'+(typeof r.legacy==='number'?'₪ '+fmt(r.legacy):esc(String(r.legacy)))+'</td>'
+        +'<td>'+(r.ref?'—':(typeof r.neo==='number'?'₪ '+fmt(r.neo):esc(String(r.neo))))+'</td>'
+        +'<td>'+(r.ref?'مرجعيّ':(r.match?'✓ متطابق':'⚠ اختلاف'))+'</td></tr>').join('')
+    +'</tbody></table>'
+    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
+    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع الديوان</div></div></div></div>'
+    +reportFooter({date:fmtDate2(new Date().toISOString())});
+  openPrintWin('@page{size:A4;margin:12mm}body{font-family:var(--fa);direction:rtl;background:#fff}',body);
 };
 

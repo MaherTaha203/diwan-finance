@@ -377,7 +377,14 @@ const D={
     const q=(document.getElementById('q-don')?.value||'').toLowerCase();
     let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     if(q)d=d.filter(r=>(r.payer_name||gmn(r.member_id)||'').toLowerCase().includes(q));
-    const _cash=d.filter(r=>r.movement_type==='donation_cash').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    /* Domain 3 — filter by donation category/destination (search ownership). */
+    const _ft=document.getElementById('f-don-type')?.value||'';
+    if(_ft==='inkind') d=d.filter(r=>r.movement_type==='donation_inkind');
+    else if(_ft==='cash') d=d.filter(r=>FIN2.isCashDonation(r.movement_type));
+    else if(_ft==='cash-food') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='food');
+    else if(_ft==='cash-diwan') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='diwan');
+    else if(_ft==='cash-deficit') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='historical_deficit');
+    const _cash=d.filter(r=>FIN2.isCashDonation(r.movement_type)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('don-sub');
     if(sub)sub.textContent=`${d.length} تبرع — نقدي ₪ ${fmt(_cash)} · عيني/خدمي (توثيقي) ₪ ${fmt(_doc)}`;
@@ -399,7 +406,7 @@ const D={
         const dl={food:en?'Food':'الغداء',diwan:en?'Diwan':'الديوان',historical_deficit:en?'Hist. Deficit':'العجز التاريخي'};
         if(r.movement_type==='historical_debt_collection')
           return `<span class="badge wr">${en?'Debt Collection':'تحصيل ذمة تاريخية'} ← ${dl.historical_deficit}</span>`;
-        if(r.movement_type==='donation_cash'){
+        if(FIN2.isCashDonation(r.movement_type)){
           /* ق5 — a donation whose Item-9 slice settles the donor-member's debt */
           const sp=(FIN.allocateFoodDonations().perReceipt[r.id]||{});
           if(r.donation_display_fund==='food'&&r.member_id&&sp.debtSettled>0)
@@ -486,7 +493,7 @@ function renderTreasuryTabs(){
   const el=document.getElementById('treasury-tabs');if(!el)return;
   /* P2-D — the new model: three CASH treasuries + the donation REGISTERS view.
      The old "donation treasury" tab no longer exists (it was never cash). */
-  const tabs=[['diwan','خزينة الديوان'],['food','خزينة الغداء'],['deficit','خزينة العجز التاريخي'],['registers','سجلّ التبرعات']];
+  const tabs=[['diwan','خزينة الديوان'],['food','خزينة الغداء'],['deficit','حساب تسوية العجز التاريخي'],['registers','سجلّ التبرعات']];
   el.innerHTML=tabs.map(([k,l])=>`<div class="tp-tab ${TP_FUND===k?'on':''}" onclick="window.selectTreasuryFund('${k}')">${l}</div>`).join('');
 }
 window.toggleTreasuryCurrency=function(){
@@ -509,7 +516,7 @@ function tpCurrencyRows(fund,nat){
 function renderTreasuryPanel(){
   const el=document.getElementById('treasury-panel');if(!el)return;
   const fund=TP_FUND;
-  const fundName=fund==='food'?'خزينة الغداء':fund==='diwan'?'خزينة الديوان':fund==='deficit'?'خزينة العجز التاريخي':'سجلّ التبرعات';
+  const fundName=fund==='food'?'خزينة الغداء':fund==='diwan'?'خزينة الديوان':fund==='deficit'?'حساب تسوية العجز التاريخي':'سجلّ التبرعات';
   const nat=tpCurrency(fund==='deficit'||fund==='registers'?'diwan':fund);
   const upd='محدث وفق أسعار الصرف اليومية';
   const ratesLine=`USD ${RATES.USD.toFixed(3)} · JOD ${RATES.JOD.toFixed(3)} · ${today()}`;
@@ -521,7 +528,7 @@ function renderTreasuryPanel(){
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     /* P1 — the authoritative total comes from FIN (single source); income/expense
        remain only to render the flow breakdown below. Value-identical to opening+income-expense. */
-    total=FIN.diwanBalance(); neg=total<0;
+    total=FinContract.diwanBalance(); neg=total<0;
     rule='القاعدة: الكلي = الرصيد الأولي السابق + إجمالي المقبوضات − إجمالي المصروفات';
     middle=`<div class="tp-flow">
       <div class="nd prev"><div class="t">الرصيد الأولي السابق</div><div class="v">₪ ${fmt(opening)}</div><div class="s">يشارك في الحساب</div></div>
@@ -529,13 +536,13 @@ function renderTreasuryPanel(){
       <div class="nd cur"><div class="t">رصيد الصندوق الحالي = الكلي</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
   } else if(fund==='food'){
-    const remDeficit=FIN.foodDeficitRemaining();
+    const remDeficit=FinContract.foodDeficitRemaining();
     const reserve=FIN.foodSettlementReserve();
     const a=FIN.allocateFoodDonations();
     const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     const operational=FIN._r2(income-expense);
-    total=FIN.foodBalance(); neg=total<0;
+    total=FinContract.foodBalance(); neg=total<0;
     cap='رصيد صندوق الغداء الحالي';
     /* ق5 — تسوية الذمم من التبرعات نقدٌ مخصص للعجز (حيازته هنا): تُعرض ضمن جانب العجز لا ضمن الرصيد الحالي */
     rule='القاعدة: الرصيد الحالي = تشغيلي + الدعم الحالي · تسوية الذمم من التبرعات تُخصَّص للعجز التاريخي (ق5) · العجز يُعرض منفصلاً ولا يُجمع';
@@ -549,7 +556,7 @@ function renderTreasuryPanel(){
   } else if(fund==='deficit'){
     /* P2-D — the Historical Deficit is a REAL cash treasury (new model).
        Composition reads TREASURY_OPENINGS (the single formal mapping); the value
-       is identical to the legacy FIN.foodDeficitRemaining() figure. */
+       is identical to the legacy FinContract.foodDeficitRemaining() figure. */
     const op=Number((window.TREASURY_OPENINGS||{}).historical_deficit||0);
     const comp=FIN2.composed();
     const inflow=FIN2.deficitInflows();            /* gross: collections + directed donations */
@@ -593,7 +600,7 @@ function renderTreasuryPanel(){
   </div>`;
 }
 function renderDash(){
-  const fb=FIN.foodBalance(),rd=FIN.foodDeficitRemaining(),np=FIN.foodNetPosition(),db=FIN.diwanBalance();
+  const fb=FinContract.foodBalance(),rd=FinContract.foodDeficitRemaining(),np=FinContract.foodNetPosition(),db=FinContract.diwanBalance();
   const dd=document.getElementById('dash-date');
   if(dd)dd.textContent=new Date().toLocaleDateString('en-CA');
 
@@ -644,7 +651,7 @@ function renderDash(){
   const _kpis=document.getElementById('dash-kpis');
   if(_kpis)_kpis.innerHTML=[
     {t:_isEn?'Food Treasury':'خزينة الغداء',v:fb,g:false},
-    {t:_isEn?'Historical Deficit Treasury':'خزينة العجز التاريخي',v:rd,g:true},
+    {t:_isEn?'Historical Deficit Settlement Account':'حساب تسوية العجز التاريخي',v:rd,g:true},
     {t:_isEn?'Net Food Position':'صافي مركز الغداء',v:np,g:false},
     {t:_isEn?'Diwan Treasury':'خزينة الديوان',v:db,g:false},
   ].map(k=>`<div class="k"><div class="t">${k.t}</div>
@@ -788,7 +795,7 @@ window.renderStmt=function(fund){
       +'<td class="as-note">'+esc(r.note||'')+'</td>'
       +'</tr>';
   }).join('');
-  const curBal=isFood?FIN.foodBalance():bal;
+  const curBal=isFood?FinContract.foodBalance():bal;
   const curLbl=isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal');
   let figs='<div class="as-figs">'
     +'<div class="as-fig green"><div class="k">'+window.t('stmt.total_income')+'</div><div class="v">₪ '+fmt(totalCr)+'</div></div>'
@@ -797,9 +804,9 @@ window.renderStmt=function(fund){
       +(isFood?'<div class="s">'+(_en?'Operational':'تشغيلي')+' ₪'+fmt(bal)+' + '+(_en?'Support':'دعم')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+(_en?'Debt Settle → Deficit (Q5)':'تسوية الذمم ← العجز (ق5)')+' ₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>':'')
     +'</div>';
   if(isFood){
-    figs+='<div class="as-fig'+(FIN.foodDeficitRemaining()<0?' red':'')+'"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v">₪ '+fmt(FIN.foodDeficitRemaining())+'</div></div>'
+    figs+='<div class="as-fig'+(FinContract.foodDeficitRemaining()<0?' red':'')+'"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v">₪ '+fmt(FinContract.foodDeficitRemaining())+'</div></div>'
       +'<div class="as-fig"><div class="k">'+mcLabel('reserve')+' + '+mcLabel('debt')+'</div><div class="v">₪ '+fmt(FIN._r2(FIN.foodSettlementReserve()+FIN.foodDebtSettlementTotal()))+'</div></div>'
-      +'<div class="as-fig '+(FIN.foodNetPosition()>=0?'green':'red')+'"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v">₪ '+fmt(FIN.foodNetPosition())+'</div></div>';
+      +'<div class="as-fig '+(FinContract.foodNetPosition()>=0?'green':'red')+'"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v">₪ '+fmt(FinContract.foodNetPosition())+'</div></div>';
   }
   figs+='</div>';
   const tbl='<div class="as-tablewrap"><table class="as-table"><thead><tr>'
@@ -1397,8 +1404,8 @@ function renderSysInfo(){
     <div class="sr"><span class="sr-l">عدد الأعضاء</span><span class="sr-v">${DB.members.filter(m=>m.is_active).length}</span></div>
     <div class="sr"><span class="sr-l">عدد الإيصالات</span><span class="sr-v">${totRec}</span></div>
     <div class="sr"><span class="sr-l">عدد سندات الصرف</span><span class="sr-v">${totPay}</span></div>
-    <div class="sr"><span class="sr-l">رصيد صندوق الغداء</span><span class="sr-v" style="color:var(--food)">₪ ${fmt(FIN.foodBalance())}</span></div>
-    <div class="sr"><span class="sr-l">رصيد صندوق الديوان</span><span class="sr-v" style="color:var(--diwan)">₪ ${fmt(FIN.diwanBalance())}</span></div>
+    <div class="sr"><span class="sr-l">رصيد صندوق الغداء</span><span class="sr-v" style="color:var(--food)">₪ ${fmt(FinContract.foodBalance())}</span></div>
+    <div class="sr"><span class="sr-l">رصيد صندوق الديوان</span><span class="sr-v" style="color:var(--diwan)">₪ ${fmt(FinContract.diwanBalance())}</span></div>
     <div class="sr"><span class="sr-l">سعر الدولار</span><span class="sr-v">₪ ${RATES.USD.toFixed(2)}</span></div>
     <div class="sr"><span class="sr-l">سعر الدينار الأردني</span><span class="sr-v">₪ ${RATES.JOD.toFixed(2)}</span></div>
   `;
@@ -1524,11 +1531,11 @@ window.exportCSV=function(type){
     h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
     const _en=window.LANG==='en';
     const summary=[
-      [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FIN.foodBalance(),'','',''],
-      [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FIN.foodDeficitRemaining(),'','',''],
+      [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FinContract.foodBalance(),'','',''],
+      [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FinContract.foodDeficitRemaining(),'','',''],
       [mcLabel('reserve'),'','',FIN.foodSettlementReserve(),'','',''],
       [(_en?'Debt Settlement → Deficit (Q5)':'تسوية ذمم من تبرعات ← العجز (ق5)'),'','',FIN.foodDebtSettlementTotal(),'','',''],
-      [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FIN.foodNetPosition(),'','',''],
+      [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FinContract.foodNetPosition(),'','',''],
       ['','','','','','','']
     ];
     rows=[...summary,...stmtRows.map(r=>{bal+=r.cr-r.dr;return[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',bal,r.note||''];})];
@@ -1709,14 +1716,21 @@ window.exportPagePDF=function(type){
     return window.downloadFundStatementPDF(fund);
   }
   else if(type==='don'){
+    /* Domain 3 (\u00a74.2) \u2014 mirror prtDonStmt: the printed CASH total must never
+       conflate the in-kind documentary value. Cash = non-in-kind; in-kind is
+       summed and shown SEPARATELY, its rows labelled documentary. */
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
-    let total=0;
+    const _ink=r=>r.movement_type==='donation_inkind';
+    let cashTot=0,inkTot=0;
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
     d.forEach(r=>{
-      const amt=Number(r.amount_ils||r.amount||0);total+=amt;
-      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${(r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.food_donation_allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'')}</td><td>${esc(r.notes||'')}</td></tr>`;
+      const amt=Number(r.amount_ils||r.amount||0); if(_ink(r))inkTot+=amt; else cashTot+=amt;
+      const dir=_ink(r)
+        ? (window.LANG==='en'?'In-kind/Service \u00b7 documentary':'\u0639\u064a\u0646\u064a/\u062e\u062f\u0645\u064a \u00b7 \u062a\u0648\u062b\u064a\u0642\u064a')+(r.register_category?' ('+esc(r.register_category)+')':'')
+        : (r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.food_donation_allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'');
+      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${dir}</td><td>${esc(r.notes||'')}</td></tr>`;
     });
-    tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length})</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
+    tableHTML+=`<tr class="final"><td colspan="3">${window.LANG==='en'?'Cash Total (in-kind excluded \u2014 \u00a74.2)':'\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0646\u0642\u062f\u064a (\u0627\u0644\u0639\u064a\u0646\u064a \u0645\u0633\u062a\u0628\u0639\u064e\u062f \u2014 \u00a74.2)'}</td><td>\u20aa ${fmt(cashTot)}</td><td>${window.LANG==='en'?'in-kind: \u20aa':'\u0639\u064a\u0646\u064a \u062a\u0648\u062b\u064a\u0642\u064a: \u20aa'} ${fmt(inkTot)}</td><td></td></tr></tbody></table>`;
   }
   else if(type==='members'){
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th></tr></thead><tbody>';
@@ -1773,7 +1787,12 @@ window.exportPageExcel=function(type){
   else if(type==='don'){
     const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u062a\u0628\u0631\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u064a\u0638\u0647\u0631 \u0641\u064a','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),(r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.food_donation_allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),r.notes||'']));
+    /* Domain 3 (Display Principle) — mark in-kind rows as documentary, never blank/cash. */
+    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),
+      r.movement_type==='donation_inkind'
+        ? (window.LANG==='en'?'In-kind/Service · documentary':'عيني/خدمي · توثيقي')+(r.register_category?' ('+r.register_category+')':'')
+        : (r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.food_donation_allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),
+      r.notes||'']));
   }
   else if(type==='members'){
     wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
@@ -1950,9 +1969,9 @@ function renderSettingsSummary(){
   const summaryEl   = document.getElementById('settings-bal-summary');
   if(!summaryCard||!summaryEl) return;
   summaryCard.style.display = '';
-  const foodOp = FIN.foodBalance();          /* operational only */
-  const foodRemDeficit = FIN.foodDeficitRemaining();  /* live remaining deficit, shown separately */
-  const diwanBal = FIN.diwanBalance();        /* unchanged: opening + movements */
+  const foodOp = FinContract.foodBalance();          /* operational only */
+  const foodRemDeficit = FinContract.foodDeficitRemaining();  /* live remaining deficit, shown separately */
+  const diwanBal = FinContract.diwanBalance();        /* unchanged: opening + movements */
   summaryEl.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
       <div class="kpi food" style="padding:14px">

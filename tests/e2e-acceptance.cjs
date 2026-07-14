@@ -106,7 +106,7 @@ const HARNESS=(seed)=>{
     const r3=await newReceipt('donation',{payerType:'member',memberId,amount:150,kind:'cash',display:'food',alloc:'support_current'});
     t1=T();
     const s3settled=R2(Math.min(s3debt,150)), s3surplus=R2(150-s3settled);
-    ok('S3/ق5 classification unchanged (donation_cash -> food): the split is a READ-TIME rule', r3.movement_type==='donation_cash'&&r3.destination_treasury==='food', JSON.stringify({mt:r3.movement_type,d:r3.destination_treasury}));
+    ok('S3/ق5 classified FE-002 (food_cash_donation -> food); the ق5 split stays a READ-TIME rule', r3.movement_type==='food_cash_donation'&&r3.destination_treasury==='food', JSON.stringify({mt:r3.movement_type,d:r3.destination_treasury}));
     ok('S3/ق5 settled slice '+s3settled+' -> DEFICIT; surplus '+s3surplus+' -> food; diwan untouched', t1.defRem===R2(t0.defRem+s3settled)&&t1.food===R2(t0.food+s3surplus)&&t1.diwan===t0.diwan, JSON.stringify({def:[t0.defRem,t1.defRem],food:[t0.food,t1.food]}));
     ok('S3/ق5 debt-settling donation NOT in the cash-donation register', s3settled>0&&t1.cashN===t0.cashN&&t1.cashS===t0.cashS, t0.cashN+'->'+t1.cashN);
     ok('S3/ق5 member statement dropped by exactly the settled slice', R2(FIN.memberStatement(memberId).finalBalance)===R2(s3debt-s3settled), s3debt+' -> '+R2(FIN.memberStatement(memberId).finalBalance));
@@ -179,7 +179,7 @@ const HARNESS=(seed)=>{
     ok('B1-R5 mixed sequence: cash moved exactly 120(diwan)+80(food); in-kind moved nothing; register +'+rcReg+' (ق5'+(rcSettled>0?' case-1: food one excluded':' case-2: no debt, real donation')+')',
        F1.diwan===R2(F0.diwan+120)&&F1.food===R2(F0.food+80)&&F1.inkN===F0.inkN+2&&F1.cashN===F0.cashN+rcReg, JSON.stringify({F0,F1,rcSettled}));
     ok('B1-R5 legacy net food position moved by exactly the CASH 80 (in-kind 1300 contributed ZERO)', L1.net===R2(L0.net+80), JSON.stringify([L0.net,L1.net]));
-    ok('B1-R5 INTENTIONAL divergence documented: legacy diwan ignores diwan-directed donations (old phantom-pot behavior); FIN2 counts them as real cash (ratified model)', L1.diwan===L0.diwan, 'legacy diwan '+L0.diwan+' -> '+L1.diwan+' while FIN2 diwan +120');
+    ok('B1-R5 Foundation-B CLOSED the legacy-diwan divergence: FIN.diwanBalance now delegates to FIN2 and counts the diwan-directed donation (+120), one canonical source', L1.diwan===R2(L0.diwan+120), 'diwan '+L0.diwan+' -> '+L1.diwan+' (unified with FIN2 +120)');
     /* R6 deficit interaction: in-kind then verify deficit figures agree across engines */
     ok('B1-R6 FIN2 deficit remaining is exactly 0 after the S5 overflow', T().defRem===0, T().defRem);
     ok('B1-R6 INTENTIONAL cross-engine difference documented (legacy defRem stays uncapped past zero; FIN2 caps at 0 + overflow — P3; debt-first split itself is UNIFIED since ق5)', typeof FIN.foodDeficitRemaining()==='number', 'legacy defRem='+R2(FIN.foodDeficitRemaining())+' vs FIN2 rem=0');

@@ -39,8 +39,13 @@
      (node unit tests) the behaviour stays neutral, exactly as before. */
   function q5Settled(r){
     /* destination must be food: a reclassified dest=historical_deficit row must
-       never debit food for cash that never entered it (Fable 5 note B-1). */
-    if(!(r&&r.movement_type==='donation_cash'&&r.destination_treasury==='food'
+       never debit food for cash that never entered it (Fable 5 note B-1).
+       Domain 2 — union by the register property, NOT the literal `donation_cash`
+       (FA-01 binding rule): FE-002 `food_cash_donation` carries ق5 exactly like
+       the transitional FE-014, so a member's deficit-settling food donation is
+       recognised whichever type it was captured as. */
+    const _ev=r?eventDef(r.movement_type):null;
+    if(!(r&&_ev&&_ev.register==='cash_donation'&&r.destination_treasury==='food'
          &&r.fund_type==='donation'&&r.donation_display_fund==='food'&&r.member_id)) return 0;
     /* FIN is a top-level `const` (global lexical binding, NOT window.FIN) */
     const F=(typeof FIN!=='undefined'&&FIN&&FIN.allocateFoodDonations)?FIN:null;
@@ -61,6 +66,9 @@
     },
     isClassified(){ return classifiedRows().length>0; },
     classifiedCount(){ return classifiedRows().length; },
+    /* Domain 2 — union predicate for every cash-donation event type (FA-01 binding
+       rule: consumers group by the register property, never the literal type). */
+    isCashDonation(mt){ const ev=eventDef(mt); return !!(ev&&ev.register==='cash_donation'); },
 
     /* ---- cash treasuries (three) ----
        balance = Σ cash inflows to this treasury − Σ cash outflows.
