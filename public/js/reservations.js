@@ -255,9 +255,11 @@ function resRenderDayCard(scroll) {
 /* ── dialogs ── */
 window.resOpenAdd = function (iso) {
   if (!resCanWrite()) { toast(resT('لا تملك صلاحية إضافة حجز', 'No permission to add reservations'), 'err'); return; }
+  // Past days (yesterday / previous months) are view-only — no retro bookings.
+  if (iso < today()) { toast(resT('لا يمكن الحجز على يوم ماضٍ — الأشهر السابقة للاطّلاع فقط', 'Cannot book a past day — previous months are view-only'), 'warn'); return; }
   if (RES.byDate[iso]) { resOpenView(iso); return; }
   document.getElementById('res-f-id').value = '';
-  document.getElementById('res-f-date').value = iso;
+  const dAdd = document.getElementById('res-f-date'); dAdd.value = iso; dAdd.min = today();
   document.getElementById('res-f-name').value = '';
   document.getElementById('res-f-phone').value = '';
   document.getElementById('res-f-type').value = '';
@@ -293,7 +295,7 @@ window.resOpenEdit = function (iso) {
   const r = RES.byDate[iso];
   if (!r || !resCanWrite()) return;
   document.getElementById('res-f-id').value = r.id;
-  document.getElementById('res-f-date').value = r.res_date;
+  const dEdit = document.getElementById('res-f-date'); dEdit.value = r.res_date; dEdit.min = today();
   document.getElementById('res-f-name').value = r.customer_name;
   document.getElementById('res-f-phone').value = r.phone;
   document.getElementById('res-f-type').value = r.res_type;
@@ -338,7 +340,7 @@ function resValidate() {
   const phone = document.getElementById('res-f-phone').value.replace(/[\s-]/g, '');
   const type = document.getElementById('res-f-type').value;
   if (!date) { resErr('res-f-date', resT('اختر التاريخ', 'Pick a date')); ok = false; }
-  else if (date < today() && !id) { resErr('res-f-date', resT('لا يمكن الحجز على يوم ماضٍ', 'Cannot book a past day')); ok = false; }
+  else if (date < today()) { resErr('res-f-date', resT('لا يمكن الحجز على يوم ماضٍ — الأشهر السابقة للاطّلاع فقط', 'Cannot book a past day — previous months are view-only')); ok = false; }
   else {
     const clash = RES.byDate[date];
     if (clash && String(clash.id) !== String(id)) {
