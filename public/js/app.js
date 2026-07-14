@@ -1947,8 +1947,10 @@ function applyLoginLang(){
     const el=document.getElementById(id);
     if(el)el.textContent=txt;
   });
-  const lEmail=document.getElementById('l-email');
-  if(lEmail)lEmail.placeholder=isEn?'0599123456 or email@example.com':'0599123456 أو email@example.com';
+  /* Identifier uses a segmented bidi-safe placeholder overlay (see #l-ph);
+     only the separator word changes with language, not a plain string. */
+  const lPhOr=document.getElementById('l-ph-or');
+  if(lPhOr)lPhOr.textContent=isEn?'or':'أو';
   const lPass=document.getElementById('l-pass');
   if(lPass)lPass.placeholder=isEn?'••••••••':'••••••••';
   const loginBtn=document.getElementById('login-btn');

@@ -102,6 +102,12 @@
 .iw-login{position:relative}
 .login-input{width:100%;height:52px;background:var(--b-input-bg);border:1px solid var(--b-input-border);border-radius:8px;padding:0 48px 0 48px;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;font-size:15px;color:var(--b-text);direction:rtl;text-align:right;outline:none;transition:border-color .2s,background .2s}
 .login-input::placeholder{color:var(--b-placeholder);font-size:13px}
+/* Segmented, bidi-correct placeholder — the flex row is forced LTR so the visual
+   order is fixed as: email@example.com · أو · 059123456. Each example is its own
+   LTR run (<bdi>), the separator its own RTL run, so nothing gets reordered. */
+.login-ph{position:absolute;top:50%;inset-inline:44px;transform:translateY(-50%);direction:ltr;display:flex;align-items:center;justify-content:center;gap:16px;pointer-events:none;font-size:13px;color:var(--b-placeholder);white-space:nowrap;overflow:hidden}
+.login-ph .login-ph-or{color:var(--b-text3);unicode-bidi:isolate}
+.login-input.has-val ~ .login-ph{display:none}
 .login-input:focus{border-color:var(--b-navy);background:var(--b-white);box-shadow:0 0 0 3px rgba(26,26,46,.06)}
 .ii-r-login{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--b-gold);pointer-events:none}
 .ii-l-login{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;color:#9CA3AF;cursor:pointer;background:none;border:none;padding:0;transition:color .15s}
@@ -318,9 +324,16 @@
         <div class="login-form-group">
           <label class="login-form-label" id="lbl-email" for="l-email">رقم الهاتف أو البريد الإلكتروني</label>
           <div class="iw-login">
-            <input class="login-input" type="text" id="l-email" autocomplete="username"
-              placeholder="0599123456 أو email@example.com" dir="rtl"
+            <input class="login-input" type="text" id="l-email" autocomplete="username" dir="rtl"
+              oninput="this.classList.toggle('has-val',!!this.value)"
               onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('l-pass').focus();}">
+            <!-- Segmented placeholder: email + phone stay LTR, «أو» stays RTL,
+                 so the mixed-direction hint renders correctly in the RTL field. -->
+            <span class="login-ph" id="l-ph" aria-hidden="true">
+              <bdi dir="ltr">email@example.com</bdi>
+              <span class="login-ph-or" id="l-ph-or" dir="rtl">أو</span>
+              <bdi dir="ltr">059123456</bdi>
+            </span>
             <span class="ii-r-login"><i class="ti ti-user" aria-hidden="true"></i></span>
           </div>
         </div>
