@@ -1077,7 +1077,7 @@ html,body{ overscroll-behavior:none; }
 .res-legend{display:flex;gap:16px;font-size:12.5px;color:var(--tx2);margin-bottom:12px;flex-wrap:wrap}
 .res-legend span{display:inline-flex;align-items:center;gap:6px}
 .res-lg{width:13px;height:13px;border-radius:3px;display:inline-block}
-.res-lg.r{background:var(--accent-soft);border:1px solid var(--diwan)}
+.res-lg.r{background:var(--pos-bg);border:1px solid var(--pos)}
 .res-lg.a{background:var(--card);border:1px solid var(--bd)}
 .res-lg.t{background:transparent;border:2px solid var(--accent)}
 .res-lg.p{background:var(--soft);border:1px solid var(--bd);opacity:.6}
@@ -1104,7 +1104,8 @@ html,body{ overscroll-behavior:none; }
 .res-day.out{opacity:.28;background:transparent;cursor:default;border-color:transparent}
 .res-day.past{opacity:.55}
 .res-day.past:not(.res){cursor:default}
-.res-day.res{background:var(--accent-soft);border-color:var(--diwan);box-shadow:inset 4px 0 0 var(--diwan)}
+/* Reserved (active booking) = GREEN, using the theme-aware positive tokens. */
+.res-day.res{background:var(--pos-bg);border-color:var(--pos);box-shadow:inset 4px 0 0 var(--pos)}
 .res-day.res .num{color:var(--tx)}
 .res-day.today{border:2px solid var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
 .res-day.sel{outline:2px solid var(--accent);outline-offset:1px}
@@ -1112,7 +1113,7 @@ html,body{ overscroll-behavior:none; }
 .res-today-chip{font-size:10px;font-weight:700;color:#fff;background:var(--accent-btn);border-radius:99px;padding:2px 9px}
 .res-addhint{opacity:0;color:var(--tx2);margin:auto auto 2px;font-size:15px;transition:opacity .13s}
 .res-rv{display:flex;flex-direction:column;gap:3px;min-width:0}
-.res-badge{display:inline-flex;font-size:11px;font-weight:700;color:#fff;background:var(--accent-btn);border-radius:5px;padding:2.5px 9px;align-self:flex-start;white-space:nowrap}
+.res-badge{display:inline-flex;font-size:11px;font-weight:700;color:#fff;background:#15803D;border-radius:5px;padding:2.5px 9px;align-self:flex-start;white-space:nowrap}
 .res-name{font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .res-emptybar{display:flex;align-items:center;gap:9px;background:var(--brand-soft);border:1px dashed var(--bd2);border-radius:9px;padding:11px 14px;font-size:13px;color:var(--tx2);margin-bottom:8px}
 .res-errbar{display:flex;align-items:center;gap:11px;background:var(--neg-bg);border:1px solid var(--neg);border-radius:10px;padding:10px 13px;margin-bottom:10px}
@@ -1173,7 +1174,7 @@ html,body{ overscroll-behavior:none; }
   .res-day .res-rv .res-name{display:none}
   .res-rv{align-items:center}
   .res-badge{display:none}
-  .res-day.res{background:var(--accent-btn);border-color:var(--accent-btn);box-shadow:none}
+  .res-day.res{background:#15803D;border-color:#15803D;box-shadow:none}
   .res-day.res .num{color:#fff}
   .res-day.res::before{display:none}
   .res-addhint{display:none}
