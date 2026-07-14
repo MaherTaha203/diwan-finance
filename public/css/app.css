@@ -829,6 +829,10 @@ body:not(.light) .acct-stmt .as-fig.teal .v,body:not(.light) .acct-stmt .export-
 .acct-stmt .as-table .bal{font-weight:800;font-variant-numeric:tabular-nums;}
 .acct-stmt .as-table tfoot td{background:var(--navy2);color:#fff;font-weight:800;padding:11px 11px;}
 body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
+/* member-statement final balance: teal, caps the running-balance column (mirrors print) */
+.acct-stmt .as-table tfoot tr.as-ffinal td{background:var(--as-acc);color:#fff;font-weight:700;font-size:13.5px;padding:12px 11px;}
+.acct-stmt .as-table tfoot tr.as-ffinal td.as-bal{background:var(--as-acc);border-inline-start:none;color:#fff;}
+.acct-stmt .as-table tfoot tr.as-ffinal .as-ffs{font-weight:500;opacity:.85;}
 .acct-stmt .as-empty{padding:34px 18px;text-align:center;color:var(--tx3);font-size:13px;}
 @media (max-width:760px){ .acct-stmt .as-figs .as-fig{flex:1 1 calc(50% - 6px);} }
 

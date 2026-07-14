@@ -37,64 +37,73 @@ function amountToWords(n){
    Matches the on-screen premium language: navy + gold + teal, soft rounded
    cards, navy table headers, tabular numerals, RTL. Layout/structure unchanged.
    ════════════════════════════════════════════════════════════════════════ */
-const PRINT_TOKENS=':root{--brand:#24425C;--brand-2:#2E5273;--accent:#0E7C66;--navy:#24425C;--navy2:#2E5273;--rule:#C3CFDA;--line:#DDE3EA;--soft:#EEF1F5;--brand-soft:#E9EEF4;--pos:#1E7E46;--neg:#B3261E;--teal:#0E7C66;--teal-ink:#0A5C4C;--teal-acc:#0E7C66;--teal-bg:#E7F2EE;--teal-line:#1FA98C;--gold:#C3CFDA;--gold-d:#93A0AD;--danger:#B3261E;--gray:#5F6D7C;--faint:#93A0AD;--bg:#FAFBFC;--bg2:#EEF2F6;--bd:#DDE3EA;--ink:#1C2733;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
+const PRINT_TOKENS=':root{--ink:#1A2230;--ink2:#3A4658;--muted:#8B94A3;--faint:#AAB2BF;--line:#E7EAEF;--line2:#D7DCE4;--hd:#F6F8FA;--zebra:#FBFCFD;--teal:#0E7C66;--teal-ink:#0A5C4C;--teal-soft:#E7F2EE;--teal-line:#1FA98C;--pos:#1E7E46;--neg:#B3261E;--gray:#5F6D7C;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
 +'*{box-sizing:border-box;margin:0;padding:0}'
 +'body{font-family:var(--fa);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}'
 +'.mono,.num{font-family:var(--fe);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}'
-/* ── Masthead: solid slate brand bar ── */
-+'.dh{display:flex;justify-content:space-between;align-items:center;background:var(--brand);padding:13px 16px;border-radius:3px}'
-+'.dh .org{display:flex;gap:11px;align-items:center}'
-+'.dh .logo{width:46px;height:46px;border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;padding:3px}.logo img{width:40px;height:40px;object-fit:contain;display:block}'
-+'.dh h1{font-size:16px;color:#fff;font-weight:700;line-height:1.2;letter-spacing:0}'
-+'.dh .org p{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px}'
-+'.dh .meta{text-align:left}'
-+'.dh .meta .tt{display:inline-block;background:rgba(255,255,255,.14);color:#fff;font-size:12.5px;font-weight:700;padding:5px 14px;border-radius:3px;letter-spacing:.2px}'
-+'.dh .meta .no{font-size:12.5px;color:#fff;font-weight:700;margin-top:6px;font-family:var(--fe);font-variant-numeric:tabular-nums}'
-+'.dh .meta .sub{font-size:10.5px;color:rgba(255,255,255,.75);margin-top:4px}'
-/* ── Period band → context strip ── */
-+'.period{text-align:center;margin:12px 0;font-size:12px;color:var(--brand);font-weight:600;background:#fff;border:1px solid var(--line);border-radius:3px;padding:8px 12px}'
-/* ── Summary cards: white + 3px top rule ── */
-+'.cards{display:flex;gap:10px;margin-bottom:14px}'
-+'.card{flex:1;background:#fff;border:1px solid var(--line);border-top:3px solid var(--line);border-radius:3px;padding:10px 12px;text-align:center}'
-+'.card:last-child{border-top-color:var(--accent)}'
-+'.card .k{font-size:9px;color:var(--faint);font-weight:600}.card .v{font-size:15px;font-weight:700;color:var(--ink);margin-top:5px;font-family:var(--fe);font-variant-numeric:tabular-nums}'
+/* ── Identity v4 · minimal white header ── */
++'.dh{display:flex;justify-content:space-between;align-items:flex-start}'
++'.dh .date{font-size:11px;color:var(--muted);font-weight:600;padding-top:8px}'
++'.dh .date .num{font-weight:600}'
++'.dh .org{display:flex;gap:12px;align-items:center}'
++'.dh .org .txt{text-align:left}'
++'.dh h1{font-size:18px;color:var(--ink);font-weight:700;line-height:1.2;letter-spacing:-.2px}'
++'.dh .org .osub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.7}'
++'.dh .chip{width:50px;height:50px;border-radius:11px;background:var(--ink);border:1.5px solid var(--teal);display:grid;place-items:center;color:#fff;font-weight:700;font-size:16px;flex:none;letter-spacing:1px}'
++'.rule{height:2px;background:var(--ink);border-radius:2px;margin-top:14px}'
+/* ── Centered title with teal underline ── */
++'.title{text-align:center;margin:22px 0 2px}'
++'.title h2{font-size:19px;font-weight:700;display:inline-block;padding-bottom:8px;position:relative}'
++'.title h2::after{content:"";position:absolute;bottom:0;right:22%;left:22%;height:3px;background:var(--teal);border-radius:3px}'
+/* ── Meta / period line (centered, muted) ── */
++'.period{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.9}'
++'.period b{color:var(--ink2);font-weight:600}'
+/* ── Summary cards ── */
++'.cards{display:flex;gap:12px;margin:16px 0 4px}'
++'.card{flex:1;background:#fff;border:1px solid var(--line);border-top:2px solid var(--line2);border-radius:9px;padding:11px 13px;text-align:center}'
++'.card:last-child,.card.acc{border-top-color:var(--teal)}'
++'.card .k{font-size:9.5px;color:var(--muted);font-weight:600}.card .v{font-size:14px;font-weight:700;color:var(--ink);margin-top:5px;font-family:var(--fe);font-variant-numeric:tabular-nums}'
 +'.card .v.pos{color:var(--pos)}.card .v.neg{color:var(--neg)}'
-/* ── Tables ── */
-+'table.dt{width:100%;border-collapse:collapse;font-size:10.5px;border:1px solid var(--line)}'
-+'table.dt thead th{background:#EEF2F6;color:var(--gray);border-top:2px solid var(--brand);padding:7px;font-weight:700;font-size:10px;letter-spacing:.2px;border-bottom:1px solid var(--line)}'
-+'table.dt thead th:not(:first-child),table.dt tbody td:not(:first-child){border-inline-start:1px solid var(--soft)}'
-+'table.dt tbody td{padding:6px;border-bottom:1px solid var(--line);text-align:center}'
-+'table.dt tbody tr:nth-child(even){background:var(--bg)}'
-+'table.dt tfoot td{border-top:2px solid var(--rule);font-weight:700;padding:7px}'
-+'.cr{color:var(--pos);font-weight:700}.dr{color:var(--neg);font-weight:700}.bal{font-weight:700;color:var(--teal-ink);font-family:var(--fe);font-variant-numeric:tabular-nums}'
-+'table.dt td.bal{background:var(--teal-bg);border-inline-start:2px solid var(--teal-line)}'
-+'table.dt tr.final td{background:var(--brand);color:#fff;font-weight:700;font-size:12px;padding:9px}'
-+'table.dt tr.final td.bal{background:var(--brand);border-inline-start:none}'
-+'table.dt tr.final .pos{color:#BFE8D2}table.dt tr.final .neg{color:#F5C6C2}'
-/* ── Footer · signatures · QR ── */
-+'.dfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:22px}'
-+'.qr-u{width:92px;text-align:center}'
-+'.qr-u .box{width:64px;height:64px;border:1px solid var(--brand);border-radius:3px;margin:0 auto;padding:3px;background:#fff}'
-+'.qr-u .box>div,.qr-u .box img,.qr-u .box canvas{width:56px!important;height:56px!important}'
++'table.dt td.mut,.mut{color:var(--faint)}'
+/* ── Tables: light, hairline; numbers isolated ── */
++'table.dt{width:100%;border-collapse:collapse;font-size:11px}'
++'table.dt thead th{background:var(--hd);color:var(--ink2);padding:9px 10px;font-weight:600;font-size:10.5px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line2)}'
++'table.dt thead th.c,table.dt tbody td.c{text-align:center}'
++'table.dt tbody td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}'
++'table.dt tbody tr:nth-child(even){background:var(--zebra)}'
++'table.dt tfoot td{border-top:2px solid var(--ink);font-weight:700;font-size:12px;padding:11px 10px;text-align:right}'
++'.cr{color:var(--pos);font-weight:600}.dr{color:var(--neg);font-weight:600}.bal{font-weight:700;color:var(--teal-ink);font-family:var(--fe);font-variant-numeric:tabular-nums}'
++'table.dt td.bal{background:var(--teal-soft);border-inline-start:2px solid var(--teal-line)}'
++'table.dt td.bal .tag{font-family:var(--fa);font-size:10px;color:var(--teal);font-weight:600;margin-inline-start:5px}'
+/* ── Final row: teal-filled, caps the balance column ── */
++'table.dt tr.final td{background:var(--teal);color:#fff;font-weight:700;font-size:12px;padding:11px 10px}'
++'table.dt tr.final td.bal{background:var(--teal);border-inline-start:none;color:#fff}'
++'table.dt tr.final .tag{color:rgba(255,255,255,.85)}table.dt tr.final .pos{color:#CFEFE0}table.dt tr.final .neg{color:#F6D4D0}'
+/* ── Footer · single signature · QR ── */
++'.dfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:30px}'
++'.qr-u{width:88px;text-align:center}'
++'.qr-u .box{width:60px;height:60px;border:1px solid var(--line2);border-radius:8px;margin:0 auto;padding:3px;background:#fff}'
++'.qr-u .box>div,.qr-u .box img,.qr-u .box canvas{width:52px!important;height:52px!important}'
 +'.qr-u .cap{font-size:7px;color:var(--faint);margin-top:3px;word-break:break-all}'
-+'.qr-u .cap .tok{display:block;font-weight:700;color:var(--brand);font-size:7.5px;letter-spacing:.2px;margin-top:1px;font-family:var(--fe)}'
-+'.sigs{display:flex;gap:42px}'
-+'.sig-u{text-align:center}.sig-u .line{width:124px;border-top:1.5px solid var(--brand);margin-top:36px;padding-top:5px;font-size:10px;color:var(--gray);text-align:center}'
-+'.pgfoot{border-top:1px solid var(--line);margin-top:18px;padding-top:7px;display:flex;justify-content:space-between;font-size:9px;color:var(--faint)}'
++'.qr-u .cap .tok{display:block;font-weight:700;color:var(--teal);font-size:7.5px;letter-spacing:.2px;margin-top:1px;font-family:var(--fe)}'
++'.sig-one{text-align:center;min-width:150px}'
++'.sig-one .line{border-top:1.5px solid var(--ink2);margin-top:34px;padding-top:6px;font-size:11px;color:var(--ink2);font-weight:600;text-align:center}'
++'.pgfoot{border-top:1px solid var(--line);margin-top:24px;padding-top:8px;display:flex;justify-content:space-between;font-size:9px;color:var(--faint)}'
 /* ── Vouchers ── */
 +'.page{background:#fff;position:relative;overflow:hidden}'
 +'.voucher{padding:14mm 12mm}'
-+'.rows{margin-top:16px;border:1px solid var(--line);border-radius:3px;overflow:hidden}'
-+'.rows .row{display:flex;border-bottom:1px solid var(--line);padding:8px 12px}.rows .row:last-child{border-bottom:none}.rows .row:nth-child(even){background:var(--bg)}'
-+'.rows .lbl{width:34%;color:var(--faint);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center}'
-+'.rows .val{flex:1;color:var(--ink);font-size:11.5px;font-weight:700}'
-+'.amount{display:flex;justify-content:space-between;align-items:center;background:var(--accent);border-radius:3px;padding:13px 16px;margin-top:16px}'
-+'.amount .big{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;font-family:var(--fe);color:#fff}.amount .big.cr{color:#fff}.amount .big.dr{color:#fff}'
-+'.amount .words{font-size:11px;color:rgba(255,255,255,.85);max-width:58%;text-align:left}'
++'.rows{margin-top:16px;border:1px solid var(--line);border-radius:9px;overflow:hidden}'
++'.rows .row{display:flex;border-bottom:1px solid var(--line);padding:10px 14px}.rows .row:last-child{border-bottom:none}.rows .row:nth-child(even){background:var(--zebra)}'
++'.rows .lbl{width:30%;color:var(--muted);font-size:10.5px;font-weight:600;display:flex;align-items:center}'
++'.rows .val{flex:1;color:var(--ink);font-size:12px;font-weight:600}'
++'.amount{display:flex;align-items:center;gap:14px;border:1px solid var(--line2);border-radius:10px;padding:14px 18px;margin-top:16px}'
++'.amount::before{content:"";width:4px;align-self:stretch;background:var(--teal);border-radius:4px;margin-inline-end:6px}'
++'.amount .big{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;font-family:var(--fe);color:var(--ink)}.amount .big.cr,.amount .big.dr{color:var(--ink)}'
++'.amount .words{font-size:11.5px;color:var(--muted);margin-inline-start:auto;max-width:56%;text-align:left;direction:ltr}'
 +'.wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}'
-+'.wm span{transform:rotate(-35deg);font-size:64px;font-weight:800;color:rgba(36,66,92,.05)}'
++'.wm span{transform:rotate(-33deg);font-size:72px;font-weight:800;color:rgba(26,34,48,.035)}'
 +'@page{size:A4 portrait;margin:0}'
-+'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tfoot{display:table-footer-group}tr{page-break-inside:avoid}.dfoot,.cards,.amount,table.dt tr.final{page-break-inside:avoid}.dh,.period{page-break-after:avoid}}';
++'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tfoot{display:table-footer-group}tr{page-break-inside:avoid}.dfoot,.cards,.amount,table.dt tr.final{page-break-inside:avoid}.dh,.rule,.title,.period{page-break-after:avoid}}';
 
 function openPrintWin(css,body){
   const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
@@ -123,12 +132,40 @@ const BRAND_LOGO=(window.BrandAssets&&window.BrandAssets.getPrintLogo())||'/bran
 /* Shared report/print header — vouchers, statements, reports, future A2/A3/A4. opts:{sub,no} */
 function reportHeader(title,opts){
   opts=opts||{};
-  return '<div class="dh"><div class="org"><div class="logo"><img src="'+BRAND_LOGO+'" alt="'+BRAND_NAME+'"></div>'
-    +'<div><h1>'+BRAND_NAME+'</h1><p>'+BRAND_SUBTITLE+' · '+BRAND_SITE+'</p></div></div>'
-    +'<div class="meta"><span class="tt">'+title+'</span>'
-    +(opts.no?'<div class="no">'+opts.no+'</div>':'')
-    +(opts.sub?'<div class="sub">'+opts.sub+'</div>':'')
-    +'</div></div>';
+  var date=opts.date||new Date().toLocaleDateString('en-GB');
+  var dateLine=(opts.dateText!=null)?opts.dateText:('تاريخ الطباعة: <span class="num">'+date+'</span>');
+  var parts=[];
+  if(opts.no) parts.push((opts.noLabel||'رقم السند')+': <b class="num">'+opts.no+'</b>');
+  if(opts.sub) parts.push(opts.sub);
+  var meta=parts.length?('<div class="period">'+parts.join(' · ')+'</div>'):'';
+  return '<div class="dh"><div class="date">'+dateLine+'</div>'
+    +'<div class="org"><div class="txt"><h1>'+BRAND_NAME+'</h1>'
+    +'<div class="osub">'+BRAND_SUBTITLE+' · '+BRAND_SITE+'</div></div>'
+    +'<div class="chip">دط</div></div></div>'
+    +'<div class="rule"></div>'
+    +'<div class="title"><h2>'+title+'</h2></div>'
+    +meta;
+}
+/* Single-signature footer (Identity v4): QR + «توقيع الديوان» only. */
+function reportDfoot(qrUrl,capHtml){
+  return '<div class="dfoot"><div class="qr-u"><div class="box">'
+    +(qrUrl?('<div data-qr-url="'+qrUrl+'"></div>'):'')+'</div>'
+    +'<div class="cap">'+(capHtml||'diwan-finance.com')+'</div></div>'
+    +'<div class="sig-one"><div class="line">توقيع الديوان</div></div></div>';
+}
+/* Amount in words — English (vouchers). Whole shekels. */
+function amountToWordsEn(n){
+  n=Math.round(Number(n||0));
+  if(n===0) return 'Zero Shekels Only';
+  var ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  var tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function trio(x){var s='';if(x>=100){s+=ones[Math.floor(x/100)]+' Hundred';x%=100;if(x)s+=' ';}
+    if(x>=20){s+=tens[Math.floor(x/10)];if(x%10)s+='-'+ones[x%10];}else if(x>0){s+=ones[x];}return s;}
+  var out='';
+  if(n>=1000000){out+=trio(Math.floor(n/1000000))+' Million';n%=1000000;if(n)out+=' ';}
+  if(n>=1000){out+=trio(Math.floor(n/1000))+' Thousand';n%=1000;if(n)out+=' ';}
+  if(n>0){out+=trio(n);}
+  return out+' Shekels Only';
 }
 /* Shared report/print footer strip — identical brand line everywhere. opts:{printedLabel,date,page} */
 function reportFooter(opts){
@@ -155,9 +192,8 @@ function buildRecVoucher(r){
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(meth)+'</div></div>'
     +cur+note
     +'</div>'
-    +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsAr(r.amount_ils||r.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify<span class="tok">'+esc(r.verification_token||'')+'</span></div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
+    +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsEn(r.amount_ils||r.amount)+'</div></div>'
+    +reportDfoot(verifyUrl,'diwan-finance.com/verify<span class="tok">'+esc(r.verification_token||'')+'</span>')
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
 }
@@ -176,9 +212,8 @@ function buildPayVoucher(p){
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(L.method(p.payment_method))+'</div></div>'
     +cur+note+appr
     +'</div>'
-    +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsAr(p.amount_ils||p.amount)+'</div></div>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="'+verifyUrl+'"></div></div><div class="cap">diwan-finance.com/verify<span class="tok">'+esc(p.verification_token||'')+'</span></div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحرِّر</div></div><div class="sig-u"><div class="line">المُعتمِد</div></div></div></div>'
+    +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsEn(p.amount_ils||p.amount)+'</div></div>'
+    +reportDfoot(verifyUrl,'diwan-finance.com/verify<span class="tok">'+esc(p.verification_token||'')+'</span>')
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
 }
@@ -270,8 +305,7 @@ window.buildFundStatementHTML=function(fund){
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.donor_name')+'</th><th>'+window.t('stmt.desc')+'</th><th>'+window.t('stmt.col_in')+'</th><th>'+window.t('stmt.col_out')+'</th><th>'+window.t('stmt.balance')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="5">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):'الرصيد الجاري · Current Balance')+'</td><td class="'+curCls+'">₪ '+fmt(curBal)+'</td><td></td></tr></tbody></table>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   const title=(fund==='food'?window.t('receipts.don_disp_food'):window.t('receipts.don_disp_diwan'));
   return {css:css, body:body, title:title};
@@ -362,10 +396,11 @@ window.prtMemberStmt=function(mode){
   const _hd=Number(member.historical_balance_ils||0), _hp=Number(member.historical_payments_ils||0), _carried=_hd-_hp;
   const moves=st.rows.filter(r=>r.date!=='—');
   let totSub=0, totPay=0;
-  const balTxt=v=>'₪ '+fmt(Math.abs(v))+(v<0?(_en?' Cr':' دائن'):'');
+  const balTxt=v=>'<span class="num">₪ '+fmt(Math.abs(v))+'</span>'+(v<0?(_en?' Cr':' دائن'):'');
+  const cell=v=>v>0?'<span class="num">₪ '+fmt(v)+'</span>':'<span class="mut">—</span>';
   let tbody='<tr>'
-    +'<td>—</td><td class="ds">'+(_en?'Carried balance before 31/12/2024':'رصيد مُرحّل قبل 31/12/2024')+'</td>'
-    +'<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>'
+    +'<td class="c mut">—</td><td class="ds">'+(_en?'Carried balance before 31/12/2024':'رصيد مُرحّل قبل 31/12/2024')+'</td>'
+    +'<td class="c mut">—</td><td class="c mut">—</td><td class="c mut">—</td><td class="mut">—</td><td class="mut">—</td>'
     +'<td class="bal">'+balTxt(_carried)+'</td></tr>';
   moves.forEach(r=>{
     totSub+=Number(r.dr||0); totPay+=Number(r.cr||0);
@@ -376,66 +411,52 @@ window.prtMemberStmt=function(mode){
     const desc=isReceipt?(_en?'Payment · Food contribution':'سداد · مساهمة غذاء'):esc(r.desc);
     const bal=Number(r.bal||0);
     tbody+='<tr>'
-      +'<td>'+fmtDate2(r.date)+'</td>'
+      +'<td><span class="num">'+fmtDate2(r.date)+'</span></td>'
       +'<td class="ds">'+desc+'</td>'
-      +'<td>'+year+'</td>'
-      +'<td class="mono">'+sysNo+'</td>'
-      +'<td class="mono">'+refNo+'</td>'
-      +'<td>'+(r.dr>0?'₪ '+fmt(r.dr):'—')+'</td>'
-      +'<td>'+(r.cr>0?'₪ '+fmt(r.cr):'—')+'</td>'
+      +'<td class="c">'+year+'</td>'
+      +'<td class="c num">'+sysNo+'</td>'
+      +'<td class="c num">'+refNo+'</td>'
+      +'<td>'+cell(r.dr)+'</td>'
+      +'<td>'+cell(r.cr)+'</td>'
       +'<td class="bal">'+balTxt(bal)+'</td></tr>';
   });
-  const tbl='<table class="dt msdt"><thead><tr>'
-    +'<th>'+(_en?'Date':'التاريخ')+'</th>'
-    +'<th>'+(_en?'Description':'البيان')+'</th>'
-    +'<th>'+(_en?'Year':'السنة')+'</th>'
-    +'<th>'+(_en?'System no.':'رقم النظام')+'</th>'
-    +'<th>'+(_en?'Reference no.':'الرقم المرجعي')+'</th>'
-    +'<th>'+(_en?'Subscription (+)':'اشتراك (+)')+'</th>'
-    +'<th>'+(_en?'Payment (−)':'سداد (−)')+'</th>'
-    +'<th>'+(_en?'Running balance':'الرصيد الجاري')+'</th>'
-    +'</tr></thead><tbody>'+tbody+'</tbody></table>';
-
   const finBal=Number(st.finalBalance||0);
   const finStatus=finBal>0?(_en?'Outstanding — member owes':'على العضو مستحقات')
                  :finBal<0?(_en?'Credit balance — owed to member':'للعضو رصيد دائن')
                  :(_en?'Fully settled':'الحساب مسدد بالكامل');
-  const metaHTML='<div class="msmeta">'
-    +'<div class="mc"><div class="mk">'+(_en?'Member name':'اسم العضو')+'</div><div class="mv">'+esc(member.name)+'</div></div>'
-    +'<div class="mc"><div class="mk">'+(_en?'Member no.':'رقم العضو')+'</div><div class="mv mono">'+esc(member.member_code||'—')+'</div></div>'
-    +'<div class="mc"><div class="mk">'+(_en?'Registration':'تاريخ التسجيل')+'</div><div class="mv mono">'+(member.active_from_year||'—')+'</div></div>'
-    +'<div class="mc"><div class="mk">'+(_en?'Print date':'تاريخ الطباعة')+'</div><div class="mv mono">'+printDate+'</div></div>'
-    +'</div>';
-  const openHTML='<div class="msopen"><span>'+(_en?'Carried balance before 31/12/2024':'الرصيد المرحّل قبل 31/12/2024')+'</span><span class="mono">'+balTxt(_carried)+'</span></div>';
+  /* final balance CAPS the running-balance column (tfoot) — approved layout */
+  const tbl='<table class="dt msdt"><thead><tr>'
+    +'<th>'+(_en?'Date':'التاريخ')+'</th>'
+    +'<th>'+(_en?'Description':'البيان')+'</th>'
+    +'<th class="c">'+(_en?'Year':'السنة')+'</th>'
+    +'<th class="c">'+(_en?'System no.':'رقم النظام')+'</th>'
+    +'<th class="c">'+(_en?'Reference no.':'الرقم المرجعي')+'</th>'
+    +'<th>'+(_en?'Subscription (+)':'اشتراك (+)')+'</th>'
+    +'<th>'+(_en?'Payment (−)':'سداد (−)')+'</th>'
+    +'<th>'+(_en?'Running balance':'الرصيد الجاري')+'</th>'
+    +'</tr></thead><tbody>'+tbody+'</tbody>'
+    +'<tfoot><tr class="final"><td colspan="7">'+(_en?'Current final balance':'الرصيد النهائي الحالي')+' · <span style="font-weight:500">'+finStatus+'</span></td>'
+    +'<td class="bal">'+balTxt(finBal)+'</td></tr></tfoot></table>';
+  const openHTML='<div class="msopen"><span>'+(_en?'Carried balance before 31/12/2024':'الرصيد المرحّل قبل 31/12/2024')+'</span><span>'+balTxt(_carried)+'</span></div>';
   const sumHTML='<div class="cards">'
     +'<div class="card"><div class="k">'+(_en?'Subscriptions after system launch':'مجموع الاشتراكات بعد تشغيل النظام')+'</div><div class="v">₪ '+fmt(totSub)+'</div></div>'
     +'<div class="card"><div class="k">'+(_en?'Payments after system launch':'مجموع السداد بعد تشغيل النظام')+'</div><div class="v">₪ '+fmt(totPay)+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'Payments against carried balance':'مجموع السداد من الرصيد المرحل')+'</div><div class="v">₪ '+fmt(_hp)+'</div></div>'
+    +'<div class="card acc"><div class="k">'+(_en?'Payments against carried balance':'مجموع السداد من الرصيد المرحل')+'</div><div class="v">₪ '+fmt(_hp)+'</div></div>'
     +'</div>';
-  const finalHTML='<div class="msfinal"><span class="fk">'+(_en?'Current final balance':'الرصيد النهائي الحالي')+'</span><span class="fv mono">₪ '+fmt(Math.abs(finBal))+'</span><span class="fs">'+finStatus+'</span></div>';
 
-  const css='@page{size:A4 portrait;margin:9mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
-    +'.msmeta{display:flex;gap:8px;margin:10px 0}'
-    +'.msmeta .mc{flex:1;border:1px solid var(--line);border-radius:3px;padding:6px 9px;text-align:center}'
-    +'.msmeta .mk{font-size:8.5px;color:var(--faint);font-weight:600}'
-    +'.msmeta .mv{font-size:11px;color:var(--ink);font-weight:700;margin-top:3px}'
-    +'.msopen{display:flex;justify-content:space-between;align-items:center;background:var(--brand-soft);border:1px solid var(--rule);border-radius:3px;padding:8px 12px;margin:10px 0;font-size:11.5px;font-weight:700;color:var(--brand)}'
-    +'table.msdt{font-size:9.5px}table.msdt td.ds{text-align:right}'
-    +'.msfinal{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--teal);color:#fff;border-radius:3px;padding:11px 16px;margin-top:12px}'
-    +'.msfinal .fk{font-size:12px;font-weight:600}'
-    +'.msfinal .fv{font-size:17px;font-weight:800}'
-    +'.msfinal .fs{font-size:10.5px;color:rgba(255,255,255,.82);margin-inline-start:auto}';
+  const css='@page{size:A4 portrait;margin:9mm}body{font-family:var(--fa);direction:rtl;background:#fff;padding:9mm}'
+    +'.msopen{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line2);border-inline-start:3px solid var(--teal-line);border-radius:8px;padding:10px 14px;margin:4px 0 14px;font-size:12px;font-weight:600;color:var(--ink2)}'
+    +'table.msdt{font-size:10px}table.msdt td.ds{text-align:right}';
 
-  const body=reportHeader(window.t('members.member_stmt'),{sub:window.t('stmt.member_label')+' '+esc(member.name)+(member.member_code?' · '+esc(member.member_code):'')})
+  const subLine=(_en?'Member: <b>'+esc(member.name)+'</b> · No. <b class="num">'+esc(member.member_code||'—')+'</b>'
+                    :'العضو: <b>'+esc(member.name)+'</b> · رقم العضو: <b class="num">'+esc(member.member_code||'—')+'</b>');
+  const body=reportHeader(window.t('members.member_stmt'),{sub:subLine})
     +'<div class="period">'+window.t('stmt.period_label')+' '+periodLabel+' '+window.t('stmt.active_since')+' '+(member.active_from_year||'—')+(member.phone?' · ☎ '+esc(member.phone):'')+'</div>'
-    +metaHTML
     +openHTML
     +tbl
     +sumHTML
-    +finalHTML
     +donsHTML
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_member')+'</div></div></div></div>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:printDate,page:window.t('stmt.page_info')});
   openPrintWin(css,body);
   if(mode==='pdf') toast(_en?'In the print dialog choose “Save as PDF”':'في نافذة الطباعة اختر «حفظ كـ PDF»','info');
@@ -463,9 +484,8 @@ window.prtMembersList=function(){
     +'<td>'+esc(FIN.balanceLabel(m.bal,false))+'</td></tr>').join('');
   const body=reportHeader(_en?'Family Members List':'قائمة أعضاء العائلة',{sub:(_en?'Members: ':'عدد الأعضاء: ')+d.length})
     +'<div class="period">'+(_en?'As displayed — filter: ':'كما هو معروض — الفلتر: ')+(st||(_en?'All':'الكل'))+(q?(' · '+esc(q)):'')+'</div>'
-    +'<table class="dt"><thead><tr><th>#</th><th>'+(_en?'Name':'الاسم')+'</th><th>'+(_en?'Phone':'الهاتف')+'</th><th>'+(_en?'Balance ₪':'الرصيد ₪')+'</th><th>'+(_en?'Status':'الحالة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">'+(_en?'Accountant':'المحاسب')+'</div></div></div></div>'
+    +'<table class="dt"><thead><tr><th class="c">#</th><th>'+(_en?'Name':'الاسم')+'</th><th>'+(_en?'Phone':'الهاتف')+'</th><th>'+(_en?'Balance ₪':'الرصيد ₪')+'</th><th>'+(_en?'Status':'الحالة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({date:fmtDate2(new Date().toISOString())});
   openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
 };
@@ -475,9 +495,8 @@ window.prtAnnual=function(){
   const rows=DB.annual.map(a=>'<tr><td class="mono">'+esc(String(a.year))+'</td><td class="mono">₪ '+fmt(a.amount)+'</td><td class="mono">'+esc(String(a.member_count))+'</td>'
     +'<td class="mono">'+fmtDate2(a.applied_at?a.applied_at.slice(0,10):null)+'</td><td>'+esc(a.applied_by||'—')+'</td></tr>').join('');
   const body=reportHeader(_en?'Annual Subscriptions Log':'سجل الاشتراكات السنوية',{sub:(_en?'Applied years: ':'السنوات المطبقة: ')+DB.annual.length})
-    +'<table class="dt" style="margin-top:12px"><thead><tr><th>'+(_en?'Year':'السنة')+'</th><th>'+(_en?'Amount ₪':'المبلغ ₪')+'</th><th>'+(_en?'Members':'عدد الأعضاء')+'</th><th>'+(_en?'Applied on':'تاريخ التطبيق')+'</th><th>'+(_en?'Applied by':'بواسطة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">'+(_en?'Accountant':'المحاسب')+'</div></div></div></div>'
+    +'<table class="dt" style="margin-top:12px"><thead><tr><th class="c">'+(_en?'Year':'السنة')+'</th><th>'+(_en?'Amount ₪':'المبلغ ₪')+'</th><th class="c">'+(_en?'Members':'عدد الأعضاء')+'</th><th class="c">'+(_en?'Applied on':'تاريخ التطبيق')+'</th><th>'+(_en?'Applied by':'بواسطة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({date:fmtDate2(new Date().toISOString())});
   openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
 };
