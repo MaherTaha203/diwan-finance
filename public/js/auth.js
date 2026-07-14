@@ -36,7 +36,17 @@ window.login=async function(){
 function showLoginErr(msg){const el=document.getElementById('login-err');el.textContent=msg;el.classList.add('show');}
 
 async function afterLogin(){
-  const{data:role}=await SB.from('user_roles').select('*').eq('user_id',CU.id).maybeSingle();
+  /* PERF stage 2: fire the settings+data fetches CONCURRENTLY with the role
+     query — one combined round trip instead of role→data in sequence. This
+     changes NOTHING about authorization: RLS is the authority on every row
+     the prefetch can see, the fail-closed role gate below still runs before
+     any UI/render, and on denial we sign out and the prefetched results are
+     discarded unrendered. (For the reservation role the finance queries are
+     RLS-blocked server-side and simply return empty — never awaited/used.) */
+  const pRole=SB.from('user_roles').select('*').eq('user_id',CU.id).maybeSingle();
+  const pSettings=loadSettings();                       /* never rejects (internal catch) */
+  const pData=loadAllData().catch(e=>({__err:e}));      /* capture — no unhandled rejection on early return */
+  const{data:role}=await pRole;
   /* Fail-closed: only users provisioned with a valid role row may enter.
      No default-viewer fallback — an unknown/self-registered account is denied. */
   const rawRole=role?.role;
@@ -94,15 +104,15 @@ if(typeof window.applyLang === 'function'){
   /* PERF (slow-login fix): the old flow was six SEQUENTIAL network stages —
      settings → edge-function rate refresh (cold start + external API, the
      dominant cost) → rates read → 7-table fetch → attachment counts → audit
-     insert — before the dashboard could render. Now: settings and the full
-     data fetch run IN PARALLEL and render fires once when both are ready
-     (numbers always computed with settings loaded, exactly as before);
-     the rate refresh and the audit insert run in the background. Rates are
-     already correct at render time — loadSettings seeds RATES from the
-     stored fallback rates; fetchRates only refreshes them on arrival. */
-  let _loadOk=true;
-  try{ await Promise.all([loadSettings(), loadAllData()]); }
-  catch(e){ _loadOk=false; toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err'); console.error(e); }
+     insert — before the dashboard could render. Now the settings + full data
+     fetch were already IN FLIGHT during the role check above; render fires
+     once when both are ready (numbers always computed with settings loaded,
+     exactly as before); the rate refresh and the audit insert run in the
+     background. Rates are already correct at render time — loadSettings
+     seeds RATES from the stored fallback rates; fetchRates refreshes later. */
+  const _dataRes=await pData; await pSettings;
+  const _loadOk=!(_dataRes&&_dataRes.__err);
+  if(!_loadOk){ toast(window.t?window.t('errors.load_error'):'خطأ في تحميل البيانات','err'); console.error(_dataRes.__err); }
   if(_loadOk) renderAll();
   fetchRates(); /* background refresh — updates RATES + display when done */
   startClock();
