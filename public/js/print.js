@@ -49,7 +49,8 @@ const PRINT_TOKENS=':root{--ink:#1A2230;--ink2:#3A4658;--muted:#8B94A3;--faint:#
 +'.dh .org .txt{text-align:left}'
 +'.dh h1{font-size:18px;color:var(--ink);font-weight:700;line-height:1.2;letter-spacing:-.2px}'
 +'.dh .org .osub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.7}'
-+'.dh .chip{width:50px;height:50px;border-radius:11px;background:var(--ink);border:1.5px solid var(--teal);display:grid;place-items:center;color:#fff;font-weight:700;font-size:16px;flex:none;letter-spacing:1px}'
++'.dh .chip{width:56px;height:56px;flex:none;display:grid;place-items:center}'
++'.dh .chip img{width:100%;height:100%;object-fit:contain;display:block}'
 +'.rule{height:2px;background:var(--ink);border-radius:2px;margin-top:14px}'
 /* ── Centered title with teal underline ── */
 +'.title{text-align:center;margin:22px 0 2px}'
@@ -141,7 +142,7 @@ function reportHeader(title,opts){
   return '<div class="dh"><div class="date">'+dateLine+'</div>'
     +'<div class="org"><div class="txt"><h1>'+BRAND_NAME+'</h1>'
     +'<div class="osub">'+BRAND_SUBTITLE+' · '+BRAND_SITE+'</div></div>'
-    +'<div class="chip">دط</div></div></div>'
+    +'<div class="chip"><img src="'+BRAND_LOGO+'" alt="'+BRAND_NAME+'"></div></div></div>'
     +'<div class="rule"></div>'
     +'<div class="title"><h2>'+title+'</h2></div>'
     +meta;
