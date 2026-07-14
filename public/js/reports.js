@@ -140,8 +140,7 @@ window.prtAnnualDebt=function(){
   const b=reportHeader(en?'Annual Debt Report':'تقرير المديونية السنوية',{sub:window.t('stmt.currency_note')})
     +'<div class="period">'+(en?'Filter: ':'التصنيف: ')+_adFilterLabel()+' · '+(en?'Shown: ':'المعروض: ')+rows.length+' / '+total+'</div>'
     +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   openPrintWin(css,b);
 };
@@ -228,8 +227,7 @@ window.prtDelinquent=function(){
   const b=reportHeader(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين',{sub:window.t('stmt.currency_note')})
     +'<div class="period">'+_delHeaderLabel()+' · '+(en?'Shown: ':'المعروض: ')+rows.length+' / '+total+'</div>'
     +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   openPrintWin(css,b);
 };
@@ -309,8 +307,7 @@ window.prtDonStmt=function(){
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+window.t('donations.donor')+'</th><th>'+window.t('common.amount')+'</th><th>'+window.t('common.currency')+'</th><th>'+window.t('stmt.direction')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="3">'+(_en?'Cash Total (in-kind excluded — §4.2)':'الإجمالي النقدي (العيني مستبعَد — §4.2)')+'</td><td class="pos">₪ '+fmt(cashTot)+'</td><td colspan="3">'+(_en?'in-kind documentary: ₪':'قيمة عينية توثيقية: ₪')+' '+fmt(inkindTot)+'</td></tr></tbody></table>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">'+window.t('stmt.sig_accountant')+'</div></div><div class="sig-u"><div class="line">'+window.t('stmt.sig_diwan')+'</div></div></div></div>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   openPrintWin(css,body);
 };
@@ -356,8 +353,7 @@ window.reconcileReport=function(){
         +'<td>'+(r.ref?'—':(typeof r.neo==='number'?'₪ '+fmt(r.neo):esc(String(r.neo))))+'</td>'
         +'<td>'+(r.ref?'مرجعيّ':(r.match?'✓ متطابق':'⚠ اختلاف'))+'</td></tr>').join('')
     +'</tbody></table>'
-    +'<div class="dfoot"><div class="qr-u"><div class="box"><div data-qr-url="https://www.diwan-finance.com"></div></div><div class="cap">diwan-finance.com</div></div>'
-    +'<div class="sigs"><div class="sig-u"><div class="line">المُحاسب</div></div><div class="sig-u"><div class="line">توقيع الديوان</div></div></div></div>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({date:fmtDate2(new Date().toISOString())});
   openPrintWin('@page{size:A4;margin:12mm}body{font-family:var(--fa);direction:rtl;background:#fff}',body);
 };
