@@ -59,6 +59,15 @@ async function afterLogin(){
   applyTopbarStyles();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
+  /* First-login security: a user provisioned with a temporary password carries
+     must_change_password=true in metadata; prompt them to set a new one before use.
+     Cleared automatically when they change it (see changePassword). */
+  if(CU?.user_metadata?.must_change_password){
+    setTimeout(function(){
+      if(typeof window.openM==='function') window.openM('change-pass');
+      toast(window.LANG==='en'?'Please set a new password to replace the temporary one.':'الرجاء تعيين كلمة مرور جديدة بدل المؤقتة.','warn');
+    },600);
+  }
   const savedTheme=localStorage.getItem('diwan_theme')||'light';
   if(savedTheme==='light'){
     document.body.classList.add('light');
@@ -267,7 +276,7 @@ window.changePassword = async function(){
   const btn = document.querySelector('#m-change-pass .btn.primary');
   btn.disabled = true;
   btn.innerHTML = '<div class="spin"></div>';
-  const { error } = await SB.auth.updateUser({ password: newPass });
+  const { error } = await SB.auth.updateUser({ password: newPass, data: { must_change_password: false } });
   btn.disabled = false;
   btn.innerHTML = '<i class="ti ti-lock-check"></i>حفظ كلمة المرور';
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}

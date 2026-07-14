@@ -1293,7 +1293,7 @@ async function loadUsers(){
   const{data}=await SB.from('user_roles').select('*').order('created_at');
   const list=document.getElementById('users-list');if(!list)return;
   if(!data?.length){list.innerHTML='<div class="empty"><div class="empty-t">لا يوجد مستخدمون</div></div>';return;}
-  const BG={admin:'linear-gradient(135deg,#6D28D9,#4F46E5)',viewer:'linear-gradient(135deg,#1B6CA8,#0284C7)'};
+  const BG={admin:'linear-gradient(135deg,#6D28D9,#4F46E5)',viewer:'linear-gradient(135deg,#1B6CA8,#0284C7)',reservation:'linear-gradient(135deg,#0F766E,#0891B2)'};
   list.innerHTML=data.map(u=>`
     <div style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;background:var(--bg2)">
       <div style="width:36px;height:36px;border-radius:50%;background:${BG[u.role]||'#475569'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${(u.full_name||'م').charAt(0).toUpperCase()}</div>
@@ -1301,6 +1301,7 @@ async function loadUsers(){
       <span class="role-tag ${u.role}">${ROLES[u.role]||u.role}</span>
       ${u.user_id!==CU?.id?`<select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)">
         <option value="viewer" ${u.role==='viewer'?'selected':''}>عارض</option>
+        <option value="reservation" ${u.role==='reservation'?'selected':''}>مدير الحجوزات</option>
         <option value="admin" ${u.role==='admin'?'selected':''}>مدير</option>
       </select>`:'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
     </div>`).join('');
@@ -1308,7 +1309,7 @@ async function loadUsers(){
 window.changeRole=async(uid,role)=>{
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   /* Enforce valid roles only */
-  const safeRole=(role==='admin')?'admin':'viewer';
+  const safeRole=(role==='admin')?'admin':(role==='reservation')?'reservation':'viewer';
   const{data:prevRole}=await SB.from('user_roles').select('role,full_name').eq('user_id',uid).maybeSingle();
   await SB.from('user_roles').update({role:safeRole}).eq('user_id',uid);
   await logAction('edit',`تغيير دور ${prevRole?.full_name||uid}: من ${ROLES[prevRole?.role]||prevRole?.role||'—'} إلى ${ROLES[safeRole]}`,'user_roles',uid);
@@ -1319,7 +1320,7 @@ window.inviteUser=async()=>{
   const email=document.getElementById('inv-email').value.trim();
   const pass=document.getElementById('inv-pass').value;
   const roleRaw=document.getElementById('inv-role').value;
-  const safeRole=(roleRaw==='admin')?'admin':'viewer';
+  const safeRole=(roleRaw==='admin')?'admin':(roleRaw==='reservation')?'reservation':'viewer';
   const name=document.getElementById('inv-name').value.trim();
   if(!email||!pass){toast(window.t('errors.required'),'warn');return;}
   const{data,error}=await SB.auth.signUp({email,password:pass});
