@@ -391,7 +391,7 @@
       <div class="uav" id="uav">م</div>
       <div><span class="uname" id="uname">...</span><span class="urole" id="urole">...</span></div>
     </div>
-    <button class="tbtn" onclick="window.openM('change-pass')"><i class="ti ti-lock"></i>كلمة المرور</button>
+    <button class="tbtn" onclick="window.changePassword()"><i class="ti ti-lock"></i>كلمة المرور</button>
     <button class="tbtn red" onclick="window.logout()"><i class="ti ti-logout"></i>خروج</button>
   </div>
 </div>
@@ -871,17 +871,15 @@
   <!-- Invite User -->
   <div class="modal" id="m-invite" style="display:none;max-width:420px">
     <div class="mhd"><span class="mtt"><span class="mico don"><i class="ti ti-send"></i></span>دعوة مستخدم جديد</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل</label><input type="text" id="inv-name" placeholder="اسم المستخدم"></div><div class="fi full"><label>البريد الإلكتروني <span class="req">*</span></label><input type="email" id="inv-email"></div><div class="fi full"><label>كلمة المرور المؤقتة <span class="req">*</span></label><input type="text" id="inv-pass"></div><div class="fi full"><label>الدور</label><select id="inv-role"><option value="viewer">عارض — عرض فقط</option><option value="reservation">مدير الحجوزات — التقويم فقط</option><option value="admin">مدير — كامل الصلاحيات</option></select></div></div></div>
+    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل</label><input type="text" id="inv-name" placeholder="اسم المستخدم"></div><div class="fi full"><label>البريد الإلكتروني <span class="req">*</span></label><input type="email" id="inv-email"></div><div class="fi full"><label>كلمة المرور المؤقتة <span class="req">*</span></label><div class="inv-pass-row"><div class="auth-field"><input type="text" id="inv-pass" dir="ltr" autocomplete="off" placeholder="12+ حرفاً · كبير/صغير/رقم/رمز"></div><button type="button" class="gen" onclick="window.genInvitePass()" title="توليد كلمة مرور قوية ونسخها"><i class="ti ti-refresh"></i>توليد</button></div><ul class="pw-checks" id="inv-checks" aria-live="polite"></ul><div class="pw-meter" style="margin-top:8px"><div class="pw-meter-track"><i id="inv-bar"></i></div><span class="pw-meter-lvl" id="inv-lvl">—</span></div></div><div class="fi full"><label>الدور</label><select id="inv-role"><option value="viewer">عارض — عرض فقط</option><option value="reservation">مدير الحجوزات — التقويم فقط</option><option value="admin">مدير — كامل الصلاحيات</option></select></div></div></div>
     <div class="mft"><button class="btn primary" id="inv-submit" onclick="window.inviteUser()"><i class="ti ti-send"></i>إنشاء الحساب</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
   </div>
 
-  <!-- Change Password -->
-  <div class="modal" id="m-change-pass" style="display:none;max-width:400px">
-    <div class="mhd"><span class="mtt"><span class="mico green"><i class="ti ti-lock"></i></span>تغيير كلمة المرور</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><form onsubmit="event.preventDefault();window.changePassword();"><div class="ibox warn"><i class="ti ti-info-circle"></i>كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل</div><div class="fg"><div class="fi full"><label>كلمة المرور الجديدة <span class="req">*</span></label><input type="password" id="new-pass" placeholder="••••••••" minlength="6" autocomplete="new-password"><span class="ferr" id="e-new-pass"><i class="ti ti-alert-circle"></i>6 أحرف على الأقل</span></div><div class="fi full"><label>تأكيد كلمة المرور <span class="req">*</span></label><input type="password" id="confirm-pass" placeholder="••••••••" autocomplete="new-password"><span class="ferr" id="e-confirm-pass"><i class="ti ti-alert-circle"></i>كلمات المرور غير متطابقة</span></form></div></div></div>
-    <div class="mft"><button class="btn primary" onclick="window.changePassword()"><i class="ti ti-lock-check"></i>حفظ كلمة المرور</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
-  </div>
+  <!-- Change Password — replaced by the AuthDS full experience (#pass-screen, auth-password.js) -->
 </div>
+
+<!-- AuthDS: premium change-password overlay (content injected by auth-password.js) -->
+<div id="pass-screen" class="auth-screen"></div>
 
 <!-- Mobile Nav -->
 <!-- Mobile FAB: one-tap primary action (write users only; shown via applyPerms). CSS reveals it on phones. -->
@@ -1056,6 +1054,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/ui-infra.js?v=2.1"></script>
 <script defer src="/js/data.js?v=2.1"></script>
 <script defer src="/js/auth.js?v=2.1"></script>
+<script defer src="/js/auth-password.js?v=1.0"></script>
 <script defer src="/js/forms.js?v=2.1"></script>
 <script defer src="/js/crud.js?v=2.1"></script>
 <script defer src="/js/reservations.js?v=1.0"></script>

@@ -1327,7 +1327,10 @@ window.inviteUser=async()=>{
   /* ── Real, specific validation messages (no more generic "خطأ") ── */
   if(!email||!pass){toast(window.t('errors.required'),'warn');return;}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('بريد إلكتروني غير صالح: '+email,'err');return;}
-  if(pass.length<6){toast('كلمة المرور قصيرة جداً — 6 أحرف على الأقل','err');return;}
+  /* EB-08 — temp passwords obey the same AuthDS policy (12+ chars, mixed classes, not common) */
+  const _pol=window.AuthDS?window.AuthDS.checkPassword(pass,{email:email,username:name}):null;
+  if(_pol&&!_pol.valid){toast('كلمة المرور المؤقتة لا تحقق السياسة — 12 حرفاً على الأقل مع حرف كبير وصغير ورقم ورمز، وألا تكون شائعة. استخدم زر «توليد».','err');return;}
+  if(!_pol&&pass.length<12){toast('كلمة المرور قصيرة جداً — 12 حرفاً على الأقل','err');return;}
 
   const btn=document.getElementById('inv-submit'); if(btn){btn.disabled=true;}
   try{
