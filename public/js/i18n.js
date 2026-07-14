@@ -1474,14 +1474,12 @@ function translateAll() {
   });
 
   // ترجمة login screen
-  // Identifier placeholder is a segmented bidi-safe overlay (#l-ph); only the
-  // separator word toggles with language.
-  const lPhOr = document.getElementById('l-ph-or');
-  if (lPhOr) lPhOr.textContent = toEn ? 'or' : 'أو';
+  const lEmail = document.getElementById('l-email');
+  if (lEmail) lEmail.placeholder = toEn ? 'Enter your phone number or email address' : 'أدخل رقم الهاتف أو البريد الإلكتروني';
   const lPass = document.getElementById('l-pass');
   if (lPass) lPass.placeholder = toEn ? 'Password' : 'كلمة المرور';
   const lEmailLbl = document.getElementById('lbl-email');
-  if (lEmailLbl) lEmailLbl.textContent = toEn ? 'Phone or Email' : 'رقم الهاتف أو البريد الإلكتروني';
+  if (lEmailLbl) lEmailLbl.textContent = toEn ? 'Phone Number or Email Address' : 'رقم الهاتف أو البريد الإلكتروني';
   const lPassLbl = document.getElementById('lbl-pass');
   if (lPassLbl) lPassLbl.textContent = toEn ? 'Password' : 'كلمة المرور';
   const lRemLbl = document.getElementById('lbl-remember');

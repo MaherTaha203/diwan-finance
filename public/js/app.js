@@ -1939,7 +1939,7 @@ function applyTopbarStyles(){
 function applyLoginLang(){
   const isEn = window.LANG==='en';
   const ids = {
-    'lbl-email': isEn?'Phone or Email':'رقم الهاتف أو البريد الإلكتروني',
+    'lbl-email': isEn?'Phone Number or Email Address':'رقم الهاتف أو البريد الإلكتروني',
     'lbl-pass': isEn?'Password':'كلمة المرور',
     'lbl-remember': isEn?'Remember me':'تذكرني',
     'btn-forgot': isEn?'Forgot password?':'نسيت كلمة المرور؟',
@@ -1950,10 +1950,8 @@ function applyLoginLang(){
     const el=document.getElementById(id);
     if(el)el.textContent=txt;
   });
-  /* Identifier uses a segmented bidi-safe placeholder overlay (see #l-ph);
-     only the separator word changes with language, not a plain string. */
-  const lPhOr=document.getElementById('l-ph-or');
-  if(lPhOr)lPhOr.textContent=isEn?'or':'أو';
+  const lEmail=document.getElementById('l-email');
+  if(lEmail)lEmail.placeholder=isEn?'Enter your phone number or email address':'أدخل رقم الهاتف أو البريد الإلكتروني';
   const lPass=document.getElementById('l-pass');
   if(lPass)lPass.placeholder=isEn?'••••••••':'••••••••';
   const loginBtn=document.getElementById('login-btn');

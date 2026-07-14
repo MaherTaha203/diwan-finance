@@ -102,12 +102,6 @@
 .iw-login{position:relative}
 .login-input{width:100%;height:52px;background:var(--b-input-bg);border:1px solid var(--b-input-border);border-radius:8px;padding:0 48px 0 48px;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;font-size:15px;color:var(--b-text);direction:rtl;text-align:right;outline:none;transition:border-color .2s,background .2s}
 .login-input::placeholder{color:var(--b-placeholder);font-size:13px}
-/* Segmented, bidi-correct placeholder — the flex row is forced LTR so the visual
-   order is fixed as: email@example.com · أو · 059123456. Each example is its own
-   LTR run (<bdi>), the separator its own RTL run, so nothing gets reordered. */
-.login-ph{position:absolute;top:50%;inset-inline:44px;transform:translateY(-50%);direction:ltr;display:flex;align-items:center;justify-content:center;gap:16px;pointer-events:none;font-size:13px;color:var(--b-placeholder);white-space:nowrap;overflow:hidden}
-.login-ph .login-ph-or{color:var(--b-text3);unicode-bidi:isolate}
-.login-input.has-val ~ .login-ph{display:none}
 .login-input:focus{border-color:var(--b-navy);background:var(--b-white);box-shadow:0 0 0 3px rgba(26,26,46,.06)}
 .ii-r-login{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--b-gold);pointer-events:none}
 .ii-l-login{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;color:#9CA3AF;cursor:pointer;background:none;border:none;padding:0;transition:color .15s}
@@ -132,8 +126,6 @@
 .login-err-box.show{display:block}
 .forgot-msg{display:none;background:rgba(198,164,106,.06);border:1px solid rgba(198,164,106,.15);border-radius:8px;padding:12px 16px;font-size:13px;color:#92700C;margin-top:10px;text-align:center;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 
-/* Card footer */
-.login-card-footer{text-align:center;margin-top:22px;padding-top:16px;border-top:.5px solid var(--b-border);font-size:13px;color:#aaa;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 
 /* ── MOBILE ── */
 @media(max-width:768px){
@@ -209,7 +201,6 @@
 #login-screen .cchk-login{border-radius:4px}
 #login-screen .login-btn-main{height:44px;border-radius:6px}
 #login-screen .login-err-box,#login-screen .forgot-msg{border-radius:6px}
-#login-screen .login-card-footer{color:#767676;margin-top:24px}    /* AA on white (was #aaa) */
 /* visible keyboard focus — in-palette gold ring, works on navy + cream */
 #login-screen .login-input:focus-visible,#login-screen .lc-pill:focus-visible,
 #login-screen .ii-l-login:focus-visible,#login-screen .forgot-link:focus-visible,
@@ -325,15 +316,8 @@
           <label class="login-form-label" id="lbl-email" for="l-email">رقم الهاتف أو البريد الإلكتروني</label>
           <div class="iw-login">
             <input class="login-input" type="text" id="l-email" autocomplete="username" dir="rtl"
-              oninput="this.classList.toggle('has-val',!!this.value)"
+              placeholder="أدخل رقم الهاتف أو البريد الإلكتروني"
               onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('l-pass').focus();}">
-            <!-- Segmented placeholder: email + phone stay LTR, «أو» stays RTL,
-                 so the mixed-direction hint renders correctly in the RTL field. -->
-            <span class="login-ph" id="l-ph" aria-hidden="true">
-              <bdi dir="ltr">email@example.com</bdi>
-              <span class="login-ph-or" id="l-ph-or" dir="rtl">أو</span>
-              <bdi dir="ltr">059123456</bdi>
-            </span>
             <span class="ii-r-login"><i class="ti ti-user" aria-hidden="true"></i></span>
           </div>
         </div>
@@ -364,8 +348,6 @@
         <div class="login-err-box" id="login-err" role="alert"></div>
         <div class="forgot-msg" id="forgot-msg" role="status" aria-live="polite"></div>
         </form>
-
-        <div class="login-card-footer" id="lp-card-footer">للدعم الفني: 00972562666612</div>
       </div>
     </div>
 
@@ -947,14 +929,13 @@ function loginSetLang(l) {
     // RIGHT PANEL (form)
     set('lp-welcome', 'Sign In');
     set('lp-subtitle', 'Enter your credentials to access the system');
-    set('lbl-email', 'Email Address');
-    ph('l-email', 'Enter your email address');
+    set('lbl-email', 'Phone Number or Email Address');
+    ph('l-email', 'Enter your phone number or email address');
     set('lbl-pass', 'Password');
     ph('l-pass', '••••••••');
     set('lbl-remember', 'Remember this device');
     set('lbl-forgot', 'Forgot password?');
     set('btn-login-txt', 'Sign In');
-    set('lp-card-footer', 'Support: 00972562666612');
   } else {
     // LEFT PANEL
     set('lp-org', 'ديوان آل طه');
@@ -976,14 +957,13 @@ function loginSetLang(l) {
     // RIGHT PANEL
     set('lp-welcome', 'تسجيل الدخول');
     set('lp-subtitle', 'أدخل بيانات حسابك للوصول إلى النظام');
-    set('lbl-email', 'البريد الإلكتروني');
-    ph('l-email', 'أدخل البريد الإلكتروني');
+    set('lbl-email', 'رقم الهاتف أو البريد الإلكتروني');
+    ph('l-email', 'أدخل رقم الهاتف أو البريد الإلكتروني');
     set('lbl-pass', 'كلمة المرور');
     ph('l-pass', '••••••••');
     set('lbl-remember', 'تذكرني على هذا الجهاز');
     set('lbl-forgot', 'نسيت كلمة المرور؟');
     set('btn-login-txt', 'تسجيل الدخول');
-    set('lp-card-footer', '00للدعم الفني: 972562666612');
   }
   localStorage.setItem('diwan_lang', l);
   window.LANG = l;

@@ -192,7 +192,7 @@ function resRenderAgenda() {
     const d = +r.res_date.slice(8, 10);
     return `<div class="res-ag-it" onclick="window.resOpenView('${r.res_date}')">
       <div class="res-ag-d"><b>${d}</b><span>${RES_MONTHS_AR[RES.m].slice(0, 3)}</span></div>
-      <div class="res-ag-m"><b>${esc(r.customer_name)}</b><span>${esc(resTypeLabel(r.res_type))} · <span class="ltr">${esc(r.phone)}</span></span></div>
+      <div class="res-ag-m"><b>${esc(r.customer_name)}</b><span class="res-ag-meta"><span class="res-badge">${esc(resTypeLabel(r.res_type))}</span><span class="ltr">${esc(r.phone)}</span></span></div>
       <i class="ti ti-chevron-left" style="color:var(--tx2)"></i></div>`;
   }).join('');
 }
