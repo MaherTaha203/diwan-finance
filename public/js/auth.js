@@ -59,14 +59,15 @@ async function afterLogin(){
   applyTopbarStyles();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
-  /* First-login security: a user provisioned with a temporary password carries
-     must_change_password=true in metadata; prompt them to set a new one before use.
-     Cleared automatically when they change it (see changePassword). */
+  /* First-login security (EB-08 — MANDATORY): a user provisioned with a
+     temporary password carries must_change_password=true in metadata. The
+     AuthDS overlay opens LOCKED (opaque, no close, focus-trapped; logout is
+     the only escape) so no page is usable before the password is changed.
+     Cleared by the change itself (auth-password.js → updateUser metadata). */
   if(CU?.user_metadata?.must_change_password){
-    setTimeout(function(){
-      if(typeof window.openM==='function') window.openM('change-pass');
-      toast(window.LANG==='en'?'Please set a new password to replace the temporary one.':'الرجاء تعيين كلمة مرور جديدة بدل المؤقتة.','warn');
-    },600);
+    if(typeof window.openPasswordChange==='function'){
+      window.openPasswordChange({locked:true});
+    }
   }
   const savedTheme=localStorage.getItem('diwan_theme')||'light';
   if(savedTheme==='light'){
@@ -266,23 +267,8 @@ window.forgotPassword = async function(){
   if(msg){ msg.textContent = neutral; msg.style.display='block'; }
 };
 
-/* ═══ CHANGE PASSWORD ═══ */
-window.changePassword = async function(){
-  const newPass = document.getElementById('new-pass').value;
-  const confirmPass = document.getElementById('confirm-pass').value;
-  const v1 = vf('new-pass', v => v.length >= 6, 'e-new-pass');
-  const v2 = vf('confirm-pass', v => v === newPass, 'e-confirm-pass');
-  if(!v1 || !v2) return;
-  const btn = document.querySelector('#m-change-pass .btn.primary');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spin"></div>';
-  const { error } = await SB.auth.updateUser({ password: newPass, data: { must_change_password: false } });
-  btn.disabled = false;
-  btn.innerHTML = '<i class="ti ti-lock-check"></i>حفظ كلمة المرور';
-  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  await logAction('edit', 'تغيير كلمة المرور', 'auth', null);
-  window.closeM();
-  document.getElementById('new-pass').value = '';
-  document.getElementById('confirm-pass').value = '';
-  toast('✓ '+window.t('messages.pass_changed'), 'ok');
-};
+/* ═══ CHANGE PASSWORD ═══
+   EB-08: the legacy 6-char modal handler was replaced by the AuthDS premium
+   experience — window.changePassword is now defined in auth-password.js
+   (loaded right after this file) with full policy, strength, reuse-history,
+   current-password verification, audit logging and the first-login lock. */
