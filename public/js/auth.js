@@ -109,7 +109,7 @@ window.logout=async function(){
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('l-pass').value='';
-  const lem=document.getElementById('l-email');lem.value='';lem.classList.remove('has-val'); // re-show the segmented placeholder
+  document.getElementById('l-email').value='';
   const btn=document.getElementById('login-btn');
   if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
   toast(window.t?window.t('messages.logged_out'):'تم تسجيل الخروج','info');
