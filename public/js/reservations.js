@@ -19,7 +19,9 @@ const RES_TYPES = {
   lecture:                ['محاضرة',              'Lecture'],
   general:                ['عام',                 'General'],
 };
-const RES_MONTHS_AR = ['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تمّوز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
+// Gregorian month names are shown in English (Latin) even in the Arabic UI —
+// per owner preference for an English-calendar look. Day names stay Arabic.
+const RES_MONTHS_AR = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const RES_MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const RES_DOW_AR = ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
 const RES_DOW_EN = ['Sat','Sun','Mon','Tue','Wed','Thu','Fri'];
@@ -189,7 +191,7 @@ function resRenderAgenda() {
   el.innerHTML = title + rows.map(r => {
     const d = +r.res_date.slice(8, 10);
     return `<div class="res-ag-it" onclick="window.resOpenView('${r.res_date}')">
-      <div class="res-ag-d"><b>${d}</b><span>${RES_MONTHS_AR[RES.m]}</span></div>
+      <div class="res-ag-d"><b>${d}</b><span>${RES_MONTHS_AR[RES.m].slice(0, 3)}</span></div>
       <div class="res-ag-m"><b>${esc(r.customer_name)}</b><span>${esc(resTypeLabel(r.res_type))} · <span class="ltr">${esc(r.phone)}</span></span></div>
       <i class="ti ti-chevron-left" style="color:var(--tx2)"></i></div>`;
   }).join('');
