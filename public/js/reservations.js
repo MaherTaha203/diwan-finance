@@ -19,7 +19,9 @@ const RES_TYPES = {
   lecture:                ['محاضرة',              'Lecture'],
   general:                ['عام',                 'General'],
 };
-const RES_MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+// Gregorian month names are shown in English (Latin) even in the Arabic UI —
+// per owner preference for an English-calendar look. Day names stay Arabic.
+const RES_MONTHS_AR = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const RES_MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const RES_DOW_AR = ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
 const RES_DOW_EN = ['Sat','Sun','Mon','Tue','Wed','Thu','Fri'];
@@ -169,6 +171,30 @@ function resRender() {
     ${!monthHasRes && RES.loadedYears[RES.y] && !RES.error ? `<div class="res-emptybar"><i class="ti ti-calendar-plus"></i>${resT('لا توجد حجوزات في هذا الشهر — كل الأيام متاحة، انقر أي يوم للإضافة.', 'No reservations this month — every day is free. Click any day to add one.')}</div>` : ''}
     <div class="res-grid" role="grid">${grid}</div>`;
   resRenderDayCard();
+  resRenderAgenda();
+}
+
+/* mobile month-agenda — turns the empty space below the compact grid into
+   a tappable list of this month's reservations (CSS shows it ≤820px only). */
+function resRenderAgenda() {
+  const el = document.getElementById('res-agenda');
+  if (!el) return;
+  const prefix = `${RES.y}-${String(RES.m + 1).padStart(2, '0')}-`;
+  const rows = Object.values(RES.byDate)
+    .filter(r => r.res_date.startsWith(prefix))
+    .sort((a, b) => a.res_date < b.res_date ? -1 : 1);
+  const title = `<div class="res-ag-t"><i class="ti ti-list-details"></i>${resT('حجوزات هذا الشهر', 'This month')} · ${rows.length}</div>`;
+  if (!rows.length) {
+    el.innerHTML = title + `<div class="res-ag-empty">${resT('لا حجوزات — انقر أي يوم للإضافة', 'None — tap a day to add')}</div>`;
+    return;
+  }
+  el.innerHTML = title + rows.map(r => {
+    const d = +r.res_date.slice(8, 10);
+    return `<div class="res-ag-it" onclick="window.resOpenView('${r.res_date}')">
+      <div class="res-ag-d"><b>${d}</b><span>${RES_MONTHS_AR[RES.m].slice(0, 3)}</span></div>
+      <div class="res-ag-m"><b>${esc(r.customer_name)}</b><span>${esc(resTypeLabel(r.res_type))} · <span class="ltr">${esc(r.phone)}</span></span></div>
+      <i class="ti ti-chevron-left" style="color:var(--tx2)"></i></div>`;
+  }).join('');
 }
 const RES_DOW_AR_SHORT = ['سبت','أحد','اثن','ثلا','أرب','خمس','جمع'];
 function resDowHead() {
