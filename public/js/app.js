@@ -1761,7 +1761,7 @@ window.exportPagePDF=function(type){
     tableHTML+='</tbody></table>';
   }
 
-  const body=reportHeader(t[0],{sub:t[1]})+'<div class="period">\u0637\u064f\u0628\u0639: '+printDate+'</div>'+tableHTML+reportFooter({date:printDate});
+  const body=reportHeader(t[0],{sub:t[1]})+'<div class="period">\u0637\u064f\u0628\u0639: '+printDate+'</div>'+tableHTML+reportDfoot('https://www.diwan-finance.com','diwan-finance.com')+reportFooter({date:printDate});
   openPrintWin(css,body);
 };
 
