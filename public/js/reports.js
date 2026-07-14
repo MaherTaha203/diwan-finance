@@ -129,7 +129,7 @@ function renderAnnualDebt(){
     +'<span>'+(en?'Auto-generated report — Diwan Al-Taha Finance':'تقرير مُولّد آليًا — ديوان آل طه')+'</span></div>'
     +'</div>';
 }
-window.prtAnnualDebt=function(){
+window.prtAnnualDebt=function(mode){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const en=window.LANG==='en';
   const rows=annualDebtRows();
@@ -142,7 +142,7 @@ window.prtAnnualDebt=function(){
     +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
     +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
-  openPrintWin(css,b);
+  if(mode==='pdf') savePrintPDF(css,b,'annual-debt-'+today(),'landscape'); else openPrintWin(css,b);
 };
 
 /* ═══ A3 — Delinquent Members Report (read-only · dynamic subscription years) ═══ */
@@ -216,7 +216,7 @@ function renderDelinquent(){
     +'<span>'+(en?'Auto-generated report — Diwan Al-Taha Finance':'تقرير مُولّد آليًا — ديوان آل طه')+'</span></div>'
     +'</div>';
 }
-window.prtDelinquent=function(){
+window.prtDelinquent=function(mode){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const en=window.LANG==='en';
   const {years, rows}=delinquentRows();
@@ -229,7 +229,7 @@ window.prtDelinquent=function(){
     +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
     +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
-  openPrintWin(css,b);
+  if(mode==='pdf') savePrintPDF(css,b,'delinquent-'+today(),'landscape'); else openPrintWin(css,b);
 };
 window.exportDelinquentExcel=function(){
   if(!can.export()){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
@@ -252,7 +252,7 @@ window.exportDelinquentExcel=function(){
   loadStyledXLSX(doExcel);
 };
 
-window.prtDonStmt=function(){
+window.prtDonStmt=function(mode){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const _en=window.LANG==='en';
   const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
@@ -309,7 +309,7 @@ window.prtDonStmt=function(){
     +'<tr class="final"><td colspan="3">'+(_en?'Cash Total (in-kind excluded — §4.2)':'الإجمالي النقدي (العيني مستبعَد — §4.2)')+'</td><td class="pos">₪ '+fmt(cashTot)+'</td><td colspan="3">'+(_en?'in-kind documentary: ₪':'قيمة عينية توثيقية: ₪')+' '+fmt(inkindTot)+'</td></tr></tbody></table>'
     +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
-  openPrintWin(css,body);
+  if(mode==='pdf') savePrintPDF(css,body,'donations-'+today(),'landscape'); else openPrintWin(css,body);
 };
 
 /* ═══ Domain 4 — Balance Reconciliation (read-only consistency tool) ═══

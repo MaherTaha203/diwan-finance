@@ -122,6 +122,43 @@ function openPrintWin(css,body){
   else toast(window.t?window.t('errors.no_print'):'يرجى السماح بالنوافذ المنبثقة','warn');
 }
 
+/* Real PDF file DOWNLOAD — shares the exact same body + PRINT_TOKENS as the
+   printed form, so a downloaded كشف/سند is identical to its print. Unlike
+   openPrintWin (which opens the browser print dialog), this saves a .pdf file.
+   Renders any QR codes first, and lazy-loads html2pdf/qrcode from CDN. */
+function savePrintPDF(css, body, filename, orient){
+  orient=orient||'portrait';
+  const build=function(){
+    const host=document.createElement('div');
+    host.style.cssText='position:fixed;left:-10000px;top:0;background:#fff;width:'+(orient==='landscape'?'297mm':'210mm');
+    host.innerHTML='<style>'+PRINT_TOKENS+(css||'')+'</style><div class="pdfroot" style="padding:8mm;background:#fff">'+body+'</div>';
+    document.body.appendChild(host);
+    const emit=function(){
+      const opt={margin:0,filename:(filename||'diwan-document')+'.pdf',
+        image:{type:'jpeg',quality:0.98},
+        html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
+        jsPDF:{unit:'mm',format:'a4',orientation:orient},
+        pagebreak:{mode:['css','legacy'],avoid:['tr','.card','.amount','tr.final','.dfoot','.cards']}};
+      window.html2pdf().set(opt).from(host.querySelector('.pdfroot')).save()
+        .then(function(){host.remove();toast('✓ PDF','ok');})
+        .catch(function(){host.remove();toast(window.t?window.t('errors.save_error'):'تعذّر إنشاء PDF','err');});
+    };
+    const qrEls=host.querySelectorAll('[data-qr-url]');
+    if(qrEls.length && window.QRCode){
+      qrEls.forEach(function(el){try{new window.QRCode(el,{text:el.getAttribute('data-qr-url'),width:52,height:52,colorDark:'#0F1B2D',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.H});}catch(e){}});
+      setTimeout(emit,350);
+    } else emit();
+  };
+  const withScript=function(cond,src,cb){ if(cond()) return cb();
+    const s=document.createElement('script');s.src=src;s.onload=cb;s.onerror=function(){cb();};document.head.appendChild(s); };
+  toast('جارٍ إنشاء PDF…','info');
+  withScript(function(){return !!window.html2pdf;},'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',function(){
+    if(!window.html2pdf){toast(window.t?window.t('errors.save_error'):'تعذّر تحميل مكتبة PDF','err');return;}
+    withScript(function(){return !!window.QRCode||!/data-qr-url/.test(body);},'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',build);
+  });
+}
+window.savePrintPDF=savePrintPDF;
+
 function fundLabelAr(ft){return ft==='food'?'صندوق الغداء':ft==='donation'?'صندوق التبرعات':'صندوق الديوان';}
 
 /* ═══ A0.5 — Identity v3 branding · single source of truth for every report/print surface ═══ */
@@ -319,15 +356,7 @@ window.prtStmt=function(fund){
 window.downloadFundStatementPDF=function(fund){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const r=window.buildFundStatementHTML(fund);
-  const doPdf=()=>{
-    const wrap=document.createElement('div');
-    wrap.innerHTML='<style>'+r.css+'</style>'+r.body;
-    wrap.style.cssText='direction:rtl;background:#fff';
-    const opt={margin:[8,8,8,8],filename:(fund==='food'?'Food-Statement':'Diwan-Statement')+'-'+today()+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}};
-    window.html2pdf().set(opt).from(wrap).save().then(()=>toast('\u2713 PDF','ok'));
-  };
-  if(window.html2pdf){doPdf();}
-  else{toast('\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644...','info');const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';s.onload=doPdf;document.head.appendChild(s);}
+  savePrintPDF(r.css, r.body, (fund==='food'?'Food-Statement':'Diwan-Statement')+'-'+today(), 'landscape');
 };
 window.prtMemberStmt=function(mode){
   /* mode: 'print' (default) · 'pdf' (download) · 'pdf-print' — ALL use the same
@@ -459,9 +488,9 @@ window.prtMemberStmt=function(mode){
     +donsHTML
     +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:printDate,page:window.t('stmt.page_info')});
-  openPrintWin(css,body);
-  if(mode==='pdf') toast(_en?'In the print dialog choose “Save as PDF”':'في نافذة الطباعة اختر «حفظ كـ PDF»','info');
-  else if(mode==='pdf-print') toast(_en?'Generated from the official PDF template':'تم التوليد من قالب PDF الرسمي','info');
+  /* 'pdf' → real file download (identical template); 'print'/'pdf-print' → print dialog. */
+  if(mode==='pdf') savePrintPDF(css, body, 'member-statement-'+esc(member.member_code||member.name||'')+'-'+today(), 'portrait');
+  else openPrintWin(css,body);
 };
 
 /* ═══ §3 PRINT-BUTTON AUDIT ADDITIONS (presentation-only printers) ═══
