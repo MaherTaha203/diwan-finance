@@ -588,7 +588,7 @@ function renderTreasuryPanel(){
   }
 
   el.innerHTML=`<div class="tp">
-    <div class="tp-hero"><div class="tp-top"><div style="color:#fff;font-weight:700;font-size:13px">لوحة الخزينة · Treasury</div><div class="tp-tag">${fundName}</div></div>
+    <div class="tp-hero"><div class="tp-top"><div class="tp-ttl">لوحة الخزينة · Treasury</div><div class="tp-tag">${fundName}</div></div>
       <div class="tp-cap">${cap}</div><div class="tp-total${neg?' neg':''}">₪ ${fmt(total)}</div>
       <div class="tp-rule">${rule}</div><div class="tp-upd">${upd}</div></div>
     ${middle}

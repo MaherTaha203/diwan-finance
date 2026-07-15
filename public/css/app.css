@@ -453,18 +453,19 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .tp-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .tp-tab{padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx3)}
 .tp-tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
-.tp{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(28,39,51,.05),0 6px 16px rgba(36,66,92,.08);margin-bottom:16px;transition:box-shadow .18s ease, transform .18s ease}
-#pg-dash .tp:hover{box-shadow:0 2px 4px rgba(28,39,51,.06),0 14px 32px rgba(36,66,92,.13);transform:translateY(-2px)}
-.tp-hero{background:var(--brand);padding:20px 24px 16px;position:relative}
-.tp-hero:after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:var(--accent)}
+.tp{background:var(--card);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
+/* DDL-03 · treasury panel is paper, not a filled navy card. The total is the
+   ink typographic hero (mirrors .acct-stmt); the accent stays structural-only. */
+.tp-hero{background:var(--card);padding:20px 24px 16px;position:relative;border-bottom:1px solid var(--bd)}
 .tp-hero .tp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
-.tp-hero .tp-tag{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:8px}
-.tp-hero .tp-cap{color:rgba(255,255,255,.65);font-size:13px;font-weight:600}
-.tp-hero .tp-total{color:#fff;font-size:32px;font-weight:800;letter-spacing:-.5px;line-height:1;margin:6px 0 4px;font-family:var(--fmono);font-variant-numeric:tabular-nums}
-.tp-hero .tp-total.neg{color:#C08A6E}
-.tp-hero .tp-rule{color:rgba(255,255,255,.75);font-size:10px;margin-bottom:6px}
-.tp-hero .tp-upd{color:rgba(255,255,255,.7);font-size:11px;font-weight:600}
-.tp-hero .tp-upd:before{content:"● ";color:#8FD6AE;font-size:8px}
+.tp-hero .tp-top .tp-ttl{color:var(--tx);font-weight:700;font-size:13px}
+.tp-hero .tp-tag{background:var(--bg3);border:1px solid var(--bd);color:var(--tx2);font-size:11px;font-weight:700;padding:4px 12px;border-radius:8px}
+.tp-hero .tp-cap{color:var(--tx3);font-size:13px;font-weight:600}
+.tp-hero .tp-total{color:var(--tx);font-size:32px;font-weight:800;letter-spacing:-.5px;line-height:1;margin:6px 0 4px;font-family:var(--fmono);font-variant-numeric:tabular-nums}
+.tp-hero .tp-total.neg{color:var(--neg)}
+.tp-hero .tp-rule{color:var(--tx3);font-size:10px;margin-bottom:6px}
+.tp-hero .tp-upd{color:var(--tx3);font-size:11px;font-weight:600}
+.tp-hero .tp-upd:before{content:"● ";color:var(--pos);font-size:8px}
 /* diwan flow */
 .tp-flow{display:flex;align-items:stretch;padding:20px 26px}
 .tp-flow .nd{flex:1;text-align:center;padding:6px 8px}
