@@ -53,10 +53,9 @@ const PRINT_TOKENS=':root{--ink:#2C2E33;--ink2:#5C5F65;--muted:#8F9299;--faint:#
 +'.dh .chip{width:56px;height:56px;flex:none;display:grid;place-items:center}'
 +'.dh .chip img{width:100%;height:100%;object-fit:contain;display:block}'
 +'.rule{height:2px;background:var(--ink);border-radius:2px;margin-top:14px}'
-/* ── Centered title with teal underline ── */
+/* ── Centered title — type + centering carry it (accent is structural-only, never decorative) ── */
 +'.title{text-align:center;margin:22px 0 2px}'
-+'.title h2{font-size:19px;font-weight:700;display:inline-block;padding-bottom:8px;position:relative}'
-+'.title h2::after{content:"";position:absolute;bottom:0;right:22%;left:22%;height:3px;background:var(--teal);border-radius:3px}'
++'.title h2{font-size:19px;font-weight:700;display:inline-block}'
 /* ── Meta / period line (centered, muted) ── */
 +'.period{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.9}'
 +'.period b{color:var(--ink2);font-weight:600}'
