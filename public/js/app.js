@@ -1053,7 +1053,7 @@ function attachCount(type,id){return ATTACH_COUNTS[type]?.[id]||0;}
 /* Row button (paperclip + count) — visible to all roles */
 window.attachBtn=function(type,id,no,fund){
   const n=attachCount(type,id);
-  const badge=n>0?`<span style="background:var(--pos,#059669);color:var(--card,#fff);border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
+  const badge=n>0?`<span style="background:var(--pos,#46604E);color:var(--card,#fff);border-radius:9px;padding:0 5px;font-size:9px;margin-inline-start:3px;font-weight:700">${n}</span>`:'';
   return `<button class="btn ghost sm ic-attach" onclick="window.openAttach('${type}','${id}','${esc(no||'')}','${fund||''}')" title="${window.t('common.attachments')}"><i class="ti ti-paperclip"></i>${badge}</button>`;
 };
 
@@ -1308,10 +1308,11 @@ async function loadUsers(){
   const{data}=await SB.from('user_roles').select('*').order('created_at');
   const list=document.getElementById('users-list');if(!list)return;
   if(!data?.length){list.innerHTML='<div class="empty"><div class="empty-t">لا يوجد مستخدمون</div></div>';return;}
-  const BG={admin:'linear-gradient(135deg,#6D28D9,#4F46E5)',viewer:'linear-gradient(135deg,#1B6CA8,#0284C7)',reservation:'linear-gradient(135deg,#0F766E,#0891B2)'};
+  /* muted DDL role colours — same solids as the top-bar avatar (.uav) and role tags */
+  const BG={admin:'#5E5578',viewer:'#3E5A78',reservation:'#3E6659'};
   list.innerHTML=data.map(u=>`
     <div style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;background:var(--bg2)">
-      <div style="width:36px;height:36px;border-radius:50%;background:${BG[u.role]||'#475569'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${(u.full_name||'م').charAt(0).toUpperCase()}</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:${BG[u.role]||'#5C5F65'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${(u.full_name||'م').charAt(0).toUpperCase()}</div>
       <div style="flex:1"><div style="font-weight:500;font-size:13px">${esc(u.full_name||'—')}</div><div style="font-size:10px;color:var(--tx3)">${u.user_id}</div></div>
       <span class="role-tag ${u.role}">${ROLES[u.role]||u.role}</span>
       ${u.user_id!==CU?.id?`<select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)">
