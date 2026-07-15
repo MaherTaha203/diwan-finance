@@ -667,19 +667,29 @@ function renderDash(){
 
 
 
+  /* Monthly net cash-flow chart — income (receipts) minus expense (payments) per
+     month over 12 months. Presentation only: display sums over already-loaded DB
+     rows; no logic/number contract touched. */
   const now=new Date();const months=[];
   for(let i=11;i>=0;i--){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const food=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.receipt_date?.startsWith(k)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const diwan=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan'&&r.receipt_date?.startsWith(k)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    months.push({lbl:L.month(d.getMonth()),food,diwan});
+    const inc=DB.receipts.filter(r=>!r.is_deleted&&r.receipt_date?.startsWith(k)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const exp=DB.payments.filter(p=>!p.is_deleted&&p.payment_date?.startsWith(k)).reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+    months.push({lbl:L.month(d.getMonth()),inc,exp,net:Math.round((inc-exp)*100)/100});
   }
-  const maxV=Math.max(...months.map(m=>m.food+m.diwan),1);
-  const _mx=months.reduce((a,m,i)=>((m.food+m.diwan)>(months[a].food+months[a].diwan)?i:a),0);
+  const _enM=window.LANG==='en';
+  const maxAbs=Math.max(...months.map(m=>Math.abs(m.net)),1);
+  const bars=months.map(m=>{
+    const pos=m.net>=0, h=m.net!==0?Math.max(3,Math.round(Math.abs(m.net)/maxAbs*100)):0;
+    const tip=`${m.lbl} · ${_enM?'In':'مقبوض'} ₪${fmt(m.inc)} · ${_enM?'Out':'مصروف'} ₪${fmt(m.exp)} · ${_enM?'Net':'صافي'} ${m.net<0?'−':''}₪${fmt(Math.abs(m.net))}`;
+    return `<div class="nfc-col" title="${esc(tip)}"><div class="nfc-up">${pos?`<i style="height:${h}%"></i>`:''}</div><div class="nfc-dn">${pos?'':`<i style="height:${h}%"></i>`}</div></div>`;
+  }).join('');
   document.getElementById('month-chart').innerHTML=
-    `<div class="dbars">${months.map((m,i)=>`<i class="${i===_mx?'hl':''}" style="height:${Math.max(4,Math.round((m.food+m.diwan)/maxV*100))}%" title="₪ ${fmt(m.food+m.diwan)}"></i>`).join('')}</div>`
-    +`<div class="dbx">${months.map(m=>`<span>${m.lbl}</span>`).join('')}</div>`;
+    `<div class="nfc-head"><div class="nfc-lg"><span><i class="p"></i>${_enM?'Surplus':'فائض'}</span><span><i class="n"></i>${_enM?'Deficit':'عجز'}</span></div>`
+    +`<div class="nfc-cap">${_enM?'Last 12 months':'آخر ١٢ شهراً'}</div></div>`
+    +`<div class="nfc"><div class="nfc-zero"></div>${bars}</div>`
+    +`<div class="nfc-x">${months.map(m=>`<span>${m.lbl}</span>`).join('')}</div>`;
 
   const allOps=[
     ...DB.receipts.filter(r=>!r.is_deleted).slice(0,5).map(r=>({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),amt:r.amount_ils||r.amount,type:'rec',fund:r.fund_type,no:r.no})),
