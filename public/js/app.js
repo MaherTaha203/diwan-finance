@@ -659,8 +659,9 @@ function renderDash(){
       <div class="pline"><i class="${k.g?'g':''}" style="width:${_pct(k.v)}%"></i></div>
       <div class="f"><b class="mono">${_pct(k.v)}%</b> ${_isEn?'of treasury total':'من إجمالي الخزينة'}</div>
     </div>`).join('');
-  /* sidebar member counter (approved design) */
-  const _nbM=document.querySelector('.nb[data-p="members"]');
+  /* sidebar member counter (approved design) — target the real group item,
+     never a favorites clone (which is rebuilt and would drop the badge). */
+  const _nbM=document.querySelector('.nbg-body:not(#sb-favs-body) .nb[data-p="members"]')||document.querySelector('.nb[data-p="members"]');
   if(_nbM){let k=_nbM.querySelector('.k');if(!k){k=document.createElement('span');k.className='k';_nbM.appendChild(k);}k.textContent=DB.members.filter(m=>m.is_active).length;}
   renderTreasuryTabs();renderTreasuryPanel();
 
