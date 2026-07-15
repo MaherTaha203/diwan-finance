@@ -877,6 +877,10 @@ window.renderMemberStmt=function(){
   const moves=st.rows.filter(r=>r.date!=='—');
   let totSub=0, totPay=0;
   const bodyRows=[];
+  /* Explicit, symmetric balance-polarity marker (DDL-02 B-3): every balance cell
+     shows دائن/مدين for BOTH polarities — never credit-labelled / debit-by-absence. */
+  const polM=v=>v>0?' <span class="as-pol as-pol-dr">'+T('مدين','Dr')+'</span>'
+               :v<0?' <span class="as-pol as-pol-cr">'+T('دائن','Cr')+'</span>':'';
 
   bodyRows.push(
     '<tr class="as-open">'
@@ -887,7 +891,7 @@ window.renderMemberStmt=function(){
     +'<td class="as-c as-mut">—</td>'
     +'<td class="as-num as-mut">—</td>'
     +'<td class="as-num as-mut">—</td>'
-    +'<td class="as-num as-bal">₪ '+fmt(Math.abs(carried))+(carried<0?T(' دائن',' Cr'):'')+'</td>'
+    +'<td class="as-num as-bal">₪ '+fmt(Math.abs(carried))+polM(carried)+'</td>'
     +'</tr>'
   );
 
@@ -909,7 +913,7 @@ window.renderMemberStmt=function(){
       +'<td class="as-c '+(refNo==='—'?'as-mut':'as-ref')+'">'+refNo+'</td>'
       +'<td class="as-num">'+(r.dr>0?'₪ '+fmt(r.dr):'<span class="as-mut">—</span>')+'</td>'
       +'<td class="as-num">'+(r.cr>0?'₪ '+fmt(r.cr):'<span class="as-mut">—</span>')+'</td>'
-      +'<td class="as-num as-bal">₪ '+fmt(Math.abs(bal))+(bal<0?T(' دائن',' Cr'):'')+'</td>'
+      +'<td class="as-num as-bal">₪ '+fmt(Math.abs(bal))+polM(bal)+'</td>'
       +'</tr>'
     );
   });
@@ -975,7 +979,7 @@ window.renderMemberStmt=function(){
 
     +'<div class="as-openbar">'
       +'<span class="as-openbar-k">'+T('الرصيد المرحّل قبل 31/12/2024','Carried balance before 31/12/2024')+'</span>'
-      +'<span class="as-openbar-v">₪ '+fmt(Math.abs(carried))+(carried<0?T(' دائن',' Cr'):'')+'</span>'
+      +'<span class="as-openbar-v">₪ '+fmt(Math.abs(carried))+polM(carried)+'</span>'
     +'</div>'
 
     +'<div class="as-tablewrap"><table class="as-table"><thead><tr>'
@@ -990,7 +994,7 @@ window.renderMemberStmt=function(){
     +'</tr></thead><tbody>'+bodyRows.join('')+'</tbody>'
     /* final balance CAPS the running-balance column (mirrors the official print) */
     +'<tfoot><tr class="as-ffinal"><td colspan="7">'+T('الرصيد النهائي الحالي','Current final balance')+' · <span class="as-ffs">'+finStatus+'</span></td>'
-    +'<td class="as-num as-bal">₪ '+fmt(Math.abs(finBal))+(finBal<0?T(' دائن',' Cr'):'')+'</td></tr></tfoot>'
+    +'<td class="as-num as-bal">₪ '+fmt(Math.abs(finBal))+polM(finBal)+'</td></tr></tfoot>'
     +'</table></div>'
 
     /* Dynamic accounting summaries (presentation only — all values from the

@@ -838,6 +838,10 @@ body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
 .acct-stmt .as-table tfoot tr.as-ffinal td{background:transparent;color:var(--tx);font-weight:800;font-size:14px;padding:14px 11px;border-top:2px solid var(--rule);}
 .acct-stmt .as-table tfoot tr.as-ffinal td.as-bal{background:transparent;border-inline-start:none;color:var(--tx);}
 .acct-stmt .as-table tfoot tr.as-ffinal .as-ffs{font-weight:600;opacity:.75;color:var(--tx2);}
+/* balance polarity marker — secondary to the amount, colored by polarity (DDL-02 B-3) */
+.acct-stmt .as-pol{font-size:.8em;font-weight:600;margin-inline-start:5px;}
+.acct-stmt .as-pol-cr{color:var(--pos);}
+.acct-stmt .as-pol-dr{color:var(--neg);}
 .acct-stmt .as-empty{padding:34px 18px;text-align:center;color:var(--tx3);font-size:13px;}
 @media (max-width:760px){ .acct-stmt .as-figs .as-fig{flex:1 1 calc(50% - 6px);} }
 
