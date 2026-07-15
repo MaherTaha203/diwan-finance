@@ -32,7 +32,7 @@ body {
   --bd:#24262A; --line:#24262A; --bd2:#34373D; --rule:#34373D;
   --soft:#202225; --row:#1E2023;
   --card:#1C1E21; --sb:#232529;
-  --chrome:#16171A; --chrome-line:rgba(255,255,255,.08);
+  --chrome:linear-gradient(150deg,#0D1730 0%,#12295E 55%,#173C82 100%); --chrome-line:rgba(255,255,255,.10);
   --brand-soft:#22252B;
   --accent:#7C93BF; --accent-soft:rgba(124,147,191,.16); --acc:#7C93BF; --acc2:#6A8F76;
   --pos:#6A8F76; --pos-bg:rgba(106,143,118,.14);
@@ -49,8 +49,8 @@ body.light {
   --tx:#2C2E33; --ink:#2C2E33; --tx2:#5C5F65; --mut:#8F9299; --tx3:#8F9299; --faint:#8F9299;
   --bd:#F0EFE9; --line:#F0EFE9; --bd2:#DCD9D0; --rule:#DCD9D0;
   --soft:#F2F1EC; --row:#FBFAF6;
-  --card:#FCFBF8; --sb:#23262B;
-  --chrome:#23262B; --chrome-line:rgba(255,255,255,.09);
+  --card:#FCFBF8; --sb:#16265E;
+  --chrome:linear-gradient(150deg,#16265E 0%,#1E56C0 55%,#2E9AD8 100%); --chrome-line:rgba(255,255,255,.16);
   --brand-soft:#E9EBF0;
   --accent:#2B3A5C; --accent-soft:rgba(43,58,92,.12); --acc:#2B3A5C; --acc2:#46604E;
   /* financial semantics: credit (pos) ≠ success; debit (neg) ≠ error (--danger split off) */
