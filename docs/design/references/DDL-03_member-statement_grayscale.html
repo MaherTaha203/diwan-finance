@@ -1,0 +1,246 @@
+<title>كشف حساب العضو — لغة الشكل DDL-03 (رماديّ)</title>
+<style>
+  :root{
+    --paper:#f7f6f2; --surface:#fdfcf9; --raised:#fffffe;
+    --ink:#1d1f23; --ink2:#565961; --ink3:#8b8e95;
+    --line:#edece6; --line2:#d3d0c7; --rule:#2a2c31;
+    --fill:#34373d; --onfill:#f7f6f2;
+    --sel:#0000000a; --hov:#00000005; --focus:#26282d;
+    --shadow:0 48px 120px rgba(20,20,25,.12),0 14px 40px rgba(20,20,25,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#17181b; --surface:#1c1e21; --raised:#212327;
+      --ink:#e9e8e3; --ink2:#a9abb0; --ink3:#7b7e84;
+      --line:#242629; --line2:#3a3d42; --rule:#c9c7c0;
+      --fill:#e9e8e3; --onfill:#17181b; --sel:#ffffff0f; --hov:#ffffff08; --focus:#e9e8e3;
+      --shadow:0 48px 120px rgba(0,0,0,.5),0 14px 40px rgba(0,0,0,.32);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#17181b; --surface:#1c1e21; --raised:#212327;
+    --ink:#e9e8e3; --ink2:#a9abb0; --ink3:#7b7e84;
+    --line:#242629; --line2:#3a3d42; --rule:#c9c7c0;
+    --fill:#e9e8e3; --onfill:#17181b; --sel:#ffffff0f; --hov:#ffffff08; --focus:#e9e8e3;
+    --shadow:0 20px 54px rgba(0,0,0,.55),0 3px 10px rgba(0,0,0,.4);
+  }
+  :root[data-theme="light"]{
+    --paper:#f7f6f2; --surface:#fdfcf9; --raised:#fffffe;
+    --ink:#1d1f23; --ink2:#565961; --ink3:#8b8e95;
+    --line:#edece6; --line2:#d3d0c7; --rule:#2a2c31;
+    --fill:#34373d; --onfill:#f7f6f2; --sel:#0000000a; --hov:#00000005; --focus:#26282d;
+    --shadow:0 48px 120px rgba(20,20,25,.12),0 14px 40px rgba(20,20,25,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);direction:rtl;
+    font-family:"Segoe UI","Tahoma","Noto Sans Arabic",system-ui,-apple-system,sans-serif;
+    font-feature-settings:"tnum" 1;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .tag{position:fixed;inset-block-start:12px;inset-inline-start:12px;z-index:5;font-size:12px;color:var(--ink3);
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;display:flex;gap:10px;align-items:center}
+  .tag button{font:inherit;font-size:12px;color:var(--ink2);background:none;border:0;cursor:pointer;padding:0}
+  .tag button:hover{color:var(--ink)}
+
+  /* the page IS the workspace: one paper column, no card shell */
+  .page{max-width:1040px;margin:0 auto;padding:clamp(20px,4vw,54px) clamp(18px,4vw,48px) 90px}
+
+  /* slim identity strip — reduced header (quieter, content is the hero) */
+  .head{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .logo{width:22px;height:22px;border-radius:4px;background:transparent;border:1px solid var(--line2);color:var(--ink3);display:grid;place-items:center;font-weight:700;font-size:10px}
+  .brand b{font-size:12px;font-weight:600;color:var(--ink3)}.brand span{display:block;font-size:10px;color:var(--ink3)}
+  .head .actions{margin-inline-start:auto;display:flex;gap:7px}
+  .btn{font:inherit;font-size:12px;font-weight:600;border-radius:4px;padding:6px 12px;cursor:pointer;border:1px solid transparent}
+  .btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .btn.ghost{background:transparent;border-color:var(--line2);color:var(--ink2)}
+  .btn.ghost:hover{border-color:var(--ink2);color:var(--ink)}
+  .btn.primary{background:var(--fill);color:var(--onfill);border-color:var(--fill)}
+  .btn.primary:hover{filter:brightness(1.08)}
+
+  /* title as a quiet label, not a banner */
+  .title{margin:30px 0 4px;font-size:16px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
+  .title::after{content:none}
+  .meta{display:flex;flex-wrap:wrap;gap:3px 28px;margin:16px 0 4px;font-size:13px}
+  .meta b{font-weight:700}.meta span{color:var(--ink3)}
+
+  .toolrow{display:flex;align-items:center;gap:14px;margin:26px 0 6px}
+  .toolrow .search{max-width:280px;flex:1}
+  .toolrow .rowspacer{margin-inline-start:auto}
+  .chip{font-size:12px;color:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:5px 12px;background:transparent}
+
+  .open{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;margin-top:20px;font-size:13px;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .open span{color:var(--ink3)}.open b{font-variant-numeric:tabular-nums;font-weight:700}
+
+  /* TABLE — the visual hero, quiet like a professional financial report */
+  table.stmt{width:100%;border-collapse:collapse;font-size:13px;margin-top:16px}
+  .stmt thead th{text-align:start;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;
+    letter-spacing:.06em;padding:11px 16px;border-bottom:1px solid var(--line2)}
+  .stmt thead th.num{text-align:end}
+  .stmt tbody td{padding:15px 16px;border-bottom:1px solid var(--line);border-bottom:1px solid color-mix(in srgb,var(--line) 82%,var(--paper))}
+  .stmt tbody td.num{text-align:end;font-variant-numeric:tabular-nums}
+  .stmt tbody tr.hov:hover{background:var(--hov)}
+  .stmt tbody tr.sel{background:var(--sel)}
+  .stmt tbody tr.sel td:first-child{box-shadow:inset 2px 0 0 var(--line2)}
+  .bal{font-weight:700}.muted{color:var(--ink3)}
+
+  .sums{display:flex;justify-content:flex-end;gap:30px;padding:18px 18px 0;font-size:13px}
+  .sums span{color:var(--ink3)}.sums b{font-variant-numeric:tabular-nums;font-weight:700}
+  /* final balance — the report's conclusion, carried by type not by a box */
+  .final{display:flex;justify-content:flex-end;margin-top:18px}
+  .final .box{min-width:280px;display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px 2px;border-top:1px solid var(--line2)}
+  .final .lbl{font-size:14.5px;color:var(--ink2);font-weight:700}
+  .final .val{font-size:19px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+
+  /* work section — flat, whitespace + hairline, no cards */
+  .work{margin-top:48px;padding-top:30px;border-top:1px solid var(--line)}
+  .work .wh{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin:0 0 16px}
+  .status{display:flex;flex-direction:column;gap:11px;max-width:520px}
+  .st{display:flex;align-items:center;gap:11px;font-size:13px;border-inline-start:3px solid var(--line2);padding-inline-start:12px}
+  .st .m{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink2);display:grid;place-items:center;font-size:11px;color:var(--ink);flex:0 0 auto}
+  .st b{font-weight:700}
+
+  /* ===== FLOATING LABELS (official) ===== */
+  .field{position:relative;margin-bottom:16px}
+  .field input,.field select{width:100%;font:inherit;font-size:13.5px;color:var(--ink);background:transparent;
+    border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--line) 62%,var(--paper));
+    border-radius:4px;padding:19px 12px 7px;height:52px;transition:border-color .12s ease}
+  .field.cur input{padding-inline-start:34px}
+  .field .unit{position:absolute;inset-inline-start:12px;bottom:9px;font-size:13px;color:var(--ink3);pointer-events:none}
+  .field label{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:13.5px;
+    pointer-events:none;transition:top .1s linear,font-size .1s linear,color .1s linear;background:transparent}
+  .field.cur label{inset-inline-start:34px}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 18%,transparent)}
+  .field input:focus + label,
+  .field input:not(:placeholder-shown) + label,
+  .field select:focus + label,
+  .field.filled label{top:7px;transform:none;font-size:10.5px;color:var(--ink2)}
+  .field .req{color:var(--ink2);font-weight:800}
+  @media (prefers-reduced-motion:reduce){.field label{transition:none}}
+
+  /* ===== MODAL — floating work surface, fixed footer ===== */
+  .scrim{position:fixed;inset:0;background:rgba(28,28,30,.13);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+  .scrim.open{display:flex}
+  .modal{background:var(--raised);border:1px solid var(--line2);border-radius:6px;box-shadow:var(--shadow);
+    width:100%;max-width:468px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal .mh{display:flex;align-items:center;gap:10px;padding:18px 26px 14px;border-bottom:1px solid var(--line)}
+  .modal .mh b{font-size:14.5px;font-weight:700;color:var(--ink2)}
+  .modal .mh .x{margin-inline-start:auto;background:none;border:0;font-size:18px;color:var(--ink3);cursor:pointer;line-height:1;padding:2px 6px}
+  .modal .mh .x:hover{color:var(--ink)}
+  .modal .mb{padding:26px 26px 24px;overflow:auto}
+  .modal .mf{padding:16px 26px;border-top:1px solid var(--line);display:flex;gap:9px;background:var(--raised)}
+  .modal .mf .btn{flex:0 0 auto}
+  .modal .mf .rowspacer{margin-inline-start:auto}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  @media (max-width:560px){.two{grid-template-columns:1fr}}
+</style>
+
+<div class="tag">
+  <span>لغة الشكل DDL-03 · رماديّ (بلا ألوان نهائية)</span>
+  <button id="tg">◐ فاتح/داكن</button>
+</div>
+
+<div class="page">
+  <div class="head">
+    <div class="logo">دط</div>
+    <div class="brand"><b>ديوان آل طه</b><span>مساحة العمل المالية</span></div>
+    <div class="actions">
+      <button class="btn ghost">تنزيل PDF</button>
+      <button class="btn ghost">طباعة</button>
+      <button class="btn primary" id="openAdd">+ قيد جديد</button>
+    </div>
+  </div>
+
+  <div class="title">كشف حساب عضو</div>
+  <div class="meta">
+    <div><span>العضو:</span> <b>محمد أحمد آل طه</b></div>
+    <div><span>رقم العضو:</span> <b>142</b></div>
+    <div><span>الفترة:</span> <b>2026-01-01 → 2026-06-30</b></div>
+    <div><span>الخزينة:</span> <b>الديوان</b></div>
+  </div>
+
+  <div class="toolrow">
+    <div class="field search" style="margin:0">
+      <input id="s1" placeholder=" " value="اشتراك" />
+      <label for="s1">بحث في القيود</label>
+    </div>
+    <span class="chip">الفترة: النصف الأول 2026</span>
+    <span class="rowspacer"></span>
+  </div>
+
+  <div class="open"><span>رصيدٌ افتتاحيّ</span> <b>₪ 1,200</b></div>
+
+  <table class="stmt">
+    <thead><tr>
+      <th>التاريخ</th><th>البيان</th><th class="num">مدين</th><th class="num">دائن</th><th class="num">الرصيد الجاري</th>
+    </tr></thead>
+    <tbody>
+      <tr class="hov"><td>2026-01-05</td><td>اشتراك شهر يناير</td><td class="num muted">—</td><td class="num">250</td><td class="num bal">1,450</td></tr>
+      <tr class="hov"><td>2026-02-03</td><td>مصروف صيانة</td><td class="num">180</td><td class="num muted">—</td><td class="num bal">1,270</td></tr>
+      <tr class="sel"><td>2026-02-20</td><td>تبرّع مخصّص</td><td class="num muted">—</td><td class="num">500</td><td class="num bal">1,770</td></tr>
+      <tr class="hov"><td>2026-03-12</td><td>اشتراك شهر مارس</td><td class="num muted">—</td><td class="num">250</td><td class="num bal">2,020</td></tr>
+      <tr class="hov"><td>2026-04-08</td><td>سحب نقديّ</td><td class="num">640</td><td class="num muted">—</td><td class="num bal">1,380</td></tr>
+      <tr class="hov"><td>2026-05-15</td><td>اشتراك شهر مايو</td><td class="num muted">—</td><td class="num">250</td><td class="num bal">1,630</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sums">
+    <div><span>إجمالي مدين: </span><b>820</b></div>
+    <div><span>إجمالي دائن: </span><b>1,250</b></div>
+  </div>
+  <div class="final"><div class="box"><span class="lbl">الرصيد النهائيّ</span><span class="val">₪ 1,630</span></div></div>
+
+  <div class="work">
+    <p class="wh">الحالات</p>
+    <div class="status">
+      <div class="st"><span class="m">✓</span><span><b>تم الحفظ</b> — حُفظ القيد بنجاح.</span></div>
+      <div class="st"><span class="m">!</span><span><b>تنبيه</b> — الفترة تُقفل بعد 3 أيام.</span></div>
+      <div class="st"><span class="m">✕</span><span><b>خطأ</b> — المبلغ المُدخَل غير صالح.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- floating work-surface modal: add entry (floating labels + fixed footer) -->
+<div class="scrim" id="scrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtl">
+    <div class="mh"><b id="mtl">قيدٌ جديد</b><button class="x" id="closeAdd" aria-label="إغلاق">✕</button></div>
+    <div class="mb">
+      <div class="two">
+        <div class="field"><input id="f-date" type="text" placeholder=" " value="2026-06-30" /><label for="f-date">التاريخ</label></div>
+        <div class="field cur"><input id="f-amt" placeholder=" " inputmode="decimal" /><label for="f-amt">المبلغ <span class="req">*</span></label><span class="unit">₪</span></div>
+      </div>
+      <div class="field"><input id="f-desc" placeholder=" " /><label for="f-desc">البيان <span class="req">*</span></label></div>
+      <div class="two">
+        <div class="field"><select id="f-tre"><option></option><option>الديوان</option><option>الغداء</option><option>التبرعات</option></select><label for="f-tre">الخزينة</label></div>
+        <div class="field"><select id="f-type"><option></option><option>دائن</option><option>مدين</option></select><label for="f-type">النوع</label></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn primary" id="saveAdd">حفظ القيد</button>
+      <button class="btn ghost" id="cancelAdd">إلغاء</button>
+      <span class="rowspacer"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // theme toggle
+  document.getElementById('tg').addEventListener('click',()=>{
+    const r=document.documentElement, c=r.getAttribute('data-theme');
+    r.setAttribute('data-theme', c==='dark'?'light':c==='light'?'dark':(matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark'));
+  });
+  // modal open/close (keyboard-first: Esc closes, focus first field)
+  const scrim=document.getElementById('scrim');
+  function openM(){scrim.classList.add('open');const f=document.getElementById('f-date');if(f)f.focus();}
+  function closeM(){scrim.classList.remove('open');}
+  document.getElementById('openAdd').addEventListener('click',openM);
+  document.getElementById('closeAdd').addEventListener('click',closeM);
+  document.getElementById('cancelAdd').addEventListener('click',closeM);
+  scrim.addEventListener('click',e=>{if(e.target===scrim)closeM();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&scrim.classList.contains('open'))closeM();});
+  // selects: mark filled so the floating label stays up when a value is chosen
+  document.querySelectorAll('.field select').forEach(s=>{
+    const sync=()=>s.closest('.field').classList.toggle('filled', s.value!=='');
+    s.addEventListener('change',sync);sync();
+  });
+</script>
