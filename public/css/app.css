@@ -49,8 +49,8 @@ body.light {
   --tx:#2C2E33; --ink:#2C2E33; --tx2:#5C5F65; --mut:#8F9299; --tx3:#8F9299; --faint:#8F9299;
   --bd:#F0EFE9; --line:#F0EFE9; --bd2:#DCD9D0; --rule:#DCD9D0;
   --soft:#F2F1EC; --row:#FBFAF6;
-  --card:#FCFBF8; --sb:#2B3A5C;
-  --chrome:#2B3A5C; --chrome-line:rgba(255,255,255,.10);
+  --card:#FCFBF8; --sb:#23262B;
+  --chrome:#23262B; --chrome-line:rgba(255,255,255,.09);
   --brand-soft:#E9EBF0;
   --accent:#2B3A5C; --accent-soft:rgba(43,58,92,.12); --acc:#2B3A5C; --acc2:#46604E;
   /* financial semantics: credit (pos) ≠ success; debit (neg) ≠ error (--danger split off) */
@@ -352,8 +352,6 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
   .ph{flex-wrap:wrap;gap:8px;margin-bottom:14px} .ph-t{font-size:16px} .ph-s{font-size:11px} .ph-a{gap:6px}
   .ph-a .btn{padding:6px 10px;font-size:12px}
    .kpi{padding:12px} .kpi-val{font-size:18px}
-   
-   #month-chart{height:100px !important}
   .tw{border-radius:8px} table{min-width:100%} thead th{padding:8px 10px;font-size:10px} tbody td{padding:8px 10px;font-size:12px}
   .fg{grid-template-columns:1fr !important} .fi.full{grid-column:1 !important}
   .fi input,.fi select,.fi textarea{font-size:14px;padding:10px 11px}
@@ -945,7 +943,7 @@ body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
   --e1:0 1px 2px rgba(28,39,51,.05), 0 6px 16px rgba(36,66,92,.08);
   --e2:0 2px 4px rgba(28,39,51,.06), 0 14px 32px rgba(36,66,92,.13);
   padding:0 0 22px; }
-#pg-dash .dband { background:var(--brand); padding:var(--s1) var(--s4) calc(var(--s2) + 24px); }
+#pg-dash .dband { background:var(--chrome); padding:var(--s1) var(--s4) calc(var(--s2) + 24px); }
 #pg-dash .dhero { display:flex; align-items:center; gap:var(--s2); color:#fff; min-height:28px; flex-wrap:wrap; }
 #pg-dash .dhero .lg { width:28px; height:28px; border-radius:var(--drc); background:var(--brand-2); border:1px solid rgba(255,255,255,.2); display:grid; place-items:center; font-size:10.5px; font-weight:800; flex:none; }
 #pg-dash .dhero b { font-size:13.5px; font-weight:700; }
@@ -981,43 +979,17 @@ body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
 #pg-dash .qa-btn i { font-size:14px; color:var(--accent); }
 #pg-dash .qa-btn:hover { border-color:var(--accent); box-shadow:0 4px 10px rgba(43,58,92,.14); }
 #pg-dash .qa-btn span { white-space:nowrap; }
-/* KPI ribbon — four twins: title16 / value24 / line3 / footer14 */
-#pg-dash .kribbon { display:grid; grid-template-columns:repeat(4,1fr); }
-#pg-dash .kribbon .k { padding:var(--s1) var(--s2); border-inline-start:1px solid var(--line); }
-#pg-dash .kribbon .k:first-child { border-inline-start:none; }
-#pg-dash .kribbon .t { height:14px; font-size:10px; font-weight:500; color:var(--mut); display:flex; justify-content:space-between; align-items:center; }
-#pg-dash .kribbon .v { height:20px; font-size:17px; font-weight:700; letter-spacing:-.3px; display:flex; align-items:center; }
+/* Fund cards — clean balance tiles brought to life (staggered entrance +
+   count-up value + hover). The % bars, collection ring and trend chart were
+   removed by request; these are the four treasury figures, nothing else. */
+#pg-dash .kribbon { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; padding:6px; }
+#pg-dash .kribbon .k { padding:14px 16px; border-radius:10px; transition:background .16s ease, transform .16s ease; animation:kIn .5s cubic-bezier(.22,1,.36,1) backwards; }
+#pg-dash .kribbon .k:hover { background:var(--bg3); transform:translateY(-2px); }
+#pg-dash .kribbon .t { font-size:10.5px; font-weight:600; color:var(--mut); line-height:1.35; min-height:28px; display:flex; align-items:flex-start; }
+#pg-dash .kribbon .v { margin-top:8px; font-size:22px; font-weight:800; letter-spacing:-.4px; color:var(--tx); font-variant-numeric:tabular-nums; }
 #pg-dash .kribbon .v.neg-t { color:var(--neg); }
-#pg-dash .kribbon .pline { height:3px; border-radius:2px; background:var(--soft); margin:4px 0; overflow:hidden; }
-#pg-dash .kribbon .pline i { display:block; height:100%; background:var(--accent); border-radius:2px; }
-#pg-dash .kribbon .pline i.g { background:var(--pos); }
-#pg-dash .kribbon .f { height:13px; font-size:9.5px; color:var(--mut); display:flex; align-items:center; gap:4px; }
-#pg-dash .kribbon .f b { font-weight:700; }
-#pg-dash .trend { font-size:9.5px; font-weight:700; }
-#pg-dash .trend.up { color:var(--pos); } #pg-dash .trend.dn { color:var(--neg); }
-/* connected chart */
-#pg-dash .kchart { border-top:1px solid var(--line); padding:var(--s1) var(--s2); }
-/* Monthly net cash-flow — polarity read by POSITION (surplus above the zero line,
-   deficit below), so it survives even though DDL's muted green/rust are close in
-   hue. Colour reinforces; the zero baseline + legend carry identity. */
-#pg-dash .nfc-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:5px; }
-#pg-dash .nfc-lg { display:flex; gap:10px; font-size:9.5px; color:var(--mut); font-weight:600; }
-#pg-dash .nfc-lg span { display:inline-flex; align-items:center; gap:4px; }
-#pg-dash .nfc-lg i { width:8px; height:8px; border-radius:2px; }
-#pg-dash .nfc-lg .p { background:var(--pos); } #pg-dash .nfc-lg .n { background:var(--neg); }
-#pg-dash .nfc-cap { font-size:9px; color:var(--mut); white-space:nowrap; }
-#pg-dash .nfc { position:relative; display:flex; align-items:stretch; gap:3px; height:72px; }
-#pg-dash .nfc-zero { position:absolute; inset-inline:0; top:50%; height:1px; background:var(--rule); z-index:1; }
-#pg-dash .nfc-col { flex:1; display:flex; flex-direction:column; min-width:0; }
-#pg-dash .nfc-up, #pg-dash .nfc-dn { flex:1; display:flex; }
-#pg-dash .nfc-up { align-items:flex-end; }
-#pg-dash .nfc-dn { align-items:flex-start; }
-#pg-dash .nfc-col i { width:100%; max-width:13px; margin:0 auto; display:block; transition:height .18s ease; }
-#pg-dash .nfc-up i { background:var(--pos); border-radius:3px 3px 0 0; }
-#pg-dash .nfc-dn i { background:var(--neg); border-radius:0 0 3px 3px; }
-#pg-dash .nfc-x { display:flex; gap:3px; margin-top:3px; }
-#pg-dash .nfc-x span { flex:1; text-align:center; font-size:9px; color:var(--mut); min-width:0; overflow:hidden; }
-@media(prefers-reduced-motion:reduce){ #pg-dash .nfc-col i { transition:none; } }
+@keyframes kIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+@media(prefers-reduced-motion:reduce){ #pg-dash .kribbon .k { animation:none; } #pg-dash .kribbon .k:hover { transform:none; } }
 /* row 2 */
 #pg-dash .dr2 { display:grid; grid-template-columns:1.8fr 1fr; gap:var(--s2); align-items:start; }
 #pg-dash .dcol { display:flex; flex-direction:column; gap:var(--s2); }
@@ -1040,11 +1012,6 @@ body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
 #pg-dash .alr + .alr { margin-top:4px; }
 #pg-dash .alr.n { border-inline-start-color:var(--accent); }
 #pg-dash .alr b { font-weight:700; }
-/* collection ring */
-#pg-dash .dring { display:flex; align-items:center; gap:var(--s2); }
-#pg-dash .ringS { position:relative; width:64px; height:64px; flex:none; }
-#pg-dash .ringS svg { transform:rotate(-90deg); }
-#pg-dash .ringS .c { position:absolute; inset:0; display:grid; place-items:center; font-size:12.5px; font-weight:700; }
 /* merged side panel — three connected sections, no floating islands */
 #pg-dash .dside { padding:2px var(--s2) var(--s1); }
 #pg-dash .dsec { padding:2px 0 var(--s1); }
@@ -1072,12 +1039,6 @@ body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
 #pg-dash .dhero .menu i { font-size:13px; }
 #pg-dash .dhero .export-dropdown-menu { min-width:196px; }
 
-/* ── KPI ribbon + collection ring side-by-side (الخزينة overview) ── */
-#pg-dash .kwrap { display:flex; align-items:stretch; }
-#pg-dash .kwrap .kribbon { flex:1; }
-#pg-dash .kside { width:196px; flex:none; border-inline-start:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:6px; padding:var(--s1) var(--s2); }
-#pg-dash .kside-h { font-size:10.5px; font-weight:700; color:var(--mut); }
-
 /* ── Skeleton shimmer (perceived performance — shown until first render) ── */
 #pg-dash .dsk { background:linear-gradient(90deg,var(--soft) 25%,var(--line) 37%,var(--soft) 63%); background-size:400% 100%; animation:dsk-shim 1.4s ease infinite; border-radius:5px; }
 @keyframes dsk-shim { 0%{ background-position:100% 0; } 100%{ background-position:-100% 0; } }
@@ -1087,10 +1048,6 @@ body.light .acct-stmt .as-table tfoot td{background:var(--navy);}
   #pg-dash .dr2 { grid-template-columns:1fr; }
   #pg-dash .hstat { display:none; }
   #pg-dash .kribbon { grid-template-columns:repeat(2,1fr); }
-  #pg-dash .kribbon .k:nth-child(odd) { border-inline-start:none; }
-  #pg-dash .kwrap { flex-wrap:wrap; }
-  #pg-dash .kside { width:100%; border-inline-start:none; border-top:1px solid var(--line); flex-direction:row; align-items:center; }
-  #pg-dash .kside-h { margin-inline-end:auto; }
 }
 @media(max-width:520px){
   #pg-dash .dhero .stale { display:none; }
