@@ -249,14 +249,29 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .pag{display:flex;align-items:center;gap:4px;margin-top:12px} .pi{font-size:11px;color:var(--tx3);margin-right:auto}
 .pb{min-width:26px;height:26px;border-radius:var(--r);border:1px solid var(--line);background:var(--bg2);color:var(--mut);cursor:pointer;font-size:11.5px;display:flex;align-items:center;justify-content:center;font-family:var(--fmono);font-variant-numeric:tabular-nums;transition:background .13s}
 .pb:hover{background:var(--soft)} .pb.on{background:var(--brand);color:#fff;border-color:var(--brand)} .pb:disabled{opacity:.35;cursor:default}
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px} .fi{display:flex;flex-direction:column;gap:5px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end} .fi{display:flex;flex-direction:column;gap:5px}
 .fi.full{grid-column:1/-1} .fi.third{grid-column:span 1}
 .fi label{font-size:11px;font-weight:600;color:var(--tx2);letter-spacing:.02em}
 .req{color:var(--neg);margin-right:2px}
-.fi input,.fi select,.fi textarea{padding:9px 11px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-family:var(--fn);transition:border .13s;outline:none}
-.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent);box-shadow:none}
-.fi input.err,.fi select.err{border-color:var(--neg)}
-.fi textarea{resize:vertical;min-height:60px}
+/* Unified field metrics — same height/border/radius/background/focus across every
+   field type (text · number · select · date · textarea) so the whole form reads as
+   one design language, even though only text-like inputs get floating labels. */
+.fi input,.fi select,.fi textarea{box-sizing:border-box;width:100%;min-height:40px;padding:9px 11px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-family:var(--fn);transition:border-color .14s,box-shadow .14s;outline:none}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.fi input.err,.fi select.err,.fi textarea.err{border-color:var(--neg)}
+.fi input.err:focus,.fi select.err:focus,.fi textarea.err:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--neg) 15%,transparent)}
+.fi textarea{resize:vertical;min-height:70px}
+/* ── DDL-03 floating labels — text-like inputs only (JS toggles .fi-fl + states) ── */
+.fi-fl{position:relative}
+.fi-fl>label{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);margin:0;pointer-events:none;font-size:12.5px;font-weight:500;color:var(--tx3);transition:top .15s ease,transform .15s ease,font-size .15s ease,color .15s ease;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-fl.fi-area>label{top:12px;transform:none}
+.fi-fl input,.fi-fl textarea{padding-top:17px;padding-bottom:4px}
+.fi-fl textarea{padding-top:20px}
+.fi-fl.is-filled>label{top:5px;transform:none;font-size:9.5px;font-weight:600;letter-spacing:.02em;color:var(--tx2)}
+.fi-fl.is-focus>label{top:5px;transform:none;font-size:9.5px;font-weight:600;letter-spacing:.02em;color:var(--accent)}
+/* native placeholder appears only on focus, so it never clashes with the resting label */
+.fi-fl input::placeholder,.fi-fl textarea::placeholder{color:transparent}
+.fi-fl.is-focus input::placeholder,.fi-fl.is-focus textarea::placeholder{color:var(--tx3)}
 .ferr{font-size:10.5px;color:var(--neg);display:none;align-items:center;gap:3px} .ferr.on{display:flex}
 .iw{position:relative} .iw input{width:100%;padding-right:34px !important}
 .ipx{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--accent);pointer-events:none}
