@@ -7,55 +7,60 @@
    re-skins from one place; new spec names are aliased alongside. */
 :root {
   /* brand & accent (mode-independent) */
-  --brand:#24425C; --brand-2:#2E5273;
-  --navy:#24425C; --navy2:#2E5273; --navy3:#33465A;
-  --gold:#C3CFDA; --gold-d:#93A0AD; --gold-l:#DDE3EA;
-  --food:#B45309; --food-bg:rgba(180,83,9,.10);
-  --diwan:#2F6DB3; --diwan-bg:rgba(47,109,179,.05);
-  --don:#6D4FA3; --don-bg:rgba(109,79,163,.12);
+  /* DDL-02 v1.0 · Ink Navy accent (mode-independent) */
+  --brand:#2B3A5C; --brand-2:#34456A;
+  --navy:#2B3A5C; --navy2:#34456A; --navy3:#3C4756;
+  --gold:#DCD9D0; --gold-d:#B6B8BC; --gold-l:#F0EFE9;
+  /* treasury/category identity — provisional muted (DDL Treasury-Identity role; hex to be formalized) */
+  --food:#8C6A34; --food-bg:rgba(140,106,52,.10);
+  --diwan:#3E5A78; --diwan-bg:rgba(62,90,120,.06);
+  --don:#5E5578; --don-bg:rgba(94,85,120,.10);
   --fn:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
   --fmono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
-  --r:4px; --rl:6px; --tr-base:all .15s ease;
+  --r:4px; --rl:6px; --tr-base:all .12s ease;
   --sh:none;
-  /* solid action surface: accent shade that keeps white labels ≥4.5:1 in both themes */
-  --accent-btn:#2F6DB3;
-  --sh1:0 1px 2px rgba(15,27,45,.10);
+  /* solid action surface: Ink Navy keeps paper/white labels ≥4.5:1 in both themes */
+  --accent-btn:#2B3A5C;
+  --sh1:0 1px 2px rgba(15,20,30,.08);
 }
 body {
   /* dark variant — navy (brand-tinted #24425C family; deep navy, not black) */
   color-scheme:dark;  /* native controls (date picker, <select> popups, scrollbars, spinners) follow dark */
-  --canvas:#132A44; --bg:#132A44; --bg2:#1B3452; --bg3:#22405E;
-  --tx:#EAF0F6; --ink:#EAF0F6; --tx2:#A6B4C2; --mut:#A6B4C2; --tx3:#A6B4C2; --faint:#A6B4C2;
-  --bd:#2C4A6A; --line:#2C4A6A; --bd2:#3A5A7C; --rule:#3A5A7C;
-  --soft:#203B58; --row:#17304C;
-  --card:#1B3452; --sb:#24425C;
-  --chrome:#16324E; --chrome-line:rgba(255,255,255,.10);
-  --brand-soft:#1E3A58;
-  --accent:#60A5FA; --accent-soft:rgba(96,165,250,.16); --acc:#60A5FA; --acc2:#34D399;
-  --pos:#34D399; --pos-bg:rgba(76,175,122,.14);
-  --neg:#FF8A93; --neg-bg:rgba(229,115,115,.08); --danger:#FF8A93;
-  --warn:#E0A24C; --warn-bg:rgba(224,162,76,.14);
-  /* fund hues, lightened for legible text on navy surfaces (bg tints unchanged) */
-  --food:#E0A24C; --diwan:#60A5FA; --don:#C4B5FD;
+  /* DDL-02 dark = role-parity re-grounding of the frozen light theme (warm charcoal paper, ivory ink) */
+  --canvas:#17181B; --bg:#17181B; --bg2:#1C1E21; --bg3:#232529;
+  --tx:#E9E8E3; --ink:#E9E8E3; --tx2:#A9ABB0; --mut:#868990; --tx3:#868990; --faint:#868990;
+  --bd:#24262A; --line:#24262A; --bd2:#34373D; --rule:#34373D;
+  --soft:#202225; --row:#1E2023;
+  --card:#1C1E21; --sb:#232529;
+  --chrome:#16171A; --chrome-line:rgba(255,255,255,.08);
+  --brand-soft:#22252B;
+  --accent:#7C93BF; --accent-soft:rgba(124,147,191,.16); --acc:#7C93BF; --acc2:#6A8F76;
+  --pos:#6A8F76; --pos-bg:rgba(106,143,118,.14);
+  --neg:#C08A6E; --neg-bg:rgba(192,138,110,.10); --danger:#DD8880;
+  --warn:#D3A557; --warn-bg:rgba(211,165,87,.14);
+  /* treasury identity, lightened for dark surfaces */
+  --food:#C2A060; --diwan:#8AA6C8; --don:#A99BC4;
 }
 body.light {
   /* light — the default premium surface */
   color-scheme:light;  /* native controls follow light */
-  --canvas:#F4F6F8; --bg:#F4F6F8; --bg2:#FFFFFF; --bg3:#EEF1F5;
-  --tx:#1C2733; --ink:#1C2733; --tx2:#5F6D7C; --mut:#5F6D7C; --tx3:#5F6D7C; --faint:#5F6D7C;
-  --bd:#DDE3EA; --line:#DDE3EA; --bd2:#C3CFDA; --rule:#C3CFDA;
-  --soft:#EEF1F5; --row:#FAFBFC;
-  --card:#FFFFFF; --sb:#24425C;
-  --chrome:#24425C; --chrome-line:rgba(255,255,255,.10);
-  --brand-soft:#E9EEF4;
-  --accent:#2F6DB3; --accent-soft:rgba(47,109,179,.12); --acc:#2F6DB3; --acc2:#176D3D;
-  --pos:#176D3D; --pos-bg:rgba(30,126,70,.10);
-  --neg:#B3261E; --neg-bg:rgba(179,38,30,.09); --danger:#B3261E;
-  --warn:#A04A08; --warn-bg:rgba(180,83,9,.10);
-  --food:#A04A08; --diwan:#2F6DB3; --don:#6D4FA3;
+  /* DDL-02 light = frozen Natural-paper base; ink is soft near-black, not pure black */
+  --canvas:#F9F8F4; --bg:#F9F8F4; --bg2:#FCFBF8; --bg3:#F1F0EB;
+  --tx:#2C2E33; --ink:#2C2E33; --tx2:#5C5F65; --mut:#8F9299; --tx3:#8F9299; --faint:#8F9299;
+  --bd:#F0EFE9; --line:#F0EFE9; --bd2:#DCD9D0; --rule:#DCD9D0;
+  --soft:#F2F1EC; --row:#FBFAF6;
+  --card:#FCFBF8; --sb:#2B3A5C;
+  --chrome:#2B3A5C; --chrome-line:rgba(255,255,255,.10);
+  --brand-soft:#E9EBF0;
+  --accent:#2B3A5C; --accent-soft:rgba(43,58,92,.12); --acc:#2B3A5C; --acc2:#46604E;
+  /* financial semantics: credit (pos) ≠ success; debit (neg) ≠ error (--danger split off) */
+  --pos:#46604E; --pos-bg:rgba(70,96,78,.10);
+  --neg:#8A5236; --neg-bg:rgba(138,82,54,.09); --danger:#B23B34;
+  --warn:#9A7016; --warn-bg:rgba(154,112,22,.10);
+  --food:#8C6A34; --diwan:#3E5A78; --don:#5E5578;
 }
 button:focus-visible, [role="button"]:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
-  outline:2px solid rgba(47,109,179,.45); outline-offset:1px;
+  outline:2px solid rgba(43,58,92,.45); outline-offset:1px;
 }
 .ic-print{color:var(--accent) !important}
 .ic-edit{color:var(--warn) !important}
@@ -718,14 +723,14 @@ body.light .adr-ychip.on .amt{ color:var(--warn); }
    is the strongest element. No accounting/data changes.
    ═══════════════════════════════════════════════════════════════════════ */
 .acct-stmt{
-  --as-acc:#0E9E84; --as-bal-text:#34D6B4; --as-bal-bg:rgba(52,214,180,.12); --as-line:#1FA98C;
+  --as-acc:#7C93BF; --as-bal-text:#E9E8E3; --as-bal-bg:rgba(124,147,191,.10); --as-line:#C9C7C0;
   background:var(--card); border:1px solid var(--bd); border-radius:var(--rl);
   overflow:hidden; color:var(--tx);
 }
 body.light .acct-stmt{
-  --as-acc:#0E7C66; --as-bal-text:#0A5C4C; --as-bal-bg:rgba(14,124,102,.08); --as-line:#0E7C66;
+  --as-acc:#2B3A5C; --as-bal-text:#2C2E33; --as-bal-bg:rgba(43,58,92,.06); --as-line:#2C2E34;
 }
-body:not(.light) .acct-stmt .as-btn-pri,body:not(.light) .acct-stmt .as-brand,body:not(.light) .acct-stmt .as-final{background:#0E8074;border-color:#0E8074;}
+body:not(.light) .acct-stmt .as-btn-pri,body:not(.light) .acct-stmt .as-brand,body:not(.light) .acct-stmt .as-final{background:#2B3A5C;border-color:#2B3A5C;}
 body:not(.light) .acct-stmt .as-fig.teal .v,body:not(.light) .acct-stmt .export-dropdown-item i{color:var(--as-bal-text);}
 .acct-stmt .as-top{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--bd);}
 .acct-stmt .as-title{display:flex;align-items:center;gap:11px;}
