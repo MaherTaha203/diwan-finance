@@ -34,7 +34,7 @@ function _adHead(){ return window.LANG==='en'
   ? ['Member No.','Member Name','Phone','Historical Balance','Subscription Dues','Total Paid','Current Balance']
   : ['رقم العضو','اسم العضو','الهاتف','رصيد افتتاحي','اشتراكات مستحقة','إجمالي المدفوع','الرصيد الحالي']; }
 function _adCurCell(c){
-  if(c>0.005)  return '<span class="dr">₪ '+fmt(c)+'</span>';
+  if(c>0.005)  return '<span class="dr">₪ '+fmt(c)+' '+(window.LANG==='en'?'debit':'مدين')+'</span>';
   if(c<-0.005) return '<span class="cr">₪ '+fmt(-c)+' '+(window.LANG==='en'?'credit':'دائن')+'</span>';
   return '<span style="color:var(--tx3,#94a3b8)">₪ 0</span>';
 }
@@ -102,7 +102,7 @@ function renderAnnualDebt(){
     +'<th class="as-num">'+(en?'Selected subscriptions':'اشتراكات السنوات المحددة')+'</th><th class="as-num">'+(en?'Selected payments':'مدفوعات السنوات المحددة')+'</th>'
     +'<th class="as-num">'+(en?'Current final balance':'الرصيد النهائي الحالي')+'</th>';
   /* screen-coloured final balance cell (same thresholds as the print _adCurCell) */
-  const curCell=c=> c>0.005?'<span class="as-dr">₪ '+fmt(c)+'</span>':c<-0.005?'<span class="as-cr">₪ '+fmt(-c)+(en?' credit':' دائن')+'</span>':'<span style="color:var(--tx3)">₪ 0</span>';
+  const curCell=c=> c>0.005?'<span class="as-dr">₪ '+fmt(c)+(en?' debit':' مدين')+'</span>':c<-0.005?'<span class="as-cr">₪ '+fmt(-c)+(en?' credit':' دائن')+'</span>':'<span style="color:var(--tx3)">₪ 0</span>';
 
   let tHist=0,tHistPaid=0,tSub=0,tPaid=0;
   const bodyRows=rows.map(r=>{tHist+=r.hist;tHistPaid+=r.histPaid;tSub+=r.selSub;tPaid+=r.selPaid;

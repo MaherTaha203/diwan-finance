@@ -34,10 +34,11 @@ function amountToWords(n){
    UNIFIED PRINT DESIGN SYSTEM — single source of design truth for EVERY printed
    document (vouchers, statements, reports). Included in every print window via
    openPrintWin, so restyling these shared classes unifies all surfaces at once.
-   Matches the on-screen premium language: navy + gold + teal, soft rounded
-   cards, navy table headers, tabular numerals, RTL. Layout/structure unchanged.
+   Matches the DDL paper language: Natural-Paper ground, Ink Navy accent used
+   structurally (never decorative), semantic Credit/Debit (green/rust) reserved
+   for balances, hairline rules, tabular numerals, RTL. Layout/structure unchanged.
    ════════════════════════════════════════════════════════════════════════ */
-const PRINT_TOKENS=':root{--ink:#1A2230;--ink2:#3A4658;--muted:#8B94A3;--faint:#AAB2BF;--line:#E7EAEF;--line2:#D7DCE4;--hd:#F6F8FA;--zebra:#FBFCFD;--teal:#0E7C66;--teal-ink:#0A5C4C;--teal-soft:#E7F2EE;--teal-line:#1FA98C;--pos:#1E7E46;--neg:#B3261E;--gray:#5F6D7C;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
+const PRINT_TOKENS=':root{--ink:#2C2E33;--ink2:#5C5F65;--muted:#8F9299;--faint:#B6B8BC;--line:#F0EFE9;--line2:#DCD9D0;--hd:#F7F6F2;--zebra:transparent;--teal:#2B3A5C;--teal-ink:#2C2E33;--teal-soft:transparent;--teal-line:#2C2E34;--pos:#46604E;--neg:#8A5236;--gray:#5C5F65;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
 +'*{box-sizing:border-box;margin:0;padding:0}'
 +'body{font-family:var(--fa);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}'
 +'.mono,.num{font-family:var(--fe);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}'
@@ -52,10 +53,9 @@ const PRINT_TOKENS=':root{--ink:#1A2230;--ink2:#3A4658;--muted:#8B94A3;--faint:#
 +'.dh .chip{width:56px;height:56px;flex:none;display:grid;place-items:center}'
 +'.dh .chip img{width:100%;height:100%;object-fit:contain;display:block}'
 +'.rule{height:2px;background:var(--ink);border-radius:2px;margin-top:14px}'
-/* ── Centered title with teal underline ── */
+/* ── Centered title — type + centering carry it (accent is structural-only, never decorative) ── */
 +'.title{text-align:center;margin:22px 0 2px}'
-+'.title h2{font-size:19px;font-weight:700;display:inline-block;padding-bottom:8px;position:relative}'
-+'.title h2::after{content:"";position:absolute;bottom:0;right:22%;left:22%;height:3px;background:var(--teal);border-radius:3px}'
++'.title h2{font-size:19px;font-weight:700;display:inline-block}'
 /* ── Meta / period line (centered, muted) ── */
 +'.period{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.9}'
 +'.period b{color:var(--ink2);font-weight:600}'
@@ -74,12 +74,13 @@ const PRINT_TOKENS=':root{--ink:#1A2230;--ink2:#3A4658;--muted:#8B94A3;--faint:#
 +'table.dt tbody tr:nth-child(even){background:var(--zebra)}'
 +'table.dt tfoot td{border-top:2px solid var(--ink);font-weight:700;font-size:12px;padding:11px 10px;text-align:right}'
 +'.cr{color:var(--pos);font-weight:600}.dr{color:var(--neg);font-weight:600}.bal{font-weight:700;color:var(--teal-ink);font-family:var(--fe);font-variant-numeric:tabular-nums}'
-+'table.dt td.bal{background:var(--teal-soft);border-inline-start:2px solid var(--teal-line)}'
-+'table.dt td.bal .tag{font-family:var(--fa);font-size:10px;color:var(--teal);font-weight:600;margin-inline-start:5px}'
-/* ── Final row: teal-filled, caps the balance column ── */
-+'table.dt tr.final td{background:var(--teal);color:#fff;font-weight:700;font-size:12px;padding:11px 10px}'
-+'table.dt tr.final td.bal{background:var(--teal);border-inline-start:none;color:#fff}'
-+'table.dt tr.final .tag{color:rgba(255,255,255,.85)}table.dt tr.final .pos{color:#CFEFE0}table.dt tr.final .neg{color:#F6D4D0}'
++'table.dt td.bal{background:transparent}'
++'table.dt td.bal .tag{font-family:var(--fa);font-size:10px;font-weight:600;margin-inline-start:5px}'
++'table.dt td.bal .tag.cr{color:var(--pos)}table.dt td.bal .tag.dr{color:var(--neg)}'
+/* ── Final row: ruled ink conclusion, caps the balance column ── */
++'table.dt tr.final td{background:transparent;color:var(--ink);font-weight:800;font-size:12px;padding:11px 10px;border-top:2px solid var(--teal-line)}'
++'table.dt tr.final td.bal{background:transparent;color:var(--ink)}'
++'table.dt tr.final .tag.cr{color:var(--pos)}table.dt tr.final .tag.dr{color:var(--neg)}table.dt tr.final .pos{color:var(--pos)}table.dt tr.final .neg{color:var(--neg)}'
 /* ── Footer · single signature · QR ── */
 +'.dfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:30px}'
 +'.qr-u{width:88px;text-align:center}'
@@ -426,7 +427,7 @@ window.prtMemberStmt=function(mode){
   const _hd=Number(member.historical_balance_ils||0), _hp=Number(member.historical_payments_ils||0), _carried=_hd-_hp;
   const moves=st.rows.filter(r=>r.date!=='—');
   let totSub=0, totPay=0;
-  const balTxt=v=>'<span class="num">₪ '+fmt(Math.abs(v))+'</span>'+(v<0?(_en?' Cr':' دائن'):'');
+  const balTxt=v=>'<span class="num">₪ '+fmt(Math.abs(v))+'</span>'+(v>0?'<span class="tag dr">'+(_en?'Dr':'مدين')+'</span>':v<0?'<span class="tag cr">'+(_en?'Cr':'دائن')+'</span>':'');
   const cell=v=>v>0?'<span class="num">₪ '+fmt(v)+'</span>':'<span class="mut">—</span>';
   let tbody='<tr>'
     +'<td class="c mut">—</td><td class="ds">'+(_en?'Carried balance before 31/12/2024':'رصيد مُرحّل قبل 31/12/2024')+'</td>'
@@ -476,6 +477,7 @@ window.prtMemberStmt=function(mode){
 
   const css='@page{size:A4 portrait;margin:9mm}body{font-family:var(--fa);direction:rtl;background:#fff;padding:9mm}'
     +'.msopen{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line2);border-inline-start:3px solid var(--teal-line);border-radius:8px;padding:10px 14px;margin:4px 0 14px;font-size:12px;font-weight:600;color:var(--ink2)}'
+    +'.msopen .tag{margin-inline-start:5px;font-weight:600}.msopen .tag.cr{color:var(--pos)}.msopen .tag.dr{color:var(--neg)}'
     +'table.msdt{font-size:10px}table.msdt td.ds{text-align:right}';
 
   const subLine=(_en?'Member: <b>'+esc(member.name)+'</b> · No. <b class="num">'+esc(member.member_code||'—')+'</b>'
