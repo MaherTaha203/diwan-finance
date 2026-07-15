@@ -364,6 +364,7 @@
 <div id="app" style="display:none">
 <div class="top">
   <div class="top-logo">
+    <button class="sb-toggle" id="sb-toggle" aria-label="القائمة" aria-controls="sb" aria-expanded="true"><i class="ti ti-menu-2"></i></button>
     <div class="top-logo-ico"><img data-brand="mark" data-brand-variant="night" src="/brand/night/PNG/logo-256.png" alt="ديوان آل طه" width="32" height="32"></div>
     <div><div class="top-logo-text">ديوان آل طه</div><div class="top-logo-sub">نظام الإدارة المالية</div></div>
   </div>
@@ -382,33 +383,76 @@
 </div>
 
 <div class="layout">
-<div class="sb">
-  <div class="sb-sec" data-i18n="nav.home">الرئيسية</div>
-  <div class="nb on" role="button" tabindex="0" data-p="dash"><i class="ti ti-layout-dashboard"></i>لوحة التحكم</div>
-  <div class="sb-sec" data-i18n="nav.food_fund">صندوق الغداء</div>
-  <div class="nb" role="button" tabindex="0" data-p="food-rec"><i class="ti ti-receipt"></i>إيصالات الغداء</div>
-  <div class="nb" role="button" tabindex="0" data-p="food-pay"><i class="ti ti-cash"></i>مصاريف الغداء</div>
-  <div class="nb" role="button" tabindex="0" data-p="food-stmt"><i class="ti ti-file-description"></i>كشف الغداء</div>
-  <div class="sb-sec" data-i18n="nav.diwan_fund">صندوق الديوان</div>
-  <div class="nb" role="button" tabindex="0" data-p="diwan-rec"><i class="ti ti-receipt"></i>إيصالات الديوان</div>
-  <div class="nb" role="button" tabindex="0" data-p="diwan-pay"><i class="ti ti-cash"></i>مصاريف الديوان</div>
-  <div class="nb" role="button" tabindex="0" data-p="diwan-stmt"><i class="ti ti-file-description"></i>كشف الديوان</div>
-  <div class="sb-sec" data-i18n="nav.reservations_sec" id="sbsec-reservations">الديوان — الحجوزات</div>
-  <div class="nb" role="button" tabindex="0" data-p="reservations" id="nb-reservations"><i class="ti ti-calendar-event"></i>تقويم الحجوزات</div>
-  <div class="sb-sec" data-i18n="nav.donations_sec">التبرعات</div>
-  <div class="nb" role="button" tabindex="0" data-p="don"><i class="ti ti-heart"></i>سجل التبرعات</div>
-  <div class="sb-sec" data-i18n="nav.members_sec">الأعضاء</div>
-  <div class="nb" role="button" tabindex="0" data-p="members"><i class="ti ti-users"></i>أعضاء العائلة</div>
-  <div class="nb" role="button" tabindex="0" data-p="member-stmt"><i class="ti ti-user"></i>كشف حساب عضو</div>
-  <div class="nb" role="button" tabindex="0" data-p="annual-debt"><i class="ti ti-report-money"></i>تقرير المديونية</div>
-  <div class="nb" role="button" tabindex="0" data-p="delinquent"><i class="ti ti-user-exclamation"></i>الأعضاء المتأخرون</div>
-  <div class="nb" role="button" tabindex="0" data-p="annual"><i class="ti ti-calendar"></i>الاشتراكات السنوية</div>
-  <div class="sb-sec" data-i18n="nav.system_sec">النظام</div>
-  <div class="nb" role="button" tabindex="0" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i>المستخدمون</div>
-  <div class="nb" role="button" tabindex="0" data-p="audit"><i class="ti ti-list-check"></i>سجل العمليات</div>
-  <div class="nb" role="button" tabindex="0" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i>الإعدادات</div>
-  <div class="nb" role="button" tabindex="0" data-p="bk"><i class="ti ti-database"></i>النسخ الاحتياطي</div>
-</div>
+<nav class="sb" id="sb" aria-label="التنقل الرئيسي">
+  <div class="sb-tools">
+    <div class="sb-search-wrap">
+      <i class="ti ti-search"></i>
+      <input class="sb-search" id="sb-search" type="text" placeholder="بحث في الصفحات..." aria-label="بحث في الصفحات" autocomplete="off">
+      <button class="sb-search-x" id="sb-search-x" aria-label="مسح البحث" hidden><i class="ti ti-x"></i></button>
+    </div>
+    <button class="sb-pin" id="sb-pin" aria-label="طيّ الشريط الجانبي" aria-pressed="false" title="طيّ/تثبيت"><i class="ti ti-layout-sidebar-right-collapse"></i></button>
+  </div>
+  <div class="sb-scrollarea" id="sb-scrollarea">
+  <div class="nbg sb-favs" id="sb-favs" data-g="favs" hidden>
+    <div class="nbg-h" role="presentation"><span class="nbg-t"><i class="ti ti-star-filled nbg-favico"></i>المفضّلة</span></div>
+    <div class="nbg-body" id="sb-favs-body" role="group"></div>
+  </div>
+  <div class="nbg" data-g="home">
+    <button class="nbg-h" data-g="home" aria-expanded="true" aria-controls="nbgb-home"><span class="nbg-t" data-i18n="nav.home">الرئيسية</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-body" id="nbgb-home" role="group">
+      <div class="nb on" role="button" tabindex="0" data-p="dash"><i class="ti ti-layout-dashboard"></i><span class="nb-t">لوحة التحكم</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="food">
+    <button class="nbg-h" data-g="food" aria-expanded="false" aria-controls="nbgb-food"><span class="nbg-t" data-i18n="nav.food_fund">صندوق الغداء</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-body" id="nbgb-food" role="group">
+      <div class="nb" role="button" tabindex="0" data-p="food-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الغداء</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="food-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الغداء</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="food-stmt"><i class="ti ti-file-description"></i><span class="nb-t">كشف الغداء</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="diwan">
+    <button class="nbg-h" data-g="diwan" aria-expanded="false" aria-controls="nbgb-diwan"><span class="nbg-t" data-i18n="nav.diwan_fund">صندوق الديوان</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-body" id="nbgb-diwan" role="group">
+      <div class="nb" role="button" tabindex="0" data-p="diwan-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الديوان</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="diwan-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الديوان</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="diwan-stmt"><i class="ti ti-file-description"></i><span class="nb-t">كشف الديوان</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+    </div>
+  </div>
+  <div class="nbg" id="sbsec-reservations" data-g="res">
+    <button class="nbg-h" data-g="res" aria-expanded="false" aria-controls="nbgb-res"><span class="nbg-t" data-i18n="nav.reservations_sec">الديوان — الحجوزات</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-body" id="nbgb-res" role="group">
+      <div class="nb" role="button" tabindex="0" data-p="reservations" id="nb-reservations"><i class="ti ti-calendar-event"></i><span class="nb-t">تقويم الحجوزات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="don">
+    <button class="nbg-h" data-g="don" aria-expanded="false" aria-controls="nbgb-don"><span class="nbg-t" data-i18n="nav.donations_sec">التبرعات</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-body" id="nbgb-don" role="group">
+      <div class="nb" role="button" tabindex="0" data-p="don"><i class="ti ti-heart"></i><span class="nb-t">سجل التبرعات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="members">
+    <button class="nbg-h" data-g="members" aria-expanded="false" aria-controls="nbgb-members"><span class="nbg-t" data-i18n="nav.members_sec">الأعضاء</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-body" id="nbgb-members" role="group">
+      <div class="nb" role="button" tabindex="0" data-p="members"><i class="ti ti-users"></i><span class="nb-t">أعضاء العائلة</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="member-stmt"><i class="ti ti-user"></i><span class="nb-t">كشف حساب عضو</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="annual-debt"><i class="ti ti-report-money"></i><span class="nb-t">تقرير المديونية</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="delinquent"><i class="ti ti-user-exclamation"></i><span class="nb-t">الأعضاء المتأخرون</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="annual"><i class="ti ti-calendar"></i><span class="nb-t">الاشتراكات السنوية</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="system">
+    <button class="nbg-h" data-g="system" aria-expanded="false" aria-controls="nbgb-system"><span class="nbg-t" data-i18n="nav.system_sec">النظام</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-body" id="nbgb-system" role="group">
+      <div class="nb" role="button" tabindex="0" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i><span class="nb-t">المستخدمون</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="audit"><i class="ti ti-list-check"></i><span class="nb-t">سجل العمليات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i><span class="nb-t">الإعدادات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="bk"><i class="ti ti-database"></i><span class="nb-t">النسخ الاحتياطي</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+    </div>
+  </div>
+  </div>
+</nav>
+<div class="sb-scrim" id="sb-scrim" hidden></div>
 
 <div class="main">
   <div class="pg on" id="pg-dash">
@@ -1044,5 +1088,6 @@ async function updateLoginMemberCount() {
 <script defer src="/js/print.js?v=2.1"></script>
 <script defer src="/js/reports.js?v=2.1"></script>
 <script defer src="/js/app.js?v=2.1"></script>
+<script defer src="/js/sidebar.js?v=1.0"></script>
 </body>
 </html>

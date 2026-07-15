@@ -981,18 +981,15 @@ window.applyLang = function() {
     'bk':          ['ti-database',         'nav.backup'],
     'settings':    ['ti-settings',         'nav.settings'],
   };
+  /* Sidebar nav labels — update only the .nb-t text (preserve icon + favorite
+     star), scoped to the real groups so favorite clones aren't double-touched. */
   Object.entries(nbMap).forEach(([p, [ico, key]]) => {
-    const el = document.querySelector(`.nb[data-p="${p}"]`);
-    if (el) el.innerHTML = `<i class="ti ${ico}"></i>${window.t(key)}`;
+    document.querySelectorAll(`.nbg-body:not(#sb-favs-body) .nb[data-p="${p}"] .nb-t`)
+      .forEach(t => { t.textContent = window.t(key); });
   });
-
-  // Sidebar sections
-  const secs = document.querySelectorAll('.sb-sec');
-  const secLabels = [
-    'nav.home','nav.operations','nav.food_fund','nav.diwan_fund',
-    'nav.donations_sec','nav.members_sec','nav.system_sec'
-  ];
-  secs.forEach((el, i) => { if (secLabels[i]) el.textContent = window.t(secLabels[i]); });
+  /* Group titles carry data-i18n and are translated generically above.
+     Let the sidebar module re-render favorites + retint the search placeholder. */
+  if (window.sidebarOnLang) window.sidebarOnLang();
 
   // -- PAGE HEADERS --
   qTxt('#pg-dash .ph-t',       window.t('dashboard.title'));
