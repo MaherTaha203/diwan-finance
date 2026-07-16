@@ -1924,3 +1924,32 @@ td.neg-amt{color:var(--neg)}
 }
 .pg.lx .pb.on{background:var(--dx-navy);border-color:var(--dx-navy);color:#fff}
 body:not(.light) .pg.lx .pb.on{background:var(--dx-lime);border-color:var(--dx-lime);color:var(--dx-limeink)}
+
+/* ═══════════════ DX-8 — كشوف الحساب: أدوات حرّة وشيل عائم (Theme-01) ═══════════════ */
+/* filter toolbar: no card — floating capsule fields on the canvas */
+.ftb{background:transparent;border:0;padding:0;gap:10px;margin-bottom:16px;align-items:flex-end}
+.ftb-grp{border-inline-end:0;padding-inline-end:0;gap:10px}
+.ftb-ci{gap:4px}
+.ftb-ci label{font-size:10px;color:var(--mut);padding-inline-start:8px;letter-spacing:.02em}
+.ftb-ci input,.ftb-ci select{height:40px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);padding:0 12px;box-shadow:0 10px 26px -22px rgba(15,27,51,.55)}
+/* action buttons: unjoin the segmented group → free pills */
+.ftb-act{border:0;border-radius:0;overflow:visible;gap:8px}
+.ftb-act .btn{height:40px;border-radius:999px !important;border:1px solid var(--line);
+  background:var(--card);padding:0 16px;font-size:12px;
+  box-shadow:0 10px 26px -22px rgba(15,27,51,.55)}
+.ftb-act .btn:first-child{border-inline-start:1px solid var(--line)}
+.ftb-act .btn.primary{border-color:transparent}
+body:not(.light) .ftb-ci input,body:not(.light) .ftb-ci select,
+body:not(.light) .ftb-act .btn{box-shadow:0 10px 26px -20px rgba(0,0,0,.6)}
+body:not(.light) .ftb-act .btn.primary{border-color:transparent}
+/* statement shell: floating panel */
+.acct-stmt{border:0;border-radius:18px;box-shadow:0 18px 44px -28px rgba(15,27,51,.45)}
+body:not(.light) .acct-stmt{border:1px solid rgba(255,255,255,.05);box-shadow:0 18px 44px -24px rgba(0,0,0,.65)}
+/* figure cards: quiet ground, semantics live in the value color only */
+.acct-stmt .as-fig{border-radius:12px}
+.acct-stmt .as-fig.green,.acct-stmt .as-fig.red{border-color:var(--bd)}
+/* shell buttons: pills */
+.acct-stmt .as-btn{border-radius:999px}
+.acct-stmt .as-brand{border-radius:9px}
+.ftb-act .btn.primary{background:var(--dx-lime);color:var(--dx-limeink)}
