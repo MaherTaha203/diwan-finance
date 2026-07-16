@@ -57,6 +57,7 @@ window.nav=function(p){
   if(p==='delinquent') renderDelinquent();
   if(p==='member-stmt') fillMemberSelect();
   if(p==='reservations') window.resOnShow();
+  if(p==='dash'&&window.placeTpInk) window.placeTpInk();
   document.body.classList.toggle('pg-res-on',p==='reservations');
   D[p]?.render();
 };

@@ -2037,3 +2037,41 @@ tbody td{transition:background-color .14s ease}
     border-radius:18px 18px 0 0;padding:12px 10px !important;
     box-shadow:0 -18px 44px -20px rgba(8,14,24,.7),0 0 0 100vmax rgba(8,14,24,.45)}
 }
+
+/* ═══════════════ DX-14 — إحياء المربعات والخزائن ═══════════════ */
+/* نبضة التحديث: غسلة ليمونية خاطفة حين تتغيّر قيمة المربّع */
+.kp.live{animation:kpLive .95s ease}
+@keyframes kpLive{
+  0%{box-shadow:inset 0 0 0 300px rgba(203,240,0,.17)}
+  55%{box-shadow:inset 0 0 0 300px rgba(203,240,0,.05)}
+  100%{box-shadow:inset 0 0 0 300px rgba(203,240,0,0)}
+}
+/* الحبر المتنقّل لتبويبات الخزائن — نفس لغة الشريط الجانبي */
+.tp-tabs{position:relative}
+.tp-tabs .tp-tab{position:relative;z-index:1;transition:color .15s ease}
+.tp-ink{position:absolute;top:0;left:0;z-index:0;border-radius:9px;background:var(--card);
+  box-shadow:0 8px 20px -12px rgba(15,27,51,.35);opacity:0;pointer-events:none;
+  transition:transform .19s cubic-bezier(.3,.85,.3,1),width .19s ease,height .19s ease,opacity .14s ease}
+.tp-tabs.has-ink .tp-tab.on{background:transparent;box-shadow:none}
+@media (prefers-reduced-motion:reduce){.tp-ink{transition:none}.kp.live{animation:none}}
+/* صفحة الحجوزات على لكنة «السحاب النيليّ» (كانت على الأزرق القديم) */
+#pg-reservations .res-pill.on{background:var(--dx-navy);border-color:var(--dx-navy);color:#fff}
+body:not(.light) #pg-reservations .res-pill.on{background:var(--dx-lime);border-color:var(--dx-lime);color:var(--dx-limeink)}
+#pg-reservations .res-day{border-radius:12px}
+#pg-reservations .res-day.today{border-color:var(--dx-navy);background:rgba(15,27,51,.06);box-shadow:0 0 0 3px rgba(15,27,51,.08)}
+body:not(.light) #pg-reservations .res-day.today{border-color:var(--dx-lime);background:rgba(203,240,0,.07);box-shadow:0 0 0 3px rgba(203,240,0,.10)}
+#pg-reservations .res-day.sel,#pg-reservations .res-day:focus-visible{outline-color:var(--dx-navy)}
+body:not(.light) #pg-reservations .res-day.sel,body:not(.light) #pg-reservations .res-day:focus-visible{outline-color:var(--dx-lime)}
+#pg-reservations .res-today-chip{background:var(--dx-navy)}
+body:not(.light) #pg-reservations .res-today-chip{background:var(--dx-lime);color:var(--dx-limeink)}
+#pg-reservations .res-lg.t{border-color:var(--dx-navy)}
+body:not(.light) #pg-reservations .res-lg.t{border-color:var(--dx-lime)}
+#pg-reservations .res-vrow>i{color:var(--dx-navy)}
+body:not(.light) #pg-reservations .res-vrow>i{color:#93B0DC}
+#pg-reservations #res-month-label b{color:var(--tx)}
+#pg-reservations .res-search{border-radius:999px;background:var(--card);border-color:var(--line);
+  box-shadow:0 10px 26px -22px rgba(15,27,51,.55)}
+#pg-reservations #res-daycard{border-radius:14px;border-color:var(--line);
+  box-shadow:0 14px 34px -24px rgba(15,27,51,.45)}
+body.pg-res-on #res-fab{background:var(--dx-lime);color:var(--dx-limeink);
+  box-shadow:0 16px 36px -12px rgba(140,165,0,.6)}
