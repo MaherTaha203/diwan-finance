@@ -33,7 +33,9 @@
   function iconOf(p){ var el=srcItem(p), i=el&&el.querySelector('i'); return i?i.className:'ti ti-point'; }
 
   /* ═══ MODE: pinned ⇄ mini (desktop) ═══ */
-  function getMode(){ return localStorage.getItem(LS_MODE)==='mini'?'mini':'pinned'; }
+  /* Theme-01 approved architecture: the slim navy rail (mini) is the default;
+     a user's explicit choice (pinned) is still honored from storage. */
+  function getMode(){ return localStorage.getItem(LS_MODE)==='pinned'?'pinned':'mini'; }
   function applyMode(){
     var mini=!isNarrow() && getMode()==='mini';
     document.body.classList.toggle('sb-mini',mini);

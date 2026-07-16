@@ -1606,3 +1606,81 @@ body:not(.light) #pg-dash .dhero .hbtn{background:#E9E4D6;color:#141E2E;border-c
 body:not(.light) .btn.primary:hover,
 body:not(.light) #pg-dash .dhero .pri:hover{background:#F3EFE4;border-color:#F3EFE4;filter:none}
 body:not(.light) .pill.on,body:not(.light) .pb.on{background:#E9E4D6;color:#141E2E;border-color:#E9E4D6}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DX-2 · THEME 01 «السحاب النيليّ» — approved identity (Salesforce-Light DNA)
+   Identity-only pass on top of the DX-1 architecture: ice canvas, floating
+   white panels, deep-navy chrome/rail, lime action light, soft diffuse
+   shadows. Dark mode is the same family's graphite sibling (Theme 03).
+   NO functional, UX or workflow change — tokens and chrome colors only.
+   Print pipeline untouched. Sidebar keeps all three modes; the slim navy
+   rail (mini) becomes the default architecture per the approved brief.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --dx-lime:#CBF000; --dx-limeink:#1A2205;
+  --dx-navy:#0F1B33; --dx-navy2:#16273D;
+  --dx-ink:#0F1B33; --dx-ink2:#16273D;
+  --brand:#0F1B33; --brand-2:#16273D; --navy:#0F1B33; --accent-btn:#0F1B33;
+  --dx-glass:rgba(15,27,51,.92);
+}
+body.light{
+  --canvas:#EDF1F7; --bg:#EDF1F7; --bg2:#F7F9FC; --bg3:#E9EDF4;
+  --tx:#17202E; --ink:#141C29; --tx2:#57606E; --mut:#7C8494; --tx3:#7C8494; --faint:#7C8494;
+  --bd:#E2E7F0; --line:#E2E7F0; --bd2:#D3DAE6; --rule:#D3DAE6;
+  --soft:#EFF2F8; --row:#F7F9FC;
+  --card:#FFFFFF;
+  --chrome:#0F1B33; --chrome-line:rgba(255,255,255,.10);
+  --accent:#24437A; --accent-soft:rgba(36,67,122,.10); --acc:#24437A;
+  --gold:#71890A; --gold-d:#5C7008; --gold-l:rgba(203,240,0,.22);
+  --pos:#3E7C52; --pos-bg:rgba(62,124,82,.10);
+  --neg:#C05840; --neg-bg:rgba(192,88,64,.09); --danger:#C0392B;
+  --warn:#9A7016; --warn-bg:rgba(154,112,22,.10);
+}
+body{
+  --canvas:#0C0E13; --bg:#0C0E13; --bg2:#12151C; --bg3:#1A1E27;
+  --tx:#EFF1F5; --ink:#F2F4F8; --tx2:#A8ADB8; --mut:#8B909B; --tx3:#8B909B; --faint:#8B909B;
+  --bd:#1E222B; --line:#1E222B; --bd2:#2A303C; --rule:#2A303C;
+  --soft:#171B23; --row:#101319;
+  --card:#14171E;
+  --chrome:#0A0C10; --chrome-line:rgba(255,255,255,.08);
+  --accent:#9FB3D4; --accent-soft:rgba(159,179,212,.14); --acc:#9FB3D4;
+  --gold:#CBF000; --gold-d:#A9C800; --gold-l:rgba(203,240,0,.16);
+  --dx-glass:rgba(10,12,16,.92);
+}
+/* focus: navy ring on ice, lime ring in graphite night */
+button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid #4A6BAA;outline-offset:2px}
+body:not(.light) button:focus-visible,body:not(.light) [role="button"]:focus-visible,body:not(.light) input:focus-visible,
+body:not(.light) select:focus-visible,body:not(.light) textarea:focus-visible,body:not(.light) a:focus-visible{outline-color:var(--dx-lime)}
+
+/* chrome islands + rail: deep navy in BOTH modes (identity anchor) */
+.top-logo,.top-actions{background:var(--dx-glass);border-color:rgba(255,255,255,.10)}
+.sb{background:var(--chrome)}
+body.light .sb{background:#0F1B33}
+.nb.on::before{background:var(--dx-lime)}
+.nb.on{background:rgba(255,255,255,.14)}
+.nbg-favico{color:var(--dx-lime)}
+.nb.is-fav .nb-star,.nb-star.is-on{color:var(--dx-lime)}
+.nb .k{background:var(--dx-lime);color:var(--dx-limeink);border-radius:999px;padding:0 6px;font-weight:800}
+
+/* action light: primary actions become lime pills (both modes) */
+.btn{border-radius:999px}
+.btn.sm{border-radius:999px}
+.btn.primary,#pg-dash .dhero .pri,#pg-dash .dhero .hbtn{
+  background:var(--dx-lime);border-color:var(--dx-lime);color:var(--dx-limeink);
+  box-shadow:0 10px 24px -12px rgba(120,150,0,.55);font-weight:800;
+}
+.btn.primary:hover,#pg-dash .dhero .pri:hover,#pg-dash .dhero .hbtn:hover{background:#D8F63A;border-color:#D8F63A;filter:none}
+body:not(.light) .btn.primary,body:not(.light) #pg-dash .dhero .pri,body:not(.light) #pg-dash .dhero .hbtn{
+  background:var(--dx-lime);color:var(--dx-limeink);border-color:var(--dx-lime)}
+body:not(.light) .btn.primary:hover,body:not(.light) #pg-dash .dhero .pri:hover{background:#D8F63A;border-color:#D8F63A}
+.pill.on,.pb.on{background:var(--dx-navy);border-color:var(--dx-navy);color:#fff}
+body:not(.light) .pill.on,body:not(.light) .pb.on{background:var(--dx-lime);border-color:var(--dx-lime);color:var(--dx-limeink)}
+.tp-tab.on{box-shadow:0 8px 20px -12px rgba(15,27,51,.35)}
+
+/* floating-panel materials: softer, larger, navy-tinted shadows */
+.tw,.card,#pg-dash .dpnl,.modal{box-shadow:0 18px 44px -30px rgba(15,27,51,.35)}
+#pg-dash .draised{box-shadow:0 22px 52px -30px rgba(15,27,51,.4)}
+.kpi{box-shadow:0 14px 34px -26px rgba(15,27,51,.3)}
+.fi input:focus,.fi select:focus,.fi textarea:focus,.si:focus{border-color:#9EBB13;box-shadow:0 0 0 3px var(--gold-l)}
+
+/* mobile dock follows the navy chrome (var already) */
