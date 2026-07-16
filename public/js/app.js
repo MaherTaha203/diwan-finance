@@ -271,7 +271,7 @@ const D={
     if(q)d=d.filter(r=>(r.no+(r.payer_name||gmn(r.member_id))+(r.notes||'')).toLowerCase().includes(q));
     const tot=d.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('food-rec-sub');
-    if(sub)sub.textContent=`${d.length} إيصال — ₪ ${fmt(tot)}`;
+    if(sub)sub.innerHTML=`<span class="stc">${d.length} إيصال</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['food-rec'])PS['food-rec']=1;
     mkPag('food-rec',d.length);
     const page=d.slice((PS['food-rec']-1)*PSZ,PS['food-rec']*PSZ);
@@ -279,12 +279,12 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(7,'receipts');return;}
     body.innerHTML=page.map(r=>`<tr>
-      <td><b style="font-size:11px">${esc(r.no)}</b></td>
-      <td style="color:var(--tx2)">${fdate(r.receipt_date)}</td>
-      <td>${esc(r.payer_name||gmn(r.member_id))}</td>
-      <td class="num pos-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="c-no"><span class="doc">${esc(r.no)}</span></td>
+      <td class="c-date">${fdate(r.receipt_date)}</td>
+      <td class="c-name">${esc(r.payer_name||gmn(r.member_id))}</td>
+      <td class="num pos-amt c-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
-      <td style="color:var(--tx3);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.notes||'—')}</td>
+      <td class="c-notes">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
         ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
@@ -297,7 +297,7 @@ const D={
    if(q)d=d.filter(p=>(p.no+(p.beneficiary_name||gmn(p.member_id))+(p.notes||'')).toLowerCase().includes(q));
     const tot=d.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     const sub=document.getElementById('food-pay-sub');
-    if(sub)sub.textContent=`${d.length} سند — ₪ ${fmt(tot)}`;
+    if(sub)sub.innerHTML=`<span class="stc">${d.length} سند</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['food-pay'])PS['food-pay']=1;
     mkPag('food-pay',d.length);
     const page=d.slice((PS['food-pay']-1)*PSZ,PS['food-pay']*PSZ);
@@ -305,12 +305,12 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(7,'expenses');return;}
     body.innerHTML=page.map(p=>`<tr>
-      <td><b style="font-size:11px">${esc(p.no)}</b></td>
-      <td style="color:var(--tx2)">${fdate(p.payment_date)}</td>
-      <td>${esc(p.beneficiary_name||gmn(p.member_id))}</td>
-      <td class="num" style="color:var(--danger)">₪ ${fmt(p.amount_ils||p.amount)}</td>
+      <td class="c-no"><span class="doc">${esc(p.no)}</span></td>
+      <td class="c-date">${fdate(p.payment_date)}</td>
+      <td class="c-name">${esc(p.beneficiary_name||gmn(p.member_id))}</td>
+      <td class="num neg-amt c-amt">₪ ${fmt(p.amount_ils||p.amount)}</td>
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
-      <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
+      <td class="c-notes">${esc(p.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
         ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtPay('${p.id}')" title="${window.t('common.print')}"><i class="ti ti-printer"></i></button>`:''}
@@ -323,7 +323,7 @@ const D={
     if(q)d=d.filter(r=>(r.no+(r.payer_name||gmn(r.member_id))+(r.notes||'')).toLowerCase().includes(q));
     const tot=d.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('diwan-rec-sub');
-    if(sub)sub.textContent=`${d.length} إيصال — ₪ ${fmt(tot)}`;
+    if(sub)sub.innerHTML=`<span class="stc">${d.length} إيصال</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['diwan-rec'])PS['diwan-rec']=1;
     mkPag('diwan-rec',d.length);
     const page=d.slice((PS['diwan-rec']-1)*PSZ,PS['diwan-rec']*PSZ);
@@ -331,13 +331,13 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'receipts');return;}
     body.innerHTML=page.map(r=>`<tr>
-      <td><b style="font-size:11px">${esc(r.no)}</b></td>
-      <td style="color:var(--tx2)">${fdate(r.receipt_date)}</td>
-      <td>${esc(r.payer_name||gmn(r.member_id))}</td>
-      <td class="num pos-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="c-no"><span class="doc">${esc(r.no)}</span></td>
+      <td class="c-date">${fdate(r.receipt_date)}</td>
+      <td class="c-name">${esc(r.payer_name||gmn(r.member_id))}</td>
+      <td class="num pos-amt c-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'diwan'}">${r.currency}</span></td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
-      <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
+      <td class="c-notes">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
         ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
@@ -352,7 +352,7 @@ const D={
     if(ft)d=d.filter(p=>p.expense_type===ft);
     const tot=d.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
     const sub=document.getElementById('diwan-pay-sub');
-    if(sub)sub.textContent=`${d.length} سند — ₪ ${fmt(tot)}`;
+    if(sub)sub.innerHTML=`<span class="stc">${d.length} سند</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['diwan-pay'])PS['diwan-pay']=1;
     mkPag('diwan-pay',d.length);
     const page=d.slice((PS['diwan-pay']-1)*PSZ,PS['diwan-pay']*PSZ);
@@ -360,13 +360,13 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'expenses');return;}
     body.innerHTML=page.map(p=>`<tr>
-      <td><b style="font-size:11px">${esc(p.no)}</b></td>
-      <td style="color:var(--tx2)">${fdate(p.payment_date)}</td>
-      <td>${esc(p.beneficiary_name||gmn(p.member_id))}</td>
-      <td class="num" style="color:var(--danger)">₪ ${fmt(p.amount_ils||p.amount)}</td>
+      <td class="c-no"><span class="doc">${esc(p.no)}</span></td>
+      <td class="c-date">${fdate(p.payment_date)}</td>
+      <td class="c-name">${esc(p.beneficiary_name||gmn(p.member_id))}</td>
+      <td class="num neg-amt c-amt">₪ ${fmt(p.amount_ils||p.amount)}</td>
       <td><span class="badge diwan">${L.expense(p.expense_type)}</span></td>
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
-      <td style="color:var(--tx3);font-size:11px">${esc(p.notes||'—')}</td>
+      <td class="c-notes">${esc(p.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
         ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>`:''}
