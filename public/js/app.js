@@ -599,6 +599,22 @@ function renderTreasuryPanel(){
     <div class="tp-ft"><span>ديوان آل طه — diwan-finance.com</span><span>الأسعار من إعدادات النظام (يدوية)</span></div>
   </div>`;
 }
+/* Count-up for the fund cards — animates each value from 0 to target so the
+   figures feel alive on render. Honours reduced-motion (settles immediately). */
+function countUpKpis(){
+  const els=document.querySelectorAll('#dash-kpis .v[data-val]');
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  els.forEach(el=>{
+    const target=Number(el.getAttribute('data-val'))||0, neg=target<0, abs=Math.abs(target);
+    const settle=()=>{el.textContent='₪ '+(neg?'−':'')+fmt(abs);};
+    if(reduce||!window.requestAnimationFrame){ settle(); return; }
+    const dur=650, t0=performance.now();
+    const step=t=>{ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+      el.textContent='₪ '+(neg?'−':'')+fmt(abs*e);
+      if(p<1) requestAnimationFrame(step); else settle(); };
+    requestAnimationFrame(step);
+  });
+}
 function renderDash(){
   const fb=FinContract.foodBalance(),rd=FinContract.foodDeficitRemaining(),np=FinContract.foodNetPosition(),db=FinContract.diwanBalance();
   const dd=document.getElementById('dash-date');
@@ -643,22 +659,21 @@ function renderDash(){
     <span class="sp"></span>
     <span class="stale mono">${_isEn?'as of':'محدّث حتى'} ${_asOf}</span>
     ${_heroActs}`;
-  /* ── KPI ribbon — four twins (same figures the old summary showed: fb/rd/np/db) ── */
-  /* Correction — the bar-width base excludes np: net position ≡ fb + rd, so
-     including it double-counted fb and rd. Base = the independent figures only. */
-  const _tot=Math.abs(fb)+Math.abs(rd)+Math.abs(db)||1;
-  const _pct=v=>Math.round(Math.abs(v)/_tot*100);
+  /* ── Fund cards — the four treasury figures (fb/rd/np/db). Clean balance tiles
+     brought to life: staggered entrance (CSS) + count-up value (JS). The old
+     %-bars / collection ring / trend chart were removed by request. ── */
   const _kpis=document.getElementById('dash-kpis');
-  if(_kpis)_kpis.innerHTML=[
-    {t:_isEn?'Food Treasury':'خزينة الغداء',v:fb,g:false},
-    {t:_isEn?'Historical Deficit Settlement Account':'حساب تسوية العجز التاريخي',v:rd,g:true},
-    {t:_isEn?'Net Food Position':'صافي مركز الغداء',v:np,g:false},
-    {t:_isEn?'Diwan Treasury':'خزينة الديوان',v:db,g:false},
-  ].map(k=>`<div class="k"><div class="t">${k.t}</div>
-      <div class="v mono ${k.v<0?'neg-t':''}">₪ ${k.v<0?'−':''}${fmt(Math.abs(k.v))}</div>
-      <div class="pline"><i class="${k.g?'g':''}" style="width:${_pct(k.v)}%"></i></div>
-      <div class="f"><b class="mono">${_pct(k.v)}%</b> ${_isEn?'of treasury total':'من إجمالي الخزينة'}</div>
+  if(_kpis){
+    _kpis.innerHTML=[
+      {t:_isEn?'Food Treasury':'خزينة الغداء',v:fb},
+      {t:_isEn?'Historical Deficit Settlement Account':'حساب تسوية العجز التاريخي',v:rd},
+      {t:_isEn?'Net Food Position':'صافي مركز الغداء',v:np},
+      {t:_isEn?'Diwan Treasury':'خزينة الديوان',v:db},
+    ].map((k,i)=>`<div class="k" style="animation-delay:${i*70}ms"><div class="t">${k.t}</div>
+      <div class="v mono ${k.v<0?'neg-t':''}" data-val="${k.v}">₪ ${k.v<0?'−':''}${fmt(Math.abs(k.v))}</div>
     </div>`).join('');
+    countUpKpis();
+  }
   /* sidebar member counter (approved design) — target the real group item,
      never a favorites clone (which is rebuilt and would drop the badge). */
   const _nbM=document.querySelector('.nbg-body:not(#sb-favs-body) .nb[data-p="members"]')||document.querySelector('.nb[data-p="members"]');
@@ -666,30 +681,6 @@ function renderDash(){
   renderTreasuryTabs();renderTreasuryPanel();
 
 
-
-  /* Monthly net cash-flow chart — income (receipts) minus expense (payments) per
-     month over 12 months. Presentation only: display sums over already-loaded DB
-     rows; no logic/number contract touched. */
-  const now=new Date();const months=[];
-  for(let i=11;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const inc=DB.receipts.filter(r=>!r.is_deleted&&r.receipt_date?.startsWith(k)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const exp=DB.payments.filter(p=>!p.is_deleted&&p.payment_date?.startsWith(k)).reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
-    months.push({lbl:L.month(d.getMonth()),inc,exp,net:Math.round((inc-exp)*100)/100});
-  }
-  const _enM=window.LANG==='en';
-  const maxAbs=Math.max(...months.map(m=>Math.abs(m.net)),1);
-  const bars=months.map(m=>{
-    const pos=m.net>=0, h=m.net!==0?Math.max(3,Math.round(Math.abs(m.net)/maxAbs*100)):0;
-    const tip=`${m.lbl} · ${_enM?'In':'مقبوض'} ₪${fmt(m.inc)} · ${_enM?'Out':'مصروف'} ₪${fmt(m.exp)} · ${_enM?'Net':'صافي'} ${m.net<0?'−':''}₪${fmt(Math.abs(m.net))}`;
-    return `<div class="nfc-col" title="${esc(tip)}"><div class="nfc-up">${pos?`<i style="height:${h}%"></i>`:''}</div><div class="nfc-dn">${pos?'':`<i style="height:${h}%"></i>`}</div></div>`;
-  }).join('');
-  document.getElementById('month-chart').innerHTML=
-    `<div class="nfc-head"><div class="nfc-lg"><span><i class="p"></i>${_enM?'Surplus':'فائض'}</span><span><i class="n"></i>${_enM?'Deficit':'عجز'}</span></div>`
-    +`<div class="nfc-cap">${_enM?'Last 12 months':'آخر ١٢ شهراً'}</div></div>`
-    +`<div class="nfc"><div class="nfc-zero"></div>${bars}</div>`
-    +`<div class="nfc-x">${months.map(m=>`<span>${m.lbl}</span>`).join('')}</div>`;
 
   const allOps=[
     ...DB.receipts.filter(r=>!r.is_deleted).slice(0,5).map(r=>({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),amt:r.amount_ils||r.amount,type:'rec',fund:r.fund_type,no:r.no})),
@@ -725,18 +716,6 @@ function renderDash(){
       if(!alerts.length) alerts.push('<div class="alr n"><div>لا تنبيهات حالية</div></div>');
       _al.innerHTML=alerts.join('');
       const n=document.getElementById('dash-alerts-n'); if(n)n.textContent=String(_late3>0?(1+(typeof window.LOCKED_THROUGH_YEAR==='number'?1:0)):alerts.length);
-    }
-    const _rg=document.getElementById('dash-ring');
-    if(_rg){
-      const yrs=(typeof FIN.subscriptionYears==='function')?FIN.subscriptionYears():[];
-      const cy=yrs.length?Math.max(...yrs.map(Number)):new Date().getFullYear();
-      /* Correction — settled status comes from FIN.memberDelinquency (due vs paid),
-         the single source of truth, NOT the stored balance_ils column. */
-      const subs=(DB.subscriptions||[]).filter(x=>Number(x.year)===cy);
-      const paid=subs.filter(x=>{const d=FIN.memberDelinquency(x.member_id).byYear[cy];return d?d.settled:(Number(x.due_amount_ils||0)<=0);}).length, tot=subs.length||1;
-      const pct=Math.round(paid/tot*100), C=2*Math.PI*26;
-      _rg.innerHTML=`<div class="ringS"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--soft)" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pct/100)).toFixed(1)}"/></svg><div class="c mono">${pct}%</div></div>
-        <div style="font-size:10.5px;color:var(--mut);line-height:1.9"><b class="mono" style="color:var(--ink)">${paid}</b> دفعوا · <b class="mono" style="color:var(--ink)">${tot-paid}</b> متبقّي (اشتراك ${cy})${_late3>0?`<br><span class="badge wr mono">${_late3} متأخرون +3س</span>`:''}</div>`;
     }
   }catch(e){console.warn('dash side column',e);}
   /* Quick actions now live in the compact hero (primary سند قبض + إجراء جديد ▾ menu). */
