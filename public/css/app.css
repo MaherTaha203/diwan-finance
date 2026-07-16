@@ -1382,3 +1382,227 @@ body.role-reservation .rate-chip{display:none!important}
   .pw-meter-track i,.auth-success{transition:none;}
   .auth-card.done .auth-ok-svg .c,.auth-card.done .auth-ok-svg .k{animation:none;stroke-dashoffset:0;}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DX-1 · PRODUCT REINVENTION — «منصّة الديوان»
+   One product, one identity: the Ink-&-Gold institution that greets the user
+   at the login now runs the entire application.
+   Architecture (replaces header→sidebar→content→cards→table):
+     · floating command islands (no full-width top bar)
+     · detached navigation dock — a rounded ink panel floating over the canvas
+       (icons-only dock in mini mode), never an attached rectangle
+     · warm-paper workspace canvas; pages are centered editorial surfaces
+     · data reads as a ledger (hairline rows, tabular numerals, no grid cage)
+     · entry forms are docked editors that slide in from the start edge
+     · confirmations stay floating cards; toasts announce from bottom-center
+   Contract: every id/class that app.js, auth.js, sidebar.js, i18n.js and the
+   acceptance suite bind to is untouched — this layer re-architects presentation
+   only. Print pipeline (PRINT_TOKENS) is unaffected.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── tokens: ink · gold · paper ── */
+:root{
+  --dx-ink:#0F1B2D; --dx-ink2:#16273D; --dx-gold:#C6A46A; --dx-gold-d:#A98B54;
+  --r:10px; --rl:16px;
+  --brand:#0F1B2D; --brand-2:#16273D; --navy:#0F1B2D; --accent-btn:#0F1B2D;
+  --sh1:0 1px 2px rgba(12,20,32,.06);
+  --dx-glass:rgba(15,27,45,.88);
+}
+body{
+  --canvas:#0B121D; --bg:#0B121D; --bg2:#121B2A; --bg3:#182338;
+  --tx:#E8E6DF; --ink:#EDEBE4; --tx2:#A8ADB8; --mut:#7E8593; --tx3:#7E8593; --faint:#7E8593;
+  --bd:#1B2637; --line:#1B2637; --bd2:#2A3850; --rule:#2A3850;
+  --soft:#152034; --row:#101A29;
+  --card:#111B2B;
+  --chrome:#0D1626; --chrome-line:rgba(255,255,255,.09);
+  --accent:#9FB3D4; --accent-soft:rgba(159,179,212,.14); --acc:#9FB3D4;
+  --gold:#C6A46A; --gold-d:#A98B54; --gold-l:rgba(198,164,106,.15);
+  --dx-glass:rgba(13,22,38,.90);
+}
+body.light{
+  --canvas:#F5F2EA; --bg:#F5F2EA; --bg2:#FBF9F4; --bg3:#EFEBE1;
+  --tx:#1F2937; --ink:#141E2E; --tx2:#57606E; --mut:#8A8F98; --tx3:#8A8F98; --faint:#8A8F98;
+  --bd:#E9E4D8; --line:#E9E4D8; --bd2:#D8D2C2; --rule:#D8D2C2;
+  --soft:#F0ECE2; --row:#FAF7F0;
+  --card:#FFFFFF;
+  --chrome:#0F1B2D; --chrome-line:rgba(255,255,255,.10);
+  --accent:#0F1B2D; --accent-soft:rgba(15,27,45,.10); --acc:#0F1B2D;
+  --gold:#C6A46A; --gold-d:#A98B54; --gold-l:rgba(198,164,106,.18);
+}
+button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{
+  outline:2px solid var(--gold); outline-offset:2px;
+}
+
+/* ── floating command islands (the .top markup, re-architected) ── */
+#app{position:relative;background:var(--canvas)}
+.top{
+  position:absolute; top:14px; inset-inline:18px; z-index:70;
+  height:auto; padding:0; background:transparent; border:0; box-shadow:none;
+  pointer-events:none;
+}
+.top-logo,.top-actions{
+  pointer-events:auto; height:46px; padding:0 12px; border-radius:14px;
+  background:var(--dx-glass); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 14px 36px -16px rgba(8,14,24,.65);
+  display:flex; align-items:center;
+}
+.top-logo{gap:10px; padding-inline-end:16px}
+.top-logo-text{font-size:13px}
+.top-actions{gap:8px}
+.tbtn{border-radius:9px;background:rgba(255,255,255,.07)}
+.rate-chip{border-radius:8px}
+.uchip{border-radius:10px;background:rgba(255,255,255,.06)}
+.sb-toggle{border-radius:9px}
+
+/* ── detached navigation dock ── */
+.layout{position:relative; padding-inline-start:calc(210px + 36px)}
+.sb{
+  position:absolute; top:76px; bottom:18px; inset-inline-start:18px;
+  border-radius:20px; background:var(--chrome);
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 26px 64px -26px rgba(8,14,24,.7);
+}
+body.sb-mini .layout{padding-inline-start:calc(56px + 36px)}
+body.sb-mini .sb{inset-block:76px 18px; inset-inline-start:18px}
+body.sb-mini .sb:hover{box-shadow:0 34px 80px -26px rgba(8,14,24,.85)}
+.sb-tools{padding:12px 10px 6px}
+.sb-search{border-radius:10px}
+.sb-pin{border-radius:10px}
+.nb{border-radius:10px; height:32px}
+.nb.on::before{background:var(--dx-gold)}
+.nbg-favico{color:var(--dx-gold)}
+.nb.is-fav .nb-star,.nb-star.is-on{color:var(--dx-gold)}
+
+/* ── workspace canvas ── */
+.main{background:transparent; padding-top:74px}
+.pg{padding:18px 30px 80px; max-width:1240px; margin:0 auto}
+.ph{margin-bottom:22px; align-items:flex-end}
+.ph-t{font-size:23px; font-weight:700; letter-spacing:-.02em}
+.ph-s{font-size:12px; margin-top:4px}
+#copyright-bar{background:transparent; color:var(--mut); border-top:0}
+
+/* ── component language: buttons ── */
+.btn{border-radius:11px; padding:8px 15px; font-weight:600; background:var(--card); border-color:var(--bd2)}
+.btn:hover{background:var(--card); border-color:var(--gold)}
+.btn.sm{border-radius:9px; padding:5px 11px}
+.btn.primary{background:var(--dx-ink); border-color:var(--dx-ink); box-shadow:0 10px 24px -12px rgba(15,27,45,.55)}
+.btn.primary:hover{background:var(--dx-ink2); border-color:var(--dx-ink2)}
+.btn.ghost{border-color:transparent; background:transparent}
+.pill{border-radius:999px}
+.pill.on{background:var(--dx-ink); border-color:var(--dx-ink)}
+.pb{border-radius:9px; min-width:28px; height:28px}
+.pb.on{background:var(--dx-ink); border-color:var(--dx-ink)}
+
+/* ── component language: fields ── */
+.fi input,.fi select,.fi textarea{min-height:42px; border-radius:11px; background:var(--card)}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--gold-d); box-shadow:0 0 0 3px var(--gold-l)}
+.si{border-radius:10px; background:var(--card); padding:8px 32px 8px 10px}
+.si:focus{border-color:var(--gold-d); box-shadow:0 0 0 3px var(--gold-l)}
+select.fs{border-radius:10px; background:var(--card)}
+
+/* ── data as ledger, not grid cage ── */
+.tw{border:1px solid var(--line); border-radius:16px; background:var(--card); box-shadow:0 16px 40px -28px rgba(15,23,38,.35)}
+thead th{background:transparent; border-top:0; height:42px; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut); border-bottom:1px solid var(--rule)}
+thead th:not(:first-child),tbody td:not(:first-child){border-inline-start:0}
+tbody td{padding:11px 14px; border-bottom:1px solid var(--line)}
+tbody tr:nth-child(even){background:transparent}
+tbody tr:hover td{background:var(--soft)}
+.badge{border-radius:6px}
+.card{border-radius:16px}
+.kpi{border-radius:14px}
+.kpi::before{inset-inline:0; top:0; width:auto; height:2px}
+.export-dropdown-menu{border-radius:12px; box-shadow:0 20px 48px -18px rgba(8,14,24,.45)}
+
+/* ── advisory notes become quiet footnotes ── */
+.ibox{background:transparent; border:0; border-inline-start:2px solid var(--bd2); border-radius:0; padding:3px 12px; font-size:11.5px; color:var(--mut); margin:0 0 14px}
+.ibox i{font-size:14px}
+
+/* ── dialogs: docked editors + floating confirms ── */
+.ov{background:rgba(9,14,23,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px)}
+.modal{background:var(--card); border-radius:18px; border:1px solid var(--bd2); box-shadow:0 34px 90px -22px rgba(8,14,24,.6)}
+.mhd{padding:20px 24px; background:var(--card)}
+.mtt{font-size:15.5px; font-weight:700}
+.mico{border-radius:10px}
+.mbd{padding:20px 24px}
+.mft{position:sticky; bottom:0; padding:14px 24px; background:var(--card); z-index:1}
+.modal.editor{
+  position:fixed; inset-block:0; inset-inline-start:0;
+  height:100dvh; max-height:100dvh; width:min(600px,96vw); max-width:none !important;
+  border:0; border-inline-end:1px solid var(--bd2);
+  border-radius:0; border-start-end-radius:26px; border-end-end-radius:26px;
+  box-shadow:0 0 90px rgba(8,14,24,.55);
+  animation:dxDrawer .22s cubic-bezier(.22,1,.36,1);
+}
+@keyframes dxDrawer{from{transform:translateX(48px);opacity:0}to{transform:none;opacity:1}}
+
+/* ── toasts: announce from bottom-center ── */
+.tc{left:50%; right:auto; transform:translateX(-50%); bottom:24px; align-items:center}
+.toast{border-radius:12px; background:var(--dx-glass); color:#F3F1EA; border-color:rgba(255,255,255,.14); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); box-shadow:0 18px 48px -14px rgba(8,14,24,.6)}
+@keyframes tIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes tOut{to{opacity:0;transform:translateY(14px)}}
+.empty i{color:var(--gold); opacity:.55}
+
+/* ── dashboard as financial story ── */
+#pg-dash .dband{background:transparent; padding:4px 2px 0}
+#pg-dash .dhero{color:var(--ink)}
+#pg-dash .dhero .lg{background:var(--chrome); border-color:transparent; color:#fff}
+#pg-dash .dhero b{font-size:20px; font-weight:700; letter-spacing:-.02em; color:var(--ink)}
+#pg-dash .dhero .st{color:var(--mut); border-color:var(--rule)}
+#pg-dash .hstat{border-color:var(--rule)}
+#pg-dash .hstat .k{color:var(--mut)}
+#pg-dash .hstat .v{color:var(--ink); font-size:14px}
+#pg-dash .hstat .v.up{color:var(--pos)}
+#pg-dash .dhero .stale{color:var(--mut)}
+#pg-dash .dhero .menu{background:var(--card); border:1px solid var(--bd2); color:var(--ink); height:34px; border-radius:11px}
+#pg-dash .dhero .menu:hover{background:var(--soft)}
+#pg-dash .dhero .pri{background:var(--dx-ink); height:34px; border-radius:11px; box-shadow:0 10px 24px -12px rgba(15,27,45,.55)}
+#pg-dash .flabel{letter-spacing:.1em; text-transform:uppercase; font-size:10px}
+#pg-dash .flabel.onband{color:var(--mut)}
+#pg-dash .flabel.onband::after{background:var(--line)}
+#pg-dash .dbody{margin-top:14px; padding:0}
+#pg-dash .dpnl{border-radius:18px; background:var(--card); border:1px solid var(--line)}
+#pg-dash .draised{box-shadow:0 20px 48px -26px rgba(15,23,38,.4)}
+#pg-dash .kribbon{grid-template-columns:repeat(4,1fr); gap:0; padding:8px 6px}
+#pg-dash .kribbon .k{border-radius:0; padding:18px 22px}
+#pg-dash .kribbon .k + .k{border-inline-start:1px solid var(--line)}
+#pg-dash .kribbon .k:hover{background:transparent; transform:none}
+#pg-dash .kribbon .t{min-height:auto; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--mut)}
+#pg-dash .kribbon .v{font-size:29px; font-weight:700; letter-spacing:-.02em; margin-top:10px}
+#pg-dash .mv{height:44px; font-size:12px}
+#pg-dash .tsk{height:34px; font-size:11.5px}
+#pg-dash .tsk .go{color:var(--gold-d)}
+#pg-dash .alr{border-radius:10px}
+.tp-tabs{display:inline-flex; gap:0; background:var(--soft); border:1px solid var(--line); border-radius:12px; padding:4px; flex-wrap:nowrap; overflow-x:auto; max-width:100%}
+.tp-tab{border:0; background:transparent; border-radius:9px; padding:7px 16px; color:var(--mut); white-space:nowrap}
+.tp-tab.on{background:var(--card); color:var(--ink); box-shadow:var(--sh1)}
+
+/* ── mobile: same architecture, drawer + floating dock ── */
+@media(max-width:768px){
+  .top{top:10px; inset-inline:10px}
+  .top-logo,.top-actions{height:42px; border-radius:12px; padding:0 8px}
+  .layout{padding-inline-start:0 !important}
+  .main{padding-top:62px; padding-bottom:96px}
+  .pg{padding:14px 12px 40px}
+  .sb{top:10px; bottom:10px; inset-inline-start:10px; border-radius:18px; transform:translateX(calc(100% + 14px))}
+  body.sb-overlay-open .sb{transform:translateX(0)}
+  #mobile-nav{left:10px; right:10px; bottom:10px; width:auto; border-radius:16px; height:58px; border:1px solid rgba(255,255,255,.10); box-shadow:0 20px 44px -16px rgba(8,14,24,.65)}
+  .modal.editor{inset:auto 0 0 0; width:100%; height:auto; max-height:94dvh; border-radius:20px 20px 0 0; border:0}
+  .ph-t{font-size:19px}
+  #pg-dash .kribbon{grid-template-columns:1fr 1fr}
+  #pg-dash .kribbon .k{padding:14px 16px}
+  #pg-dash .kribbon .k + .k{border-inline-start:0}
+  #pg-dash .kribbon .v{font-size:22px}
+  .tc{width:calc(100% - 24px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .modal.editor,.toast{animation:none !important}
+}
+
+/* dark theme: primary actions flip to ivory-on-ink so they carry on the ink canvas */
+body:not(.light) .btn.primary,
+body:not(.light) #pg-dash .dhero .pri,
+body:not(.light) #pg-dash .dhero .hbtn{background:#E9E4D6;color:#141E2E;border-color:#E9E4D6;box-shadow:0 10px 24px -12px rgba(0,0,0,.5)}
+body:not(.light) .btn.primary:hover,
+body:not(.light) #pg-dash .dhero .pri:hover{background:#F3EFE4;border-color:#F3EFE4;filter:none}
+body:not(.light) .pill.on,body:not(.light) .pb.on{background:#E9E4D6;color:#141E2E;border-color:#E9E4D6}
