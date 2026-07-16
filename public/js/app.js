@@ -486,8 +486,33 @@ function renderTreasuryTabs(){
   /* P2-D — the new model: three CASH treasuries + the donation REGISTERS view.
      The old "donation treasury" tab no longer exists (it was never cash). */
   const tabs=[['diwan','خزينة الديوان'],['food','خزينة الغداء'],['deficit','حساب تسوية العجز التاريخي'],['registers','سجلّ التبرعات']];
-  el.innerHTML=tabs.map(([k,l])=>`<div class="tp-tab ${TP_FUND===k?'on':''}" onclick="window.selectTreasuryFund('${k}')">${l}</div>`).join('');
+  /* DX-14: build once per language; on switches only toggle classes so the ink pill
+     can travel between tabs (same approved language as the sidebar ink). */
+  if(!el.querySelector('.tp-tab')||el.dataset.lang!==String(window.LANG||'ar')){
+    el.dataset.lang=String(window.LANG||'ar');
+    el.innerHTML=tabs.map(([k,l])=>`<div class="tp-tab ${TP_FUND===k?'on':''}" data-k="${k}" onclick="window.selectTreasuryFund('${k}')">${l}</div>`).join('')
+      +'<div class="tp-ink" aria-hidden="true"></div>';
+    el.classList.add('has-ink');
+  } else {
+    el.querySelectorAll('.tp-tab').forEach(t=>t.classList.toggle('on',t.getAttribute('data-k')===TP_FUND));
+  }
+  placeTpInk();
 }
+function placeTpInk(){
+  const el=document.getElementById('treasury-tabs');if(!el)return;
+  const ink=el.querySelector('.tp-ink'), on=el.querySelector('.tp-tab.on');
+  /* if the dashboard is hidden the tab can't be measured — fall back to the
+     solid active style until the page is shown again (nav re-places the ink). */
+  if(!ink||!on||!on.offsetWidth){ if(ink)ink.style.opacity='0'; el.classList.remove('has-ink'); return; }
+  el.classList.add('has-ink');
+  ink.style.opacity='1';
+  ink.style.width=on.offsetWidth+'px';
+  ink.style.height=on.offsetHeight+'px';
+  ink.style.transform='translate('+on.offsetLeft+'px,'+on.offsetTop+'px)';
+}
+window.placeTpInk=placeTpInk;
+window.addEventListener('resize',()=>{ if(window.__tpInkT)clearTimeout(window.__tpInkT);
+  window.__tpInkT=setTimeout(placeTpInk,80); });
 window.toggleTreasuryCurrency=function(){
   TP_CUR_OPEN=!TP_CUR_OPEN;
   const cs=document.querySelector('#treasury-panel .tp-cs');
@@ -590,6 +615,22 @@ function renderTreasuryPanel(){
     </div>`}
     <div class="tp-ft"><span>ديوان آل طه — diwan-finance.com</span><span>الأسعار من إعدادات النظام (يدوية)</span></div>
   </div>`;
+  animateTpTotal(total);
+}
+/* DX-14: إجمالي الخزينة يعدّ من قيمته المعروضة السابقة عند التنقّل بين
+   التبويبات أو تحديث البيانات — أول ظهورٍ يستقرّ فورًا بلا عدّ. */
+function animateTpTotal(target){
+  const el=document.querySelector('#treasury-panel .tp-total'); if(!el) return;
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const had=Object.prototype.hasOwnProperty.call(window,'__tpPrevTotal');
+  const from=had?window.__tpPrevTotal:target;
+  window.__tpPrevTotal=target;
+  if(reduce||!window.requestAnimationFrame||Math.abs(from-target)<0.005) return; /* النص النهائي مرسوم أصلًا */
+  const dur=420, t0=performance.now(), delta=target-from;
+  const step=t=>{ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+    el.textContent='₪ '+fmt(Math.round((from+delta*e)*100)/100);
+    if(p<1) requestAnimationFrame(step); else el.textContent='₪ '+fmt(target); };
+  requestAnimationFrame(step);
 }
 /* Count-up for the fund cards — animates each value from 0 to target so the
    figures feel alive on render. Honours reduced-motion (settles immediately). */
@@ -647,15 +688,30 @@ window.dashDebtCollect=function(id){
     if(s){ s.value=id; s.dispatchEvent(new Event('change')); } },150);
 };
 function countUpKpis(){
+  /* DX-14 «نبضة التحديث الحيّ»: أول ظهورٍ يعدّ من الصفر؛ وبعدها يعدّ كل مربّعٍ
+     من قيمته السابقة إلى الجديدة مع غسلة ليمونية — ولا حركة إن لم تتغيّر القيمة. */
   const els=document.querySelectorAll('#dash-kpis .v[data-val]');
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const prevMap=window.__kpiPrev=window.__kpiPrev||{};
   els.forEach(el=>{
-    const target=Number(el.getAttribute('data-val'))||0, neg=target<0, abs=Math.abs(target);
-    const settle=()=>{el.textContent='₪ '+(neg?'−':'')+fmt(abs);};
+    const target=Number(el.getAttribute('data-val'))||0;
+    const key=el.getAttribute('data-k')||'';
+    const known=key&&Object.prototype.hasOwnProperty.call(prevMap,key);
+    const from=known?prevMap[key]:0;
+    const changed=known&&Math.abs(from-target)>0.005;
+    if(key) prevMap[key]=target;
+    const show=v=>{el.textContent='₪ '+(v<0?'−':'')+fmt(Math.abs(Math.round(v*100)/100));};
+    const settle=()=>show(target);
+    if(known&&!changed){ settle(); return; }          /* لا تغيير → سكون */
+    if(changed){
+      const card=el.closest('.kp');
+      if(card&&!reduce){ card.classList.remove('live'); void card.offsetWidth;
+        card.classList.add('live'); setTimeout(()=>card.classList.remove('live'),950); }
+    }
     if(reduce||!window.requestAnimationFrame){ settle(); return; }
-    const dur=650, t0=performance.now();
+    const dur=650, t0=performance.now(), delta=target-from;
     const step=t=>{ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
-      el.textContent='₪ '+(neg?'−':'')+fmt(abs*e);
+      show(from+delta*e);
       if(p<1) requestAnimationFrame(step); else settle(); };
     requestAnimationFrame(step);
   });
@@ -712,15 +768,15 @@ function renderDash(){
      (fb/rd/np/db) — presentation only, engines untouched. */
   const _kpis=document.getElementById('dash-kpis');
   if(_kpis){
-    const lightKp=(t,v,i)=>`<div class="kp" style="animation-delay:${i*70}ms"><div class="l">${t}</div>
-      <div class="v mono ${v<0?'neg-t':''}" data-val="${v}">₪ ${v<0?'−':''}${fmt(Math.abs(v))}</div></div>`;
+    const lightKp=(t,v,i,k)=>`<div class="kp" style="animation-delay:${i*70}ms"><div class="l">${t}</div>
+      <div class="v mono ${v<0?'neg-t':''}" data-val="${v}" data-k="${k}">₪ ${v<0?'−':''}${fmt(Math.abs(v))}</div></div>`;
     const avail=Math.round((db+fb)*100)/100;
     _kpis.innerHTML=
-      lightKp(_isEn?'Food Treasury':'خزينة الغداء',fb,0)
-      +lightKp(_isEn?'Historical Deficit Settlement':'حساب تسوية العجز التاريخي',rd,1)
-      +lightKp(_isEn?'Net Food Position':'صافي مركز الغداء',np,2)
+      lightKp(_isEn?'Food Treasury':'خزينة الغداء',fb,0,'fb')
+      +lightKp(_isEn?'Historical Deficit Settlement':'حساب تسوية العجز التاريخي',rd,1,'rd')
+      +lightKp(_isEn?'Net Food Position':'صافي مركز الغداء',np,2,'np')
       +`<div class="kp kpd" style="animation-delay:210ms"><div><div class="l">${_isEn?'Diwan Treasury':'خزينة الديوان'}</div>
-        <div class="v mono ${db<0?'neg-t':''}" data-val="${db}">₪ ${db<0?'−':''}${fmt(Math.abs(db))}</div></div>
+        <div class="v mono ${db<0?'neg-t':''}" data-val="${db}" data-k="db">₪ ${db<0?'−':''}${fmt(Math.abs(db))}</div></div>
         <div class="mini">
           <div class="mc">${_isEn?'Available':'المتاح · الخزينتان'}<b class="mono">₪ ${fmt(Math.abs(avail))}</b></div>
           <div class="mc hot">${_isEn?'Net today':'صافي اليوم'}<b class="mono">${_netToday>=0?'+':'−'}₪ ${fmt(Math.abs(_netToday))}</b></div>
