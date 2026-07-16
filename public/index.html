@@ -628,7 +628,7 @@
 <!-- MODALS -->
 <div class="ov" id="ov">
   <!-- Module R: reservation form (add + edit share one form) -->
-  <div class="modal" id="m-res-form" style="display:none;max-width:460px">
+  <div class="modal editor" id="m-res-form" style="display:none;max-width:460px">
     <div class="mhd"><span class="mtt" id="m-res-form-title"><i class="ti ti-calendar-plus"></i>حجز جديد</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd">
       <input type="hidden" id="res-f-id">
@@ -675,7 +675,7 @@
     <div class="mft"><button class="btn" onclick="window.closeM()" data-i18n="reservations.keep">تراجع</button><button class="btn danger" id="res-d-confirm"><i class="ti ti-trash"></i><span data-i18n="reservations.confirm_cancel">تأكيد الإلغاء</span></button></div>
   </div>
   <!-- Receipt Modal -->
-  <div class="modal" id="m-rec" style="display:none;max-width:580px">
+  <div class="modal editor" id="m-rec" style="display:none;max-width:580px">
     <div class="mhd"><span class="mtt"><span class="mico green" id="rec-mico"><i class="ti ti-receipt"></i></span><span id="rec-mtitle">سند قبض جديد</span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd">
       <div class="fi full" style="margin-bottom:14px"><label><span data-i18n="receipts.type">نوع الإيصال</span> <span class="req">*</span></label><select id="rec-fund" onchange="window.onRecFundChange()"><option value="food" data-i18n="receipts.opt_food_long">صندوق الغداء — مساهمة عضو</option><option value="diwan" data-i18n="receipts.opt_diwan_long">صندوق الديوان — دفعة للديوان</option><option value="donation" data-i18n="receipts.opt_don_long">تبرع — يُسجَّل في صندوق التبرعات</option></select></div>
@@ -706,7 +706,7 @@
   </div>
 
   <!-- Payment Modal -->
-  <div class="modal" id="m-pay" style="display:none;max-width:580px">
+  <div class="modal editor" id="m-pay" style="display:none;max-width:580px">
     <div class="mhd"><span class="mtt"><span class="mico red"><i class="ti ti-cash"></i></span><span id="pay-mtitle">سند صرف جديد</span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd">
       <div class="fi full" style="margin-bottom:14px"><label><span data-i18n="payments.fund">الصندوق</span> <span class="req">*</span></label><select id="pay-fund" onchange="window.onPayFundChange()"><option value="food" data-i18n="payments.opt_food_long">صندوق الغداء — مصاريف الإطعام</option><option value="diwan" data-i18n="payments.opt_diwan_long">صندوق الديوان — مصاريف الديوان</option></select></div>
@@ -728,14 +728,14 @@
   </div>
 
   <!-- Member Modal -->
-  <div class="modal" id="m-member" style="display:none;max-width:480px">
+  <div class="modal editor" id="m-member" style="display:none;max-width:480px">
     <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-user-plus"></i></span>إضافة عضو جديد</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="mem-name" placeholder="الاسم الرباعي"><span class="ferr" id="e-mem-name"><i class="ti ti-alert-circle"></i>مطلوب</span></div><div class="fi"><label>الهاتف</label><input type="tel" id="mem-phone" placeholder="05x-xxx-xxxx"></div><div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="mem-from-year" min="2000" max="2100" step="1" oninput="window.onMemberFromYearChange('new')"></div><div class="fi"><label>الرصيد التاريخي ₪ <span style="font-size:10px;color:var(--tx3)">(محسوب تلقائياً)</span></label><input type="number" id="mem-balance" value="0" step="0.01"><span id="mem-hist-hint" style="font-size:10px;color:var(--tx3);display:block;margin-top:2px"></span></div><div class="fi full"><label>ملاحظات</label><textarea id="mem-notes" placeholder="ملاحظات..."></textarea></div></div></div>
     <div class="mft"><button class="btn primary" onclick="window.saveMember()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
   </div>
 
   <!-- Edit Member -->
-  <div class="modal" id="m-edit-member" style="display:none;max-width:480px">
+  <div class="modal editor" id="m-edit-member" style="display:none;max-width:480px">
     <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-edit"></i></span>تعديل بيانات العضو</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd"><input type="hidden" id="edit-mem-id"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="edit-mem-name"></div><div class="fi"><label>الهاتف</label><input type="tel" id="edit-mem-phone"></div><div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="edit-mem-from-year" min="2000" max="2100" step="1" oninput="window.onMemberFromYearChange('edit')"></div><div class="fi"><label>الرصيد التاريخي ₪ <span style="font-size:10px;color:var(--tx3)">(محسوب تلقائياً)</span></label><input type="number" id="edit-mem-balance" step="0.01"><span id="edit-mem-hist-hint" style="font-size:10px;color:var(--tx3);display:block;margin-top:2px"></span></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-mem-notes"></textarea></div></div></div>
     <div class="mft"><button class="btn primary" onclick="window.updateMember()"><i class="ti ti-device-floppy"></i>حفظ التعديل</button><button class="btn danger" onclick="window.deleteMember()"><i class="ti ti-trash"></i>حذف العضو</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
