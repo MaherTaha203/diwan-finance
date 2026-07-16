@@ -1779,3 +1779,32 @@ body.sb-mini .sb:hover .nb:hover .nb-star,body.sb-mini .sb:hover .nb.is-fav .nb-
 .ibox{color:var(--tx2)}
 #copyright-bar{color:var(--tx2)}
 body:not(.light) .main,body:not(.light) .sb-scrollarea,body:not(.light) .modal,body:not(.light) .scroll{scrollbar-color:var(--bd2) transparent}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DX-5b · عنصر التنقّل V4 النهائيّ فقط (قرار المالك: بلا تغييرٍ في بنية الشريط)
+   The sidebar, islands, canvas and layout stay EXACTLY as before (DX-1/2/3).
+   Only the nav-item language changes: soft stacked ink (8.5%→4% + inner top
+   light), calm 140ms hover, lime confined to the active icon, identical
+   language in the mini rail, and ONE traveling ink layer (.sb-ink, sidebar.js)
+   that moves with the user between pages instead of a new rectangle appearing.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nb{color:rgba(255,255,255,.62);border:0;position:relative;z-index:1;
+  transition:color .14s ease,background-color .14s ease}
+.nb i{transition:color .14s ease}
+.nb:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.93)}
+.nb.on{color:#fff;font-weight:600}
+.nb.on::before{display:none}
+.nb.on i{color:var(--dx-lime)}
+/* fallback layered fill (only if the traveling ink layer is unavailable) */
+.sb:not(.sb-has-ink) .nb.on{background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.sb.sb-has-ink .nb.on{background:transparent;box-shadow:none}
+.nb:focus-visible{outline:none;box-shadow:inset 0 0 0 2px rgba(203,240,0,.55)}
+/* the ONE traveling ink layer */
+.sb-scrollarea{position:relative}
+.sb-ink{position:absolute;inset-inline:8px;top:0;height:32px;border-radius:10px;pointer-events:none;opacity:0;z-index:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+  transition:transform .19s cubic-bezier(.3,.85,.3,1),height .19s ease,opacity .14s ease}
+.sb-ink.show{opacity:1}
+@media(prefers-reduced-motion:reduce){.sb-ink{transition:opacity .14s ease}}
