@@ -439,7 +439,7 @@ else if(st==='due')
 else if(st==='credit')
   d=d.filter(m=>m.bal<0);
     const sub=document.getElementById('members-sub');
-    if(sub)sub.textContent=`${d.length} ${window.t('members.count')}`;
+    if(sub)sub.innerHTML=`<span class="stc navy">${d.length} ${window.t('members.count')}</span>`;
     if(!PS['members'])PS['members']=1;
     mkPag('members',d.length);
     const page=d.slice((PS['members']-1)*PSZ,PS['members']*PSZ);
@@ -450,18 +450,10 @@ else if(st==='credit')
       let cls = m.bal > 0 ? 'red' : m.bal < 0 ? 'blue' : 'green';
       const lbl = FIN.balanceLabel(m.bal, false);
       return`<tr>
-        <td style="color:var(--tx3)">${(PS['members']-1)*PSZ+i+1}</td>
-        <td><b>${esc(m.name)}</b></td>
-        <td style="color:var(--tx2)">${esc(m.phone||'—')}</td>
-       <td class="num" style="color:${
-  m.bal > 0 ? 'var(--danger)' :
-  m.bal < 0 ? 'var(--diwan)' :
-  'var(--pos)'
-}">
-${
-  `₪ ${fmt(Math.abs(m.bal))}`
-}
-</td>
+        <td class="c-idx">${(PS['members']-1)*PSZ+i+1}</td>
+        <td class="c-name">${esc(m.name)}</td>
+        <td class="c-date">${esc(m.phone||'—')}</td>
+        <td class="num c-amt ${m.bal>0?'neg-amt':m.bal<0?'crd-amt':'pos-amt'}">₪ ${fmt(Math.abs(m.bal))}</td>
         <td><span class="badge ${cls}">${lbl}</span></td>
         <td class="tda">
           <button class="btn ghost sm ic-print" onclick="window.nav('member-stmt');setTimeout(()=>{document.getElementById('ms-member').value='${m.id}';window.renderMemberStmt();},80)" title="${window.t('members.member_stmt')}"><i class="ti ti-file-description"></i></button>
