@@ -1684,3 +1684,50 @@ body:not(.light) .pill.on,body:not(.light) .pb.on{background:var(--dx-lime);bord
 .fi input:focus,.fi select:focus,.fi textarea:focus,.si:focus{border-color:#9EBB13;box-shadow:0 0 0 3px var(--gold-l)}
 
 /* mobile dock follows the navy chrome (var already) */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DX-3 · Theme-01 color audit + flat sidebar (owner revision)
+   1) Sidebar: NO accordions — all groups permanently open, every page name
+      visible; headers become quiet section labels (sidebar.js neutralizes
+      toggling; these rules make the state unconditional).
+   2) Mobile: «المزيد» sheet + dock aligned to the deep-navy chrome.
+   3) Dark mode: semantic + treasury hues re-tuned to the graphite family
+      (the previous warm-charcoal palette clashed with Theme-01).
+   4) On-screen statement + legacy chips aligned to #0F1B33.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* 1 — flat sidebar */
+.nbg-body{max-height:none !important;overflow:visible}
+.nbg-caret{display:none !important}
+.nbg-h{pointer-events:none;cursor:default;padding:13px 14px 3px}
+.nbg-t{color:rgba(255,255,255,.44);font-size:9px;letter-spacing:.14em}
+.nbg + .nbg{margin-top:2px}
+body.sb-mini .sb:hover .nbg-h{display:flex}
+/* 2 — mobile chrome */
+:root{--navy2:#16273D}
+@media(max-width:768px){
+  #mobile-menu{background:#0F1B33 !important;bottom:74px !important;left:10px;right:10px;
+    border:1px solid rgba(255,255,255,.10);border-radius:16px;box-shadow:0 20px 44px -16px rgba(8,14,24,.65)}
+  #mobile-menu .mnb{color:rgba(255,255,255,.72)}
+  #mobile-menu .mnb:active{background:rgba(255,255,255,.12)}
+}
+/* 3 — dark (graphite) semantic + identity palette */
+body{
+  --pos:#7CC79A; --pos-bg:rgba(124,199,154,.13);
+  --neg:#E08B74; --neg-bg:rgba(224,139,116,.12); --danger:#E8756A;
+  --warn:#D9B44A; --warn-bg:rgba(217,180,74,.13);
+  --food:#D4BC6A; --food-bg:rgba(212,188,106,.13);
+  --diwan:#93B0DC; --diwan-bg:rgba(147,176,220,.13);
+  --don:#A9A3D9; --don-bg:rgba(169,163,217,.13);
+}
+body.light{
+  --food:#7A681C; --food-bg:rgba(122,104,28,.10);
+  --diwan:#24437A; --diwan-bg:rgba(36,67,122,.08);
+  --don:#5C5A94; --don-bg:rgba(92,90,148,.10);
+}
+/* role identity chips/avatars — cool family */
+.uav.admin,.role-tag.admin{background:#4E5DA8;border-color:#4E5DA8}
+.uav.accountant,.role-tag.accountant{background:#2F7A5F;border-color:#2F7A5F}
+.uav.viewer,.role-tag.viewer{background:#24437A;border-color:#24437A}
+/* 4 — on-screen member statement follows the identity navy */
+.acct-stmt{--as-acc:#0F1B33;--as-bal-bg:rgba(15,27,51,.06);--as-line:#1C2A45}
+body:not(.light) .acct-stmt .as-btn-pri,body:not(.light) .acct-stmt .as-brand{background:#0F1B33;border-color:#0F1B33}

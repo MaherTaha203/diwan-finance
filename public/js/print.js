@@ -38,7 +38,8 @@ function amountToWords(n){
    structurally (never decorative), semantic Credit/Debit (green/rust) reserved
    for balances, hairline rules, tabular numerals, RTL. Layout/structure unchanged.
    ════════════════════════════════════════════════════════════════════════ */
-const PRINT_TOKENS=':root{--ink:#2C2E33;--ink2:#5C5F65;--muted:#8F9299;--faint:#B6B8BC;--line:#F0EFE9;--line2:#DCD9D0;--hd:#F7F6F2;--zebra:transparent;--teal:#2B3A5C;--teal-ink:#2C2E33;--teal-soft:transparent;--teal-line:#2C2E34;--pos:#46604E;--neg:#8A5236;--gray:#5C5F65;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
+/* Theme-01 «السحاب النيليّ»: deep-navy accent + cool ice greys on paper (identity-only change) */
+const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#AEB6C4;--line:#E5EAF2;--line2:#C9D2E0;--hd:#F2F5FA;--zebra:transparent;--teal:#0F1B33;--teal-ink:#17202E;--teal-soft:transparent;--teal-line:#1C2A45;--pos:#2F6B47;--neg:#A84A32;--gray:#57606E;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
 +'*{box-sizing:border-box;margin:0;padding:0}'
 +'body{font-family:var(--fa);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}'
 +'.mono,.num{font-family:var(--fe);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}'

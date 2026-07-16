@@ -1473,7 +1473,7 @@ function loadStyledXLSX(cb){
 function styleDiwanSheet(XLSX, ws, opts){
   opts=opts||{};
   const range=XLSX.utils.decode_range(ws['!ref']);
-  const NAVY='2B3A5C', WHITE='FFFFFF', BG='F7F6F2';  /* DDL: Ink Navy header/total fill · paper tint */
+  const NAVY='0F1B33', WHITE='FFFFFF', BG='F2F5FA';  /* Theme-01: deep-navy header/total fill · ice paper tint */
   const thin={style:'thin',color:{rgb:'E2E8F0'}};
   const border={top:thin,bottom:thin,left:thin,right:thin};
   const hr=(opts.headerRow!=null)?opts.headerRow:0;
