@@ -1870,3 +1870,57 @@ body:not(.light) .dmd-list{background:#1A1E27}
   .dmd{grid-template-columns:1fr}
 }
 @media(max-width:480px){.kband{grid-template-columns:1fr}}
+
+/* ═══════════════ DX-7 — «السجلّ» · قوائم إيصالات ومصاريف الصندوقين (Theme-01) ═══════════════
+   scope: .pg.lx = pg-food-rec / pg-food-pay / pg-diwan-rec / pg-diwan-pay */
+.pg.lx .ph{align-items:flex-end;margin-bottom:16px}
+.pg.lx .ph-t{font-size:24px}
+.pg.lx .ph-s{display:flex;align-items:center;gap:8px;margin-top:10px}
+.stc{display:inline-flex;align-items:center;padding:5px 13px;border-radius:999px;background:var(--card);
+  border:1px solid var(--line);font-size:11.5px;font-weight:600;color:var(--tx2);
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;white-space:nowrap}
+.stc.navy{background:var(--dx-navy);border-color:var(--dx-navy);color:#EDF1F7}
+body:not(.light) .stc.navy{background:#1A1E27;border-color:rgba(255,255,255,.10);color:#E8ECF3}
+.pg.lx .ibox{padding-block:4px;margin-bottom:16px}
+/* toolbar: pill search + pill filter */
+.pg.lx .tb{gap:10px;margin-bottom:14px}
+.pg.lx .sw{max-width:360px}
+.pg.lx .si{height:40px;border-radius:999px;padding:0 40px 0 18px;
+  box-shadow:0 10px 26px -22px rgba(15,27,51,.55)}
+.pg.lx .sw i{right:16px}
+.pg.lx select.fs{height:40px;border-radius:999px;padding:0 16px;border:1px solid var(--line);
+  background:var(--card);box-shadow:0 10px 26px -22px rgba(15,27,51,.55)}
+/* register panel */
+.pg.lx .tw{border:0;border-radius:18px;box-shadow:0 18px 44px -28px rgba(15,27,51,.45)}
+body:not(.light) .pg.lx .tw{border:1px solid rgba(255,255,255,.05);box-shadow:0 18px 44px -24px rgba(0,0,0,.65)}
+.pg.lx thead th{height:46px;font-size:10px;letter-spacing:.14em;padding:0 16px}
+.pg.lx tbody td{padding:13px 16px;font-size:12.8px}
+.pg.lx tbody tr:hover td{background:rgba(15,27,51,.035)}
+body:not(.light) .pg.lx tbody tr:hover td{background:rgba(255,255,255,.045)}
+.pg.lx .doc{display:inline-block;font-family:var(--fmono);font-size:10.5px;font-weight:700;
+  padding:3px 9px;border-radius:8px;background:var(--soft);color:var(--tx2);
+  direction:ltr;unicode-bidi:isolate;letter-spacing:.02em}
+.pg.lx td.c-date{color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pg.lx td.c-name{font-weight:600;color:var(--ink)}
+.pg.lx td.c-amt{font-size:13.5px;font-weight:700}
+td.neg-amt{color:var(--neg)}
+.pg.lx td.c-notes{color:var(--tx3);font-size:11.5px;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pg.lx .badge{border-radius:999px;padding:3px 10px;font-weight:600}
+/* row actions: quiet round ghosts */
+.pg.lx .tda{gap:4px}
+.pg.lx .tda .btn.ghost.sm{width:30px;height:30px;padding:0;border-radius:999px;justify-content:center}
+.pg.lx .tda .btn.ghost.sm:hover{background:var(--soft)}
+/* capsule pager */
+.pg.lx .pag{gap:6px;margin-top:14px}
+.pg.lx .pb{min-width:32px;height:32px;border-radius:999px;border-color:transparent;background:var(--card);
+  box-shadow:0 6px 18px -14px rgba(15,27,51,.5)}
+.pg.lx .pb:hover{background:var(--soft)}
+@media (max-width:640px){
+  .pg.lx .ph-t{font-size:20px}
+  .pg.lx .ph-s{flex-wrap:wrap}
+  .pg.lx .sw{max-width:none}
+  .pg.lx .tw{border-radius:14px}
+  .pg.lx tbody td{padding:11px 12px}
+}
+.pg.lx .pb.on{background:var(--dx-navy);border-color:var(--dx-navy);color:#fff}
+body:not(.light) .pg.lx .pb.on{background:var(--dx-lime);border-color:var(--dx-lime);color:var(--dx-limeink)}
