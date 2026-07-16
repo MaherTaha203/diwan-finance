@@ -15,7 +15,7 @@
 <link rel="icon" type="image/svg+xml" href="/brand/light/Favicon/favicon.svg" id="brand-svg">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" id="brand-apple">
 <link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#24425C">
+<meta name="theme-color" content="#0F1B33">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +29,7 @@
 <style>
 /* == CONCEPT B — PREMIUM FINANCIAL INSTITUTION — REVISION 3 == */
 :root {
-  --b-navy:#0F1B2D; --b-navy2:#16273D; --b-gold:#C6A46A;
+  --b-navy:#0F1B33; --b-navy2:#16273D; --b-gold:#C6A46A;
   --b-cream:#F2EEE7; --b-white:#fff; --b-border:#EDE9E0;
   --b-input-border:#DDD9D0; --b-input-bg:#FAFAF8;
   --b-text:#0F1B2D; --b-text2:#555; --b-text3:#888; --b-placeholder:#B8B4AC;
@@ -398,13 +398,13 @@
     <div class="nbg-body" id="sb-favs-body" role="group"></div>
   </div>
   <div class="nbg" data-g="home">
-    <button class="nbg-h" data-g="home" aria-expanded="true" aria-controls="nbgb-home"><span class="nbg-t" data-i18n="nav.home">الرئيسية</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.home">الرئيسية</span></div>
     <div class="nbg-body" id="nbgb-home" role="group">
       <div class="nb on" role="button" tabindex="0" data-p="dash"><i class="ti ti-layout-dashboard"></i><span class="nb-t">لوحة التحكم</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
     </div>
   </div>
   <div class="nbg" data-g="food">
-    <button class="nbg-h" data-g="food" aria-expanded="false" aria-controls="nbgb-food"><span class="nbg-t" data-i18n="nav.food_fund">صندوق الغداء</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.food_fund">صندوق الغداء</span></div>
     <div class="nbg-body" id="nbgb-food" role="group">
       <div class="nb" role="button" tabindex="0" data-p="food-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الغداء</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="food-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الغداء</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
@@ -412,7 +412,7 @@
     </div>
   </div>
   <div class="nbg" data-g="diwan">
-    <button class="nbg-h" data-g="diwan" aria-expanded="false" aria-controls="nbgb-diwan"><span class="nbg-t" data-i18n="nav.diwan_fund">صندوق الديوان</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.diwan_fund">صندوق الديوان</span></div>
     <div class="nbg-body" id="nbgb-diwan" role="group">
       <div class="nb" role="button" tabindex="0" data-p="diwan-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الديوان</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="diwan-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الديوان</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
@@ -420,19 +420,19 @@
     </div>
   </div>
   <div class="nbg" id="sbsec-reservations" data-g="res">
-    <button class="nbg-h" data-g="res" aria-expanded="false" aria-controls="nbgb-res"><span class="nbg-t" data-i18n="nav.reservations_sec">الديوان — الحجوزات</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.reservations_sec">الديوان — الحجوزات</span></div>
     <div class="nbg-body" id="nbgb-res" role="group">
       <div class="nb" role="button" tabindex="0" data-p="reservations" id="nb-reservations"><i class="ti ti-calendar-event"></i><span class="nb-t">تقويم الحجوزات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
     </div>
   </div>
   <div class="nbg" data-g="don">
-    <button class="nbg-h" data-g="don" aria-expanded="false" aria-controls="nbgb-don"><span class="nbg-t" data-i18n="nav.donations_sec">التبرعات</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.donations_sec">التبرعات</span></div>
     <div class="nbg-body" id="nbgb-don" role="group">
       <div class="nb" role="button" tabindex="0" data-p="don"><i class="ti ti-heart"></i><span class="nb-t">سجل التبرعات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
     </div>
   </div>
   <div class="nbg" data-g="members">
-    <button class="nbg-h" data-g="members" aria-expanded="false" aria-controls="nbgb-members"><span class="nbg-t" data-i18n="nav.members_sec">الأعضاء</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.members_sec">الأعضاء</span></div>
     <div class="nbg-body" id="nbgb-members" role="group">
       <div class="nb" role="button" tabindex="0" data-p="members"><i class="ti ti-users"></i><span class="nb-t">أعضاء العائلة</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="member-stmt"><i class="ti ti-user"></i><span class="nb-t">كشف حساب عضو</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
@@ -442,7 +442,7 @@
     </div>
   </div>
   <div class="nbg" data-g="system">
-    <button class="nbg-h" data-g="system" aria-expanded="false" aria-controls="nbgb-system"><span class="nbg-t" data-i18n="nav.system_sec">النظام</span><i class="ti ti-chevron-down nbg-caret"></i></button>
+    <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.system_sec">النظام</span></div>
     <div class="nbg-body" id="nbgb-system" role="group">
       <div class="nb" role="button" tabindex="0" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i><span class="nb-t">المستخدمون</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="audit"><i class="ti ti-list-check"></i><span class="nb-t">سجل العمليات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
@@ -698,7 +698,7 @@
         <div class="fi full" id="rec-ils-row" style="display:none"><div class="ils-row show"><i class="ti ti-calculator"></i><span data-i18n="receipts.ils_amount">المبلغ بالشيكل: </span><span class="ils-val" id="rec-ils-val">—</span><span style="color:var(--tx3);font-size:11px;margin-right:auto" id="rec-rate-label"></span></div></div>
         <div class="fi"><label><span data-i18n="common.date">التاريخ</span> <span class="req">*</span></label><input type="date" id="rec-date"><span class="ferr" id="e-rec-date"><i class="ti ti-alert-circle"></i><span data-i18n="common.required">مطلوب</span></span></div>
         <div class="fi"><label data-i18n="common.method">طريقة الدفع</label><div class="pills" id="rec-pills"><span class="pill on" data-val="cash" onclick="window.setPill('rec',this)"><i class="ti ti-cash"></i><span data-i18n="payments.cash">نقد</span></span><span class="pill" data-val="check" onclick="window.setPill('rec',this)"><i class="ti ti-file-dollar"></i><span data-i18n="payments.check">شيك</span></span><span class="pill" data-val="transfer" onclick="window.setPill('rec',this)"><i class="ti ti-building-bank"></i><span data-i18n="payments.transfer">تحويل</span></span><span class="pill" data-val="online" onclick="window.setPill('rec',this)"><i class="ti ti-device-mobile"></i><span data-i18n="payments.online">أونلاين</span></span></div><input type="hidden" id="rec-method" value="cash"></div>
-        <div class="fi full" id="rec-cheque-wrap" style="display:none"><div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> <span data-i18n="receipts.cheque_info">معلومات الشيك</span></div><div class="fg"><div class="fi"><label data-i18n="receipts.cheque_no">رقم الشيك</label><input type="text" id="rec-cheque-no" placeholder="مثال: 123456" data-i18n-placeholder="receipts.cheque_no_ph"></div><div class="fi"><label data-i18n="receipts.cheque_date">تاريخ الشيك</label><input type="date" id="rec-cheque-date"></div><div class="fi full"><label data-i18n="receipts.cheque_bank">البنك المسحوب عليه</label><input type="text" id="rec-cheque-bank" placeholder="اسم البنك" data-i18n-placeholder="receipts.bank_ph"></div></div></div></div>
+        <div class="fi full" id="rec-cheque-wrap" style="display:none"><div style="background:var(--diwan-bg);border:1px solid var(--diwan);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> <span data-i18n="receipts.cheque_info">معلومات الشيك</span></div><div class="fg"><div class="fi"><label data-i18n="receipts.cheque_no">رقم الشيك</label><input type="text" id="rec-cheque-no" placeholder="مثال: 123456" data-i18n-placeholder="receipts.cheque_no_ph"></div><div class="fi"><label data-i18n="receipts.cheque_date">تاريخ الشيك</label><input type="date" id="rec-cheque-date"></div><div class="fi full"><label data-i18n="receipts.cheque_bank">البنك المسحوب عليه</label><input type="text" id="rec-cheque-bank" placeholder="اسم البنك" data-i18n-placeholder="receipts.bank_ph"></div></div></div></div>
         <div class="fi full"><label data-i18n="common.notes">ملاحظات</label><textarea id="rec-notes" placeholder="ملاحظات اختيارية..." data-i18n-placeholder="receipts.notes_opt_ph"></textarea></div>
       </div>
     </div>
@@ -719,7 +719,7 @@
         <div class="fi full" id="pay-ils-row" style="display:none"><div class="ils-row show"><i class="ti ti-calculator"></i><span data-i18n="receipts.ils_amount">المبلغ بالشيكل: </span><span class="ils-val" id="pay-ils-val">—</span><span style="color:var(--tx3);font-size:11px;margin-right:auto" id="pay-rate-label"></span></div></div>
         <div class="fi"><label><span data-i18n="common.date">التاريخ</span> <span class="req">*</span></label><input type="date" id="pay-date"><span class="ferr" id="e-pay-date"><i class="ti ti-alert-circle"></i><span data-i18n="common.required">مطلوب</span></span></div>
         <div class="fi"><label data-i18n="payments.method_pay">طريقة الصرف</label><div class="pills" id="pay-pills"><span class="pill on" data-val="cash" onclick="window.setPill('pay',this)"><i class="ti ti-cash"></i><span data-i18n="payments.cash">نقد</span></span><span class="pill" data-val="check" onclick="window.setPill('pay',this)"><i class="ti ti-file-dollar"></i><span data-i18n="payments.check">شيك</span></span><span class="pill" data-val="transfer" onclick="window.setPill('pay',this)"><i class="ti ti-building-bank"></i><span data-i18n="payments.transfer">تحويل</span></span></div><input type="hidden" id="pay-method" value="cash"></div>
-        <div class="fi full" id="pay-cheque-wrap" style="display:none"><div style="background:rgba(27,108,168,.06);border:1px solid rgba(27,108,168,.15);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> <span data-i18n="receipts.cheque_info">معلومات الشيك</span></div><div class="fg"><div class="fi"><label data-i18n="receipts.cheque_no">رقم الشيك</label><input type="text" id="pay-cheque-no"></div><div class="fi"><label data-i18n="receipts.cheque_date">تاريخ الشيك</label><input type="date" id="pay-cheque-date"></div><div class="fi full"><label data-i18n="receipts.cheque_bank">البنك المسحوب عليه</label><input type="text" id="pay-cheque-bank"></div></div></div></div>
+        <div class="fi full" id="pay-cheque-wrap" style="display:none"><div style="background:var(--diwan-bg);border:1px solid var(--diwan);border-radius:var(--r);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--diwan);margin-bottom:10px"><i class="ti ti-file-dollar"></i> <span data-i18n="receipts.cheque_info">معلومات الشيك</span></div><div class="fg"><div class="fi"><label data-i18n="receipts.cheque_no">رقم الشيك</label><input type="text" id="pay-cheque-no"></div><div class="fi"><label data-i18n="receipts.cheque_date">تاريخ الشيك</label><input type="date" id="pay-cheque-date"></div><div class="fi full"><label data-i18n="receipts.cheque_bank">البنك المسحوب عليه</label><input type="text" id="pay-cheque-bank"></div></div></div></div>
         <div class="fi"><label data-i18n="payments.approved_by">معتمد من</label><input type="text" id="pay-approved" placeholder="اسم المعتمد" data-i18n-placeholder="payments.approved_ph"></div>
         <div class="fi full"><label data-i18n="common.notes">ملاحظات</label><textarea id="pay-notes" placeholder="وصف تفصيلي..." data-i18n-placeholder="payments.desc_ph"></textarea></div>
       </div>
@@ -752,17 +752,14 @@
       تعديل الإيصال
     </span>
 
-```
 <button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق">
   <i class="ti ti-x"></i>
 </button>
-```
 
   </div>
 
   <div class="mbd">
 
-```
 <input type="hidden" id="edit-rec-id">
 
 <div class="ibox warn">
@@ -835,7 +832,6 @@
   </div>
 
 </div>
-```
 
   </div>
 
@@ -850,7 +846,6 @@
       السجل
     </button>
 
-```
 <button class="btn danger" onclick="window.deleteRec()">
   <i class="ti ti-trash"></i>
   إلغاء السند
@@ -859,7 +854,6 @@
 <button class="btn" onclick="window.closeM()">
   إلغاء
 </button>
-```
 
   </div>
 </div>
@@ -918,11 +912,11 @@
 <!-- Mobile Menu -->
 <div id="mobile-menu" style="display:none;position:fixed;bottom:62px;left:0;right:0;background:var(--navy2);border-top:1px solid rgba(255,255,255,.08);z-index:199;padding:8px">
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:var(--food)"></i><span>إيصالات الغداء</span></div>
-    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:var(--diwan)"></i><span>إيصالات الديوان</span></div>
-    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('don');closeMobileMenu();setMobileNav(null)"><i class="ti ti-heart" style="color:var(--don)"></i><span>التبرعات</span></div>
-    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:var(--food)"></i><span>مصاريف الغداء</span></div>
-    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:var(--diwan)"></i><span>مصاريف الديوان</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:#D4BC6A"></i><span>إيصالات الغداء</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-rec');closeMobileMenu();setMobileNav(null)"><i class="ti ti-receipt" style="color:#93B0DC"></i><span>إيصالات الديوان</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('don');closeMobileMenu();setMobileNav(null)"><i class="ti ti-heart" style="color:#A9A3D9"></i><span>التبرعات</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('food-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:#D4BC6A"></i><span>مصاريف الغداء</span></div>
+    <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('diwan-pay');closeMobileMenu();setMobileNav(null)"><i class="ti ti-cash" style="color:#93B0DC"></i><span>مصاريف الديوان</span></div>
     <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('member-stmt');closeMobileMenu();setMobileNav(null)"><i class="ti ti-user"></i><span>كشف عضو</span></div>
     <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('audit');closeMobileMenu();setMobileNav(null)"><i class="ti ti-list-check"></i><span>سجل العمليات</span></div>
     <div class="mnb" style="max-width:none;padding:10px" onclick="window.nav('annual-debt');closeMobileMenu();setMobileNav(null)"><i class="ti ti-report-money"></i><span>المديونية</span></div>

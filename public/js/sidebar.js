@@ -33,6 +33,8 @@
   function iconOf(p){ var el=srcItem(p), i=el&&el.querySelector('i'); return i?i.className:'ti ti-point'; }
 
   /* ═══ MODE: pinned ⇄ mini (desktop) ═══ */
+  /* Theme-01 (owner revision): the expanded sidebar with ALL page names visible
+     is the default; mini rail stays available via the pin button. */
   function getMode(){ return localStorage.getItem(LS_MODE)==='mini'?'mini':'pinned'; }
   function applyMode(){
     var mini=!isNarrow() && getMode()==='mini';
@@ -78,12 +80,12 @@
     var h=g.querySelector('.nbg-h');
     if(h) h.setAttribute('aria-expanded',open?'true':'false');
   }
-  function toggleGroup(g){ setGroupOpen(g,!g.classList.contains('open')); }
-  /* Accordion: keep only the active page's group open (unless the user is searching). */
+  /* Theme-01 (owner revision): NO accordions — every group stays open and every
+     page name stays visible. Headers become static section labels; toggling and
+     the active-context accordion are neutralized (search still filters items). */
+  function toggleGroup(g){ setGroupOpen(g,true); }
   function expandActiveGroup(p){
-    if(searching) return;
-    var active=groupOf(p);
-    groups().forEach(function(g){ setGroupOpen(g, g===active); });
+    groups().forEach(function(g){ setGroupOpen(g,true); });
   }
 
   /* ═══ SEARCH — instant filter ═══ */
