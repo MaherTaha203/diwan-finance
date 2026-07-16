@@ -36,7 +36,7 @@ function _adHead(){ return window.LANG==='en'
 function _adCurCell(c){
   if(c>0.005)  return '<span class="dr">₪ '+fmt(c)+' '+(window.LANG==='en'?'debit':'مدين')+'</span>';
   if(c<-0.005) return '<span class="cr">₪ '+fmt(-c)+' '+(window.LANG==='en'?'credit':'دائن')+'</span>';
-  return '<span style="color:var(--tx3,#94a3b8)">₪ 0</span>';
+  return '<span style="color:var(--faint)">₪ 0</span>';
 }
 function _adFilterLabel(){ const en=window.LANG==='en';
   return _adFilter==='debtors'?(en?'Debtors':'مدينون'):_adFilter==='creditors'?(en?'Creditors':'دائنون'):_adFilter==='zero'?(en?'Zero balance':'رصيد صفر'):(en?'All':'الكل'); }
@@ -153,7 +153,7 @@ function _delYearStatus(byYear, year){
   return v.paid>=v.due ? 'settled' : 'unpaid';
 }
 function _delCell(v){
-  if(!v || v.due<=0) return '<span style="color:var(--tx3,#94a3b8)">—</span>';
+  if(!v || v.due<=0) return '<span style="color:var(--faint)">—</span>';
   if(v.paid>=v.due)  return '<span class="cr">✓ مسدد</span>';
   return '<span class="dr">✗ '+fmt(v.remaining)+' ₪</span>';
 }

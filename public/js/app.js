@@ -1849,8 +1849,8 @@ window.exportPageExcel=function(type){
   const doExcel=()=>{
     const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644...','info');return;}
     const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
-    const moneyMap={receipts:[3],payments:[3],donation:[3],members:[3,4],annual:[1],'annual-debt':[3,4,5,6],audit:[],users:[]};
-    const colW={receipts:[10,12,26,14,16,24],payments:[10,12,26,14,16,24],donation:[10,12,26,14,16,24],members:[26,16,12,14,16],annual:[10,14,16,18,14],'annual-debt':[14,28,14,14,16,14,18],audit:[14,12,30,18,14],users:[26,14,14]};
+    const moneyMap={receipts:[3],payments:[3],donation:[3],'food-rec':[3],'diwan-rec':[3],'food-pay':[3],'diwan-pay':[3],don:[3],members:[3,4],annual:[1],'annual-debt':[3,4,5,6],audit:[],users:[]};
+    const colW={receipts:[10,12,26,14,16,24],payments:[10,12,26,14,16,24],donation:[10,12,26,14,16,24],'food-rec':[10,12,26,14,16,24],'diwan-rec':[10,12,26,14,16,24],'food-pay':[10,12,26,14,16,24],'diwan-pay':[10,12,26,14,16,24],don:[10,12,26,14,16,24],members:[26,16,12,14,16],annual:[10,14,16,18,14],'annual-debt':[14,28,14,14,16,14,18],audit:[14,12,30,18,14],users:[26,14,14]};
     if(colW[type])ws['!cols']=colW[type].map(w=>({wch:w}));
     styleDiwanSheet(XLSX,ws,{headerRow:0,money:(moneyMap[type]||[])});
     const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a');

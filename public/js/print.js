@@ -39,7 +39,7 @@ function amountToWords(n){
    for balances, hairline rules, tabular numerals, RTL. Layout/structure unchanged.
    ════════════════════════════════════════════════════════════════════════ */
 /* Theme-01 «السحاب النيليّ»: deep-navy accent + cool ice greys on paper (identity-only change) */
-const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#AEB6C4;--line:#E5EAF2;--line2:#C9D2E0;--hd:#F2F5FA;--zebra:transparent;--teal:#0F1B33;--teal-ink:#17202E;--teal-soft:transparent;--teal-line:#1C2A45;--pos:#2F6B47;--neg:#A84A32;--gray:#57606E;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
+const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#AEB6C4;--line:#E5EAF2;--line2:#C9D2E0;--hd:#F2F5FA;--zebra:transparent;--teal:#0F1B33;--teal-ink:#17202E;--teal-soft:transparent;--teal-line:#1C2A45;--pos:#2F6B47;--neg:#B4552E;--gray:#57606E;--fa:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--fe:"IBM Plex Mono",Menlo,monospace}'
 +'*{box-sizing:border-box;margin:0;padding:0}'
 +'body{font-family:var(--fa);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}'
 +'.mono,.num{font-family:var(--fe);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}'
@@ -115,7 +115,7 @@ function openPrintWin(css,body){
     +'<style>'+PRINT_TOKENS+css+'</style></head><body>'+body
     +'<script>window.onload=function(){'
     +'document.querySelectorAll("[data-qr-url]").forEach(function(el){'
-    +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#0F1B2D",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
+    +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#17202E",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
     +'});'
     +'setTimeout(function(){window.print();},900);'
     +'};<\/script></body></html>';
@@ -147,7 +147,7 @@ function savePrintPDF(css, body, filename, orient){
     };
     const qrEls=host.querySelectorAll('[data-qr-url]');
     if(qrEls.length && window.QRCode){
-      qrEls.forEach(function(el){try{new window.QRCode(el,{text:el.getAttribute('data-qr-url'),width:52,height:52,colorDark:'#0F1B2D',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.H});}catch(e){}});
+      qrEls.forEach(function(el){try{new window.QRCode(el,{text:el.getAttribute('data-qr-url'),width:52,height:52,colorDark:'#17202E',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.H});}catch(e){}});
       setTimeout(emit,350);
     } else emit();
   };
@@ -341,7 +341,7 @@ window.buildFundStatementHTML=function(fund){
       +'<div class="card"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v '+(FinContract.foodDeficitRemaining()<0?'neg':'pos')+'">₪ '+fmt(FinContract.foodDeficitRemaining())+'</div></div>'
       +'<div class="card"><div class="k">'+mcLabel('reserve')+'</div><div class="v">₪ '+fmt(FIN.foodSettlementReserve())+'</div></div>'
       +'<div class="card"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v '+(FinContract.foodNetPosition()>=0?'pos':'neg')+'">₪ '+fmt(FinContract.foodNetPosition())+'</div></div></div>'
-      +'<div style="font-size:10px;color:#666;margin:2px 0 6px">'+(_en?'Current Food Fund Balance = Operational ':'رصيد صندوق الغداء الحالي = تشغيلي ')+'₪'+fmt(bal)+' + '+mcLabel('current')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+mcLabel('debt')+(_en?' → Deficit (Q5) ':' ← العجز (ق5) ')+'₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>'):'')
+      +'<div style="font-size:10px;color:var(--muted);margin:2px 0 6px">'+(_en?'Current Food Fund Balance = Operational ':'رصيد صندوق الغداء الحالي = تشغيلي ')+'₪'+fmt(bal)+' + '+mcLabel('current')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+mcLabel('debt')+(_en?' → Deficit (Q5) ':' ← العجز (ق5) ')+'₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>'):'')
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.donor_name')+'</th><th>'+window.t('stmt.desc')+'</th><th>'+window.t('stmt.col_in')+'</th><th>'+window.t('stmt.col_out')+'</th><th>'+window.t('stmt.balance')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
     +'<tbody>'+rowsHTML
     +'<tr class="final"><td colspan="5">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):'الرصيد الجاري · Current Balance')+'</td><td class="'+curCls+'">₪ '+fmt(curBal)+'</td><td></td></tr></tbody></table>'
@@ -407,7 +407,7 @@ window.prtMemberStmt=function(mode){
     return parts.length?parts.join(' · '):donCat(d);
   };
   const donsHTML=dons.length?('<div class="period" style="margin-top:10px">'+(_en?'Donation movements':'حركات التبرعات')+'</div>'
-    +'<div style="font-size:10px;color:#666;margin:4px 0">'+(_en?'Debt Settlement reduces the member balance. Historical Deficit Donation and Current Support Donation are shown for transparency only and do not affect the member balance.':'تسوية الذمة تخفّض رصيد العضو. تبرع العجز التاريخي وتبرع الدعم الحالي يُعرضان للشفافية فقط ولا يؤثّران على رصيد العضو.')+'</div>'
+    +'<div style="font-size:10px;color:var(--muted);margin:4px 0">'+(_en?'Debt Settlement reduces the member balance. Historical Deficit Donation and Current Support Donation are shown for transparency only and do not affect the member balance.':'تسوية الذمة تخفّض رصيد العضو. تبرع العجز التاريخي وتبرع الدعم الحالي يُعرضان للشفافية فقط ولا يؤثّران على رصيد العضو.')+'</div>'
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Movement breakdown':'تفصيل الحركة')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
     +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donSplit(d)+'</td><td><span class="cr">₪ '+fmt(d.amount_ils||d.amount)+'</span></td></tr>').join('')
     +'</tbody></table>'):'';
