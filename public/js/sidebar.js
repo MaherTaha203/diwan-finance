@@ -47,7 +47,7 @@
     }
     syncToggleAria();
   }
-  function setMode(mode){ localStorage.setItem(LS_MODE,mode); applyMode(); }
+  function setMode(mode){ localStorage.setItem(LS_MODE,mode); applyMode(); placeInkSoon(); }
   function toggleMini(){ setMode(getMode()==='mini'?'pinned':'mini'); }
 
   /* ═══ MODE: overlay (narrow screens) ═══ */
@@ -100,6 +100,7 @@
       applyMode();
       // restore accordion around the current page
       var on=$('.nb.on[data-p]'); expandActiveGroup(on?on.getAttribute('data-p'):'dash');
+      placeInkSoon();
       return;
     }
     groups().forEach(function(g){
@@ -114,6 +115,7 @@
       g.classList.toggle('sb-empty',!any);
       setGroupOpen(g,any);           // auto-expand groups that have matches
     });
+    placeInkSoon();
   }
   function clearSearch(){ if(search){ search.value=''; } runSearch(''); if(search) search.focus(); }
 
@@ -158,9 +160,30 @@
   function markActive(p){
     $$('.nb',sb).forEach(function(n){ n.classList.toggle('on', n.getAttribute('data-p')===p); });
   }
+  /* ═══ DX-5 · the traveling ink layer ═══
+     One shared active-layer travels between items (transform/height animate in
+     CSS), so switching pages reads as the SAME ink moving with the user — never
+     a new rectangle appearing. Falls back to a static .nb.on fill if absent. */
+  var ink=null;
+  function placeInk(){
+    if(!sb||!scrollArea) return;
+    if(!ink){
+      ink=document.createElement('div'); ink.className='sb-ink';
+      scrollArea.appendChild(ink); sb.classList.add('sb-has-ink');
+    }
+    /* target the real group item (favorites clones stay text-only) */
+    var on=scrollArea.querySelector('.nbg-body:not(#sb-favs-body) .nb.on')||scrollArea.querySelector('.nb.on');
+    if(!on || on.offsetParent===null){ ink.classList.remove('show'); return; }
+    ink.style.height=on.offsetHeight+'px';
+    ink.style.transform='translateY('+on.offsetTop+'px)';
+    ink.classList.add('show');
+  }
+  var _inkT=null;
+  function placeInkSoon(){ clearTimeout(_inkT); _inkT=setTimeout(placeInk,40); }
   function onNav(p){
     markActive(p);
     expandActiveGroup(p);
+    placeInkSoon();
     if(isNarrow() && overlayOpen()) closeOverlay(false);
   }
 
@@ -234,7 +257,7 @@
     /* language hook (called from i18n after it re-translates) */
     window.sidebarOnLang=function(){
       if(search) search.setAttribute('placeholder',T('بحث في الصفحات...','Search pages...'));
-      renderFavs(); reflectStars(); applyMode();
+      renderFavs(); reflectStars(); applyMode(); placeInkSoon();
     };
 
     /* initial state */
@@ -243,6 +266,9 @@
     syncGroupVisibility();
     var on=$('.nb.on[data-p]'); expandActiveGroup(on?on.getAttribute('data-p'):'dash');
     if(search) search.setAttribute('placeholder',T('بحث في الصفحات...','Search pages...'));
+    placeInkSoon();
+    window.addEventListener('resize',placeInkSoon);
+    if(sb) sb.addEventListener('transitionend',function(e){ if(e.propertyName==='width') placeInk(); });
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wire);

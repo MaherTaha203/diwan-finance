@@ -1779,3 +1779,72 @@ body.sb-mini .sb:hover .nb:hover .nb-star,body.sb-mini .sb:hover .nb.is-fav .nb-
 .ibox{color:var(--tx2)}
 #copyright-bar{color:var(--tx2)}
 body:not(.light) .main,body:not(.light) .sb-scrollarea,body:not(.light) .modal,body:not(.light) .scroll{scrollbar-color:var(--bd2) transparent}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DX-5 · «الأرضيّة الواحدة» — the sidebar becomes the system's bedrock
+   Approved direction: V4 «طبقتا الحبر», developed to final.
+   Architecture: the deep navy is no longer a sidebar panel — it is the GROUND
+   of the whole product. The workspace is an ice sheet with a rounded shoulder
+   resting on that ground, so navigation and content read as ONE structure in
+   both states (expanded / rail), on desktop and mobile, light and dark.
+   Item language: quiet architectural depth — soft stacked translucency, calm
+   140ms transitions, lime confined to the active icon, and ONE traveling ink
+   layer (.sb-ink, sidebar.js) that moves with the user between pages.
+   No glass, no notches, no floating chips. Chrome var(--chrome) IS the ground.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* ── ground + sheet ── */
+#app{background:var(--chrome)}
+.top{top:14px;inset-inline:22px;z-index:70}
+.top-logo,.top-actions{background:transparent;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0;height:44px}
+.layout{position:relative;padding-top:64px;padding-inline-start:236px}
+body.sb-mini .layout{padding-inline-start:88px}
+.sb{position:absolute;top:64px;bottom:0;inset-inline-start:0;width:236px;
+  background:transparent;border:0;box-shadow:none;border-radius:0;transition:width .18s ease}
+body.sb-mini .sb{inset-block:64px 0;inset-inline-start:0;width:88px}
+body.sb-mini .sb:hover{width:236px;background:var(--chrome);
+  border-start-end-radius:18px;border-end-end-radius:18px;
+  box-shadow:-24px 0 60px -34px rgba(0,0,0,.55)}
+.main{background:var(--bg);border-start-start-radius:26px;padding-top:26px;
+  box-shadow:0 -20px 44px -34px rgba(0,0,0,.5)}
+body:not(.light) .main{border-inline-start:1px solid rgba(255,255,255,.05);border-top:1px solid rgba(255,255,255,.05)}
+/* ── sidebar internals on the ground ── */
+.sb-tools{padding:4px 16px 8px}
+.sb-search{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09);border-radius:10px}
+.sb-search:focus{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22)}
+.sb-pin{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09);border-radius:10px}
+.sb-scrollarea{position:relative;padding:2px 0 22px}
+.nbg-h{padding:14px 16px 3px}
+.nbg-t{color:rgba(255,255,255,.40)}
+/* ── V4-final item: soft stacked ink, calm 140ms, lime on the icon only ── */
+.nb{height:33px;margin:1px 16px;border-radius:9px;color:rgba(255,255,255,.62);font-size:12.5px;
+  border:0;transition:color .14s ease,background-color .14s ease;position:relative;z-index:1}
+.nb i{transition:color .14s ease}
+.nb:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.93);transform:none}
+.nb.on{color:#fff;font-weight:600;transform:none}
+.nb.on::before{display:none}
+.nb.on i{color:var(--dx-lime)}
+/* fallback layered fill (used only if the traveling ink layer is unavailable) */
+.sb:not(.sb-has-ink) .nb.on{background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.sb.sb-has-ink .nb.on{background:transparent;box-shadow:none}
+.nb:focus-visible{outline:none;box-shadow:inset 0 0 0 2px rgba(203,240,0,.55)}
+/* the ONE traveling ink layer — moves between pages with the user */
+.sb-ink{position:absolute;inset-inline:16px;top:0;height:33px;border-radius:9px;pointer-events:none;opacity:0;z-index:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+  transition:transform .19s cubic-bezier(.3,.85,.3,1),height .19s ease,opacity .14s ease}
+.sb-ink.show{opacity:1}
+body.sb-mini .sb-ink{inset-inline:10px}
+body.sb-mini .sb:hover .sb-ink{inset-inline:16px}
+@media(prefers-reduced-motion:reduce){.sb-ink{transition:opacity .14s ease}}
+/* mini rail: identical language, centered */
+body.sb-mini .nb{margin:1px 10px;justify-content:center;padding:0}
+body.sb-mini .sb:hover .nb{margin:1px 16px;justify-content:flex-start;padding:0 12px}
+/* ── mobile: same bedrock ── */
+@media(max-width:768px){
+  .layout{padding-inline-start:0 !important;padding-top:58px}
+  .main{border-start-start-radius:22px;border-start-end-radius:22px;padding-top:16px}
+  .sb{background:var(--chrome);top:10px;bottom:10px;inset-inline-start:10px;border-radius:18px;width:min(280px,82vw)}
+  .top{top:10px;inset-inline:14px}
+  #mobile-menu{background:var(--chrome) !important}
+}
