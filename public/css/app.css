@@ -1966,3 +1966,21 @@ td.crd-amt{color:var(--diwan)}
 /* ═══════════════ DX-11 — سجل العمليات: تمريرة ختام «السجلّ» ═══════════════ */
 /* the outer card dissolves; the register panel carries the page itself */
 #pg-audit .card{background:transparent;border:0;box-shadow:none;padding:0}
+
+/* ═══════════════ DX-12 — إيقاع الحركة الموحّد (V4: هادئ، طبقيّ، 120–260ms) ═══════════════ */
+/* page enter: one calm rise, the V4 curve */
+.pg{animation:none}
+.pg.on{animation:dxPg .26s cubic-bezier(.3,.85,.3,1)}
+@keyframes dxPg{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+/* interactive rhythm — one clock for the whole surface */
+.btn{transition:background .15s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .12s ease}
+.btn:active{transform:scale(.98)}
+tbody td{transition:background-color .14s ease}
+.pb,.stc,.badge,.lc-pill,.export-dropdown-item{transition:background .15s ease,color .15s ease,border-color .15s ease}
+.tw,.card,.kp,.acct-stmt{transition:box-shadow .22s ease}
+/* editor drawer: same curve, a touch softer */
+.modal.editor{animation:dxDrawer .3s cubic-bezier(.3,.85,.3,1)}
+/* respect reduced motion everywhere */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+}

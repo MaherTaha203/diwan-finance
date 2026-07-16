@@ -29,10 +29,10 @@
 <style>
 /* == CONCEPT B — PREMIUM FINANCIAL INSTITUTION — REVISION 3 == */
 :root {
-  --b-navy:#0F1B33; --b-navy2:#16273D; --b-gold:#C6A46A;
-  --b-cream:#F2EEE7; --b-white:#fff; --b-border:#EDE9E0;
-  --b-input-border:#DDD9D0; --b-input-bg:#FAFAF8;
-  --b-text:#0F1B2D; --b-text2:#555; --b-text3:#888; --b-placeholder:#B8B4AC;
+  --b-navy:#0F1B33; --b-navy2:#1C2A45; --b-gold:#CBF000;
+  --b-cream:#EDF1F7; --b-white:#fff; --b-border:#E5EAF2;
+  --b-input-border:#C9D2E0; --b-input-bg:#F7F9FC;
+  --b-text:#17202E; --b-text2:#57606E; --b-text3:#7C8494; --b-placeholder:#AEB6C4;
 }
 
 #login-screen{position:fixed;inset:0;z-index:1000;display:flex;overflow:hidden}
@@ -40,47 +40,47 @@
 
 /* ── LEFT PANEL — 60% Navy institutional ── */
 .lp{width:55%;min-height:100dvh;background:var(--b-navy);position:relative;display:flex;flex-direction:column;padding:26px 36px 20px;overflow-y:auto;transition:background .3s}
-.lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(198,164,106,.05) 0%,transparent 60%);pointer-events:none}
+.lp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 55% 25%,rgba(203,240,0,.05) 0%,transparent 60%);pointer-events:none}
 
 /* Logo emblem */
 .lp-logo{display:flex;align-items:center;gap:12px;margin-bottom:20px;position:relative;z-index:2}
-.lp-emblem{width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(198,164,106,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lp-emblem{width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(203,240,0,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .lp-emblem svg{width:34px;height:34px;display:block}
 .lp-org{font-size:26px;font-weight:600;color:#fff;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;display:block}
 .lp-org-en{font-size:13px;color:rgba(255,255,255,.28);letter-spacing:3px;display:block;margin-top:1px}
 
 /* Institutional content */
 .lp-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;padding:8px 0;max-width:none}
-.lp-gold-bar{width:56px;height:3px;background:#C6A46A;border-radius:1px;margin-bottom:14px}
+.lp-gold-bar{width:56px;height:3px;background:var(--b-gold);border-radius:1px;margin-bottom:14px}
 .lp-title{font-size:30px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:22px;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 .lp-inst{font-size:15.5px;color:rgba(255,255,255,.52);line-height:2;margin-bottom:18px;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;text-align:justify}
 
 /* Features */
 .lp-feats{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
 .lp-feat{display:flex;align-items:center;gap:9px}
-.lp-feat-icon{width:30px;height:30px;border-radius:5px;background:rgba(198,164,106,.08);border:.5px solid rgba(198,164,106,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#C6A46A}
+.lp-feat-icon{width:30px;height:30px;border-radius:5px;background:rgba(203,240,0,.08);border:.5px solid rgba(203,240,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:var(--b-gold)}
 .lp-feat-text{font-size:16px;color:rgba(255,255,255,.58);font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 
 /* Compliance notice */
-.lp-notice{font-size:14px;color:rgba(198,164,106,.58);line-height:1.9;padding:16px 20px;background:rgba(198,164,106,.03);border:.5px solid rgba(198,164,106,.12);border-radius:6px;margin-bottom:20px;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;text-align:justify}
+.lp-notice{font-size:14px;color:rgba(203,240,0,.58);line-height:1.9;padding:16px 20px;background:rgba(203,240,0,.03);border:.5px solid rgba(203,240,0,.12);border-radius:6px;margin-bottom:20px;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;text-align:justify}
 
 /* System info */
 .lp-sys{display:flex;gap:14px;margin-bottom:16px}
 .lp-sys-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;text-align:center}
 .lp-sys-lbl{font-size:13px;color:rgba(255,255,255,.32);font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;display:block;margin-bottom:2px}
-.lp-sys-val{font-size:28px;font-weight:600;color:#C6A46A;display:block}
+.lp-sys-val{font-size:28px;font-weight:600;color:var(--b-gold);display:block}
 
 /* Authorized users */
 .lp-auth-title{font-size:13px;color:rgba(255,255,255,.28);margin-bottom:8px;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 .lp-auth{display:flex;gap:14px;margin-bottom:16px}
 .lp-auth-card{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 22px;flex:1;display:flex;align-items:center;gap:8px}
-.lp-auth-icon{width:32px;height:32px;border-radius:4px;background:rgba(198,164,106,.06);border:.5px solid rgba(198,164,106,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lp-auth-icon{width:32px;height:32px;border-radius:4px;background:rgba(203,240,0,.06);border:.5px solid rgba(203,240,0,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .lp-auth-lbl{font-size:13px;color:rgba(255,255,255,.3);display:block;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 .lp-auth-val{font-size:18px;font-weight:500;color:rgba(255,255,255,.7);font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 
 /* Footer */
 .lp-foot{position:relative;z-index:2;padding-top:12px;border-top:.5px solid rgba(255,255,255,.05)}
-.lp-foot-title{font-size:12px;color:rgba(198,164,106,.45);font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;margin-bottom:4px}
+.lp-foot-title{font-size:12px;color:rgba(203,240,0,.45);font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;margin-bottom:4px}
 .lp-foot-text{font-size:11px;color:rgba(255,255,255,.24);line-height:1.75;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 
 /* ── RIGHT PANEL — 40% Cream form ── */
@@ -114,7 +114,7 @@
 .rem-row-login{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .rem-right{display:flex;align-items:center;gap:6px}
 .cchk-login{width:18px;height:18px;border-radius:3px;border:1px solid var(--b-input-border);background:var(--b-white);appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;transition:all .15s;position:relative}
-.cchk-login:checked{background:#E8E4DC;border-color:#C6A46A}
+.cchk-login:checked{background:#E8E4DC;border-color:var(--b-gold)}
 .cchk-login:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:var(--b-navy);font-weight:700}
 .rem-lbl-login{font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;font-size:14px;color:#666;cursor:pointer}
 .forgot-link{font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;font-size:14px;color:var(--b-navy);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0}
@@ -127,7 +127,7 @@
 /* Error + forgot msg */
 .login-err-box{background:rgba(220,38,38,.06);color:#DC2626;border:1px solid rgba(220,38,38,.15);border-radius:8px;padding:12px 16px;font-size:13px;margin-top:10px;display:none;text-align:center;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 .login-err-box.show{display:block}
-.forgot-msg{display:none;background:rgba(198,164,106,.06);border:1px solid rgba(198,164,106,.15);border-radius:8px;padding:12px 16px;font-size:13px;color:#92700C;margin-top:10px;text-align:center;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
+.forgot-msg{display:none;background:rgba(203,240,0,.06);border:1px solid rgba(203,240,0,.15);border-radius:8px;padding:12px 16px;font-size:13px;color:#92700C;margin-top:10px;text-align:center;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
 
 
 /* ── MOBILE ── */
@@ -208,7 +208,7 @@
 #login-screen .login-input:focus-visible,#login-screen .lc-pill:focus-visible,
 #login-screen .ii-l-login:focus-visible,#login-screen .forgot-link:focus-visible,
 #login-screen .cchk-login:focus-visible,#login-screen .login-btn-main:focus-visible{
-  outline:2px solid rgba(198,164,106,.8);outline-offset:2px}
+  outline:2px solid rgba(203,240,0,.8);outline-offset:2px}
 /* mobile: keep brand + member-count strip, declutter heavy text, form reachable, ≥44px targets */
 @media(max-width:768px){
   #login-screen .lp{padding:calc(16px + env(safe-area-inset-top)) 20px 16px;min-height:auto;flex:none}
@@ -245,6 +245,29 @@
   .btn.ghost.sm i{font-size:16px}
   .tda{gap:4px}
 }
+/* ── DX-12 — واجهة الدخول على هوية «السحاب النيليّ» ── */
+#login-screen .login-card{border:0;border-radius:18px;box-shadow:0 22px 54px -30px rgba(15,27,51,.45)}
+#login-screen .lc-pills{border-radius:999px;border-color:var(--b-border)}
+#login-screen .lc-pill{background:var(--b-white)}
+#login-screen .lc-pill.on{background:var(--b-navy)}
+#login-screen .login-input{border-radius:12px}
+#login-screen .login-input:focus{border-color:var(--b-navy);box-shadow:0 0 0 3px rgba(15,27,51,.08)}
+#login-screen .login-btn-main{background:var(--b-gold);color:#1A2205;border-radius:12px}
+#login-screen .login-btn-main:hover{background:#D6F62A}
+#login-screen .lp-sys-val{font-variant-numeric:tabular-nums}
+/* dark mode — the login follows the stored theme */
+body:not(.light) #login-screen{
+  --b-cream:#0C0E13; --b-white:#14171E; --b-border:rgba(255,255,255,.08);
+  --b-input-border:rgba(255,255,255,.14); --b-input-bg:#1A1E27;
+  --b-text:#E8ECF3; --b-text2:#B9C0CC; --b-text3:#8B93A3; --b-placeholder:#5C6474;
+}
+body:not(.light) #login-screen .login-card{box-shadow:0 22px 54px -26px rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.05)}
+body:not(.light) #login-screen .login-input:focus{border-color:var(--b-gold);box-shadow:0 0 0 3px rgba(203,240,0,.12)}
+body:not(.light) #login-screen .lp{background:#0C0E13}
+body:not(.light) #login-screen .lp-sys-card,body:not(.light) #login-screen .lp-auth-card{background:rgba(255,255,255,.04)}
+#login-screen .forgot-msg{color:#4A5708}
+body:not(.light) #login-screen .forgot-link{color:#B9C0CC}
+body:not(.light) #login-screen .forgot-msg{color:#CBF000}
 </style>
 </head>
 <body>
