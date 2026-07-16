@@ -89,7 +89,7 @@ function renderAnnualDebt(){
   rows.sort((a,b)=>b.current-a.current);
 
   const subEl=document.getElementById('annual-debt-sub');
-  if(subEl) subEl.textContent='Annual Debt Report · '+rows.length+(en?' of ':' من ')+total;
+  if(subEl) subEl.innerHTML='<span class="stc navy">'+rows.length+(en?' of ':' من ')+total+(en?' members':' عضوًا')+'</span>';
 
   const chips=[['all',en?'All':'الكل'],['debtors',en?'Debtors':'مدينون'],['creditors',en?'Creditors':'دائنون'],['zero',en?'Zero balance':'رصيد صفر']]
     .map(c=>'<button class="tp-tab'+(_adFilter===c[0]?' on':'')+'" onclick="setAnnualDebtFilter(\''+c[0]+'\')">'+c[1]+'</button>').join('');
@@ -193,7 +193,7 @@ function renderDelinquent(){
   const en=window.LANG==='en';
   const {years, rows}=delinquentRows();
   const total=DB.members.filter(m=>m.is_active!==false).length;
-  const sub=document.getElementById('delinquent-sub'); if(sub) sub.textContent='Delinquent Members Report · '+rows.length+(en?' of ':' من ')+total;
+  const sub=document.getElementById('delinquent-sub'); if(sub) sub.innerHTML='<span class="stc navy">'+rows.length+(en?' of ':' من ')+total+(en?' members':' عضوًا')+'</span>';
   const chips=[['all',en?'All':'الكل'],['delinquent',en?'Delinquent':'المتأخرون'],['current',en?'Not delinquent':'غير المتأخرين']]
     .map(c=>'<button class="tp-tab'+(_delPrimary===c[0]?' on':'')+'" onclick="setDelPrimary(\''+c[0]+'\')">'+c[1]+'</button>').join('');
   const yopts=['<option value="all">'+(en?'All years':'جميع السنوات')+'</option>']

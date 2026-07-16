@@ -387,7 +387,7 @@ const D={
     const _cash=d.filter(r=>FIN2.isCashDonation(r.movement_type)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('don-sub');
-    if(sub)sub.textContent=`${d.length} تبرع — نقدي ₪ ${fmt(_cash)} · عيني/خدمي (توثيقي) ₪ ${fmt(_doc)}`;
+    if(sub)sub.innerHTML=`<span class="stc">${d.length} تبرع</span><span class="stc navy">نقدي ₪ ${fmt(_cash)}</span><span class="stc">توثيقي ₪ ${fmt(_doc)}</span>`;
     if(!PS['don'])PS['don']=1;
     mkPag('don',d.length);
     const page=d.slice((PS['don']-1)*PSZ,PS['don']*PSZ);
@@ -395,10 +395,10 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'donations');return;}
     body.innerHTML=page.map(r=>`<tr>
-      <td><b style="font-size:11px">${esc(r.no)}</b></td>
-      <td style="color:var(--tx2)">${fdate(r.receipt_date)}</td>
-      <td>${esc(r.payer_name||gmn(r.member_id))}</td>
-      <td class="num" style="color:var(--don)">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="c-no"><span class="doc">${esc(r.no)}</span></td>
+      <td class="c-date">${fdate(r.receipt_date)}</td>
+      <td class="c-name">${esc(r.payer_name||gmn(r.member_id))}</td>
+      <td class="num c-amt don-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'don'}">${r.currency}</span></td>
       <td>${(function(){
         /* P2-D — the authoritative classification (owner-approved layer). */
@@ -417,7 +417,7 @@ const D={
           return `<span class="badge gray">${en?'In-kind / Service (record only)':'عيني/خدمي — توثيقي'}</span>`;
         return `<span class="badge gray">${en?'Unclassified':'غير مُصنَّف'}</span>`;
       })()}</td>
-      <td style="color:var(--tx3);font-size:11px">${esc(r.notes||'—')}</td>
+      <td class="c-notes">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
         ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
