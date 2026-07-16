@@ -1962,3 +1962,7 @@ td.don-amt{color:var(--don)}
 /* ═══════════════ DX-10 — دليل أعضاء العائلة في لغة «السجلّ» ═══════════════ */
 .pg.lx td.c-idx{color:var(--tx3);font-size:11px;font-variant-numeric:tabular-nums}
 td.crd-amt{color:var(--diwan)}
+
+/* ═══════════════ DX-11 — سجل العمليات: تمريرة ختام «السجلّ» ═══════════════ */
+/* the outer card dissolves; the register panel carries the page itself */
+#pg-audit .card{background:transparent;border:0;box-shadow:none;padding:0}
