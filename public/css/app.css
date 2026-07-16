@@ -1953,3 +1953,8 @@ body:not(.light) .acct-stmt{border:1px solid rgba(255,255,255,.05);box-shadow:0 
 .acct-stmt .as-btn{border-radius:999px}
 .acct-stmt .as-brand{border-radius:9px}
 .ftb-act .btn.primary{background:var(--dx-lime);color:var(--dx-limeink)}
+
+/* ═══════════════ DX-9 — سجل التبرعات في لغة «السجلّ» + كبسولات إحصاء للتقارير ═══════════════ */
+td.don-amt{color:var(--don)}
+/* stat capsules in any page header (reports outside .lx) */
+.ph-s:has(.stc){display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
