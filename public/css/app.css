@@ -1808,3 +1808,65 @@ body:not(.light) .main,body:not(.light) .sb-scrollarea,body:not(.light) .modal,b
   transition:transform .19s cubic-bezier(.3,.85,.3,1),height .19s ease,opacity .14s ease}
 .sb-ink.show{opacity:1}
 @media(prefers-reduced-motion:reduce){.sb-ink{transition:opacity .14s ease}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DX-6 · Dashboard page redesign (Theme-01 approved composition)
+   KPI band: three floating light panels + one deep-navy panel with live
+   day-figures. Master-detail «الذمم المستحقّة»: top outstanding balances +
+   in-place inspector. Presentation over existing engines — zero logic change.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.kband{display:grid;grid-template-columns:1fr 1fr 1fr 1.35fr;gap:12px}
+.kband .kp{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px 17px;
+  box-shadow:0 16px 38px -28px rgba(15,27,51,.35);animation:kIn .5s cubic-bezier(.22,1,.36,1) backwards}
+.kband .kp .l{font-size:10.5px;font-weight:600;color:var(--mut);line-height:1.4}
+.kband .kp .v{margin-top:8px;font-size:23px;font-weight:800;letter-spacing:-.4px;color:var(--tx);font-variant-numeric:tabular-nums}
+.kband .kp .v.neg-t{color:var(--neg)}
+.kband .kpd{background:var(--dx-navy);border-color:var(--dx-navy);display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.kband .kpd .l{color:rgba(255,255,255,.6)}
+.kband .kpd .v{color:#fff}
+.kband .kpd .v.neg-t{color:#F0A48E}
+.kband .kpd .mini{display:flex;gap:7px}
+.kband .kpd .mc{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:10px;
+  padding:7px 9px;font-size:9px;color:rgba(255,255,255,.62);line-height:1.5}
+.kband .kpd .mc b{display:block;font-size:12px;color:#fff;font-variant-numeric:tabular-nums}
+.kband .kpd .mc.hot{background:var(--dx-lime);border-color:var(--dx-lime);color:rgba(26,34,5,.75)}
+.kband .kpd .mc.hot b{color:var(--dx-limeink)}
+body:not(.light) .kband .kpd{background:#1A1E27;border-color:#242A36}
+/* master-detail */
+#dash-md{padding:12px}
+.dmd{display:grid;grid-template-columns:.95fr 1.25fr;gap:12px}
+.dmd-list{background:var(--dx-navy);border-radius:14px;padding:11px;color:#fff}
+body:not(.light) .dmd-list{background:#1A1E27}
+.dmd-h{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:800;margin-bottom:8px;padding:0 2px}
+.dmd-h .btn.ghost{color:rgba(255,255,255,.65)}
+.dmd-h .btn.ghost:hover{background:rgba(255,255,255,.08);color:#fff;border-color:transparent}
+.dmd-row{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:10px;cursor:pointer;
+  color:rgba(255,255,255,.66);transition:background .14s ease,color .14s ease;outline:none}
+.dmd-row:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.92)}
+.dmd-row.sel{background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);color:#fff}
+.dmd-row:focus-visible{box-shadow:inset 0 0 0 2px rgba(203,240,0,.55)}
+.dmd-row .av{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:rgba(255,255,255,.10);font-size:11px;font-weight:800;color:#fff}
+.dmd-row.sel .av{background:var(--dx-lime);color:var(--dx-limeink)}
+.dmd-row .nm{flex:1;min-width:0;line-height:1.45}
+.dmd-row .nm b{display:block;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dmd-row .nm small{font-size:9px;color:rgba(255,255,255,.45)}
+.dmd-row .amt{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.dmd-row.sel .amt{color:var(--dx-lime)}
+.dmd-insp{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:13px 15px;display:flex;flex-direction:column}
+.dmd-insp .ih{display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--rule);padding-bottom:9px;margin-bottom:10px}
+.dmd-insp .ih b{font-size:13.5px;color:var(--tx)}
+.dmd-insp .tag{background:var(--neg-bg);color:var(--neg);border-radius:999px;padding:1px 10px;font-size:9.5px;font-weight:800}
+.dmd-insp .cells{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.dmd-insp .cell{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:9px 11px}
+.dmd-insp .cell .l{font-size:9px;color:var(--mut);font-weight:600}
+.dmd-insp .cell .v{font-size:14.5px;font-weight:800;margin-top:3px;color:var(--tx);font-variant-numeric:tabular-nums}
+.dmd-insp .sum{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:auto;padding-top:12px;font-size:11px;color:var(--tx2)}
+.dmd-insp .sum .acts{display:flex;gap:7px}
+@media(max-width:900px){
+  .kband{grid-template-columns:1fr 1fr}
+  .dmd{grid-template-columns:1fr}
+}
+@media(max-width:480px){.kband{grid-template-columns:1fr}}

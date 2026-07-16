@@ -601,6 +601,59 @@ function renderTreasuryPanel(){
 }
 /* Count-up for the fund cards — animates each value from 0 to target so the
    figures feel alive on render. Honours reduced-motion (settles immediately). */
+/* ═══ Theme-01 dashboard master-detail: «الذمم المستحقّة» ═══
+   Read-only over the existing engines (FIN.memberStatement / memberDelinquency):
+   top outstanding member balances as a master list + an in-place inspector with
+   real figures and two actions (statement / collect). No engine change. */
+function renderDashDebts(){
+  const el=document.getElementById('dash-md'); if(!el) return;
+  const en=window.LANG==='en';
+  let rows=[];
+  try{
+    rows=DB.members.filter(m=>m.is_active!==false).map(m=>{
+      const st=FIN.memberStatement(m.id);
+      const d=(typeof FIN.memberDelinquency==='function')?FIN.memberDelinquency(m.id):{unpaidCount:0};
+      return {id:m.id,name:m.name||'—',
+        due:Math.round((st.finalBalance||0)*100)/100,
+        base:Math.round(((st.openingBalance||0)+(st.totalDues||0))*100)/100,
+        paid:Math.round(((st.totalPaid||0)+(st.debtSettled||0))*100)/100,
+        yrs:(d&&d.unpaidCount)||0};
+    }).filter(r=>r.due>0).sort((a,b)=>b.due-a.due).slice(0,6);
+  }catch(e){ rows=[]; }
+  if(!rows.some(r=>r.id===window.__dmdSel)) window.__dmdSel=rows[0]&&rows[0].id;
+  const sel=rows.find(r=>r.id===window.__dmdSel);
+  el.innerHTML=`<div class="dmd">
+    <div class="dmd-list">
+      <div class="dmd-h"><span>${en?'Top balances':'أعلى الذمم'}</span><button class="btn ghost sm" onclick="window.nav('annual-debt')">${en?'Full report':'التقرير الكامل'}</button></div>
+      ${rows.length?rows.map(r=>`<div class="dmd-row${r.id===window.__dmdSel?' sel':''}" role="button" tabindex="0" onclick="window.dashSelDebt('${r.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.dashSelDebt('${r.id}')}">
+        <span class="av">${esc(String(r.name).trim().charAt(0)||'؟')}</span>
+        <span class="nm"><b>${esc(r.name)}</b><small>${r.yrs>0?(en?r.yrs+' unpaid years':r.yrs+' سنوات غير مسدّدة'):(en?'running balance':'ذمّة جارية')}</small></span>
+        <b class="amt mono">₪ ${fmt(r.due)}</b></div>`).join('')
+      :`<div class="empty" style="padding:18px"><div class="empty-t">${en?'No outstanding balances':'لا ذمم مستحقّة'}</div></div>`}
+    </div>
+    ${sel?`<div class="dmd-insp">
+      <div class="ih"><b>${esc(sel.name)}</b><span class="tag">${en?'Owing':'مدين'}</span></div>
+      <div class="cells">
+        <div class="cell"><div class="l">${en?'Total accrued':'إجماليّ الاستحقاق'}</div><div class="v mono">₪ ${fmt(sel.base)}</div></div>
+        <div class="cell"><div class="l">${en?'Paid':'سُدّد منه'}</div><div class="v mono">₪ ${fmt(sel.paid)}</div></div>
+        <div class="cell"><div class="l">${en?'Remaining':'المتبقّي'}</div><div class="v mono">₪ ${fmt(sel.due)}</div></div>
+      </div>
+      <div class="sum"><span>${en?'Balance due':'الرصيد المستحقّ'} · <b class="mono">₪ ${fmt(sel.due)}</b></span>
+        <span class="acts"><button class="btn sm" onclick="window.dashDebtStmt('${sel.id}')">${en?'Statement':'كشف الحساب'}</button>${can.write()?`<button class="btn sm primary" onclick="window.dashDebtCollect('${sel.id}')">${en?'Collect now':'تحصيل الآن'}</button>`:''}</span></div>
+    </div>`:''}
+  </div>`;
+}
+window.dashSelDebt=function(id){ window.__dmdSel=id; renderDashDebts(); };
+window.dashDebtStmt=function(id){
+  window.nav('member-stmt');
+  const s=document.getElementById('ms-member');
+  if(s){ s.value=id; if(typeof window.renderMemberStmt==='function') window.renderMemberStmt(); }
+};
+window.dashDebtCollect=function(id){
+  window.openRec('food');
+  setTimeout(()=>{ const s=document.getElementById('rec-member');
+    if(s){ s.value=id; s.dispatchEvent(new Event('change')); } },150);
+};
 function countUpKpis(){
   const els=document.querySelectorAll('#dash-kpis .v[data-val]');
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -662,18 +715,28 @@ function renderDash(){
   /* ── Fund cards — the four treasury figures (fb/rd/np/db). Clean balance tiles
      brought to life: staggered entrance (CSS) + count-up value (JS). The old
      %-bars / collection ring / trend chart were removed by request. ── */
+  /* Theme-01 approved band: three floating light panels + the deep-navy diwan
+     panel carrying the live day-figures. Same four canonical treasury numbers
+     (fb/rd/np/db) — presentation only, engines untouched. */
   const _kpis=document.getElementById('dash-kpis');
   if(_kpis){
-    _kpis.innerHTML=[
-      {t:_isEn?'Food Treasury':'خزينة الغداء',v:fb},
-      {t:_isEn?'Historical Deficit Settlement Account':'حساب تسوية العجز التاريخي',v:rd},
-      {t:_isEn?'Net Food Position':'صافي مركز الغداء',v:np},
-      {t:_isEn?'Diwan Treasury':'خزينة الديوان',v:db},
-    ].map((k,i)=>`<div class="k" style="animation-delay:${i*70}ms"><div class="t">${k.t}</div>
-      <div class="v mono ${k.v<0?'neg-t':''}" data-val="${k.v}">₪ ${k.v<0?'−':''}${fmt(Math.abs(k.v))}</div>
-    </div>`).join('');
+    const lightKp=(t,v,i)=>`<div class="kp" style="animation-delay:${i*70}ms"><div class="l">${t}</div>
+      <div class="v mono ${v<0?'neg-t':''}" data-val="${v}">₪ ${v<0?'−':''}${fmt(Math.abs(v))}</div></div>`;
+    const avail=Math.round((db+fb)*100)/100;
+    _kpis.innerHTML=
+      lightKp(_isEn?'Food Treasury':'خزينة الغداء',fb,0)
+      +lightKp(_isEn?'Historical Deficit Settlement':'حساب تسوية العجز التاريخي',rd,1)
+      +lightKp(_isEn?'Net Food Position':'صافي مركز الغداء',np,2)
+      +`<div class="kp kpd" style="animation-delay:210ms"><div><div class="l">${_isEn?'Diwan Treasury':'خزينة الديوان'}</div>
+        <div class="v mono ${db<0?'neg-t':''}" data-val="${db}">₪ ${db<0?'−':''}${fmt(Math.abs(db))}</div></div>
+        <div class="mini">
+          <div class="mc">${_isEn?'Available':'المتاح · الخزينتان'}<b class="mono">₪ ${fmt(Math.abs(avail))}</b></div>
+          <div class="mc hot">${_isEn?'Net today':'صافي اليوم'}<b class="mono">${_netToday>=0?'+':'−'}₪ ${fmt(Math.abs(_netToday))}</b></div>
+          <div class="mc">${_isEn?"Today's vouchers":'سندات اليوم'}<b class="mono">${_recToday.length+_payToday.length}</b></div>
+        </div></div>`;
     countUpKpis();
   }
+  renderDashDebts();
   /* sidebar member counter (approved design) — target the real group item,
      never a favorites clone (which is rebuilt and would drop the badge). */
   const _nbM=document.querySelector('.nbg-body:not(#sb-favs-body) .nb[data-p="members"]')||document.querySelector('.nb[data-p="members"]');
