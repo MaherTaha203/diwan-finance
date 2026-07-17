@@ -398,7 +398,12 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
       ins.payer_name=row.payer_name||null;
       ins.register_category=next.register_category||null;
       ins.donation_display_fund=mp.disp;
-      ins.food_donation_allocation=null;
+      /* A food-donation child row (only produced for a historical-deficit
+         destination) must carry an allocation — the `receipts_food_donation_alloc_
+         _required` CHECK forbids fund_type='donation'+display='food' with a NULL
+         allocation. Money bound to the deficit is `reduce_deficit` (matches every
+         existing deficit receipt, e.g. REC-00058). Non-donation children stay null. */
+      ins.food_donation_allocation=(mp.fund_type==='donation'&&mp.disp==='food')?'reduce_deficit':null;
       ins.current_addition=null;
     }
     const{data:newRow,error:iErr}=await SB.from(table).insert(ins).select().single();
