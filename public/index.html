@@ -902,7 +902,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-replace"></i></span>إعادة تصنيف محاسبي</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
     <div class="mbd">
       <div class="fi full"><label>السند</label><div id="rcl-info" style="font-size:12px;color:var(--tx2)">—</div></div>
-      <div class="fi full"><label>التصنيف الجديد (نوع الحدث) <span class="req">*</span></label><select id="rcl-type"></select></div>
+      <div class="fi full"><label>التصنيف الجديد (نوع الحدث) <span class="req">*</span></label><select id="rcl-type" onchange="window.onReclassTypeChange()"></select></div>
       <div class="fi full"><label>الوجهة (للتبرع النقدي العام فقط)</label><select id="rcl-dest"><option value="">— تلقائي / ثابت —</option><option value="food">صندوق الغداء</option><option value="diwan">خزينة الديوان</option><option value="historical_deficit">حساب تسوية العجز</option></select></div>
       <div class="fi full"><label>المبلغ المُعاد تصنيفه (₪)</label><input type="number" id="rcl-amount" min="0.01" step="0.01" placeholder="0.00"><div style="font-size:10.5px;color:var(--tx3);margin-top:4px" id="rcl-amount-hint">اتركه بالمبلغ الكامل لنقل السند بالكامل، أو أدخل جزءاً لإعادة تصنيفٍ جزئية: يبقى الباقي في الصندوق الأصلي وينتقل هذا الجزء بسندٍ جديدٍ مرتبط.</div></div>
       <div class="fi full"><label>السبب <span class="req">*</span></label><input type="text" id="rcl-reason" placeholder="سبب التصحيح الإداري"></div>

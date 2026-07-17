@@ -412,6 +412,25 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
 /* Domain 4 — reclassification admin UI (invokes the governed reclassifyVoucher).
    Single Admin creates+approves this release (separation of duties designed, not
    yet activated); the operation is classification-only and fully audited. */
+/* When the admin picks a new event type, the destination is bound to that event's
+   constitutional treasury (subscription/collection/food/diwan/deficit events each
+   have a FIXED treasury). Leaving the dropdown on the old fund is what triggered
+   «وجهة هذا الحدث ثابتةٌ دستورياً» — so we auto-set and lock it here. Only the
+   transitional general cash donation (ADMIN_SELECTED) lets the admin choose. */
+window.onReclassTypeChange=function(){
+  const M2=window.MODEL2; if(!M2) return;
+  const mt=document.getElementById('rcl-type')?.value;
+  const dsel=document.getElementById('rcl-dest'); if(!dsel) return;
+  const ev=M2.EVENTS[mt]||{};
+  const CASH_TREAS=['food','diwan','historical_deficit'];
+  if(ev.cash===true && CASH_TREAS.includes(ev.treasury)){        /* fixed treasury */
+    dsel.value=ev.treasury; dsel.disabled=true;
+  } else if(ev.treasury==='ADMIN_SELECTED'){                     /* admin chooses (donation_cash) */
+    dsel.disabled=false;
+  } else {                                                       /* non-cash / derived: no destination */
+    dsel.value=''; dsel.disabled=true;
+  }
+};
 window.openReclassify=function(kind,id){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const row=(kind==='payment'?DB.payments:DB.receipts).find(x=>x.id===id); if(!row){toast('السند غير موجود','err');return;}
@@ -422,6 +441,7 @@ window.openReclassify=function(kind,id){
   const info=document.getElementById('rcl-info');
   if(info) info.textContent=`${row.no} · ₪${fmt(row.amount_ils||row.amount)} · ${row.receipt_date||row.payment_date} · الحالي: ${row.movement_type||'—'} → ${row.destination_treasury||'—'}`;
   const dsel=document.getElementById('rcl-dest'); if(dsel) dsel.value=row.destination_treasury||'';
+  window.onReclassTypeChange();   /* sync the destination to the (initial) event type */
   const rsn=document.getElementById('rcl-reason'); if(rsn) rsn.value='';
   /* FIX 3 — default the amount field to the full voucher (full move); the admin
      may lower it for a partial split. */
