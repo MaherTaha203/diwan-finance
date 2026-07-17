@@ -370,19 +370,37 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
     const newNo=nextNo(kind==='payment'?'PAY':'REC', kind==='payment'?DB.payments:DB.receipts);
     const _curTag=cur!=='ILS'?` (${fmtD?fmtD(childNative):childNative} ${cur})`:'';
     const splitNote=(row.notes?String(row.notes)+' · ':'')+`جزءٌ مُعاد تصنيفه من ${row.no} (₪${fmt(childILS)}${_curTag}) — ${String(reason).trim()}`;
+    /* Build the child payload with ONLY the columns that exist on the target table:
+       `receipts` carries payer-side + register/display columns; `payments` carries
+       beneficiary-side + expense columns. Mixing them (e.g. beneficiary_name on a
+       receipt) makes PostgREST reject the whole insert ("Could not find the column").
+       The parent→child link lives in the note, voucher_versions and the audit log. */
     const ins={
       no:newNo, verification_token:genVerificationToken(),
       fund_type: kind==='payment' ? (effDest==='diwan'?'diwan':'food') : mp.fund_type,
       movement_type:next.movement_type, destination_treasury:effDest||null,
-      movement_reason:next.movement_reason||'reclassification_split', register_category:next.register_category||null,
-      payer_type:row.payer_type||null, member_id:row.member_id||null, contact_id:row.contact_id||null,
-      payer_name:row.payer_name||null, beneficiary_name:row.beneficiary_name||null,
+      movement_reason:next.movement_reason||'reclassification_split',
+      member_id:row.member_id||null,
       amount:childNative, currency:cur, amount_ils:childILS, exchange_rate:rate,
       payment_method:row.payment_method||'cash', notes:splitNote,
-      reclassified_from:row.no, version:1, created_by:editor
+      version:1, created_by:editor
     };
-    if(kind==='payment'){ ins.payment_date=row.payment_date; ins.expense_type=row.expense_type||null; }
-    else { ins.receipt_date=row.receipt_date; ins.donation_display_fund=mp.disp; ins.food_donation_allocation=null; ins.current_addition=null; }
+    if(kind==='payment'){
+      ins.payment_date=row.payment_date;
+      ins.beneficiary_type=row.beneficiary_type||null;
+      ins.beneficiary_name=row.beneficiary_name||null;
+      ins.expense_type=row.expense_type||null;
+      ins.approved_by=row.approved_by||null;
+    } else {
+      ins.receipt_date=row.receipt_date;
+      ins.payer_type=row.payer_type||null;
+      ins.contact_id=row.contact_id||null;
+      ins.payer_name=row.payer_name||null;
+      ins.register_category=next.register_category||null;
+      ins.donation_display_fund=mp.disp;
+      ins.food_donation_allocation=null;
+      ins.current_addition=null;
+    }
     const{data:newRow,error:iErr}=await SB.from(table).insert(ins).select().single();
     if(iErr){toast('فشل إنشاء الجزء المنقول: '+iErr.message,'err');return false;}
     /* 2) reduce the original to the retained portion (audited pre/post snapshot) */
@@ -408,7 +426,11 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
   await recordVoucherVersion(kind==='payment'?'payment':'receipt',row,
     Object.assign({},row,next,{version:newVer}),
     'إعادة تصنيف استثنائية · Reclassification — '+String(reason).trim(),newVer);
-  const{error:uErr}=await SB.from(table).update(Object.assign({},next,{version:newVer})).eq('id',voucherId);
+  /* `register_category` exists only on `receipts` — omit it from a payment update
+     so PostgREST doesn't reject the whole statement on an unknown column. */
+  const nextUpd=Object.assign({},next,{version:newVer});
+  if(kind==='payment') delete nextUpd.register_category;
+  const{error:uErr}=await SB.from(table).update(nextUpd).eq('id',voucherId);
   if(uErr){toast('فشل التحديث: '+uErr.message,'err');return false;}
   await logAction('reclassify',
     `إعادة تصنيف ${row.no}: ${prev.movement_type||'—'}→${next.movement_type}`+
