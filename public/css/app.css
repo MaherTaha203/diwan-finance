@@ -2075,3 +2075,26 @@ body:not(.light) #pg-reservations .res-vrow>i{color:#93B0DC}
   box-shadow:0 14px 34px -24px rgba(15,27,51,.45)}
 body.pg-res-on #res-fab{background:var(--dx-lime);color:var(--dx-limeink);
   box-shadow:0 16px 36px -12px rgba(140,165,0,.6)}
+
+/* ═══════════════ POST-REVIEW FIX 1 + FIX 2 — سلوك الشريط الجانبي وعرضه ═══════════════ */
+/* FIX 2 — عرض الشريط المفتوح = عرض لوحة الشعار العليا بالضبط (مرساة يمنى مشتركة inset:18px).
+   نوحّد العرضين عبر متغيّر واحد فيتطابقان بكسلاً ببكسل؛ والانتقال ناعم أصلاً (transition:width). */
+:root{ --rail-w:210px; }
+.top-logo{ width:var(--rail-w); box-sizing:border-box; }
+.sb{ --sbw:var(--rail-w); }
+.layout{ padding-inline-start:calc(var(--rail-w) + 36px); }
+
+/* FIX 1 — معاينة الـHover على الشريط المطوي: أيقونات وأسماء الصفحات فقط.
+   لا مربع بحث، لا عناوين أقسام، لا معلومات إضافية. وعند خروج الماوس يعود مطوياً
+   مباشرةً (سلوك :hover لا يغيّر الوضع، فلا يتحوّل إلى مثبّت). */
+body.sb-mini .sb:hover .sb-search-wrap{ display:none !important; }
+body.sb-mini .sb:hover .nbg-h,
+body.sb-mini .sb:hover .nbg-caret{ display:none !important; }
+/* أسماء الصفحات تظهر في المعاينة — نتجاوز الـ!important القاطع للمطوي */
+body.sb-mini .sb:hover .nb-t{ display:block !important; }
+body.sb-mini .sb:hover .nb{ justify-content:flex-start; padding:0 12px; gap:9px; }
+/* لكن الشارات والنجوم تبقى مخفيّة (لا معلومات إضافية) */
+body.sb-mini .sb:hover .nb .k,
+body.sb-mini .sb:hover .nb-star{ display:none !important; }
+/* تبقى فواصل المجموعات خفيّةً كتنظيمٍ بصريٍّ بلا عناوين */
+body.sb-mini .sb:hover .nbg + .nbg{ border-top:1px solid var(--chrome-line); margin-top:3px; padding-top:3px; }

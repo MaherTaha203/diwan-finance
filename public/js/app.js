@@ -375,7 +375,10 @@ const D={
   }},
   'don':{render(){
     const q=(document.getElementById('q-don')?.value||'').toLowerCase();
-    let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
+    /* POST-REVIEW FIX 4 — صندوق العجز التاريخي وجهةٌ محاسبيةٌ داخل صندوق الغداء،
+       لا وحدةٌ مستقلّةٌ في سجل التبرعات: كل حركةٍ موجَّهةٍ للعجز التاريخي تُستبعَد
+       من هذا السجل (تظهر في صندوق الغداء وكشف الحساب والأرصدة بدلًا من ذلك). */
+    let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.destination_treasury!=='historical_deficit');
     if(q)d=d.filter(r=>(r.payer_name||gmn(r.member_id)||'').toLowerCase().includes(q));
     /* Domain 3 — filter by donation category/destination (search ownership). */
     const _ft=document.getElementById('f-don-type')?.value||'';
@@ -383,7 +386,6 @@ const D={
     else if(_ft==='cash') d=d.filter(r=>FIN2.isCashDonation(r.movement_type));
     else if(_ft==='cash-food') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='food');
     else if(_ft==='cash-diwan') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='diwan');
-    else if(_ft==='cash-deficit') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='historical_deficit');
     const _cash=d.filter(r=>FIN2.isCashDonation(r.movement_type)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
     const sub=document.getElementById('don-sub');

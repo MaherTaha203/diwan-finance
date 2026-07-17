@@ -333,6 +333,67 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
               movement_reason:newClass.reason||newClass.movement_reason||null,
               register_category:newClass.register_category??null};
   const editor=CUR?.full_name||CU?.email||'admin';
+
+  /* ═══ POST-REVIEW FIX 3 — PARTIAL RECLASSIFICATION (split, not full move) ═══
+     A subscription/receipt of e.g. ₪597 may be split: part stays in the original
+     fund (₪197 keeps its old classification) and part moves to the new fund (₪400
+     takes the new classification). We never mutate money silently: the original
+     amount is reduced (audited pre/post snapshot) and a NEW linked voucher carries
+     the moved portion with the new classification, so BOTH fund balances, both
+     ledgers, the member statement, the running balance and every report update
+     from the live rows — with the full accounting history preserved. */
+  const R2v=n=>Math.round((Number(n)||0)*100)/100;
+  const fullAmt=R2v(row.amount_ils||row.amount||0);
+  const partAmt=(newClass.amount!=null&&newClass.amount!=='')?R2v(newClass.amount):fullAmt;
+  if(partAmt>0 && partAmt<fullAmt){
+    if((row.currency||'ILS')!=='ILS'){
+      toast('الإعادة الجزئية متاحةٌ للسندات بالشيكل فقط — أعد التصنيف كاملاً للعملات الأجنبية','err');return false;}
+    const remainAmt=R2v(fullAmt-partAmt);
+    /* resolve the effective destination treasury: the admin may leave the dropdown
+       on «auto» for a fixed-treasury event — take the event's constitutional treasury. */
+    const _evNew=M2.EVENTS[next.movement_type]||{};
+    let effDest=next.destination_treasury;
+    if(!effDest && _evNew.cash===true && _evNew.treasury && _evNew.treasury!=='ADMIN_SELECTED' && _evNew.treasury!=='FROM_LINKED_ORIGIN') effDest=_evNew.treasury;
+    /* 1) the moved portion → a NEW linked voucher carrying the new classification */
+    const _fundForDest=d=> d==='diwan' ? {fund_type:'diwan',disp:null}
+                         : d==='historical_deficit' ? {fund_type:'donation',disp:'food'}
+                         : {fund_type:'food',disp:null};
+    const mp=_fundForDest(effDest);
+    const newNo=nextNo(kind==='payment'?'PAY':'REC', kind==='payment'?DB.payments:DB.receipts);
+    const splitNote=(row.notes?String(row.notes)+' · ':'')+`جزءٌ مُعاد تصنيفه من ${row.no} (₪${fmt(partAmt)}) — ${String(reason).trim()}`;
+    const ins={
+      no:newNo, verification_token:genVerificationToken(),
+      fund_type: kind==='payment' ? (effDest==='diwan'?'diwan':'food') : mp.fund_type,
+      movement_type:next.movement_type, destination_treasury:effDest||null,
+      movement_reason:next.movement_reason||'reclassification_split', register_category:next.register_category||null,
+      payer_type:row.payer_type||null, member_id:row.member_id||null, contact_id:row.contact_id||null,
+      payer_name:row.payer_name||null, beneficiary_name:row.beneficiary_name||null,
+      amount:partAmt, currency:'ILS', amount_ils:partAmt, exchange_rate:1,
+      payment_method:row.payment_method||'cash', notes:splitNote,
+      reclassified_from:row.no, version:1, created_by:editor
+    };
+    if(kind==='payment'){ ins.payment_date=row.payment_date; ins.expense_type=row.expense_type||null; }
+    else { ins.receipt_date=row.receipt_date; ins.donation_display_fund=mp.disp; ins.food_donation_allocation=null; ins.current_addition=null; }
+    const{data:newRow,error:iErr}=await SB.from(table).insert(ins).select().single();
+    if(iErr){toast('فشل إنشاء الجزء المنقول: '+iErr.message,'err');return false;}
+    /* 2) reduce the original to the retained portion (audited pre/post snapshot) */
+    const origVer=Number(row.version||1)+1;
+    const reducedRow=Object.assign({},row,{amount:remainAmt,amount_ils:remainAmt,version:origVer});
+    await recordVoucherVersion(kind==='payment'?'payment':'receipt',row,reducedRow,
+      `إعادة تصنيف جزئية · Partial reclassification — نُقل ₪${fmt(partAmt)} إلى ${newNo} · تبقّى ₪${fmt(remainAmt)} — ${String(reason).trim()}`,origVer);
+    const{error:uErr}=await SB.from(table).update({amount:remainAmt,amount_ils:remainAmt,version:origVer}).eq('id',voucherId);
+    if(uErr){toast('فشل تخفيض السند الأصلي: '+uErr.message,'err');return false;}
+    await logAction('reclassify',
+      `إعادة تصنيف جزئية ${row.no}: نُقل ₪${fmt(partAmt)} → ${newNo} (${next.movement_type} · ${next.destination_treasury||'—'})`+
+      ` · تبقّى ₪${fmt(remainAmt)} في ${prev.movement_type||'—'} · السبب: ${String(reason).trim()}`,
+      table,voucherId);
+    await loadAll();
+    toast(`✓ إعادة تصنيف جزئية: ₪${fmt(remainAmt)} تبقّى · ₪${fmt(partAmt)} انتقل إلى ${newNo}`,'ok');
+    return true;
+  }
+  if(partAmt<=0 || partAmt>fullAmt){ toast('المبلغ المُعاد تصنيفه غير صالح (يجب أن يكون بين ₪0 و ₪'+fmt(fullAmt)+')','err');return false; }
+
+  /* ═══ FULL reclassification (classification-only; amount unchanged) ═══ */
   const newVer=Number(row.version||1)+1;
   /* immutable evidence FIRST: full pre/post snapshot + the reason */
   await recordVoucherVersion(kind==='payment'?'payment':'receipt',row,
@@ -362,6 +423,10 @@ window.openReclassify=function(kind,id){
   if(info) info.textContent=`${row.no} · ₪${fmt(row.amount_ils||row.amount)} · ${row.receipt_date||row.payment_date} · الحالي: ${row.movement_type||'—'} → ${row.destination_treasury||'—'}`;
   const dsel=document.getElementById('rcl-dest'); if(dsel) dsel.value=row.destination_treasury||'';
   const rsn=document.getElementById('rcl-reason'); if(rsn) rsn.value='';
+  /* FIX 3 — default the amount field to the full voucher (full move); the admin
+     may lower it for a partial split. */
+  const amt=document.getElementById('rcl-amount');
+  if(amt){ amt.value=Math.round((Number(row.amount_ils||row.amount)||0)*100)/100; amt.max=amt.value; }
   window.openM('reclass');
 };
 window.doReclassify=async function(){
@@ -369,7 +434,8 @@ window.doReclassify=async function(){
   const mt=document.getElementById('rcl-type')?.value;
   const dest=document.getElementById('rcl-dest')?.value||null;
   const reason=document.getElementById('rcl-reason')?.value;
-  const ok=await window.reclassifyVoucher(kind,id,{movement_type:mt,destination_treasury:dest},reason);
+  const amount=document.getElementById('rcl-amount')?.value;
+  const ok=await window.reclassifyVoucher(kind,id,{movement_type:mt,destination_treasury:dest,amount:amount},reason);
   if(ok) window.closeM();
 };
 async function fetchVoucherHistory(kind,voucherId){

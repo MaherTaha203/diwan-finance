@@ -255,7 +255,10 @@ window.exportDelinquentExcel=function(){
 window.prtDonStmt=function(mode){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const _en=window.LANG==='en';
-  const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
+  /* POST-REVIEW FIX 4 — deficit-directed movements belong to the Food Fund
+     (historical deficit is an accounting destination inside Food), never the
+     donations statement. They appear in the fund/member statements instead. */
+  const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.destination_treasury!=='historical_deficit');
   /* Domain 3 (§4.2 enforcement) — the printed CASH total must never conflate the
      in-kind documentary value. Split: cash donations vs in-kind/service (FE-008,
      documentary only, no cash). The in-kind value is shown SEPARATELY, never in
