@@ -343,12 +343,20 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
      ledgers, the member statement, the running balance and every report update
      from the live rows — with the full accounting history preserved. */
   const R2v=n=>Math.round((Number(n)||0)*100)/100;
-  const fullAmt=R2v(row.amount_ils||row.amount||0);
-  const partAmt=(newClass.amount!=null&&newClass.amount!=='')?R2v(newClass.amount):fullAmt;
+  const fullAmt=R2v(row.amount_ils||row.amount||0);           /* ILS value (authoritative) */
+  const partAmt=(newClass.amount!=null&&newClass.amount!=='')?R2v(newClass.amount):fullAmt;  /* entered in ILS */
   if(partAmt>0 && partAmt<fullAmt){
-    if((row.currency||'ILS')!=='ILS'){
-      toast('الإعادة الجزئية متاحةٌ للسندات بالشيكل فقط — أعد التصنيف كاملاً للعملات الأجنبية','err');return false;}
-    const remainAmt=R2v(fullAmt-partAmt);
+    /* Currency-preserving split (owner ruling): the NATIVE amount is split in the
+       same ILS proportion, so BOTH parts keep the original currency and BOTH the
+       native total AND the ILS total are conserved exactly (balances use amount_ils).
+       For a shekel voucher rate=1, so native==ILS and the entered amount is exact. */
+    const rate=Number(row.exchange_rate)||1;
+    const cur=row.currency||'ILS';
+    const nativeBase=R2v(Number(row.amount)||fullAmt);
+    const childNative=R2v(nativeBase*partAmt/fullAmt);
+    const childILS=R2v(childNative*rate);
+    const remainNative=R2v(nativeBase-childNative);
+    const remainILS=R2v(fullAmt-childILS);
     /* resolve the effective destination treasury: the admin may leave the dropdown
        on «auto» for a fixed-treasury event — take the event's constitutional treasury. */
     const _evNew=M2.EVENTS[next.movement_type]||{};
@@ -360,7 +368,8 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
                          : {fund_type:'food',disp:null};
     const mp=_fundForDest(effDest);
     const newNo=nextNo(kind==='payment'?'PAY':'REC', kind==='payment'?DB.payments:DB.receipts);
-    const splitNote=(row.notes?String(row.notes)+' · ':'')+`جزءٌ مُعاد تصنيفه من ${row.no} (₪${fmt(partAmt)}) — ${String(reason).trim()}`;
+    const _curTag=cur!=='ILS'?` (${fmtD?fmtD(childNative):childNative} ${cur})`:'';
+    const splitNote=(row.notes?String(row.notes)+' · ':'')+`جزءٌ مُعاد تصنيفه من ${row.no} (₪${fmt(childILS)}${_curTag}) — ${String(reason).trim()}`;
     const ins={
       no:newNo, verification_token:genVerificationToken(),
       fund_type: kind==='payment' ? (effDest==='diwan'?'diwan':'food') : mp.fund_type,
@@ -368,7 +377,7 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
       movement_reason:next.movement_reason||'reclassification_split', register_category:next.register_category||null,
       payer_type:row.payer_type||null, member_id:row.member_id||null, contact_id:row.contact_id||null,
       payer_name:row.payer_name||null, beneficiary_name:row.beneficiary_name||null,
-      amount:partAmt, currency:'ILS', amount_ils:partAmt, exchange_rate:1,
+      amount:childNative, currency:cur, amount_ils:childILS, exchange_rate:rate,
       payment_method:row.payment_method||'cash', notes:splitNote,
       reclassified_from:row.no, version:1, created_by:editor
     };
@@ -378,17 +387,17 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
     if(iErr){toast('فشل إنشاء الجزء المنقول: '+iErr.message,'err');return false;}
     /* 2) reduce the original to the retained portion (audited pre/post snapshot) */
     const origVer=Number(row.version||1)+1;
-    const reducedRow=Object.assign({},row,{amount:remainAmt,amount_ils:remainAmt,version:origVer});
+    const reducedRow=Object.assign({},row,{amount:remainNative,amount_ils:remainILS,version:origVer});
     await recordVoucherVersion(kind==='payment'?'payment':'receipt',row,reducedRow,
-      `إعادة تصنيف جزئية · Partial reclassification — نُقل ₪${fmt(partAmt)} إلى ${newNo} · تبقّى ₪${fmt(remainAmt)} — ${String(reason).trim()}`,origVer);
-    const{error:uErr}=await SB.from(table).update({amount:remainAmt,amount_ils:remainAmt,version:origVer}).eq('id',voucherId);
+      `إعادة تصنيف جزئية · Partial reclassification — نُقل ₪${fmt(childILS)} إلى ${newNo} · تبقّى ₪${fmt(remainILS)} — ${String(reason).trim()}`,origVer);
+    const{error:uErr}=await SB.from(table).update({amount:remainNative,amount_ils:remainILS,version:origVer}).eq('id',voucherId);
     if(uErr){toast('فشل تخفيض السند الأصلي: '+uErr.message,'err');return false;}
     await logAction('reclassify',
-      `إعادة تصنيف جزئية ${row.no}: نُقل ₪${fmt(partAmt)} → ${newNo} (${next.movement_type} · ${next.destination_treasury||'—'})`+
-      ` · تبقّى ₪${fmt(remainAmt)} في ${prev.movement_type||'—'} · السبب: ${String(reason).trim()}`,
+      `إعادة تصنيف جزئية ${row.no}: نُقل ₪${fmt(childILS)} → ${newNo} (${next.movement_type} · ${next.destination_treasury||'—'})`+
+      ` · تبقّى ₪${fmt(remainILS)} في ${prev.movement_type||'—'} · السبب: ${String(reason).trim()}`,
       table,voucherId);
     await loadAll();
-    toast(`✓ إعادة تصنيف جزئية: ₪${fmt(remainAmt)} تبقّى · ₪${fmt(partAmt)} انتقل إلى ${newNo}`,'ok');
+    toast(`✓ إعادة تصنيف جزئية: ₪${fmt(remainILS)} تبقّى · ₪${fmt(childILS)} انتقل إلى ${newNo}`,'ok');
     return true;
   }
   if(partAmt<=0 || partAmt>fullAmt){ toast('المبلغ المُعاد تصنيفه غير صالح (يجب أن يكون بين ₪0 و ₪'+fmt(fullAmt)+')','err');return false; }
