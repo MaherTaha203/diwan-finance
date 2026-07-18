@@ -279,9 +279,9 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(7,'receipts');return;}
     body.innerHTML=page.map(r=>`<tr>
-      <td class="c-no"><span class="doc">${esc(r.no)}</span></td>
+      <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(r.no)}')">${esc(r.no)}</span></td>
       <td class="c-date">${fdate(r.receipt_date)}</td>
-      <td class="c-name">${esc(r.payer_name||gmn(r.member_id))}</td>
+      <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(r.no)}')">${esc(r.payer_name||gmn(r.member_id))}</span></td>
       <td class="num pos-amt c-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td class="c-notes">${esc(r.notes||'—')}</td>
@@ -305,9 +305,9 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(7,'expenses');return;}
     body.innerHTML=page.map(p=>`<tr>
-      <td class="c-no"><span class="doc">${esc(p.no)}</span></td>
+      <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(p.no)}')">${esc(p.no)}</span></td>
       <td class="c-date">${fdate(p.payment_date)}</td>
-      <td class="c-name">${esc(p.beneficiary_name||gmn(p.member_id))}</td>
+      <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(p.no)}')">${esc(p.beneficiary_name||gmn(p.member_id))}</span></td>
       <td class="num neg-amt c-amt">₪ ${fmt(p.amount_ils||p.amount)}</td>
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
       <td class="c-notes">${esc(p.notes||'—')}</td>
@@ -331,9 +331,9 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'receipts');return;}
     body.innerHTML=page.map(r=>`<tr>
-      <td class="c-no"><span class="doc">${esc(r.no)}</span></td>
+      <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(r.no)}')">${esc(r.no)}</span></td>
       <td class="c-date">${fdate(r.receipt_date)}</td>
-      <td class="c-name">${esc(r.payer_name||gmn(r.member_id))}</td>
+      <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(r.no)}')">${esc(r.payer_name||gmn(r.member_id))}</span></td>
       <td class="num pos-amt c-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'diwan'}">${r.currency}</span></td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
@@ -360,9 +360,9 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'expenses');return;}
     body.innerHTML=page.map(p=>`<tr>
-      <td class="c-no"><span class="doc">${esc(p.no)}</span></td>
+      <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(p.no)}')">${esc(p.no)}</span></td>
       <td class="c-date">${fdate(p.payment_date)}</td>
-      <td class="c-name">${esc(p.beneficiary_name||gmn(p.member_id))}</td>
+      <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(p.no)}')">${esc(p.beneficiary_name||gmn(p.member_id))}</span></td>
       <td class="num neg-amt c-amt">₪ ${fmt(p.amount_ils||p.amount)}</td>
       <td><span class="badge diwan">${L.expense(p.expense_type)}</span></td>
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
@@ -397,9 +397,9 @@ const D={
     if(!body)return;
     if(!page.length){body.innerHTML=emptyRow(8,'donations');return;}
     body.innerHTML=page.map(r=>`<tr>
-      <td class="c-no"><span class="doc">${esc(r.no)}</span></td>
+      <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(r.no)}')">${esc(r.no)}</span></td>
       <td class="c-date">${fdate(r.receipt_date)}</td>
-      <td class="c-name">${esc(r.payer_name||gmn(r.member_id))}</td>
+      <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(r.no)}')">${esc(r.payer_name||gmn(r.member_id))}</span></td>
       <td class="num c-amt don-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'don'}">${r.currency}</span></td>
       <td>${(function(){
@@ -597,7 +597,7 @@ function renderTreasuryPanel(){
       middle+=`<div class="tp-led">
         <div class="tp-led-h">قيود مخصّصة للعجز · ${dEntries.length}</div>
         <div class="tp-led-list">${dEntries.map(e=>`<div class="tp-led-row">
-          <div class="li">${e.no?`<span class="no">${e.no}</span>`:''}<span class="nm">${e.payer||(e.member_id?gmn(e.member_id):'—')}</span><span class="ty">${kindLbl[e.kind]||'موجَّه للعجز'}</span></div>
+          <div class="li">${e.no?`<span class="no lnk-no" onclick="window.openVoucherByNo('${esc(e.no)}')">${esc(e.no)}</span>`:''}<span class="nm${e.no?' lnk-nm':''}"${e.no?` onclick="window.openPersonByVoucher('${esc(e.no)}')"`:''}>${esc(e.payer||(e.member_id?gmn(e.member_id):'—'))}</span><span class="ty">${kindLbl[e.kind]||'موجَّه للعجز'}</span></div>
           <div class="ri"><span class="am">₪ ${fmt(e.amount)}</span><span class="dt">${e.date?fdate(e.date):''}</span></div>
         </div>`).join('')}</div>
       </div>`;
@@ -702,6 +702,55 @@ window.dashDebtCollect=function(id){
   window.openRec('food');
   setTimeout(()=>{ const s=document.getElementById('rec-member');
     if(s){ s.value=id; s.dispatchEvent(new Event('change')); } },150);
+};
+
+/* ═══ Click-through in statements (display only) ═══
+   Clicking a voucher number opens the voucher; clicking a person's name opens
+   their account statement (family member) or a compact vouchers card (external
+   contact / manual payer). Every action reuses existing behaviour — no engine,
+   calculation or data change. */
+window.openVoucherByNo=function(no){
+  if(!no||no==='—') return;
+  const r=DB.receipts.find(x=>x.no===no); if(r){ window.prtRec(r.id); return; }
+  const p=DB.payments.find(x=>x.no===no); if(p){ window.prtPay(p.id); return; }
+  toast(window.t?window.t('errors.not_found')||'السند غير موجود':'السند غير موجود','err');
+};
+window.openPersonStmt=function(memberId){
+  if(!memberId) return;
+  window.nav('member-stmt');
+  const s=document.getElementById('ms-member');
+  if(s){ s.value=memberId; if(typeof window.renderMemberStmt==='function') window.renderMemberStmt(); }
+};
+/* Resolve the person behind a voucher: family member → account statement,
+   otherwise → the external-person vouchers card. */
+window.openPersonByVoucher=function(no){
+  if(!no||no==='—') return;
+  const v=DB.receipts.find(x=>x.no===no)||DB.payments.find(x=>x.no===no);
+  if(!v) return;
+  if(v.member_id){ window.openPersonStmt(v.member_id); return; }
+  window.openPersonCard(v.payer_name||v.beneficiary_name||'—', v.contact_id||null);
+};
+/* External person (contact/manual): a small card listing every voucher bearing
+   this person — matched by contact_id when present, else by exact name — each row
+   opening its voucher. */
+window.openPersonCard=function(name, contactId){
+  const nm=String(name||'').trim();
+  const recs=DB.receipts.filter(r=>!r.is_deleted&&!r.member_id&&((contactId&&r.contact_id===contactId)||(r.payer_name||'').trim()===nm))
+    .map(r=>({kind:'receipt',no:r.no,date:r.receipt_date,amount:Number(r.amount_ils||r.amount||0),desc:r.notes||''}));
+  const pays=DB.payments.filter(p=>!p.is_deleted&&!p.member_id&&(p.beneficiary_name||'').trim()===nm)
+    .map(p=>({kind:'payment',no:p.no,date:p.payment_date,amount:Number(p.amount_ils||p.amount||0),desc:(typeof L!=='undefined'&&L.expense?L.expense(p.expense_type):'')||p.notes||''}));
+  const all=recs.concat(pays).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+  const totIn=recs.reduce((s,x)=>s+x.amount,0), totOut=pays.reduce((s,x)=>s+x.amount,0);
+  const t=document.getElementById('person-card-title'); if(t) t.textContent=nm||'سندات الشخص';
+  const body=document.getElementById('person-card-body');
+  if(body){
+    body.innerHTML=`<div class="pc-sum"><div class="pc-meta">${all.length} سند · مقبوضات ₪${fmt(totIn)}${pays.length?` · مصروفات ₪${fmt(totOut)}`:''}</div></div>`
+      +`<div class="pc-list">${all.length?all.map(x=>`<div class="pc-row" onclick="window.openVoucherByNo('${esc(x.no)}')">
+          <div class="li"><span class="no">${esc(x.no)}</span><span class="ty ${x.kind}">${x.kind==='payment'?'صرف':'قبض'}</span><span class="ds">${esc(String(x.desc||'').slice(0,44))}</span></div>
+          <div class="ri"><span class="am ${x.kind==='payment'?'out':'in'}">₪ ${fmt(x.amount)}</span><span class="dt">${x.date?fdate(x.date):''}</span></div>
+        </div>`).join(''):'<div class="pc-empty">لا سندات مسجّلة لهذا الشخص</div>'}</div>`;
+  }
+  if(typeof window.openM==='function') window.openM('person');
 };
 function countUpKpis(){
   /* DX-14 «نبضة التحديث الحيّ»: أول ظهورٍ يعدّ من الصفر؛ وبعدها يعدّ كل مربّعٍ
@@ -904,7 +953,7 @@ window.renderStmt=function(fund){
     bal+=r.cr-r.dr;totalCr+=r.cr;totalDr+=r.dr;
     return '<tr>'
       +'<td class="as-c">'+fdate(r.date)+'</td>'
-      +'<td class="as-desc">'+esc(r.name||'—')+'</td>'
+      +'<td class="as-desc">'+(r.no?'<span class="lnk-nm" onclick="window.openPersonByVoucher(\''+esc(r.no)+'\')">'+esc(r.name||'—')+'</span>':esc(r.name||'—'))+'</td>'
       +'<td class="as-desc">'+esc(r.desc)+'</td>'
       +'<td class="as-num as-cr">'+(r.cr>0?'₪ '+fmt(r.cr):(r.type==='don'?'<span style="color:var(--don);font-size:11px">'+(_en?'Donation':'تبرع')+'</span>':'—'))+'</td>'
       +'<td class="as-num as-dr">'+(r.dr>0?'₪ '+fmt(r.dr):'—')+'</td>'
@@ -1026,7 +1075,7 @@ window.renderMemberStmt=function(){
       +'<td class="as-c">'+fdate(r.date)+'</td>'
       +'<td class="as-desc">'+desc+'</td>'
       +'<td class="as-c">'+year+'</td>'
-      +'<td class="as-c">'+sysNo+'</td>'
+      +'<td class="as-c">'+(isReceipt?'<span class="lnk-no" onclick="window.openVoucherByNo(\''+esc(r.no)+'\')">'+sysNo+'</span>':sysNo)+'</td>'
       +'<td class="as-c '+(refNo==='—'?'as-mut':'as-ref')+'">'+refNo+'</td>'
       +'<td class="as-num">'+(r.dr>0?'₪ '+fmt(r.dr):'<span class="as-mut">—</span>')+'</td>'
       +'<td class="as-num">'+(r.cr>0?'₪ '+fmt(r.cr):'<span class="as-mut">—</span>')+'</td>'

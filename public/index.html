@@ -917,6 +917,13 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="mft"><button class="btn primary" id="inv-submit" onclick="window.inviteUser()"><i class="ti ti-send"></i>إنشاء الحساب</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
   </div>
 
+  <!-- Person vouchers card (external contact / manual payer) -->
+  <div class="modal" id="m-person" style="display:none;max-width:460px">
+    <div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-user-search"></i></span><span id="person-card-title">سندات الشخص</span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd" id="person-card-body"></div>
+    <div class="mft"><button class="btn" onclick="window.closeM()">إغلاق</button></div>
+  </div>
+
   <!-- Change Password — replaced by the AuthDS full experience (#pass-screen, auth-password.js) -->
 </div>
 

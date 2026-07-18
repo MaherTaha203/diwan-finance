@@ -78,7 +78,7 @@ function renderAnnualDebt(){
   let rows=DB.members.filter(m=>m.is_active!==false).map(m=>{
     const st=FIN.memberStatement(m.id);
     const seld=adMemberSelected(m.id);
-    return {code:m.member_code||'—', name:m.name, phone:m.phone||'',
+    return {id:m.id, code:m.member_code||'—', name:m.name, phone:m.phone||'',
       hist:Number(m.historical_balance_ils||0), histPaid:Number(m.historical_payments_ils||0),
       selSub:seld.sub, selPaid:seld.paid, current:st.finalBalance};
   });
@@ -106,7 +106,7 @@ function renderAnnualDebt(){
 
   let tHist=0,tHistPaid=0,tSub=0,tPaid=0;
   const bodyRows=rows.map(r=>{tHist+=r.hist;tHistPaid+=r.histPaid;tSub+=r.selSub;tPaid+=r.selPaid;
-    return '<tr><td>'+esc(r.code)+'</td><td class="as-desc">'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
+    return '<tr><td>'+esc(r.code)+'</td><td class="as-desc"><span class="lnk-nm" onclick="window.openPersonStmt(\''+esc(r.id)+'\')">'+esc(r.name)+'</span></td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
       +'<td class="as-num">₪ '+fmt(r.hist)+'</td><td class="as-num as-cr">₪ '+fmt(r.histPaid)+'</td>'
       +'<td class="as-num">₪ '+fmt(r.selSub)+'</td><td class="as-num as-cr">₪ '+fmt(r.selPaid)+'</td>'
       +'<td class="as-num">'+curCell(r.current)+'</td></tr>';}).join('');
@@ -166,7 +166,7 @@ function _delHeaderLabel(){
 function delinquentRows(){
   const years=FIN.subscriptionYears();
   let rows=DB.members.filter(m=>m.is_active!==false).map(m=>({
-    code:m.member_code||'—', name:m.name, phone:m.phone||'', d:FIN.memberDelinquency(m.id)
+    id:m.id, code:m.member_code||'—', name:m.name, phone:m.phone||'', d:FIN.memberDelinquency(m.id)
   }));
   rows=rows.filter(r=>{
     if(_delPrimary==='all') return true;
@@ -181,8 +181,9 @@ function _delHead(years){
   const en=window.LANG==='en';
   return ['رقم العضو','اسم العضو','الهاتف'].concat(years.map(String)).concat([en?'Unpaid years':'عدد السنوات غير المسددة']);
 }
-function _delRowCells(r, years){
-  return '<td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
+function _delRowCells(r, years, link){
+  const nameCell=link?'<span class="lnk-nm" onclick="window.openPersonStmt(\''+esc(r.id)+'\')">'+esc(r.name)+'</span>':esc(r.name);
+  return '<td>'+esc(r.code)+'</td><td>'+nameCell+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
     +years.map(y=>'<td>'+_delCell(r.d.byYear[y])+'</td>').join('')
     +'<td class="bal">'+(r.d.unpaidCount>0?'<span class="dr"><b>'+r.d.unpaidCount+'</b></span>':'<span class="cr">0</span>')+'</td>';
 }
@@ -200,7 +201,7 @@ function renderDelinquent(){
     .concat(years.map(y=>'<option value="'+y+'"'+(String(_delYear)===String(y)?' selected':'')+'>'+y+'</option>')).join('');
   const yearSel='<select onchange="setDelYear(this.value)" style="height:34px;padding:0 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-weight:700;margin-inline-start:auto">'+yopts+'</select>';
   const head=_delHead(years).map(h=>'<th>'+h+'</th>').join('');
-  const body=rows.map(r=>'<tr>'+_delRowCells(r,years)+'</tr>').join('');
+  const body=rows.map(r=>'<tr>'+_delRowCells(r,years,true)+'</tr>').join('');
   el.innerHTML='<div class="acct-stmt">'
     +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
       +'<div class="as-h">'+(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين')+'</div>'
