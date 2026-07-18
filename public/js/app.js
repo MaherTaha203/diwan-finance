@@ -588,6 +588,20 @@ function renderTreasuryPanel(){
       <div class="ar"><div class="op up">+ تحصيل وتبرعات موجَّهة وتسويات ذمم ₪ ${fmt(inflow)}</div><div class="ln"></div><div class="op dn">− تسويات العجز ₪ ${fmt(settled)}${comp.overflow_to_food>0?` · فائض محوَّل للغداء ₪ ${fmt(comp.overflow_to_food)}`:''}</div></div>
       <div class="nd cur"><div class="t">المتبقّي من العجز</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
+    /* قيود العجز — كل مبلغٍ دخل العجز يُقيَّد كملاحظةٍ مرئيّة برقم سند القبض (عرض
+       فقط، يُقرأ من السندات؛ لا يُنشئ أي حركة). لا قسم «خارج»: المال يُصرف مباشرةً. */
+    const dEntries=(window.FIN2&&FIN2.deficitEntries)?FIN2.deficitEntries():[];
+    if(dEntries.length){
+      const kindLbl={historical_debt_collection:'تحصيل ذمة تاريخية',deficit_cash_donation:'تبرع موجَّه للعجز',
+                     q5_debt_settlement:'تسوية ذمة من تبرع',food_cash_donation:'تبرع موجَّه للعجز',donation_cash:'تبرع موجَّه للعجز'};
+      middle+=`<div class="tp-led">
+        <div class="tp-led-h">قيود مخصّصة للعجز · ${dEntries.length}</div>
+        <div class="tp-led-list">${dEntries.map(e=>`<div class="tp-led-row">
+          <div class="li">${e.no?`<span class="no">${e.no}</span>`:''}<span class="nm">${e.payer||(e.member_id?gmn(e.member_id):'—')}</span><span class="ty">${kindLbl[e.kind]||'موجَّه للعجز'}</span></div>
+          <div class="ri"><span class="am">₪ ${fmt(e.amount)}</span><span class="dt">${e.date?fdate(e.date):''}</span></div>
+        </div>`).join('')}</div>
+      </div>`;
+    }
   } else {
     /* P2-D — the donation REGISTERS: references only, never cash, no balance. */
     const cash=FIN2.cashDonationRegister();

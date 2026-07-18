@@ -153,6 +153,30 @@
         .filter(r=>(eventDef(r.movement_type)||{}).cash===true&&!(eventDef(r.movement_type)||{}).outflow)
         .reduce((s,r)=>s+(r.destination_treasury==='historical_deficit'?amountOf(r):0)+q5Settled(r),0));
     },
+    /* Itemised inflow entries behind deficitInflows() — DISPLAY ONLY (deficit
+       ledger for the treasury view). Every cash inflow directed to the deficit
+       plus each ق5 debt-settled slice, as a dated line carrying its own receipt
+       number. Sums exactly to deficitInflows(); it records money entering the
+       deficit only (settlement money leaves directly, off-ledger by owner ruling
+       — no synthetic in/out pair). */
+    deficitEntries(){
+      const out=[];
+      classifiedRows().forEach(r=>{
+        const ev=eventDef(r.movement_type);
+        if(ev&&ev.cash===true&&!ev.outflow&&r.destination_treasury==='historical_deficit'){
+          out.push({ no:r.no||null, date:r.receipt_date||r.payment_date||null,
+                     payer:r.payer_name||null, member_id:r.member_id||null,
+                     amount:amountOf(r), kind:r.movement_type });
+        }
+        const q5=q5Settled(r);
+        if(q5>0){
+          out.push({ no:r.no||null, date:r.receipt_date||r.payment_date||null,
+                     payer:r.payer_name||null, member_id:r.member_id||null,
+                     amount:R2(q5), kind:'q5_debt_settlement' });
+        }
+      });
+      return out.sort((a,b)=> new Date(a.date||0)-new Date(b.date||0));
+    },
     composed(){
       const OP=(typeof window!=='undefined'&&window.TREASURY_OPENINGS)||{food:0,diwan:0,historical_deficit:0};
       const rem=R2(Number(OP.historical_deficit||0)+FIN2.historicalDeficitTreasury());

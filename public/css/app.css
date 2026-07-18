@@ -598,6 +598,20 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .tp-cr .bl{font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums}.tp-cr .bl.mut{color:var(--mut)}
 .tp-cr .eq{color:var(--pos);font-size:11px;font-weight:700;min-width:92px;text-align:left}.tp-cr .eq.z{color:var(--mut)}
 .tp-ft{background:var(--bg2,#F8FAFC);padding:11px 26px;display:flex;justify-content:space-between;font-size:10px;color:var(--tx3,#6B7280);border-top:1px solid var(--bd,#e2e8f0)}
+/* قيود العجز — كشف مبسّط لكل مبلغٍ دخل صندوق العجز (عرض فقط) */
+.tp-led{border-top:1px solid var(--bd,#e2e8f0);padding:16px 26px}
+.tp-led-h{font-size:12px;font-weight:700;color:var(--tx,#0F1B2D);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tp-led-h:before{content:"";width:3px;height:13px;background:var(--gold);border-radius:2px}
+.tp-led-list{display:flex;flex-direction:column}
+.tp-led-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--bd,#e2e8f0)}
+.tp-led-row:last-child{border-bottom:none}
+.tp-led-row .li{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+.tp-led-row .no{font-size:10.5px;font-weight:800;color:var(--accent);background:var(--bg2,#F8FAFC);border:1px solid var(--bd,#e2e8f0);border-radius:7px;padding:2px 7px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tp-led-row .nm{font-weight:700;color:var(--tx,#0F1B2D);font-size:12.5px}
+.tp-led-row .ty{font-size:10px;color:var(--tx3,#6B7280);font-weight:700}
+.tp-led-row .ri{display:flex;flex-direction:column;align-items:flex-start;gap:2px;white-space:nowrap}
+.tp-led-row .am{font-weight:800;color:var(--pos);font-variant-numeric:tabular-nums;font-size:13px}
+.tp-led-row .dt{font-size:10px;color:var(--tx3,#6B7280);font-variant-numeric:tabular-nums}
 @media(max-width:760px){
   .tp-flow{flex-direction:column}.tp-flow .ar{min-width:0;padding:12px 0;flex-direction:row;gap:12px}
   .tp-flow .ar .ln{width:40px}
