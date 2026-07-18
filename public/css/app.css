@@ -612,6 +612,28 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .tp-led-row .ri{display:flex;flex-direction:column;align-items:flex-start;gap:2px;white-space:nowrap}
 .tp-led-row .am{font-weight:800;color:var(--pos);font-variant-numeric:tabular-nums;font-size:13px}
 .tp-led-row .dt{font-size:10px;color:var(--tx3,#6B7280);font-variant-numeric:tabular-nums}
+/* روابط الكشوف: رقم السند واسم الشخص قابلان للنقر (عرض فقط) */
+.lnk-no{cursor:pointer;color:var(--accent);border-bottom:1px dotted transparent;transition:border-color .15s,color .15s}
+.lnk-no:hover{border-bottom-color:currentColor}
+.lnk-nm{cursor:pointer;border-bottom:1px dotted transparent;transition:border-color .15s,color .15s}
+.lnk-nm:hover{color:var(--accent);border-bottom-color:currentColor}
+/* بطاقة سندات الشخص الخارجي (m-person) */
+.pc-sum{margin-bottom:10px}
+.pc-meta{font-size:12px;color:var(--tx3,#6B7280);font-weight:700}
+.pc-list{display:flex;flex-direction:column;max-height:52vh;overflow:auto}
+.pc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px;border-bottom:1px dashed var(--bd,#e2e8f0);cursor:pointer;border-radius:8px}
+.pc-row:hover{background:var(--bg2,#F8FAFC)}
+.pc-row:last-child{border-bottom:none}
+.pc-row .li{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.pc-row .no{font-size:10.5px;font-weight:800;color:var(--accent);background:var(--bg2,#F8FAFC);border:1px solid var(--bd,#e2e8f0);border-radius:7px;padding:2px 7px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc-row .ty{font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;background:var(--bg2,#F8FAFC);border:1px solid var(--bd,#e2e8f0);color:var(--pos)}
+.pc-row .ty.payment{color:var(--neg)}
+.pc-row .ds{font-size:11px;color:var(--tx3,#6B7280)}
+.pc-row .ri{display:flex;flex-direction:column;align-items:flex-start;gap:2px;white-space:nowrap}
+.pc-row .am{font-weight:800;font-variant-numeric:tabular-nums;font-size:13px}
+.pc-row .am.in{color:var(--pos)}.pc-row .am.out{color:var(--neg)}
+.pc-row .dt{font-size:10px;color:var(--tx3,#6B7280);font-variant-numeric:tabular-nums}
+.pc-empty{text-align:center;color:var(--tx3,#6B7280);font-size:12px;padding:20px}
 @media(max-width:760px){
   .tp-flow{flex-direction:column}.tp-flow .ar{min-width:0;padding:12px 0;flex-direction:row;gap:12px}
   .tp-flow .ar .ln{width:40px}
