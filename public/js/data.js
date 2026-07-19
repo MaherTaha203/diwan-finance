@@ -59,7 +59,12 @@ async function loadAllData(){
       SB.from('contacts').select('*').order('name'),
       SB.from('annual_dues').select('*').order('year',{ascending:false}),
       SB.from('audit_log').select('id,action,description,user_name,created_at').order('created_at',{ascending:false}).limit(50),
-      SB.from('member_subscriptions').select('id,member_id,year,due_amount_ils,paid_amount_ils,balance_ils,is_overridden,override_amount_ils,override_reason'),
+      /* P0/V3 · Law 3 — annual subscription paid has ONE authoritative origin
+         (paid_amount_ils). balance_ils is DB-derived and the override_* columns
+         are constitutionally disabled (see ms_balance_is_derived /
+         ms_no_independent_paid_authority); the client no longer reads any of
+         these second-source fields. */
+      SB.from('member_subscriptions').select('id,member_id,year,due_amount_ils,paid_amount_ils'),
       loadAttachCounts(),   /* independent read — same round trip instead of a serial one */
     ]);
     DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
