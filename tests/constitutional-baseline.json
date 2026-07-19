@@ -1,0 +1,39 @@
+{
+  "treasuries": {
+    "food": 260,
+    "diwan": 580,
+    "historical_deficit_remaining": -503,
+    "overflow_to_food": 0
+  },
+  "fin": {
+    "foodBalance": 260,
+    "diwanBalance": 580,
+    "foodDeficitRemaining": -503,
+    "foodNetPosition": -243,
+    "debtSettlementTotal": 200,
+    "currentSupportTotal": 50,
+    "settlementReserve": 100
+  },
+  "members": [
+    {
+      "id": "M1",
+      "finalBalance": 303
+    },
+    {
+      "id": "M2",
+      "finalBalance": 0
+    }
+  ],
+  "ledgers": {
+    "food": {
+      "rows": 5,
+      "cr": 300,
+      "dr": 90
+    },
+    "diwan": {
+      "rows": 2,
+      "cr": 120,
+      "dr": 40
+    }
+  }
+}
