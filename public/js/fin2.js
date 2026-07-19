@@ -53,6 +53,12 @@
     const sp=F.allocateFoodDonations().perReceipt[r.id];
     return sp?Number(sp.debtSettled||0):0;
   }
+  /* V6 · Law 4 — the ق5 transfer's EXPLICIT accounting identity, from the MODEL2
+     catalog (event q5_debt_settlement_transfer): source treasury (Food) and
+     destination treasury (Historical-Deficit) are declared, not inferred here. */
+  function q5Event(){ const m=M(); return (m&&m.EVENTS&&m.EVENTS.q5_debt_settlement_transfer)||null; }
+  function q5Source(){ const e=q5Event(); return (e&&e.source_treasury)||'food'; }
+  function q5Dest(){ const e=q5Event(); return (e&&e.treasury)||'historical_deficit'; }
 
   const FIN2 = {
     version: 2,
@@ -82,11 +88,14 @@
         const amt=amountOf(r);
         if(r.destination_treasury===key) bal += ev.outflow ? -amt : amt;
         if(r.source_treasury===key)      bal -= amt; /* transfer leaves the source treasury */
-        /* ق5 — move the debt-settled slice: food → historical_deficit */
+        /* ق5 — the debt-settled slice moves per its EXPLICIT accounting identity
+           (V6 · Law 4): out of the source treasury, into the destination treasury.
+           Direction is read from the MODEL2 event, not hard-coded here (same values:
+           food → historical_deficit). */
         const q5=q5Settled(r);
         if(q5>0){
-          if(key==='food')               bal -= q5;
-          if(key==='historical_deficit') bal += q5;
+          if(key===q5Source()) bal -= q5;
+          if(key===q5Dest())   bal += q5;
         }
       });
       return R2(bal);
@@ -131,6 +140,28 @@
     deficitSettlementTotal(){
       return R2(FIN2.deficitSettlements().reduce((s,r)=>s+amountOf(r),0));
     },
+
+    /* ---- ق5 transfers as EXPLICIT classified accounting events (V6 · Law 4) ----
+       Each member food-display donation whose debt-settled slice > 0 IS a first-class
+       transfer event (movement_type q5_debt_settlement_transfer): Food → Historical-
+       Deficit. The amount is derived from the single-source Item-9 allocation; the
+       accounting identity is explicit (declared in MODEL2), not inferred at read time.
+       DISPLAY/audit accessor — the treasury math already applies the same slice, so this
+       adds NO numeric effect; it makes the movement enumerable and self-describing. */
+    q5Transfers(){
+      const ev=q5Event();
+      return liveRows().reduce((out,r)=>{
+        const q5=q5Settled(r);
+        if(q5>0) out.push({
+          no:r.no||null, date:r.receipt_date||r.payment_date||null,
+          payer:r.payer_name||null, member_id:r.member_id||null,
+          amount:R2(q5), movement_type:(ev&&ev.key)||'q5_debt_settlement_transfer',
+          source_treasury:q5Source(), destination_treasury:q5Dest(), automatic:true, derived_from:'item9_debt_settlement'
+        });
+        return out;
+      },[]);
+    },
+    q5TransferTotal(){ return R2(FIN2.q5Transfers().reduce((s,t)=>s+t.amount,0)); },
 
     /* ---- overflow rule (deficit → food when remaining deficit hits zero) ----
        Pure helper describing the ratified rule; no automatic side effect here. */

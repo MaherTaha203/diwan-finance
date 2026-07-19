@@ -75,6 +75,15 @@
     food_expense:                {key:'food_expense',                label_ar:'مصروف غداء',             treasury:'food',               cash:true, outflow:true},
     diwan_expense:               {key:'diwan_expense',               label_ar:'مصروف ديوان',            treasury:'diwan',              cash:true, outflow:true},
     overflow_transfer:           {key:'overflow_transfer',           label_ar:'تحويل فائض العجز للغداء', treasury:'food',               cash:true, automatic:true, source_treasury:'historical_deficit', trigger:'remaining_deficit<=0'},
+    /* V6 · Law 4 (Explicit Classification) — the ق5 transfer promoted to a FIRST-CLASS
+       accounting event. The debt-settled slice of a member's food-display cash donation
+       is an internal cash transfer: it leaves the Food treasury and lands in the
+       Historical-Deficit treasury (it settles the member's OWN historical debt). Its
+       amount is DERIVED from the single-source Item-9 allocation, but its accounting
+       IDENTITY (a Food → Historical-Deficit transfer) is now declared explicitly here,
+       not inferred at read time. Automatic like overflow_transfer (no stored row);
+       purely semantic — zero numeric impact (proven by the golden baseline). */
+    q5_debt_settlement_transfer: {key:'q5_debt_settlement_transfer', label_ar:'تسوية ذمة تاريخية من تبرع غذائي (تحويل داخلي)', treasury:'historical_deficit', cash:true, automatic:true, source_treasury:'food', derived_from:'item9_debt_settlement', trigger:'member_food_donation_settles_own_debt'},
     /* Refund reverses the ORIGINAL receipt; its treasury is derived from the linked
        origin (FEM-01 E-14), never freely chosen — the admin cannot refund from a
        treasury the money never entered. */
