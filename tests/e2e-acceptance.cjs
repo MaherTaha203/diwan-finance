@@ -35,6 +35,13 @@ const HARNESS=(seed)=>{
         vv.push({voucher_kind:a.p_kind,voucher_id:a.p_parent_id,voucher_no:parent.no,version_no:a.p_parent_version,snapshot:a.p_version_snapshot,edit_reason:a.p_version_reason});
         return {data:{child_no:child.no,parent_no:parent.no},error:null};
       }
+      if(name==='create_member_atomic'){
+        const id='m'+Math.random().toString(36).slice(2);
+        (window.__seed.members=window.__seed.members||[]).push(Object.assign({id,is_active:true},a.p_member));
+        const subs=window.__seed.member_subscriptions=window.__seed.member_subscriptions||[];
+        (a.p_subscriptions||[]).forEach(s=>subs.push(Object.assign({id:'s'+Math.random().toString(36).slice(2),member_id:id},s)));
+        return {data:{member_id:id},error:null};
+      }
       return {data:null,error:null};
     }catch(e){return {data:null,error:{message:String(e.message||e)}};} },
     auth:{getSession:async()=>({data:{session:{user:{id:'admin-id',email:'v@l'}}},error:null}),

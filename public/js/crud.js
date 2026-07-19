@@ -234,12 +234,16 @@ window.saveMember=async function(){
   const auth = bal>=0
     ? {historical_balance_ils:bal, historical_payments_ils:0, credit_balance_ils:0}
     : {historical_balance_ils:0, historical_payments_ils:-bal, credit_balance_ils:-bal};
-  const{data:mNew,error}=await SB.from('members').insert({name,phone,notes,opening_balance:bal,active_from_year:fromYear,...auth}).select('id').single();
+  /* ═══ P0 · V2 (Law 7 · Atomicity) — the member and ALL its subscription rows are
+     created as ONE atomic operation via create_member_atomic: full success or full
+     rollback, never a member without a dues schedule (NoSchedule). The values are
+     unchanged from before — only the two writes became atomic. */
+  const memberObj={name,phone,notes,opening_balance:bal,active_from_year:fromYear,...auth};
+  /* R1 — authoritative subscription rows (member_id is assigned atomically inside the RPC). */
+  const subRows=DB.annual.map(a=>({year:a.year,due_amount_ils:(fromYear<=a.year?Number(a.amount||0):0),paid_amount_ils:0,balance_ils:(fromYear<=a.year?Number(a.amount||0):0)}));
+  const{data:mRes,error}=await SB.rpc('create_member_atomic',{p_member:memberObj,p_subscriptions:subRows});
   if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  /* R1 — seed authoritative subscription rows so the new member carries dues. */
-  const subRows=DB.annual.map(a=>({member_id:mNew.id,year:a.year,due_amount_ils:(fromYear<=a.year?Number(a.amount||0):0),paid_amount_ils:0,balance_ils:(fromYear<=a.year?Number(a.amount||0):0)}));
-  if(subRows.length){await SB.from('member_subscriptions').insert(subRows);}
-  await logAction('add',`إضافة عضو: ${name}`,'members',mNew?.id||null);
+  await logAction('add',`إضافة عضو: ${name}`,'members',(mRes&&mRes.member_id)||null);
   window.closeM();await loadAll();toast(window.t('messages.member_added')+' '+name,'ok');
 };
 
