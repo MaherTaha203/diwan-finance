@@ -406,15 +406,27 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
       ins.food_donation_allocation=(mp.fund_type==='donation'&&mp.disp==='food')?'reduce_deficit':null;
       ins.current_addition=null;
     }
-    const{data:newRow,error:iErr}=await SB.from(table).insert(ins).select().single();
-    if(iErr){toast('فشل إنشاء الجزء المنقول: '+iErr.message,'err');return false;}
-    /* 2) reduce the original to the retained portion (audited pre/post snapshot) */
+    /* ═══ P0 · V1 (Law 7 · Atomicity) — the split is ONE atomic operation ═══
+       The moved child, the original's reduction, and the audit version snapshots
+       (v1 baseline backfill + reduced) are written together or not at all, via
+       reclassify_split_atomic. The split MATH above is unchanged, so the golden
+       baseline is preserved — only the writes became atomic. A mid-operation
+       failure now leaves NO partial state (no orphan child / un-reduced original). */
     const origVer=Number(row.version||1)+1;
     const reducedRow=Object.assign({},row,{amount:remainNative,amount_ils:remainILS,version:origVer});
-    await recordVoucherVersion(kind==='payment'?'payment':'receipt',row,reducedRow,
-      `إعادة تصنيف جزئية · Partial reclassification — نُقل ₪${fmt(childILS)} إلى ${newNo} · تبقّى ₪${fmt(remainILS)} — ${String(reason).trim()}`,origVer);
-    const{error:uErr}=await SB.from(table).update({amount:remainNative,amount_ils:remainILS,version:origVer}).eq('id',voucherId);
-    if(uErr){toast('فشل تخفيض السند الأصلي: '+uErr.message,'err');return false;}
+    const{error:splitErr}=await SB.rpc('reclassify_split_atomic',{
+      p_kind: kind==='payment'?'payment':'receipt',
+      p_parent_id: voucherId,
+      p_child: ins,
+      p_remain_amount: remainNative,
+      p_remain_amount_ils: remainILS,
+      p_parent_version: origVer,
+      p_version_snapshot: reducedRow,
+      p_version_reason: `إعادة تصنيف جزئية · Partial reclassification — نُقل ₪${fmt(childILS)} إلى ${newNo} · تبقّى ₪${fmt(remainILS)} — ${String(reason).trim()}`,
+      p_edited_by: editor,
+      p_original_snapshot: row
+    });
+    if(splitErr){toast('فشل التجزئة الذرّية: '+splitErr.message,'err');return false;}
     await logAction('reclassify',
       `إعادة تصنيف جزئية ${row.no}: نُقل ₪${fmt(childILS)} → ${newNo} (${next.movement_type} · ${next.destination_treasury||'—'})`+
       ` · تبقّى ₪${fmt(remainILS)} في ${prev.movement_type||'—'} · السبب: ${String(reason).trim()}`,

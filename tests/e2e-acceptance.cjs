@@ -19,7 +19,25 @@ const HARNESS=(seed)=>{
       then(res,rej){if(pendingUpdate){rows.forEach(r=>Object.assign(r,pendingUpdate));}
         return Promise.resolve({data:single?((inserted||rows)[0]||null):(inserted||rows),error:null}).then(res,rej);}};
     return api;}
-  const SB={from:t=>b(t),auth:{getSession:async()=>({data:{session:{user:{id:'admin-id',email:'v@l'}}},error:null}),
+  const SB={from:t=>b(t),
+    /* P0/V1 — simulate the atomic split RPC over the in-memory store (all-or-nothing). */
+    rpc:async(name,a)=>{ try{
+      if(name==='reclassify_split_atomic'){
+        const tbl=a.p_kind==='payment'?'payments':'receipts';
+        const arr=window.__seed[tbl]=window.__seed[tbl]||[];
+        const parent=arr.find(r=>r.id===a.p_parent_id);
+        if(!parent) return {data:null,error:{message:'parent not found'}};
+        const child=Object.assign({},a.p_child); if(!child.id)child.id='rpc'+Math.random().toString(36).slice(2);
+        arr.push(child);
+        parent.amount=a.p_remain_amount; parent.amount_ils=a.p_remain_amount_ils; parent.version=a.p_parent_version;
+        const vv=window.__seed.voucher_versions=window.__seed.voucher_versions||[];
+        if(!vv.some(v=>v.voucher_id===a.p_parent_id)) vv.push({voucher_kind:a.p_kind,voucher_id:a.p_parent_id,voucher_no:parent.no,version_no:Number((a.p_original_snapshot||{}).version||1),snapshot:a.p_original_snapshot,edit_reason:'سجل أولي · Initial'});
+        vv.push({voucher_kind:a.p_kind,voucher_id:a.p_parent_id,voucher_no:parent.no,version_no:a.p_parent_version,snapshot:a.p_version_snapshot,edit_reason:a.p_version_reason});
+        return {data:{child_no:child.no,parent_no:parent.no},error:null};
+      }
+      return {data:null,error:null};
+    }catch(e){return {data:null,error:{message:String(e.message||e)}};} },
+    auth:{getSession:async()=>({data:{session:{user:{id:'admin-id',email:'v@l'}}},error:null}),
     signInWithPassword:async()=>({data:{user:{id:'admin-id'}},error:null}),signOut:async()=>({error:null}),
     onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getUser:async()=>({data:{user:{id:'admin-id'}},error:null}),
     updateUser:async()=>({data:{},error:null}),resetPasswordForEmail:async()=>({data:{},error:null}),signUp:async()=>({data:{user:{id:'x'}},error:null})}};
