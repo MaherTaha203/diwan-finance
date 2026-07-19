@@ -678,8 +678,20 @@ window.deleteRec=async function(){
   const _dr=DB.receipts.find(x=>x.id===id);
   if(_dr&&voucherLocked(_dr.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
-  await SB.from('receipts').update({is_deleted:true}).eq('id',id);
-  await logAction('delete','إلغاء إيصال','receipts',id);
+  /* V8 · Law 5/6 — cancellation is an accounting state transition and must leave the
+     same reconstructible trail as an edit: an immutable full-snapshot version (and the
+     v1 baseline, backfilled by recordVoucherVersion on first versioning). Version is
+     bumped; is_deleted is set. No balance/treasury/calculation changes (financial code
+     already excludes is_deleted rows) — this only completes the history. */
+  const nowIso=new Date().toISOString();
+  const newVer=Number(_dr?.version||1)+1;
+  const upd={is_deleted:true,version:newVer,updated_at:nowIso};
+  const{error}=await SB.from('receipts').update(upd).eq('id',id);
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
+  try{
+    if(_dr) await recordVoucherVersion('receipt', _dr, {..._dr, ...upd}, 'إلغاء · Cancellation', newVer);
+  }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
+  await logAction('delete',`إلغاء إيصال ${_dr?.no||''} (نسخة ${newVer})`,'receipts',id);
   window.closeM();await loadAll();toast(window.t('messages.cancelled'),'warn');
 };
 window.editPay=function(id){
@@ -720,8 +732,18 @@ window.deletePay=async function(){
   const _dp=DB.payments.find(x=>x.id===id);
   if(_dp&&voucherLocked(_dp.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
-  await SB.from('payments').update({is_deleted:true}).eq('id',id);
-  await logAction('delete','إلغاء سند صرف','payments',id);
+  /* V8 · Law 5/6 — cancellation records the same immutable version snapshot as an edit
+     (plus the backfilled v1 baseline). Version bumped; is_deleted set. No balance/
+     treasury/calculation change — is_deleted rows are already excluded everywhere. */
+  const nowIso=new Date().toISOString();
+  const newVer=Number(_dp?.version||1)+1;
+  const upd={is_deleted:true,version:newVer,updated_at:nowIso};
+  const{error}=await SB.from('payments').update(upd).eq('id',id);
+  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
+  try{
+    if(_dp) await recordVoucherVersion('payment', _dp, {..._dp, ...upd}, 'إلغاء · Cancellation', newVer);
+  }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
+  await logAction('delete',`إلغاء سند صرف ${_dp?.no||''} (نسخة ${newVer})`,'payments',id);
   window.closeM();await loadAll();toast(window.t('messages.cancelled'),'warn');
 };
 window.editMember=function(id){
