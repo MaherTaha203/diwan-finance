@@ -70,7 +70,7 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   const { FIN, CollectionWorkspace, window } = load(DB, { food_deficit: 0, diwan: 0 }, docEls, extras);
 
   // ── surface + entry points ────────────────────────────────────────────────
-  A('module present · version 1', CollectionWorkspace && CollectionWorkspace.version === 1);
+  A('module present (version >= 1)', CollectionWorkspace && CollectionWorkspace.version >= 1);
   A('read surface exposed (collectionState / collectionRows)', typeof CollectionWorkspace.collectionState === 'function' && typeof CollectionWorkspace.collectionRows === 'function');
   A('workspace entry points present', typeof window.renderCollectionWorkspace === 'function' && typeof window.openCollectionWorkspace === 'function');
 
@@ -87,8 +87,11 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   A('renders · Collection Timeline (HISTORY)', /ماذا حدث عبر الزمن/.test(html));
   A('renders · Workspace Navigation', /إلى أين أذهب من هنا/.test(html));
 
-  // ── Rule 3 / Rule 4 · NO Capability section, NO execution controls ────────
-  A('capability is deferred (P3-S2 note present, no execution)', /P3-S2/.test(html) && /cw-defer/.test(html));
+  // ── Rule 3 · History (Receipt Ledger) carries no execution controls ───────
+  //    (P3-S1 deferred capability; P3-S2 activated it in a SEPARATE Capability
+  //    section — the State/History sections stay execution-free either way.)
+  const ledgerTbl = (html.match(/<table class="cw-table"[\s\S]*?<\/table>/) || [''])[0];
+  A('Rule 3 · History (Receipt Ledger) carries no execution controls', ledgerTbl.length > 0 && !/onclick/.test(ledgerTbl));
 
   // ── single source · every value from the certified read model ─────────────
   const foodCr = R2((FIN.fundLedger('food', '', '', 'cr') || []).reduce((t, r) => t + Number(r.cr || 0), 0));
@@ -114,11 +117,12 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   CollectionWorkspace.setFund('all');
   A('workspace render is a pure read (no store mutation)', DB.receipts.length === recBefore && DB.payments.length === payBefore && DB.audit.length === audBefore);
 
-  // ── no Business Operation executed ────────────────────────────────────────
-  A('no Business Operation is executed (0 BusinessOps calls)', boCalls.length === 0, 'calls=' + boCalls.length);
-  A('module source references NO BusinessOps (read-only by construction)', !/BusinessOps/.test(rd('collection-workspace.js')));
-  A('markup contains no execution routing (create/edit/cancel/reclassify/split)',
-    !/BusinessOps|actionEdit|actionDeactivate|saveRec|savePay|updateRec|deleteRec|reclassif|splitVoucher/i.test(cwOut.innerHTML));
+  // ── no Business Operation executed by the workspace itself ────────────────
+  A('no Business Operation is executed during render (0 BusinessOps calls)', boCalls.length === 0, 'calls=' + boCalls.length);
+  A('module invokes NO Business Operation directly (delegates to certified flows)',
+    !/BusinessOps\s*\./.test(rd('collection-workspace.js').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
+  A('State (Summary) tiles carry no execution controls (Rule 3)',
+    !/onclick/.test((html.match(/<div class="cw-tiles">[\s\S]*?<\/div>\s*<\/div>\s*<\/section>/) || [''])[0]));
 
   // ── read-only view filter works (not an operation) ────────────────────────
   CollectionWorkspace.setFund('food');
