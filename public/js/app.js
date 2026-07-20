@@ -467,6 +467,7 @@ else if(st==='credit')
   /* P2·S2 — Member Financial Lifecycle workspace (orchestration only; renders via
      window.MemberLifecycle over certified read models). */
   'member-workspace':{render(){ if(typeof window.renderMemberWorkspace==='function') window.renderMemberWorkspace(); }},
+  'collection-workspace':{render(){ if(typeof window.renderCollectionWorkspace==='function') window.renderCollectionWorkspace(); }},
 };
 function emptyRow(cols,msgKey){const msg=L.noData(msgKey)||msgKey;return`<tr><td colspan="${cols}"><div class="empty"><i class="ti ti-inbox"></i><div class="empty-t">${msg}</div></div></td></tr>`;}
 
