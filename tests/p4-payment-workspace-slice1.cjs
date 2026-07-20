@@ -75,7 +75,7 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   let html = pwOut.innerHTML;
 
   // ── GOV-WS-01 · one dominant Primary Business Question (Rule 2) ────────────
-  A('hero states the Primary Business Question', /ما المدفوعات القائمة الآن، وما حالتها الحالية/.test(html));
+  A('hero states the Primary Business Question', /ما المدفوعات القائمة، وما حالتها التشغيلية الحالية/.test(html));
   A('hero surfaces ONE dominant metric (total disbursed)', (html.match(/pw-hero-bal/g) || []).length === 1);
 
   // ── required sections · State → History → Navigation ──────────────────────

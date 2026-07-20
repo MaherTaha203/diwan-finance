@@ -151,7 +151,7 @@
       + '<div class="pw-hero">'
       +   '<div class="pw-hero-id"><span class="pw-hero-badge">' + T('بيئة الصرف التشغيلية · قراءة فقط', 'Payment Operations · read-only') + '</span>'
       +     '<div class="pw-hero-name">' + T('المدفوعات', 'Payments') + '</div>'
-      +     '<div class="pw-hero-q">' + T('ما المدفوعات القائمة الآن، وما حالتها الحالية؟', 'What payments exist now, and what is their current state?') + '</div>'
+      +     '<div class="pw-hero-q">' + T('ما المدفوعات القائمة، وما حالتها التشغيلية الحالية؟', 'What payments exist, and what is their current operational state?') + '</div>'
       +   '</div>'
       +   '<div class="pw-hero-state">'
       +     '<div class="pw-hero-bal">₪ ' + M(s.total) + '</div>'
