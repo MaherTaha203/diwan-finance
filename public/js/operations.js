@@ -52,7 +52,18 @@
     'BO-05': { id: 'BO-05', name: 'Split / Move Voucher', authority: 'admin',
       preconditions: ['administrator', 'parent active', 'not locked', 'reason present'],
       engine: 'reclassify_split_atomic (V1 atomicity + V9 guards) — sole executor; no split math in this layer',
-      lifecycle: 'parent → ACTIVE(reduced) + NEW linked child ACTIVE(v1), atomic', laws: [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }
+      lifecycle: 'parent → ACTIVE(reduced) + NEW linked child ACTIVE(v1), atomic', laws: [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    'BO-07': { id: 'BO-07', name: 'Create Member', authority: 'admin',
+      preconditions: ['administrator', 'member payload present'],
+      engine: 'create_member_atomic (V2/Law 7) — sole executor; atomic member + schedule',
+      lifecycle: '(none) → member + all subscription rows (all-or-nothing)', laws: [3, 7] },
+    'BO-08': { id: 'BO-08', name: 'Edit Member', authority: 'admin',
+      preconditions: ['administrator', 'member exists'], lifecycle: 'member → member′ (audited)', laws: [3, 5, 6] },
+    'BO-09': { id: 'BO-09', name: 'Cancel Member', authority: 'admin',
+      preconditions: ['administrator', 'member exists'], lifecycle: 'member → deactivated (audited)', laws: [3, 5, 6] },
+    'BO-10': { id: 'BO-10', name: 'Apply Annual Dues', authority: 'admin',
+      preconditions: ['administrator', 'valid year+amount', 'obligation-only (no paid amount)'],
+      lifecycle: 'generate one obligation row per eligible member', laws: [3] }
   };
 
   /* ── BO-01 · Create Voucher ──────────────────────────────────────────────
@@ -189,7 +200,69 @@
     return { ok: true, data };
   }
 
-  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher };
+  /* ── BO-07 · Create Member (+ subscription schedule) ─────────────────────
+     Member + all its subscription rows created atomically. The operation routes
+     EXCLUSIVELY through the certified atomic RPC create_member_atomic (V2/Law 7):
+     full success or full rollback, never a member without a dues schedule. The
+     member/schedule payload is built by the certified caller; no accounting logic
+     is performed here. */
+  async function createMember({ member, subscriptions, logLabel } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    if (!member || typeof member !== 'object') return fail('E_INPUT', 'بيانات العضو مفقودة');
+    const { data, error } = await SB.rpc('create_member_atomic', { p_member: member, p_subscriptions: subscriptions || [] });
+    if (error) return fail('E_ATOMIC', error.message);   /* atomic path only — no bypass */
+    try { await logAction('add', logLabel || 'إضافة عضو', 'members', (data && data.member_id) || null); } catch (_) {}
+    return { ok: true, data };
+  }
+
+  /* ── BO-08 · Edit Member ─────────────────────────────────────────────────
+     Amends a member record; traceable via the audit log (L5/L6). The authoritative
+     opening model is shaped by the certified caller (no accounting logic here). */
+  async function editMember({ id, changes, logLabel } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    const m = (typeof DB !== 'undefined' && DB.members || []).find(x => x.id === id);
+    if (!m) return fail('E_STATE', 'العضو غير موجود');
+    if (!changes || typeof changes !== 'object') return fail('E_INPUT', 'لا تغييرات');
+    const { error } = await SB.from('members').update(changes).eq('id', id);
+    if (error) return fail('E_WRITE', error.message);
+    try { await logAction('edit', logLabel || 'تعديل بيانات عضو', 'members', id); } catch (_) {}
+    return { ok: true };
+  }
+
+  /* ── BO-09 · Cancel (deactivate) Member ──────────────────────────────────
+     Deactivates a member (is_active=false); traceable via the audit log. */
+  async function cancelMember({ id, logLabel } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    const m = (typeof DB !== 'undefined' && DB.members || []).find(x => x.id === id);
+    if (!m) return fail('E_STATE', 'العضو غير موجود');
+    const { error } = await SB.from('members').update({ is_active: false }).eq('id', id);
+    if (error) return fail('E_WRITE', error.message);
+    try { await logAction('delete', logLabel || 'حذف عضو', 'members', id); } catch (_) {}
+    return { ok: true };
+  }
+
+  /* ── BO-10 · Apply Annual Dues (subscription generation) ─────────────────
+     Bills a year's dues by generating each eligible member's obligation row. This is
+     an OBLIGATION-generation operation only: it records NO payment and creates NO
+     second source of truth. The contract forbids any non-zero paid amount here
+     (Detect → Reject); the derived balance is enforced at the single source by the V3
+     DB constraint. The eligible-member set and rows are built by the certified caller. */
+  async function applyAnnualDues({ duesRow, subscriptions, logLabel } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    if (!duesRow || duesRow.year == null || !(Number(duesRow.amount) > 0)) return fail('E_INPUT', 'بيانات الاشتراك غير صالحة');
+    if (Array.isArray(subscriptions) && subscriptions.some(s => Number(s.paid_amount_ils || 0) !== 0))
+      return fail('E_CONTRACT', 'BO-10 توليد استحقاقات فقط — لا تُسجَّل أي دفعة');   /* no payment / no 2nd source */
+    const { data: adNew, error } = await SB.from('annual_dues').insert(duesRow).select('id').single();
+    if (error) return fail('E_WRITE', error.message);
+    if (Array.isArray(subscriptions) && subscriptions.length) {
+      const { error: subErr } = await SB.from('member_subscriptions').insert(subscriptions);
+      if (subErr) return fail('E_WRITE', subErr.message);
+    }
+    try { await logAction('add', logLabel || ('تطبيق اشتراك سنة ' + duesRow.year), 'annual_dues', (adNew && adNew.id) || null); } catch (_) {}
+    return { ok: true, data: { annual_id: (adNew && adNew.id) || null } };
+  }
+
+  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues };
   if (typeof window !== 'undefined') window.BusinessOps = BusinessOps;
   if (typeof module !== 'undefined' && module.exports) module.exports = BusinessOps;
 })();
