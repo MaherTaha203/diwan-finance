@@ -71,7 +71,7 @@ const between = (html, startRe, endRe) => { const s = html.search(startRe); if (
 
   // ── extends Slice 1 ───────────────────────────────────────────────────────
   A('extends Slice 1 (read surface preserved)', typeof CollectionWorkspace.collectionState === 'function' && typeof CollectionWorkspace.collectionRows === 'function');
-  A('module version advanced to 2', CollectionWorkspace.version === 2, 'version=' + CollectionWorkspace.version);
+  A('module version advanced (>= 2)', CollectionWorkspace.version >= 2, 'version=' + CollectionWorkspace.version);
   A('capability wrappers exposed', typeof CollectionWorkspace.actionIssue === 'function' && typeof CollectionWorkspace.actionEdit === 'function');
 
   window.renderCollectionWorkspace();
