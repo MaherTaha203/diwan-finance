@@ -80,7 +80,8 @@ const between = (html, startRe, endRe) => { const s = html.search(startRe); if (
   // ── State/History preserved + one dominant Primary Business Question ──────
   A('State (Collection Summary) still renders', /ما إجمالي التحصيلات وحركة اليوم والمركز الحالي/.test(html));
   A('History (Receipt Ledger) still renders', /ما سندات القبض الموجودة/.test(html));
-  A('hero keeps the one dominant Primary Business Question', /ما التحصيلات الموجودة اليوم، وما حالتها الحالية/.test(html) && (html.match(/cw-hero-bal/g) || []).length === 1);
+  A('hero leads with the operational Primary Business Question', /العملية التي يُسمح لي بتنفيذها قانونيًا/.test(html) && (html.match(/cw-hero-bal/g) || []).length === 1);
+  A('hero surfaces the dominant next legitimate operation (Issue receipt CTA → BO-01 flow)', typeof CollectionWorkspace.nextOperation === 'function' && /cw-hero-cta[^>]*onclick="window\.CollectionWorkspace\.actionIssue\(\)"/.test(html));
 
   // ── Capability section present + Rule 4 structure ─────────────────────────
   A('Capability section renders (Operational Actions)', /ما الذي يمكنني تنفيذه قانونيًا الآن/.test(html));
@@ -98,6 +99,8 @@ const between = (html, startRe, endRe) => { const s = html.search(startRe); if (
   CollectionWorkspace.actionIssue('food');
   CollectionWorkspace.actionIssue('diwan');
   A('issue → certified create flow window.openRec (→ BO-01), food+diwan', recCalls.length === 2 && recCalls[0] === 'food' && recCalls[1] === 'diwan');
+  CollectionWorkspace.actionIssue();
+  A('issue (hero, generic) → certified create flow with no preset fund (user picks in the form)', recCalls.length === 3 && recCalls[2] === undefined);
   CollectionWorkspace.actionEdit();
   A('edit/cancel → certified editor window.editRec (→ BO-02/BO-03) for the selected receipt', editCalls.length === 1 && editCalls[0] === 'r1');
 

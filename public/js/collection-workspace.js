@@ -115,6 +115,17 @@
       + (s.rows.length > 40 ? '<div class="cw-more">' + T('عرض أحدث 40 حركة', 'showing the latest 40 events') + '</div>' : ''));
   }
 
+  /* The single dominant next legitimate operation (the order's Primary Business
+     Question: "what operation am I legitimately allowed to perform next?"). Chosen
+     from AUTHORITY only — an orchestration choice, never an accounting decision.
+     Routes to the certified create flow (issue → openRec → saveRec → BO-01). */
+  function nextOperation() {
+    const canW = (typeof can !== 'undefined' && can.write && can.write());
+    return canW
+      ? { enabled: true, label: T('إصدار سند قبض', 'Issue a receipt'), run: "window.CollectionWorkspace.actionIssue()" }
+      : { enabled: false, label: T('قراءة فقط · لا صلاحية تنفيذ', 'read-only · no execution permission') };
+  }
+
   /* SECTION 4 · Operational Actions (CAPABILITY — activated in P3-S2). GOV-WS-01
      Rule 3 keeps this a DEDICATED Capability section, never mixed into State or
      History (the ledger rows carry no execution controls). Rule 4: Intent (choose
@@ -173,16 +184,22 @@
     const out = document.getElementById('cw-out'); if (!out) return;
     if (typeof FIN === 'undefined' || !FIN.fundLedger) { out.innerHTML = ''; return; }
     const s = collectionState(_cwFund);
-    // GOV-WS-01 Rule 2 — one dominant Primary Business Question: the collection state.
+    const nxt = nextOperation();
+    // GOV-WS-01 Rule 2 — one dominant Primary Business Question. As an Operational
+    // Workspace (P3-S2), it leads with the operation the user may legitimately
+    // perform next; the collection state is the supporting figure.
     out.innerHTML = '<div class="cw-shell">'
       + '<div class="cw-hero">'
       +   '<div class="cw-hero-id"><span class="cw-hero-badge">' + T('بيئة التحصيل التشغيلية', 'Collection Operations') + '</span>'
       +     '<div class="cw-hero-name">' + T('التحصيلات', 'Collections') + '</div>'
-      +     '<div class="cw-hero-q">' + T('ما التحصيلات الموجودة اليوم، وما حالتها الحالية؟', 'What collections exist today, and what is their current state?') + '</div>'
+      +     '<div class="cw-hero-q">' + T('ما التحصيلات الموجودة الآن، وما العملية التي يُسمح لي بتنفيذها قانونيًا؟', 'What collections exist now, and what collection operation am I legitimately allowed to perform next?') + '</div>'
       +   '</div>'
       +   '<div class="cw-hero-state">'
       +     '<div class="cw-hero-bal">₪ ' + M(s.total) + '</div>'
       +     '<div class="cw-hero-sub">' + T(s.count + ' سند · اليوم: ' + s.today.count + ' (₪ ' + M(s.today.total) + ')', s.count + ' vouchers · today: ' + s.today.count + ' (₪ ' + M(s.today.total) + ')') + '</div>'
+      +     (nxt.enabled
+        ? '<button class="cw-hero-cta" onclick="' + nxt.run + '"><i class="ti ti-plus"></i>' + nxt.label + '</button>'
+        : '<span class="cw-hero-cta cw-hero-cta-off">' + nxt.label + '</span>')
       +   '</div>'
       + '</div>'
       + '<div class="cw-tabs">' + fillFundTabs() + '</div>'
@@ -201,12 +218,13 @@
   }
 
   const CollectionWorkspace = {
-    version: 2, collectionRows, collectionState, renderWorkspace,
+    version: 2, collectionRows, collectionState, nextOperation, renderWorkspace,
     setFund(f) { _cwFund = (f === 'food' || f === 'diwan') ? f : 'all'; renderWorkspace(); },
     /* BO-01 · Issue receipt — opens the existing certified create flow
        (window.openRec → saveRec → BusinessOps.createVoucher). No BO call here. */
     actionIssue(fund) {
-      if (typeof window !== 'undefined' && typeof window.openRec === 'function') window.openRec(fund === 'food' || fund === 'diwan' ? fund : 'food');
+      if (typeof window === 'undefined' || typeof window.openRec !== 'function') return;
+      if (fund === 'food' || fund === 'diwan') window.openRec(fund); else window.openRec();   // generic → user picks the fund in the certified form
     },
     /* BO-02 / BO-03 · Edit / cancel — opens the existing certified receipt editor
        (window.editRec → updateRec → BO-02 · deleteRec → BO-03). No BO call here. */

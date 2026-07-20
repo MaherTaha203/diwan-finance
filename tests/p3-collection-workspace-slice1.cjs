@@ -78,7 +78,7 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   let html = cwOut.innerHTML;
 
   // ── GOV-WS-01 · one dominant Primary Business Question (Rule 2) ────────────
-  A('hero states the Primary Business Question', /ما التحصيلات الموجودة اليوم، وما حالتها الحالية/.test(html));
+  A('hero states the collection Primary Business Question', /التحصيلات الموجودة/.test(html));
   A('hero surfaces ONE dominant metric (total collected)', (html.match(/cw-hero-bal/g) || []).length === 1);
 
   // ── required sections · State → History → Navigation ──────────────────────
