@@ -8,10 +8,11 @@
 # Business Workspace — Design Rules
 
 **Document ID:** GOV‑WS‑01
-**Version:** 1.1 (FROZEN)
+**Version:** 1.2 (FROZEN)
 **Status:** RATIFIED · STANDING
-**Established:** 2026‑07‑20 · Rules 1–2 (P2‑S2 review) · Rule 3 (P2‑S3 review)
+**Established:** 2026‑07‑20 · Rules 1–2 (P2‑S2 review) · Rule 3 (P2‑S3 review) · Rule 4 (P3‑000 approval)
 **Scope:** every Business Workspace of Diwan — all current and future Business Modules.
+Rules 1–3 apply to **every** Business Workspace; Rule 4 applies to every **Operational** Workspace.
 
 ---
 
@@ -67,6 +68,32 @@ Every workspace presents three clearly separated kinds of information:
 - Applies to all workspaces. (In the Member Financial Lifecycle: **State** = Financial Status ·
   **History** = Statement + Timeline · **Capability** = Available Actions / operational panel.)
 
+## Rule 4 · Separate Intent, Authorization, Execution, and Result (Operational Workspaces)
+
+> **Every Operational Workspace shall separate Intent, Authorization, Execution, and Result.
+> Execution must always occur exclusively through certified Business Operations, and every
+> visible result must originate exclusively from certified Read Models. No accounting logic,
+> direct state mutation, or second source of truth may exist inside the Workspace.**
+
+An **Operational Workspace** — one where the user *executes* work, not only observes — keeps these
+four moments distinct and never collapses them:
+
+1. **Intent** — *what the user wants to do* (the chosen affordance / form input). Presentation only.
+2. **Authorization** — *whether it is legitimate now* (authority + certified state). A gate, never a
+   mutation; it decides legitimacy only.
+3. **Execution** — *how it is carried out* — **exclusively** by invoking a certified Business
+   Operation. The workspace never mutates state directly and contains no accounting logic.
+4. **Result** — *what happened* — read back **exclusively** from certified Read Models. No cached or
+   independently‑computed outcome; no second source of truth.
+
+- These four moments must not be blended: Authorization is not Execution; the displayed Result is
+  never computed by the workspace.
+- This refines Rule 3's **Capability** layer for Operational Workspaces: Capability = **Intent +
+  Authorization**; **Execution** routes to a certified Business Operation; **Result** returns through
+  a certified Read Model.
+- Applies to every Operational Workspace — the Member Financial Lifecycle today, and every future
+  one (starting with the Collection Operations Workspace, P3).
+
 ---
 
 ## Application
@@ -85,6 +112,8 @@ Every workspace presents three clearly separated kinds of information:
 - **1.1** — added Rule 3 (State / History / Capability), ratified at the P2‑S3 architectural
   review. Issued as a new version (frozen artifacts change only by new version, never in‑place);
   supersedes 1.0.
+- **1.2** — added Rule 4 (Intent / Authorization / Execution / Result for Operational Workspaces),
+  ratified at the P3‑000 approval. Supersedes 1.1.
 
 ---
 
