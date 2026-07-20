@@ -8,9 +8,9 @@
 # Business Workspace — Design Rules
 
 **Document ID:** GOV‑WS‑01
-**Version:** 1.0 (FROZEN)
+**Version:** 1.1 (FROZEN)
 **Status:** RATIFIED · STANDING
-**Established:** 2026‑07‑20 (owner architectural review of P2‑S2)
+**Established:** 2026‑07‑20 · Rules 1–2 (P2‑S2 review) · Rule 3 (P2‑S3 review)
 **Scope:** every Business Workspace of Diwan — all current and future Business Modules.
 
 ---
@@ -47,14 +47,44 @@ Accounting Constitution     → the governing reference (frozen, P0)
 - Applies to all workspaces. (For the Member Financial Lifecycle, the primary question is the
   member's **current financial position**; Summary / Statement / Timeline / Actions support it.)
 
+## Rule 3 · Distinguish State, History, and Capability (permanent design rule)
+
+> **Every Business Workspace shall distinguish between State, History, and Capability, and
+> shall not mix these information types within a single section.**
+
+Every workspace presents three clearly separated kinds of information:
+
+1. **State** — *what is the current situation?* (e.g. the member's current financial position / standing).
+2. **History** — *how did we get here?* (e.g. the statement and the timeline of certified events).
+3. **Capability** — *what does the system allow to be done right now?* (the legitimacy‑gated
+   operations, each routing to a certified Business Operation).
+
+- These three types must not be blended inside one section: a section is a **State** section, a
+  **History** section, or a **Capability** section — never a mixture.
+- **The workspace determines _what_ the user is legitimately allowed to do; the certified Business
+  Operations determine _how_ it is done.** Capability answers legitimacy only; business logic never
+  migrates into the workspace layer.
+- Applies to all workspaces. (In the Member Financial Lifecycle: **State** = Financial Status ·
+  **History** = Statement + Timeline · **Capability** = Available Actions / operational panel.)
+
 ---
 
 ## Application
 
 - **P2‑S2** established the first true Business Workspace and the layering above (approved).
-- **From P2‑S3 onward**, the Member Financial Lifecycle evolves into an **Operational
-  Workspace** while maintaining this exact layering and honoring Rule 2.
-- Any new Business Module opens its own workspace under these rules.
+- **P2‑S3** delivered the first **Operational Workspace** (Member Financial Lifecycle),
+  honoring Rules 1–3.
+- Every new Business Module opens its **own** workspace under these rules; future phases begin a
+  new business unit rather than extending an existing workspace.
+
+---
+
+## Version history
+
+- **1.0** — Rules 1–2, ratified at the P2‑S2 architectural review.
+- **1.1** — added Rule 3 (State / History / Capability), ratified at the P2‑S3 architectural
+  review. Issued as a new version (frozen artifacts change only by new version, never in‑place);
+  supersedes 1.0.
 
 ---
 
