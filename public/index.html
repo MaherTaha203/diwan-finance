@@ -458,6 +458,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="nbg-h" role="presentation"><span class="nbg-t" data-i18n="nav.members_sec">الأعضاء</span></div>
     <div class="nbg-body" id="nbgb-members" role="group">
       <div class="nb" role="button" tabindex="0" data-p="members"><i class="ti ti-users"></i><span class="nb-t">أعضاء العائلة</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="member-workspace"><i class="ti ti-user-dollar"></i><span class="nb-t">وحدة العضو المالية</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="member-stmt"><i class="ti ti-user"></i><span class="nb-t">كشف حساب عضو</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="annual-debt"><i class="ti ti-report-money"></i><span class="nb-t">تقرير المديونية</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="delinquent"><i class="ti ti-user-exclamation"></i><span class="nb-t">الأعضاء المتأخرون</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
@@ -609,6 +610,11 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="ph"><div><div class="ph-t">كشف حساب عضو</div></div><div class="ph-a"><button class="btn sm" onclick="window.reconcileReport()" title="تقرير مطابقة الأرصدة"><i class="ti ti-scale"></i><span>مطابقة الأرصدة</span></button><button class="btn sm" onclick="window.prtMemberStmt('print')" title="طباعة الكشف الشخصي"><i class="ti ti-printer"></i><span>طباعة الكشف الشخصي</span></button></div></div>
     <div class="ftb"><div class="ftb-grp"><div class="ftb-ci wide"><label>العضو</label><select id="ms-member"><option value="">-- اختر عضواً --</option></select></div></div><div class="ftb-grp"><div class="ftb-ci"><label>من تاريخ</label><input type="date" id="ms-from" aria-label="من تاريخ"></div><div class="ftb-ci"><label>إلى تاريخ</label><input type="date" id="ms-to" aria-label="إلى تاريخ"></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض</button></div></div>
     <div id="ms-out"></div>
+  </div>
+  <div class="pg" id="pg-member-workspace">
+    <div class="ph"><div><div class="ph-t">وحدة العضو المالية</div><div class="ph-s">Member Financial Lifecycle</div></div></div>
+    <div class="ftb"><div class="ftb-grp"><div class="ftb-ci wide"><label>العضو</label><select id="mw-member" onchange="window.renderMemberWorkspace&&window.renderMemberWorkspace()"><option value="">-- اختر عضواً --</option></select></div></div></div>
+    <div id="mw-out"></div>
   </div>
   <div class="pg" id="pg-annual-debt">
     <div class="ph"><div><div class="ph-t">تقرير المديونية السنوية</div><div class="ph-s" id="annual-debt-sub"></div></div><div class="ph-a"><button class="btn sm" onclick="window.prtAnnualDebt()"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-annual-debt')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-annual-debt"><button class="export-dropdown-item" onclick="window.exportPageExcel('annual-debt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('annual-debt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
