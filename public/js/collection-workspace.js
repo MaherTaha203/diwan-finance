@@ -1,9 +1,11 @@
-/* ═══ COLLECTION OPERATIONS WORKSPACE — P3 · Slices 1–2 ════════════════════════
+/* ═══ COLLECTION OPERATIONS WORKSPACE — P3 · Slices 1–3 ════════════════════════
    The second Business Module surface (P3-000, approved & frozen). The operational
    environment for money collection (Receipt Vouchers).
      • Slice 1 established VISIBILITY: the collection State and History (read-only).
-     • Slice 2 activates CAPABILITY: a dedicated Operational Actions section that
-       lets the user issue / edit / cancel receipts — ORCHESTRATION ONLY.
+     • Slice 2 activated CAPABILITY: issue / edit / cancel receipts.
+     • Slice 3 completes it with advanced CORRECTIONS: reclassify / split a receipt.
+   All orchestration only; after Slice 3 the receipt-voucher module is functionally
+   complete for the current roadmap.
 
    ORCHESTRATION ONLY, on the certified foundation:
      • DISPLAY — every value originates from a certified Read Model (FIN.fundLedger
@@ -14,8 +16,10 @@
      • EXECUTION — the workspace never calls a Business Operation or mutates state
        itself. Each capability DELEGATES to an existing certified flow that routes
        to a certified Business Operation: issue → window.openRec → saveRec → BO-01;
-       edit → window.editRec → updateRec → BO-02; cancel → deleteRec → BO-03. No
-       BO-04/05/06, no payment, no allocation, no accounting logic in the workspace.
+       edit → window.editRec → updateRec → BO-02; cancel → deleteRec → BO-03;
+       correct/split → window.openReclassify → doReclassify → reclassifyVoucher →
+       BO-04 (full) / BO-05 (split). No BO-06, no payment, no allocation, no balance
+       derivation, no accounting logic, no correction logic in the workspace.
 
    GOV-WS-01: Rule 2 (one dominant Primary Business Question); Rule 3 (State /
    History / Capability kept in separate sections, never mixed); Rule 4 (Intent →
@@ -149,16 +153,29 @@
     const editable = s.rows.filter(r => r.id);
     const opts = editable.map(r => '<option value="' + E(r.id) + '">' + E(r.no || '—') + ' · ' + E(r.name || '—') + ' · ₪' + M(r.amount) + ' (' + fundLabel(r.fund) + ')</option>').join('');
     const edit = !canA
-      ? '<div class="cw-cap-row cw-cap-off">' + lbl('ti-edit', T('تعديل / تصحيح / إلغاء سند', 'Edit / correct / cancel a receipt'), 'BO-02 · BO-03') + why(T('يتطلب صلاحية مدير', 'requires admin')) + '</div>'
+      ? '<div class="cw-cap-row cw-cap-off">' + lbl('ti-edit', T('تعديل / إلغاء سند', 'Edit / cancel a receipt'), 'BO-02 · BO-03') + why(T('يتطلب صلاحية مدير', 'requires admin')) + '</div>'
       : editable.length
-        ? '<div class="cw-cap-row">' + lbl('ti-edit', T('تعديل / تصحيح / إلغاء سند', 'Edit / correct / cancel a receipt'), 'BO-02 · BO-03')
+        ? '<div class="cw-cap-row">' + lbl('ti-edit', T('تعديل / إلغاء سند', 'Edit / cancel a receipt'), 'BO-02 · BO-03')
           + '<span class="cw-cap-act"><select id="cw-edit-sel" class="cw-sel">' + opts + '</select>'
           + '<button class="cw-op" onclick="window.CollectionWorkspace.actionEdit()"><i class="ti ti-external-link"></i>' + T('فتح المحرّر المعتمد', 'Open certified editor') + '</button></span></div>'
-        : '<div class="cw-cap-row cw-cap-off">' + lbl('ti-edit', T('تعديل / تصحيح / إلغاء سند', 'Edit / correct / cancel a receipt'), 'BO-02 · BO-03') + why(T('لا سندات في هذا النطاق', 'no receipts in scope')) + '</div>';
+        : '<div class="cw-cap-row cw-cap-off">' + lbl('ti-edit', T('تعديل / إلغاء سند', 'Edit / cancel a receipt'), 'BO-02 · BO-03') + why(T('لا سندات في هذا النطاق', 'no receipts in scope')) + '</div>';
+    // BO-04 / BO-05 · advanced corrections (P3-S3) → certified reclassify flow.
+    // Corrective PBQ: "if this receipt requires correction, what legitimate
+    // corrective action may be performed?" Shown even when illegitimate (disabled
+    // with a business reason), per the order's design requirement.
+    const correctHead = '<div class="cw-cap-sub"><i class="ti ti-tools"></i>'
+      + T('إن احتاج السند إلى تصحيح، ما الإجراء التصحيحي المشروع؟', 'If this receipt requires correction, what legitimate corrective action may be performed?') + '</div>';
+    const correct = !canA
+      ? '<div class="cw-cap-row cw-cap-off">' + lbl('ti-replace', T('تصحيح التصنيف / تقسيم سند', 'Correct classification / split a receipt'), 'BO-04 · BO-05') + why(T('يتطلب صلاحية مدير', 'requires admin')) + '</div>'
+      : editable.length
+        ? '<div class="cw-cap-row">' + lbl('ti-replace', T('تصحيح التصنيف / تقسيم سند', 'Correct classification / split a receipt'), 'BO-04 · BO-05')
+          + '<span class="cw-cap-act"><select id="cw-correct-sel" class="cw-sel">' + opts + '</select>'
+          + '<button class="cw-op" onclick="window.CollectionWorkspace.actionCorrect()"><i class="ti ti-external-link"></i>' + T('فتح إعادة التصنيف المعتمدة', 'Open certified reclassify') + '</button></span></div>'
+        : '<div class="cw-cap-row cw-cap-off">' + lbl('ti-replace', T('تصحيح التصنيف / تقسيم سند', 'Correct classification / split a receipt'), 'BO-04 · BO-05') + why(T('لا سندات في هذا النطاق', 'no receipts in scope')) + '</div>';
     const note = '<div class="cw-cap-note"><i class="ti ti-shield-check"></i><span>'
-      + T('النية ← الصلاحية ← التنفيذ عبر عملية أعمال معتمدة فقط ← النتيجة من نموذج القراءة المعتمد · لا منطق محاسبي داخل مساحة العمل · التخصيص وإعادة التصنيف خارج نطاق هذه الشريحة.',
-          'Intent → Authorization → Execution via a certified Business Operation only → Result from the certified read model · no accounting logic in the workspace · allocation & reclassification are out of this slice.') + '</span></div>';
-    return card('ti-player-play', T('العمليات التشغيلية', 'Operational Actions'), T('ما الذي يمكنني تنفيذه قانونيًا الآن؟', 'What may I legitimately execute now?'), issue + edit + note);
+      + T('النية ← الصلاحية ← التنفيذ عبر عملية أعمال معتمدة فقط ← النتيجة من نموذج القراءة المعتمد · لا منطق محاسبي أو تصحيحي داخل مساحة العمل · التخصيص (GAP-1) وتسوية العجز (BO-06) خارج النطاق.',
+          'Intent → Authorization → Execution via a certified Business Operation only → Result from the certified read model · no accounting or correction logic in the workspace · allocation (GAP-1) & deficit settlement (BO-06) remain out of scope.') + '</span></div>';
+    return card('ti-player-play', T('العمليات التشغيلية', 'Operational Actions'), T('ما الذي يمكنني تنفيذه قانونيًا الآن؟', 'What may I legitimately execute now?'), issue + edit + correctHead + correct + note);
   }
 
   /* SECTION 5 · Workspace Navigation — READ-ONLY orientation links to related
@@ -218,7 +235,7 @@
   }
 
   const CollectionWorkspace = {
-    version: 2, collectionRows, collectionState, nextOperation, renderWorkspace,
+    version: 3, collectionRows, collectionState, nextOperation, renderWorkspace,
     setFund(f) { _cwFund = (f === 'food' || f === 'diwan') ? f : 'all'; renderWorkspace(); },
     /* BO-01 · Issue receipt — opens the existing certified create flow
        (window.openRec → saveRec → BusinessOps.createVoucher). No BO call here. */
@@ -232,6 +249,14 @@
       const sel = (typeof document !== 'undefined') && document.getElementById('cw-edit-sel');
       const id = sel && sel.value;
       if (id && typeof window !== 'undefined' && typeof window.editRec === 'function') window.editRec(id);
+    },
+    /* BO-04 / BO-05 · Correct classification / split — opens the existing certified
+       reclassify flow (window.openReclassify → doReclassify → reclassifyVoucher →
+       BO-04 full / BO-05 split). No BO call and no correction logic here. */
+    actionCorrect() {
+      const sel = (typeof document !== 'undefined') && document.getElementById('cw-correct-sel');
+      const id = sel && sel.value;
+      if (id && typeof window !== 'undefined' && typeof window.openReclassify === 'function') window.openReclassify('receipt', id);
     }
   };
   if (typeof window !== 'undefined') window.CollectionWorkspace = CollectionWorkspace;
