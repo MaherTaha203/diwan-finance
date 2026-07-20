@@ -8,11 +8,12 @@
 # Business Workspace — Design Rules
 
 **Document ID:** GOV‑WS‑01
-**Version:** 1.2 (FROZEN)
+**Version:** 1.3 (FROZEN)
 **Status:** RATIFIED · STANDING
-**Established:** 2026‑07‑20 · Rules 1–2 (P2‑S2 review) · Rule 3 (P2‑S3 review) · Rule 4 (P3‑000 approval)
+**Established:** 2026‑07‑20 · Rules 1–2 (P2‑S2) · Rule 3 (P2‑S3) · Rule 4 (P3‑000) · Rule 5 (P4‑000)
 **Scope:** every Business Workspace of Diwan — all current and future Business Modules.
-Rules 1–3 apply to **every** Business Workspace; Rule 4 applies to every **Operational** Workspace.
+Rules 1–3 apply to **every** Business Workspace; Rule 4 applies to every **Operational** Workspace;
+Rule 5 applies to every **Business Module**.
 
 ---
 
@@ -94,6 +95,23 @@ four moments distinct and never collapses them:
 - Applies to every Operational Workspace — the Member Financial Lifecycle today, and every future
   one (starting with the Collection Operations Workspace, P3).
 
+## Rule 5 · Declare the Business Boundary — owns / does not own (every Business Module)
+
+> **Every Business Module shall explicitly define its Business Boundary by stating both what it
+> OWNS and what it intentionally DOES NOT OWN.**
+
+- Each module's specification declares, in explicit terms, the operations, data, and decisions it
+  **owns** (its Scope) and the ones it **intentionally does not own** (its Out‑of‑Scope and deferred
+  gaps) — including *why* each is excluded and what future decision would be required to include it.
+- "Does not own" is a **first‑class, permanent statement**, not an omission. A capability that is
+  not owned is not merely unbuilt; it is deliberately outside the module and belongs to another
+  module or to a separate business decision.
+- The boundary is the module's **contract with the rest of the system**: no module silently absorbs
+  a neighbouring module's responsibility, and no gap is filled without an explicit decision.
+- Applies to every Business Module (P2 Member Lifecycle, P3 Collection, P4 Payment Vouchers, and all
+  future modules). *(E.g. P4 **owns** issue / edit / cancel / correct of payment vouchers; it
+  explicitly **does not own** the approval workflow (GAP‑P1) or the liquidity guard (GAP‑P2).)*
+
 ---
 
 ## Application
@@ -114,6 +132,8 @@ four moments distinct and never collapses them:
   supersedes 1.0.
 - **1.2** — added Rule 4 (Intent / Authorization / Execution / Result for Operational Workspaces),
   ratified at the P3‑000 approval. Supersedes 1.1.
+- **1.3** — added Rule 5 (declare the Business Boundary: owns / does not own — every Business
+  Module), ratified at the P4‑000 approval. Supersedes 1.2.
 
 ---
 
