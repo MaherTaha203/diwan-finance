@@ -144,23 +144,82 @@
       '<ul class="mw-tl">' + (evs || '<li class="mw-tl-i"><span class="mw-tl-t">' + T('لا أحداث', 'No events') + '</span></li>') + '</ul>');
   }
 
-  /* SECTION 5 · Available Actions — "What can I legally do next?" (certified BOs only) */
-  function sectionActions(m) {
+  /* ═══ P2 · Slice 3 — OPERATIONAL WORKSPACE ════════════════════════════════
+     Extends Slice 2 (never replaces it). Turns the workspace into the first
+     Operational Business Workspace: SECTION 5 becomes a legitimacy-gated
+     OPERATIONAL PANEL that answers the second half of the Primary Business
+     Question — "what may I legitimately do next?" — and the hero elevates the
+     whole question to the single dominant focal point (GOV-WS-01).
+     ORCHESTRATION ONLY: the legitimate set is read from certified state
+     (authority + member standing), never computed as accounting; every
+     executable affordance invokes exactly one ALREADY-CERTIFIED Business
+     Operation. No new BO. No payments / allocation / corrections. No BO-06. */
+
+  /* The operations that are legitimate for THIS member right now. Legitimacy is
+     read from certified state (authority via `can`, standing via the certified
+     read model + member metadata); NO accounting is derived here. Each op names
+     the certified route it invokes, so routing is auditable from the markup. */
+  function legitimacyOps(m, st, del, init) {
     const admin = (typeof can !== 'undefined' && can.admin && can.admin());
-    const btns = [];
-    // read action (always): the full certified statement
-    btns.push('<button class="btn ghost" onclick="window.openMemberStatementFromWorkspace(\'' + m.id + '\')"><i class="ti ti-file-description"></i>' + T('كشف الحساب الكامل', 'Full statement') + '</button>');
-    if (admin) {
-      // BO-08 · Edit Member (existing certified flow)
-      btns.push('<button class="btn ghost" onclick="window.editMember(\'' + m.id + '\')"><i class="ti ti-edit"></i>' + T('تعديل بيانات العضو', 'Edit member') + '</button>');
-      // BO-09 · Cancel (deactivate) Member — invokes the certified operation directly
-      if (m.is_active !== false)
-        btns.push('<button class="btn ghost" style="color:var(--warn)" onclick="window.MemberLifecycle.actionDeactivate(\'' + m.id + '\')"><i class="ti ti-user-off"></i>' + T('تعطيل العضو', 'Deactivate member') + '</button>');
-    }
-    const note = '<div class="mw-actions-note">' + T('التسجيل والفوترة عمليتان على مستوى الوحدة · الدفعات والتصحيحات ضمن شريحة لاحقة',
-      'Onboarding & billing are module-level · payments & corrections are a later slice') + '</div>';
-    return card('ti-player-play', T('الإجراءات المتاحة', 'Available Actions'), T('ما الذي يمكن فعله قانونيًا الآن؟', 'What can I legally do next?'),
-      '<div class="mw-actions">' + btns.join('') + '</div>' + note);
+    const active = m.is_active !== false;
+    const billed = (init && init.schedule) ? init.schedule.length : 0;
+    const id = m.id;
+    const need = T('يتطلب صلاحية مدير', 'requires admin');
+    return [
+      // read — always legitimate (certified read model, never a write)
+      { key: 'statement', bo: T('نموذج قراءة معتمد', 'certified read model'), kind: 'read',
+        icon: 'ti-file-description', label: T('كشف الحساب الكامل', 'Full statement'),
+        run: "window.openMemberStatementFromWorkspace('" + id + "')", allowed: true },
+      // BO-08 · edit member (existing certified flow → BusinessOps.editMember)
+      { key: 'edit', bo: 'BO-08', kind: 'write', icon: 'ti-edit',
+        label: T('تعديل بيانات العضو', 'Edit member'),
+        run: "window.MemberLifecycle.actionEdit('" + id + "')",
+        allowed: admin, reason: admin ? '' : need },
+      // BO-10 · annual billing — module-level obligation generation (never a payment)
+      { key: 'billing', bo: 'BO-10', kind: 'module', icon: 'ti-calendar-plus',
+        label: T('تطبيق الاشتراك السنوي', 'Apply annual dues'),
+        hint: billed ? T(billed + ' سنة مفوترة', billed + ' year(s) billed') : T('لا سنوات مفوترة بعد', 'no years billed yet'),
+        run: "window.MemberLifecycle.actionApplyDues()",
+        allowed: admin && active, reason: !admin ? need : !active ? T('العضو غير نشط', 'member is inactive') : '' },
+      // BO-09 · deactivate member (invokes the certified operation directly)
+      { key: 'deactivate', bo: 'BO-09', kind: 'danger', icon: 'ti-user-off',
+        label: T('تعطيل العضو', 'Deactivate member'),
+        run: "window.MemberLifecycle.actionDeactivate('" + id + "')",
+        allowed: admin && active, reason: !admin ? need : !active ? T('العضو غير نشط بالفعل', 'already inactive') : '' }
+    ];
+  }
+
+  /* The single dominant "what may I do next", chosen from the legitimate set by
+     certified standing — an orchestration choice (which affordance to elevate),
+     never a computed accounting decision. Always resolves to a legitimate op. */
+  function nextLegitimateAction(m, st, del) {
+    const run = "window.openMemberStatementFromWorkspace('" + m.id + "')";
+    if (m.is_active === false) return { label: T('مراجعة السجل التاريخي', 'Review history'), run, tone: 'muted' };
+    if (del && del.isDelinquent) return { label: T('مراجعة كشف الحساب · يوجد تأخر', 'Review statement · overdue'), run, tone: 'warn' };
+    return { label: T('مراجعة كشف الحساب الكامل', 'Review full statement'), run, tone: 'ok' };
+  }
+
+  /* SECTION 5 · Available Actions → OPERATIONAL PANEL (Slice 3). Each affordance
+     carries the certified operation it routes to; illegitimate ones are shown
+     disabled with a plain reason (answering "what may I NOT do, and why"). */
+  function sectionActions(m, st, del, init) {
+    const rows = legitimacyOps(m, st, del, init).map(op => {
+      const tag = '<span class="mw-op-bo">' + E(op.bo) + '</span>';
+      const hint = op.hint ? '<span class="mw-op-hint">' + op.hint + '</span>' : '';
+      if (op.allowed) {
+        return '<button class="mw-op mw-op-' + op.kind + '" onclick="' + op.run + '">'
+          + '<i class="ti ' + op.icon + '"></i>'
+          + '<span class="mw-op-l">' + op.label + hint + '</span>' + tag + '</button>';
+      }
+      return '<div class="mw-op mw-op-off" aria-disabled="true">'
+        + '<i class="ti ' + op.icon + '"></i>'
+        + '<span class="mw-op-l">' + op.label + '<span class="mw-op-why">' + E(op.reason || '') + '</span></span>' + tag + '</div>';
+    }).join('');
+    const note = '<div class="mw-actions-note">' + T(
+      'كل إجراء ينفّذ عملية أعمال معتمدة فقط · لا منطق محاسبي داخل مساحة العمل · الدفعات والتصحيحات والتخصيص خارج نطاق هذه الشريحة',
+      'Each action invokes a certified Business Operation only · no accounting logic in the workspace · payments, corrections & allocation are out of this slice') + '</div>';
+    return card('ti-player-play', T('الإجراءات المتاحة', 'Available Actions'), T('ما الذي يمكن فعله قانونيًا الآن؟', 'What may I legitimately do next?'),
+      '<div class="mw-ops">' + rows + '</div>' + note);
   }
 
   function card(icon, title, question, body) {
@@ -183,13 +242,22 @@
     if (!m) { out.innerHTML = ''; return; }
     const del = (typeof FIN.memberDelinquency === 'function') ? FIN.memberDelinquency(mid) : { unpaidCount: 0, isDelinquent: false };
     const init = initialState(mid);
-    // hierarchy: who → current position → how we got here → what next
+    const nxt = nextLegitimateAction(m, st, del);
+    // Primary Business Question (GOV-WS-01) — one dominant focal point: the member's
+    // financial state AND the single legitimate next action. Cards below are context.
     out.innerHTML = '<div class="mw-shell">'
-      + '<div class="mw-hero"><div class="mw-hero-id"><span class="mw-hero-badge">' + T('وحدة العضو المالية', 'Member Financial Lifecycle') + '</span>'
-      + '<div class="mw-hero-name">' + E(m.name) + '</div></div>'
-      + '<div class="mw-hero-bal">₪ ' + M(Math.abs(st.finalBalance)) + ' ' + polTag(st.finalBalance) + '</div></div>'
+      + '<div class="mw-hero">'
+      +   '<div class="mw-hero-id"><span class="mw-hero-badge">' + T('وحدة العضو المالية · مساحة تشغيلية', 'Member Financial Lifecycle · Operational') + '</span>'
+      +     '<div class="mw-hero-name">' + E(m.name) + '</div>'
+      +     '<div class="mw-hero-q">' + T('ما وضع هذا العضو المالي، وما الذي يمكنني فعله قانونيًا الآن؟', 'What is this member’s financial state, and what may I legitimately do next?') + '</div>'
+      +   '</div>'
+      +   '<div class="mw-hero-state">'
+      +     '<div class="mw-hero-bal">₪ ' + M(Math.abs(st.finalBalance)) + ' ' + polTag(st.finalBalance) + '</div>'
+      +     '<button class="mw-hero-cta mw-cta-' + nxt.tone + '" onclick="' + nxt.run + '"><i class="ti ti-file-search"></i>' + nxt.label + '</button>'
+      +   '</div>'
+      + '</div>'
       + '<div class="mw-cols">'
-      + sectionSummary(m) + sectionStatus(st, del, init) + sectionStatement(st) + sectionTimeline(st) + sectionActions(m)
+      + sectionSummary(m) + sectionStatus(st, del, init) + sectionStatement(st) + sectionTimeline(st) + sectionActions(m, st, del, init)
       + '</div></div>';
   }
 
@@ -207,7 +275,19 @@
   }
 
   const MemberLifecycle = {
-    version: 2, initialState, initialStateCard, renderWorkspace,
+    version: 3, initialState, initialStateCard, renderWorkspace,
+    legitimacyOps, nextLegitimateAction,
+    /* BO-08 · Edit Member — routes to the existing certified edit flow
+       (window.editMember → BusinessOps.editMember). No accounting here. */
+    actionEdit(id) {
+      if (typeof window !== 'undefined' && typeof window.editMember === 'function') window.editMember(id);
+    },
+    /* BO-10 · Apply Annual Dues — module-level obligation generation (never a
+       payment). Opens the certified annual-dues flow; the workspace does not
+       generate obligations itself. */
+    actionApplyDues() {
+      if (typeof window !== 'undefined' && typeof window.nav === 'function') window.nav('annual');
+    },
     /* BO-09 · Cancel (deactivate) Member — invokes the certified operation only */
     async actionDeactivate(id) {
       const m = (typeof DB !== 'undefined' && DB.members || []).find(x => x.id === id);
