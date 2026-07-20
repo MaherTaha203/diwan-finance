@@ -2230,6 +2230,11 @@ button.mw-op.mw-op-module>.ti{color:var(--warn,#b9761d)}
 .cw-hero-state{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
 .cw-hero-bal{font-size:24px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
 .cw-hero-sub{font-size:11.5px;color:var(--tx3)}
+.cw-hero-cta{display:inline-flex;align-items:center;gap:7px;margin-top:5px;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:8px 15px;border-radius:9px;cursor:pointer;border:1px solid var(--accent,#2B3A5C);background:var(--accent,#2B3A5C);color:#fff;transition:filter .13s}
+.cw-hero-cta:hover{filter:brightness(1.07)}
+.cw-hero-cta .ti{font-size:15px}
+.cw-hero-cta-off{background:transparent;color:var(--tx3);border-color:var(--bd);cursor:default}
 .cw-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .cw-tab{font-family:inherit;font-size:12.5px;font-weight:700;padding:7px 15px;border-radius:8px;cursor:pointer;
   border:1px solid var(--bd2);background:var(--bg2);color:var(--tx2);transition:.13s}
@@ -2237,7 +2242,7 @@ button.mw-op.mw-op-module>.ti{color:var(--warn,#b9761d)}
 .cw-tab.on{background:var(--accent,#2B3A5C);border-color:var(--accent,#2B3A5C);color:#fff}
 .cw-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .cw-card{border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:var(--bg2);display:flex;flex-direction:column}
-.cw-card:nth-child(2),.cw-card:nth-child(3){grid-column:1/-1}   /* Ledger + Timeline span full width */
+.cw-card:nth-child(2),.cw-card:nth-child(3),.cw-card:nth-child(4){grid-column:1/-1}   /* Ledger + Timeline + Operational Actions span full width */
 .cw-card-h{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bd)}
 .cw-card-h .ti{font-size:18px;color:var(--tx3)}
 .cw-card-t{font-size:14px;font-weight:800}
@@ -2272,9 +2277,27 @@ button.mw-op.mw-op-module>.ti{color:var(--warn,#b9761d)}
   padding:8px 13px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);cursor:pointer;transition:.13s}
 .cw-nav-lnk:hover{border-color:var(--accent,#2B3A5C);background:var(--bg3)}
 .cw-nav-lnk .ti{font-size:16px;color:var(--tx3)}
-.cw-defer{display:flex;align-items:flex-start;gap:8px;margin-top:12px;padding:10px 12px;border:1px dashed var(--bd2);border-radius:10px;
-  background:var(--bg3);font-size:11.5px;color:var(--tx3);line-height:1.6}
-.cw-defer .ti{font-size:15px;margin-top:1px;flex:none}
+/* P3·S2 — Operational Actions (Capability) · Intent → Authorization → Execution → Result */
+.cw-cap-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:10px 12px;border:1px solid var(--bd);border-radius:11px;background:var(--bg);margin-bottom:8px}
+.cw-cap-l{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;min-width:0}
+.cw-cap-l .ti{font-size:17px;color:var(--tx3);flex:none}
+.cw-cap-bo{font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--tx3);border:1px solid var(--bd);
+  border-radius:999px;padding:2px 9px;background:var(--bg2);white-space:nowrap}
+.cw-cap-act{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cw-op{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:7px 13px;border-radius:8px;cursor:pointer;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);transition:.13s}
+.cw-op:hover{border-color:var(--accent,#2B3A5C);background:var(--bg3)}
+.cw-op .ti{font-size:15px}
+.cw-op-pri{background:var(--accent,#2B3A5C);border-color:var(--accent,#2B3A5C);color:#fff}
+.cw-op-pri:hover{filter:brightness(1.07);background:var(--accent,#2B3A5C);color:#fff}
+.cw-sel{font-family:inherit;font-size:12.5px;font-weight:600;padding:7px 10px;border-radius:8px;
+  border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);max-width:340px}
+.cw-cap-off{opacity:.62;background:var(--bg2)}
+.cw-cap-why{font-size:11px;font-weight:600;color:var(--neg,#b4322e)}
+.cw-cap-note{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;border:1px dashed var(--bd2);
+  border-radius:10px;background:var(--bg3);font-size:11.5px;color:var(--tx3);line-height:1.6}
+.cw-cap-note .ti{font-size:15px;margin-top:1px;flex:none;color:var(--accent,#2B3A5C)}
 .cw-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 16px;color:var(--tx3)}
 .cw-empty .ti{font-size:32px}
 @media(max-width:820px){

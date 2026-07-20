@@ -1,20 +1,25 @@
-/* ═══ COLLECTION OPERATIONS WORKSPACE — P3 · Slice 1 (read-only) ═══════════════
+/* ═══ COLLECTION OPERATIONS WORKSPACE — P3 · Slices 1–2 ════════════════════════
    The second Business Module surface (P3-000, approved & frozen). The operational
-   environment for money collection (Receipt Vouchers). Slice 1 establishes
-   VISIBILITY BEFORE CAPABILITY: it presents the collection State and History only.
+   environment for money collection (Receipt Vouchers).
+     • Slice 1 established VISIBILITY: the collection State and History (read-only).
+     • Slice 2 activates CAPABILITY: a dedicated Operational Actions section that
+       lets the user issue / edit / cancel receipts — ORCHESTRATION ONLY.
 
-   ORCHESTRATION ONLY — and, in Slice 1, strictly READ-ONLY:
-     • every displayed value originates from a certified Read Model
-       (FIN.fundLedger credit rows = the certified receipt ledger; FIN.foodBalance /
-       diwanBalance = the certified fund position). Totals shown are the sum of the
-       certified ledger credits — the very same figure the certified fund statement
-       already presents as total income — never a new accounting rule.
-     • NO Business Operation is executed (no BO-01…06), no create/edit/cancel, no
-       payment, no allocation, no accounting logic, no second source of truth.
+   ORCHESTRATION ONLY, on the certified foundation:
+     • DISPLAY — every value originates from a certified Read Model (FIN.fundLedger
+       credit rows = the certified receipt ledger; FIN.foodBalance / diwanBalance =
+       the certified fund position). Totals are the sum of certified ledger credits
+       — the same figure the certified fund statement shows as income — never a new
+       accounting rule. No second source of truth.
+     • EXECUTION — the workspace never calls a Business Operation or mutates state
+       itself. Each capability DELEGATES to an existing certified flow that routes
+       to a certified Business Operation: issue → window.openRec → saveRec → BO-01;
+       edit → window.editRec → updateRec → BO-02; cancel → deleteRec → BO-03. No
+       BO-04/05/06, no payment, no allocation, no accounting logic in the workspace.
 
-   Architecture:  Workspace → Certified Read Models.  Capability is intentionally
-   deferred to P3-S2 (a separate order). GOV-WS-01: State → History (no Capability
-   section, no execution controls); Rule 2 (one dominant Primary Business Question).
+   GOV-WS-01: Rule 2 (one dominant Primary Business Question); Rule 3 (State /
+   History / Capability kept in separate sections, never mixed); Rule 4 (Intent →
+   Authorization → Execution via a certified BO → Result from a certified Read Model).
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -35,7 +40,7 @@
     const funds = fund === 'food' ? ['food'] : fund === 'diwan' ? ['diwan'] : ['food', 'diwan'];
     const rows = [];
     funds.forEach(f => (FIN.fundLedger(f, '', '', 'cr') || []).forEach(r => {
-      rows.push({ date: r.date, no: r.no, name: r.name, desc: r.desc, amount: Number(r.cr || 0), fund: f });
+      rows.push({ id: r.id, date: r.date, no: r.no, name: r.name, desc: r.desc, amount: Number(r.cr || 0), fund: f });
     }));
     rows.sort((a, b) => new Date(b.date) - new Date(a.date));   // most recent first
     return rows;
@@ -110,9 +115,54 @@
       + (s.rows.length > 40 ? '<div class="cw-more">' + T('عرض أحدث 40 حركة', 'showing the latest 40 events') + '</div>' : ''));
   }
 
-  /* SECTION 4 · Workspace Navigation — prepares the operational surface with
-     READ-ONLY navigation to related certified views. NO capability, NO execution
-     controls, NO inactive buttons: operational capability arrives in P3-S2. */
+  /* The single dominant next legitimate operation (the order's Primary Business
+     Question: "what operation am I legitimately allowed to perform next?"). Chosen
+     from AUTHORITY only — an orchestration choice, never an accounting decision.
+     Routes to the certified create flow (issue → openRec → saveRec → BO-01). */
+  function nextOperation() {
+    const canW = (typeof can !== 'undefined' && can.write && can.write());
+    return canW
+      ? { enabled: true, label: T('إصدار سند قبض', 'Issue a receipt'), run: "window.CollectionWorkspace.actionIssue()" }
+      : { enabled: false, label: T('قراءة فقط · لا صلاحية تنفيذ', 'read-only · no execution permission') };
+  }
+
+  /* SECTION 4 · Operational Actions (CAPABILITY — activated in P3-S2). GOV-WS-01
+     Rule 3 keeps this a DEDICATED Capability section, never mixed into State or
+     History (the ledger rows carry no execution controls). Rule 4: Intent (choose
+     action / receipt) → Authorization (can.write / can.admin) → Execution
+     (EXCLUSIVELY via an existing certified flow that routes to a certified Business
+     Operation) → Result (re-read from certified Read Models). The workspace itself
+     executes no Business Operation and mutates no state. */
+  function sectionCapability(s) {
+    const canW = (typeof can !== 'undefined' && can.write && can.write());
+    const canA = (typeof can !== 'undefined' && can.admin && can.admin());
+    const why = t => '<span class="cw-cap-why">' + t + '</span>';
+    const lbl = (icon, text, bo) => '<span class="cw-cap-l"><i class="ti ' + icon + '"></i>' + text + '<span class="cw-cap-bo">' + bo + '</span></span>';
+    // BO-01 · Issue receipt → certified new-receipt flow (openRec → saveRec → BO-01)
+    const issue = canW
+      ? '<div class="cw-cap-row">' + lbl('ti-plus', T('إصدار سند قبض جديد', 'Issue a new receipt'), 'BO-01')
+        + '<span class="cw-cap-act">'
+        + '<button class="cw-op cw-op-pri" onclick="window.CollectionWorkspace.actionIssue(\'food\')"><i class="ti ti-receipt"></i>' + T('غداء', 'Food') + '</button>'
+        + '<button class="cw-op cw-op-pri" onclick="window.CollectionWorkspace.actionIssue(\'diwan\')"><i class="ti ti-receipt"></i>' + T('ديوان', 'Diwan') + '</button></span></div>'
+      : '<div class="cw-cap-row cw-cap-off">' + lbl('ti-plus', T('إصدار سند قبض جديد', 'Issue a new receipt'), 'BO-01') + why(T('يتطلب صلاحية كتابة', 'requires write permission')) + '</div>';
+    // BO-02 / BO-03 · Edit / correct / cancel a selected receipt → certified editor
+    const editable = s.rows.filter(r => r.id);
+    const opts = editable.map(r => '<option value="' + E(r.id) + '">' + E(r.no || '—') + ' · ' + E(r.name || '—') + ' · ₪' + M(r.amount) + ' (' + fundLabel(r.fund) + ')</option>').join('');
+    const edit = !canA
+      ? '<div class="cw-cap-row cw-cap-off">' + lbl('ti-edit', T('تعديل / تصحيح / إلغاء سند', 'Edit / correct / cancel a receipt'), 'BO-02 · BO-03') + why(T('يتطلب صلاحية مدير', 'requires admin')) + '</div>'
+      : editable.length
+        ? '<div class="cw-cap-row">' + lbl('ti-edit', T('تعديل / تصحيح / إلغاء سند', 'Edit / correct / cancel a receipt'), 'BO-02 · BO-03')
+          + '<span class="cw-cap-act"><select id="cw-edit-sel" class="cw-sel">' + opts + '</select>'
+          + '<button class="cw-op" onclick="window.CollectionWorkspace.actionEdit()"><i class="ti ti-external-link"></i>' + T('فتح المحرّر المعتمد', 'Open certified editor') + '</button></span></div>'
+        : '<div class="cw-cap-row cw-cap-off">' + lbl('ti-edit', T('تعديل / تصحيح / إلغاء سند', 'Edit / correct / cancel a receipt'), 'BO-02 · BO-03') + why(T('لا سندات في هذا النطاق', 'no receipts in scope')) + '</div>';
+    const note = '<div class="cw-cap-note"><i class="ti ti-shield-check"></i><span>'
+      + T('النية ← الصلاحية ← التنفيذ عبر عملية أعمال معتمدة فقط ← النتيجة من نموذج القراءة المعتمد · لا منطق محاسبي داخل مساحة العمل · التخصيص وإعادة التصنيف خارج نطاق هذه الشريحة.',
+          'Intent → Authorization → Execution via a certified Business Operation only → Result from the certified read model · no accounting logic in the workspace · allocation & reclassification are out of this slice.') + '</span></div>';
+    return card('ti-player-play', T('العمليات التشغيلية', 'Operational Actions'), T('ما الذي يمكنني تنفيذه قانونيًا الآن؟', 'What may I legitimately execute now?'), issue + edit + note);
+  }
+
+  /* SECTION 5 · Workspace Navigation — READ-ONLY orientation links to related
+     certified views. Not capability (no execution); kept separate (Rule 3). */
   function sectionNav() {
     const link = (p, icon, label) => '<button class="cw-nav-lnk" onclick="window.nav&&window.nav(\'' + p + '\')"><i class="ti ' + icon + '"></i>' + label + '</button>';
     const links = [
@@ -120,11 +170,8 @@
       link('diwan-stmt', 'ti-file-description', T('كشف صندوق الديوان', 'Diwan fund statement')),
       link('don', 'ti-heart-handshake', T('سجل التبرعات', 'Donations ledger'))
     ].join('');
-    const note = '<div class="cw-defer"><i class="ti ti-lock"></i><span>'
-      + T('القدرات التشغيلية (إصدار · تعديل · تصحيح سندات القبض) تُضاف في الشريحة الثانية P3-S2 — لا تنفيذ في هذه الشريحة.',
-          'Operational capability (issue · edit · correct receipts) arrives in P3-S2 — no execution in this slice.') + '</span></div>';
-    return card('ti-compass', T('التنقّل في مساحة العمل', 'Workspace Navigation'), T('إلى أين أذهب من هنا؟ (قراءة فقط)', 'Where to from here? (read-only)'),
-      '<div class="cw-nav">' + links + '</div>' + note);
+    return card('ti-compass', T('التنقّل في مساحة العمل', 'Workspace Navigation'), T('إلى أين أذهب من هنا؟', 'Where to from here?'),
+      '<div class="cw-nav">' + links + '</div>');
   }
 
   function fillFundTabs() {
@@ -137,21 +184,27 @@
     const out = document.getElementById('cw-out'); if (!out) return;
     if (typeof FIN === 'undefined' || !FIN.fundLedger) { out.innerHTML = ''; return; }
     const s = collectionState(_cwFund);
-    // GOV-WS-01 Rule 2 — one dominant Primary Business Question: the collection state.
+    const nxt = nextOperation();
+    // GOV-WS-01 Rule 2 — one dominant Primary Business Question. As an Operational
+    // Workspace (P3-S2), it leads with the operation the user may legitimately
+    // perform next; the collection state is the supporting figure.
     out.innerHTML = '<div class="cw-shell">'
       + '<div class="cw-hero">'
-      +   '<div class="cw-hero-id"><span class="cw-hero-badge">' + T('بيئة التحصيل التشغيلية · قراءة فقط', 'Collection Operations · read-only') + '</span>'
+      +   '<div class="cw-hero-id"><span class="cw-hero-badge">' + T('بيئة التحصيل التشغيلية', 'Collection Operations') + '</span>'
       +     '<div class="cw-hero-name">' + T('التحصيلات', 'Collections') + '</div>'
-      +     '<div class="cw-hero-q">' + T('ما التحصيلات الموجودة اليوم، وما حالتها الحالية؟', 'What collections exist today, and what is their current state?') + '</div>'
+      +     '<div class="cw-hero-q">' + T('ما التحصيلات الموجودة الآن، وما العملية التي يُسمح لي بتنفيذها قانونيًا؟', 'What collections exist now, and what collection operation am I legitimately allowed to perform next?') + '</div>'
       +   '</div>'
       +   '<div class="cw-hero-state">'
       +     '<div class="cw-hero-bal">₪ ' + M(s.total) + '</div>'
       +     '<div class="cw-hero-sub">' + T(s.count + ' سند · اليوم: ' + s.today.count + ' (₪ ' + M(s.today.total) + ')', s.count + ' vouchers · today: ' + s.today.count + ' (₪ ' + M(s.today.total) + ')') + '</div>'
+      +     (nxt.enabled
+        ? '<button class="cw-hero-cta" onclick="' + nxt.run + '"><i class="ti ti-plus"></i>' + nxt.label + '</button>'
+        : '<span class="cw-hero-cta cw-hero-cta-off">' + nxt.label + '</span>')
       +   '</div>'
       + '</div>'
       + '<div class="cw-tabs">' + fillFundTabs() + '</div>'
       + '<div class="cw-cols">'
-      + sectionSummary(s) + sectionLedger(s) + sectionTimeline(s) + sectionNav()
+      + sectionSummary(s) + sectionLedger(s) + sectionTimeline(s) + sectionCapability(s) + sectionNav()
       + '</div></div>';
   }
 
@@ -165,8 +218,21 @@
   }
 
   const CollectionWorkspace = {
-    version: 1, collectionRows, collectionState, renderWorkspace,
-    setFund(f) { _cwFund = (f === 'food' || f === 'diwan') ? f : 'all'; renderWorkspace(); }
+    version: 2, collectionRows, collectionState, nextOperation, renderWorkspace,
+    setFund(f) { _cwFund = (f === 'food' || f === 'diwan') ? f : 'all'; renderWorkspace(); },
+    /* BO-01 · Issue receipt — opens the existing certified create flow
+       (window.openRec → saveRec → BusinessOps.createVoucher). No BO call here. */
+    actionIssue(fund) {
+      if (typeof window === 'undefined' || typeof window.openRec !== 'function') return;
+      if (fund === 'food' || fund === 'diwan') window.openRec(fund); else window.openRec();   // generic → user picks the fund in the certified form
+    },
+    /* BO-02 / BO-03 · Edit / cancel — opens the existing certified receipt editor
+       (window.editRec → updateRec → BO-02 · deleteRec → BO-03). No BO call here. */
+    actionEdit() {
+      const sel = (typeof document !== 'undefined') && document.getElementById('cw-edit-sel');
+      const id = sel && sel.value;
+      if (id && typeof window !== 'undefined' && typeof window.editRec === 'function') window.editRec(id);
+    }
   };
   if (typeof window !== 'undefined') window.CollectionWorkspace = CollectionWorkspace;
   if (typeof module !== 'undefined' && module.exports) module.exports = CollectionWorkspace;
