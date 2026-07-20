@@ -1,17 +1,28 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FROZEN GOVERNANCE ARTIFACT — DO NOT EDIT
+     Ratified v1.0. Immutable; never re-edited in place. A future change is issued as
+     a NEW version (P2-000 v1.1, …). Implementation slices are gated separately by
+     owner order and measured against this specification.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
 # P2‑000 — Functional Phase Specification
 
 **Document ID:** P2‑000
-**Phase:** P2 — First Business Module
-**Version:** 0.1 (DRAFT — pending owner approval)
-**Status:** AWAITING APPROVAL · specification only · no implementation begins until approved
+**Phase:** P2 — First Business Module (Member Financial Lifecycle)
+**Version:** 1.0 (FROZEN)
+**Status:** RATIFIED · APPROVED — implementation proceeds by slice under owner order
 **Built on:** the Operational Baseline `d35b2c5` (P1 Business Operations) over the certified
 constitutional baseline `1eca2ce` (P0).
 **Design constraints (frozen, not modified by P2):** Accounting Constitution, Certified
 Accounting Core, Runtime Guards, Business Contracts (P1‑000 Part A), Business Operations.
 
+> **Owner decisions (ratified).** P2‑000 approved. First business module = **Member Financial
+> Lifecycle**. **BO‑06** remains deferred. **GAP‑1** is **out of P2 scope — documented only**
+> (§6). Implementation opens at **P2‑S1**, confined to the narrow scope in §9.
+
 > This is a **specification, not code**. P2 is a new phase — not a continuation of P1. Its
 > purpose is to design the first complete **Business Module** built on the certified Business
-> Operations layer. Implementation waits for owner approval.
+> Operations layer. Each implementation slice is gated by a separate owner order.
 
 ---
 
@@ -223,7 +234,7 @@ P2 is complete when:
 
 | Slice | Delivers | Uses | Standalone value |
 |-------|----------|------|------------------|
-| **P2‑S1 · Onboarding & Billing** | Enroll members (incl. opening credit) and bill a year's dues | BO‑07, BO‑10 + schedule read | The treasurer can enroll members and issue a year's obligations |
+| **P2‑S1 · Onboarding & Billing** *(scope confirmed narrow by owner)* | Enroll members (incl. opening credit), bill a year's dues, and view the member's **initial state** (opening + schedule). **Explicitly excludes** payment recording, corrections, and allocation. | BO‑07, BO‑10 + schedule/initial‑state read | The treasurer can enroll members and issue a year's obligations, and see the member's starting position |
 | **P2‑S2 · Account & Delinquency** | The member account statement (print/export) and cross‑member delinquency/debtor view | Certified read model + existing presentation | The treasurer can see every member's balance and who owes — the daily reporting need |
 | **P2‑S3 · Payment Recording & Corrections** | Record member payments and correct/cancel/reclassify/split them | BO‑01, BO‑02, BO‑03, BO‑04, BO‑05 | The treasurer can collect and correct payments end‑to‑end (with existing operations; GAP‑1 is a later refinement, not a blocker) |
 | **(later, gated)** | Explicit payment→obligation allocation operation | *new BO under a Part A amendment* | Deferred — only if the owner approves filling GAP‑1 |
