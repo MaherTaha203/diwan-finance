@@ -140,24 +140,28 @@ window.saveRec=async function(print=false){
       if(over>0&&!window.confirm('العجز المتبقي ₪'+fmt(rem)+' أقل من التبرع. الفائض ₪'+fmt(over)+' سيتحوّل تلقائياً لخزينة الغداء. متابعة؟')) return;
     }
   }
-  const no=nextNo('REC',DB.receipts);
-  const{data,error}=await SB.from('receipts').insert({
-    no,verification_token:genVerificationToken(),fund_type:fund,receipt_date:date,
-    movement_type:cls.movement_type,destination_treasury:cls.destination_treasury,
-    movement_reason:cls.movement_reason,register_category:cls.register_category||null,
-    payer_type:payerType,
-    member_id:payerType==='member'?memberId:null,
-    contact_id:finalContactId,
-    payer_name:payerName,
-    amount,currency,amount_ils:amountILS,exchange_rate:rate,
-    payment_method:method,notes,
-    donation_display_fund:(fund==='donation'&&donKind!=='inkind')?donDisplay:null,   /* ق3: in-kind never enters legacy display/allocator */
-    food_donation_allocation:finalAllocType,
-    current_addition:null,
-    created_by:CUR?.full_name||CU?.email,
-  }).select().single();
-  if(error){toast(window.t('errors.save_error')+': '+error.message,'err');return;}
-  await logAction('add',`إضافة إيصال ${no} — ${payerName} — ₪${fmt(amountILS)}${currency!=='ILS'?` (${fmtD(amount)} ${currency})`:''}`, 'receipts', data.id);
+  /* BO-01 · Create Voucher — route the certified write through the Business
+     Operations layer (P1-000 Part A). Classification/UX above stay in this adapter;
+     the operation owns the contract (authority, amount, lock, explicit class, unique
+     number) + the certified insert + audit. */
+  const _res=await BusinessOps.createVoucher({ kind:'receipt',
+    logLabel:no=>`إضافة إيصال ${no} — ${payerName} — ₪${fmt(amountILS)}${currency!=='ILS'?` (${fmtD(amount)} ${currency})`:''}`,
+    payload:{
+      fund_type:fund,receipt_date:date,
+      movement_type:cls.movement_type,destination_treasury:cls.destination_treasury,
+      movement_reason:cls.movement_reason,register_category:cls.register_category||null,
+      payer_type:payerType,
+      member_id:payerType==='member'?memberId:null,
+      contact_id:finalContactId,
+      payer_name:payerName,
+      amount,currency,amount_ils:amountILS,exchange_rate:rate,
+      payment_method:method,notes,
+      donation_display_fund:(fund==='donation'&&donKind!=='inkind')?donDisplay:null,   /* ق3: in-kind never enters legacy display/allocator */
+      food_donation_allocation:finalAllocType,
+      current_addition:null
+    }});
+  if(!_res.ok){toast(window.t('errors.save_error')+': '+_res.error,'err');return;}
+  const data=_res.data, no=_res.no;
   window.closeM();
   await loadAll();
   toast(window.t('messages.receipt_saved')+' '+no,'ok');
@@ -191,23 +195,24 @@ window.savePay=async function(print=false){
   if(voucherLocked(date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إنشاء سند بتاريخ ضمن سنة مقفلة','err'); return; }
 
   const benName=benType==='member'?gmn(memberId):benNameInput;
-  const no=nextNo('PAY',DB.payments);
-  const{data,error}=await SB.from('payments').insert({
-    no,verification_token:genVerificationToken(),fund_type:fund,payment_date:date,
-    /* P2-D — classification at capture: an expense of its treasury */
-    movement_type:fund==='food'?'food_expense':'diwan_expense',
-    destination_treasury:fund==='food'?'food':'diwan',
-    movement_reason:fund==='food'?'food_expense':'diwan_expense',
-    beneficiary_type:benType,
-    member_id:benType==='member'?memberId:null,
-    beneficiary_name:benName,
-    amount,currency,amount_ils:amountILS,exchange_rate:rate,
-    expense_type:expense,payment_method:method,notes,
-    approved_by:approved,
-    created_by:CUR?.full_name||CU?.email,
-  }).select().single();
-  if(error){toast(window.t('errors.save_error')+': '+error.message,'err');return;}
-  await logAction('add',`إضافة سند ${no} — ${benName} — ₪${fmt(amountILS)}`,'payments',data.id);
+  /* BO-01 · Create Voucher (payment) — via the Business Operations layer. */
+  const _res=await BusinessOps.createVoucher({ kind:'payment',
+    logLabel:no=>`إضافة سند ${no} — ${benName} — ₪${fmt(amountILS)}`,
+    payload:{
+      fund_type:fund,payment_date:date,
+      /* P2-D — classification at capture: an expense of its treasury */
+      movement_type:fund==='food'?'food_expense':'diwan_expense',
+      destination_treasury:fund==='food'?'food':'diwan',
+      movement_reason:fund==='food'?'food_expense':'diwan_expense',
+      beneficiary_type:benType,
+      member_id:benType==='member'?memberId:null,
+      beneficiary_name:benName,
+      amount,currency,amount_ils:amountILS,exchange_rate:rate,
+      expense_type:expense,payment_method:method,notes,
+      approved_by:approved
+    }});
+  if(!_res.ok){toast(window.t('errors.save_error')+': '+_res.error,'err');return;}
+  const data=_res.data, no=_res.no;
   window.closeM();
   await loadAll();
   toast(window.t('messages.payment_saved')+' '+no,'ok');
@@ -652,21 +657,11 @@ if(r.fund_type==='donation' && r.donation_display_fund==='food'){
     upd.manual_allocation=false; upd.manual_debt_settlement=null; upd.manual_historical_donation=null; upd.manual_current_support=null;
   }
 }
-const nowIso = new Date().toISOString();
-const newVer = Number(r.version||1)+1;
-upd.version=newVer; upd.updated_at=nowIso;
-const { error } = await SB.from('receipts').update(upd).eq('id', id);
-
-if (error) {
-  toast(window.t('errors.generic_error')+': '+error.message,'err');
-  return;
-}
-/* Phase 2/3 — immutable full snapshot + reason for this version (and v1 baseline). */
-try{
-  await recordVoucherVersion('receipt', r, { ...r, ...upd }, reason, newVer);
-}catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
-
-await logAction('edit',`تعديل إيصال ${r.no} (نسخة ${newVer}) — ₪${fmt(amount)} | السبب: ${reason}`, 'receipts', id);
+/* BO-02 · Edit Voucher — route the certified write + immutable version snapshot
+   through the Business Operations layer (P1-000 Part A; V8 versioning). */
+const _res=await BusinessOps.editVoucher({ kind:'receipt', id, changes:upd, reason,
+  logLabel:`تعديل إيصال ${r.no} (نسخة ${Number(r.version||1)+1}) — ₪${fmt(amount)} | السبب: ${reason}` });
+if(!_res.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_res.error,'err'); return; }
 window.closeM();
 await loadAll();
 toast(window.t('messages.updated'),'ok');
@@ -678,20 +673,9 @@ window.deleteRec=async function(){
   const _dr=DB.receipts.find(x=>x.id===id);
   if(_dr&&voucherLocked(_dr.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
-  /* V8 · Law 5/6 — cancellation is an accounting state transition and must leave the
-     same reconstructible trail as an edit: an immutable full-snapshot version (and the
-     v1 baseline, backfilled by recordVoucherVersion on first versioning). Version is
-     bumped; is_deleted is set. No balance/treasury/calculation changes (financial code
-     already excludes is_deleted rows) — this only completes the history. */
-  const nowIso=new Date().toISOString();
-  const newVer=Number(_dr?.version||1)+1;
-  const upd={is_deleted:true,version:newVer,updated_at:nowIso};
-  const{error}=await SB.from('receipts').update(upd).eq('id',id);
-  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  try{
-    if(_dr) await recordVoucherVersion('receipt', _dr, {..._dr, ...upd}, 'إلغاء · Cancellation', newVer);
-  }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
-  await logAction('delete',`إلغاء إيصال ${_dr?.no||''} (نسخة ${newVer})`,'receipts',id);
+  /* BO-03 · Cancel Voucher — via the Business Operations layer (V8 snapshot). */
+  const _res=await BusinessOps.cancelVoucher({ kind:'receipt', id });
+  if(!_res.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_res.error,'err'); return; }
   window.closeM();await loadAll();toast(window.t('messages.cancelled'),'warn');
 };
 window.editPay=function(id){
@@ -715,15 +699,10 @@ window.updatePay=async function(){
   const reason=(document.getElementById('edit-pay-reason')?.value||'').trim();
   if(amount<=0){toast(window.t('errors.invalid_amount'),'warn');return;}
   if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
-  const nowIso=new Date().toISOString();
-  const newVer=Number(p.version||1)+1;
-  const{error}=await SB.from('payments').update({amount_ils:amount,notes,version:newVer,updated_at:nowIso}).eq('id',id);
-  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  try{
-    await recordVoucherVersion('payment', p,
-      {...p, amount_ils:amount, notes:notes, version:newVer, updated_at:nowIso}, reason, newVer);
-  }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
-  await logAction('edit',`تعديل سند صرف ${p.no} (نسخة ${newVer}) — ₪${fmt(amount)} | السبب: ${reason}`,'payments',id);
+  /* BO-02 · Edit Voucher (payment) — via the Business Operations layer (V8 versioning). */
+  const _res=await BusinessOps.editVoucher({ kind:'payment', id, changes:{amount_ils:amount,notes}, reason,
+    logLabel:`تعديل سند صرف ${p.no} (نسخة ${Number(p.version||1)+1}) — ₪${fmt(amount)} | السبب: ${reason}` });
+  if(!_res.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_res.error,'err'); return; }
   window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
 };
 window.deletePay=async function(){
@@ -732,18 +711,9 @@ window.deletePay=async function(){
   const _dp=DB.payments.find(x=>x.id===id);
   if(_dp&&voucherLocked(_dp.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إلغاء هذا السند','err'); return; }
   if(!confirm('إلغاء هذا السند نهائياً؟'))return;
-  /* V8 · Law 5/6 — cancellation records the same immutable version snapshot as an edit
-     (plus the backfilled v1 baseline). Version bumped; is_deleted set. No balance/
-     treasury/calculation change — is_deleted rows are already excluded everywhere. */
-  const nowIso=new Date().toISOString();
-  const newVer=Number(_dp?.version||1)+1;
-  const upd={is_deleted:true,version:newVer,updated_at:nowIso};
-  const{error}=await SB.from('payments').update(upd).eq('id',id);
-  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  try{
-    if(_dp) await recordVoucherVersion('payment', _dp, {..._dp, ...upd}, 'إلغاء · Cancellation', newVer);
-  }catch(e){ toast('⚠️ تعذّر حفظ نسخة السجل: '+e.message,'warn'); }
-  await logAction('delete',`إلغاء سند صرف ${_dp?.no||''} (نسخة ${newVer})`,'payments',id);
+  /* BO-03 · Cancel Voucher (payment) — via the Business Operations layer (V8 snapshot). */
+  const _res=await BusinessOps.cancelVoucher({ kind:'payment', id });
+  if(!_res.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_res.error,'err'); return; }
   window.closeM();await loadAll();toast(window.t('messages.cancelled'),'warn');
 };
 window.editMember=function(id){
