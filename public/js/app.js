@@ -1180,6 +1180,10 @@ window.renderMemberStmt=function(){
       +'<span>'+T('كُشف حساب مُولّد آليًا من النظام المالي — ديوان آل طه','Auto-generated statement — Diwan Al-Taha Finance')+'</span>'
     +'</div>'
   +'</div>';
+  /* P2·S1 — Member Financial Lifecycle: read-only INITIAL-STATE card, injected
+     additively after the opening bar. Presentation only; values derive from the
+     certified read model via window.MemberLifecycle (no accounting change). */
+  try{ if(window.MemberLifecycle){ const _ob=out.querySelector('.as-openbar'); if(_ob) _ob.insertAdjacentHTML('afterend', window.MemberLifecycle.initialStateCard(mid,_en)); } }catch(_){}
 };
 
 
