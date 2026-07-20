@@ -246,9 +246,10 @@ window.saveMember=async function(){
   const memberObj={name,phone,notes,opening_balance:bal,active_from_year:fromYear,...auth};
   /* R1 — authoritative subscription rows (member_id is assigned atomically inside the RPC). */
   const subRows=DB.annual.map(a=>({year:a.year,due_amount_ils:(fromYear<=a.year?Number(a.amount||0):0),paid_amount_ils:0,balance_ils:(fromYear<=a.year?Number(a.amount||0):0)}));
-  const{data:mRes,error}=await SB.rpc('create_member_atomic',{p_member:memberObj,p_subscriptions:subRows});
-  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  await logAction('add',`إضافة عضو: ${name}`,'members',(mRes&&mRes.member_id)||null);
+  /* BO-07 · Create Member — via the Business Operations layer (sole executor:
+     create_member_atomic, V2). Payload built above by this certified caller. */
+  const _res=await BusinessOps.createMember({member:memberObj, subscriptions:subRows, logLabel:`إضافة عضو: ${name}`});
+  if(!_res.ok){toast(window.t('errors.generic_error')+': '+_res.error,'err');return;}
   window.closeM();await loadAll();toast(window.t('messages.member_added')+' '+name,'ok');
 };
 
@@ -743,9 +744,9 @@ window.updateMember=async function(){
       ? {historical_balance_ils:bal, historical_payments_ils:0, credit_balance_ils:0}
       : {historical_balance_ils:0, historical_payments_ils:-bal, credit_balance_ils:-bal});
   }
-  const{error}=await SB.from('members').update(upd).eq('id',id);
-  if(error){toast(window.t('errors.generic_error')+': '+error.message,'err');return;}
-  await logAction('edit',`تعديل بيانات عضو: ${name}`,'members',id);
+  /* BO-08 · Edit Member — via the Business Operations layer. */
+  const _res=await BusinessOps.editMember({id, changes:upd, logLabel:`تعديل بيانات عضو: ${name}`});
+  if(!_res.ok){toast(window.t('errors.generic_error')+': '+_res.error,'err');return;}
   window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
 };
 window.deleteMember=async function(){
@@ -753,8 +754,9 @@ window.deleteMember=async function(){
   const id=document.getElementById('edit-mem-id').value;
   const m=gm(id);
   if(!confirm(`حذف العضو ${m?.name}؟ لا يمكن التراجع.`))return;
-  await SB.from('members').update({is_active:false}).eq('id',id);
-  await logAction('delete',`حذف عضو: ${m?.name}`,'members',id);
+  /* BO-09 · Cancel (deactivate) Member — via the Business Operations layer. */
+  const _res=await BusinessOps.cancelMember({id, logLabel:`حذف عضو: ${m?.name}`});
+  if(!_res.ok){toast(window.t('errors.generic_error')+': '+_res.error,'err');return;}
   window.closeM();await loadAll();toast(window.t('messages.deleted'),'warn');
 };
 
