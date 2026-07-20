@@ -45,7 +45,14 @@
       lifecycle: 'ACTIVE → ACTIVE′(v n+1)', laws: [5, 6, 11] },
     'BO-03': { id: 'BO-03', name: 'Cancel Voucher', authority: 'admin',
       preconditions: ['administrator', 'voucher active', 'not locked'],
-      lifecycle: 'ACTIVE → CANCELLED(v n+1)', laws: [5, 6, 11] }
+      lifecycle: 'ACTIVE → CANCELLED(v n+1)', laws: [5, 6, 11] },
+    'BO-04': { id: 'BO-04', name: 'Reclassify Voucher', authority: 'admin',
+      preconditions: ['administrator', 'voucher active', 'not locked', 'reason present', 'explicit valid classification'],
+      lifecycle: 'ACTIVE → ACTIVE′ (classification changed)', laws: [1, 4, 5, 6, 8, 11] },
+    'BO-05': { id: 'BO-05', name: 'Split / Move Voucher', authority: 'admin',
+      preconditions: ['administrator', 'parent active', 'not locked', 'reason present'],
+      engine: 'reclassify_split_atomic (V1 atomicity + V9 guards) — sole executor; no split math in this layer',
+      lifecycle: 'parent → ACTIVE(reduced) + NEW linked child ACTIVE(v1), atomic', laws: [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }
   };
 
   /* ── BO-01 · Create Voucher ──────────────────────────────────────────────
@@ -119,7 +126,70 @@
     return { ok: true, data: { version: newVer }, no: row.no };
   }
 
-  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher };
+  /* ── BO-04 · Reclassify Voucher (full, classification-only) ──────────────
+     Corrects a voucher's whole-amount classification without changing the amount.
+     Classification-only — there is NO financial calculation here; the operation
+     coordinates the contract + the certified write (immutable snapshot then the
+     classification update). `next` is the explicit target classification (Law 4). */
+  async function reclassifyVoucher({ kind, id, next, reason, snapshotReason, logLabel } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    const tbl = tableOf(kind);
+    const row = (typeof DB !== 'undefined' && DB[tbl] || []).find(x => x.id === id);
+    if (!row || row.is_deleted) return fail('E_STATE', 'السند غير موجود أو غير نشط');
+    if (isLocked(dateOf(kind, row))) return fail('E_LOCKED', '🔒 السنة المالية مقفلة — لا يُعاد تصنيف سندٍ فيها');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', 'سبب إعادة التصنيف إلزامي');
+    if (!next || !next.movement_type || !eventValid(next.movement_type)) return fail('E_CLASS', 'التصنيف الجديد غير صريح أو غير معتمد (Law 4)');
+
+    const preRow = Object.assign({}, row);
+    const newVer = Number(row.version || 1) + 1;
+    /* immutable evidence FIRST (full pre/post snapshot + reason), then the update */
+    try { await recordVoucherVersion(kind, preRow, Object.assign({}, preRow, next, { version: newVer }), snapshotReason || String(reason).trim(), newVer); }
+    catch (e) { return fail('E_HISTORY', e.message); }
+    const upd = Object.assign({}, next, { version: newVer });
+    if (kind === 'payment') delete upd.register_category;   /* column exists only on receipts */
+    const { error } = await SB.from(tbl).update(upd).eq('id', id);
+    if (error) return fail('E_WRITE', error.message);
+    try { await logAction('reclassify', logLabel || `إعادة تصنيف ${row.no}`, tbl, id); } catch (_) {}
+    return { ok: true, data: { version: newVer }, no: row.no };
+  }
+
+  /* ── BO-05 · Split / Move Voucher (partial reclassification) ──────────────
+     Moves a portion of a voucher to a new classification. The operation performs
+     NO split math and NO conservation check — the split proposal (child row +
+     retained amounts) is computed by the certified caller, and the CERTIFIED ATOMIC
+     RPC reclassify_split_atomic (V1 atomicity + V9 runtime guards) is the sole
+     executor: it re-verifies conservation / exactness / derivation / deficit against
+     the stored parent and commits all-or-nothing (or rejects with full rollback).
+     This layer only coordinates the contract and calls that one path — never a
+     bypass. It keeps the parent→child link intact (child carries the reference). */
+  async function splitVoucher({ kind, parentId, child, remainNative, remainILS, parentVersion, versionSnapshot, versionReason, reason, originalSnapshot, logLabel } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    const tbl = tableOf(kind);
+    const parent = (typeof DB !== 'undefined' && DB[tbl] || []).find(x => x.id === parentId);
+    if (!parent || parent.is_deleted) return fail('E_STATE', 'السند الأصل غير موجود أو غير نشط');
+    if (isLocked(dateOf(kind, parent))) return fail('E_LOCKED', '🔒 السنة المالية مقفلة — لا يمكن تجزئة سندٍ فيها');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', 'سبب التجزئة إلزامي');
+    if (!child || typeof child !== 'object') return fail('E_INPUT', 'بيانات الفرع مفقودة');
+
+    /* sole executor: the certified atomic + guarded RPC (no bypass, no recompute) */
+    const { data, error } = await SB.rpc('reclassify_split_atomic', {
+      p_kind: kind === 'payment' ? 'payment' : 'receipt',
+      p_parent_id: parentId,
+      p_child: child,
+      p_remain_amount: remainNative,
+      p_remain_amount_ils: remainILS,
+      p_parent_version: parentVersion,
+      p_version_snapshot: versionSnapshot,
+      p_version_reason: versionReason,
+      p_edited_by: editor(),
+      p_original_snapshot: originalSnapshot
+    });
+    if (error) return fail('E_ATOMIC', error.message);   /* guard rejection or atomic failure → nothing committed */
+    try { await logAction('reclassify', logLabel || `إعادة تصنيف جزئية ${parent.no}`, tbl, parentId); } catch (_) {}
+    return { ok: true, data };
+  }
+
+  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher };
   if (typeof window !== 'undefined') window.BusinessOps = BusinessOps;
   if (typeof module !== 'undefined' && module.exports) module.exports = BusinessOps;
 })();

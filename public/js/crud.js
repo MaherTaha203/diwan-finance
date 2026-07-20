@@ -421,47 +421,39 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
        reclassify_split_atomic. The split MATH above is unchanged, so the golden
        baseline is preserved — only the writes became atomic. A mid-operation
        failure now leaves NO partial state (no orphan child / un-reduced original). */
+    /* BO-05 · Split / Move — the split MATH above stays in this certified caller;
+       the Business Operations layer only coordinates the contract and invokes the
+       sole executor (the atomic + guarded RPC). No split math / conservation check
+       is duplicated in the layer. */
     const origVer=Number(row.version||1)+1;
     const reducedRow=Object.assign({},row,{amount:remainNative,amount_ils:remainILS,version:origVer});
-    const{error:splitErr}=await SB.rpc('reclassify_split_atomic',{
-      p_kind: kind==='payment'?'payment':'receipt',
-      p_parent_id: voucherId,
-      p_child: ins,
-      p_remain_amount: remainNative,
-      p_remain_amount_ils: remainILS,
-      p_parent_version: origVer,
-      p_version_snapshot: reducedRow,
-      p_version_reason: `إعادة تصنيف جزئية · Partial reclassification — نُقل ₪${fmt(childILS)} إلى ${newNo} · تبقّى ₪${fmt(remainILS)} — ${String(reason).trim()}`,
-      p_edited_by: editor,
-      p_original_snapshot: row
+    const _res=await BusinessOps.splitVoucher({
+      kind, parentId:voucherId, child:ins,
+      remainNative, remainILS, parentVersion:origVer,
+      versionSnapshot:reducedRow,
+      versionReason:`إعادة تصنيف جزئية · Partial reclassification — نُقل ₪${fmt(childILS)} إلى ${newNo} · تبقّى ₪${fmt(remainILS)} — ${String(reason).trim()}`,
+      reason,
+      originalSnapshot:row,
+      logLabel:`إعادة تصنيف جزئية ${row.no}: نُقل ₪${fmt(childILS)} → ${newNo} (${next.movement_type} · ${next.destination_treasury||'—'}) · تبقّى ₪${fmt(remainILS)} في ${prev.movement_type||'—'} · السبب: ${String(reason).trim()}`
     });
-    if(splitErr){toast('فشل التجزئة الذرّية: '+splitErr.message,'err');return false;}
-    await logAction('reclassify',
-      `إعادة تصنيف جزئية ${row.no}: نُقل ₪${fmt(childILS)} → ${newNo} (${next.movement_type} · ${next.destination_treasury||'—'})`+
-      ` · تبقّى ₪${fmt(remainILS)} في ${prev.movement_type||'—'} · السبب: ${String(reason).trim()}`,
-      table,voucherId);
+    if(!_res.ok){toast('فشل التجزئة الذرّية: '+_res.error,'err');return false;}
     await loadAll();
     toast(`✓ إعادة تصنيف جزئية: ₪${fmt(remainILS)} تبقّى · ₪${fmt(childILS)} انتقل إلى ${newNo}`,'ok');
     return true;
   }
   if(partAmt<=0 || partAmt>fullAmt){ toast('المبلغ المُعاد تصنيفه غير صالح (يجب أن يكون بين ₪0 و ₪'+fmt(fullAmt)+')','err');return false; }
 
-  /* ═══ FULL reclassification (classification-only; amount unchanged) ═══ */
-  const newVer=Number(row.version||1)+1;
-  /* immutable evidence FIRST: full pre/post snapshot + the reason */
-  await recordVoucherVersion(kind==='payment'?'payment':'receipt',row,
-    Object.assign({},row,next,{version:newVer}),
-    'إعادة تصنيف استثنائية · Reclassification — '+String(reason).trim(),newVer);
-  /* `register_category` exists only on `receipts` — omit it from a payment update
-     so PostgREST doesn't reject the whole statement on an unknown column. */
-  const nextUpd=Object.assign({},next,{version:newVer});
-  if(kind==='payment') delete nextUpd.register_category;
-  const{error:uErr}=await SB.from(table).update(nextUpd).eq('id',voucherId);
-  if(uErr){toast('فشل التحديث: '+uErr.message,'err');return false;}
-  await logAction('reclassify',
-    `إعادة تصنيف ${row.no}: ${prev.movement_type||'—'}→${next.movement_type}`+
-    ` · ${prev.destination_treasury||'—'}→${next.destination_treasury||'—'} · السبب: ${String(reason).trim()}`,
-    table,voucherId);
+  /* ═══ BO-04 · FULL reclassification (classification-only; amount unchanged) ═══
+     Routed through the Business Operations layer: it enforces the contract
+     (authority, active, not-locked, reason, explicit valid class — Law 4) and
+     performs the certified write (immutable snapshot then the classification
+     update). No financial calculation is involved. */
+  const _res=await BusinessOps.reclassifyVoucher({
+    kind, id:voucherId, next, reason,
+    snapshotReason:'إعادة تصنيف استثنائية · Reclassification — '+String(reason).trim(),
+    logLabel:`إعادة تصنيف ${row.no}: ${prev.movement_type||'—'}→${next.movement_type} · ${prev.destination_treasury||'—'}→${next.destination_treasury||'—'} · السبب: ${String(reason).trim()}`
+  });
+  if(!_res.ok){toast('فشل التحديث: '+_res.error,'err');return false;}
   await loadAll();
   toast('✓ أُعيد التصنيف مع حفظ الأثر الكامل','ok');
   return true;
