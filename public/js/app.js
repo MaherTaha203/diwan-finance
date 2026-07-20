@@ -458,11 +458,15 @@ else if(st==='credit')
         <td class="num c-amt ${m.bal>0?'neg-amt':m.bal<0?'crd-amt':'pos-amt'}">₪ ${fmt(Math.abs(m.bal))}</td>
         <td><span class="badge ${cls}">${lbl}</span></td>
         <td class="tda">
+          <button class="btn ghost sm" onclick="window.openMemberWorkspace('${m.id}')" title="${window.LANG==='en'?'Financial unit':'وحدة العضو المالية'}"><i class="ti ti-user-dollar"></i></button>
           <button class="btn ghost sm ic-print" onclick="window.nav('member-stmt');setTimeout(()=>{document.getElementById('ms-member').value='${m.id}';window.renderMemberStmt();},80)" title="${window.t('members.member_stmt')}"><i class="ti ti-file-description"></i></button>
           ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editMember('${m.id}')" title="${window.t('common.edit')}"><i class="ti ti-edit"></i></button>`:''}
         </td></tr>`;
     }).join('');
   }},
+  /* P2·S2 — Member Financial Lifecycle workspace (orchestration only; renders via
+     window.MemberLifecycle over certified read models). */
+  'member-workspace':{render(){ if(typeof window.renderMemberWorkspace==='function') window.renderMemberWorkspace(); }},
 };
 function emptyRow(cols,msgKey){const msg=L.noData(msgKey)||msgKey;return`<tr><td colspan="${cols}"><div class="empty"><i class="ti ti-inbox"></i><div class="empty-t">${msg}</div></div></td></tr>`;}
 
