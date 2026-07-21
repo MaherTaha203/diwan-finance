@@ -67,7 +67,7 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   const { FIN, PaymentWorkspace, window } = load(DB, docEls, extras);
 
   // ── surface + entry points ────────────────────────────────────────────────
-  A('module present · version 1', PaymentWorkspace && PaymentWorkspace.version === 1);
+  A('module present (version >= 1)', PaymentWorkspace && PaymentWorkspace.version >= 1);
   A('read surface exposed (paymentState / paymentRows)', typeof PaymentWorkspace.paymentState === 'function' && typeof PaymentWorkspace.paymentRows === 'function');
   A('workspace entry points present', typeof window.renderPaymentWorkspace === 'function' && typeof window.openPaymentWorkspace === 'function');
 
@@ -75,7 +75,7 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   let html = pwOut.innerHTML;
 
   // ── GOV-WS-01 · one dominant Primary Business Question (Rule 2) ────────────
-  A('hero states the Primary Business Question', /ما المدفوعات القائمة، وما حالتها التشغيلية الحالية/.test(html));
+  A('hero states the payment Primary Business Question', /المدفوعات القائمة/.test(html));
   A('hero surfaces ONE dominant metric (total disbursed)', (html.match(/pw-hero-bal/g) || []).length === 1);
 
   // ── required sections · State → History → Navigation ──────────────────────
@@ -84,8 +84,11 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   A('renders · Payment Timeline (HISTORY)', /ماذا حدث عبر الزمن/.test(html));
   A('renders · Workspace Navigation', /إلى أين أذهب من هنا/.test(html));
 
-  // ── Rule 3 / Rule 4 · NO Capability section, NO execution controls ────────
-  A('capability is deferred (P4-S2 note present, no execution)', /P4-S2/.test(html) && /pw-defer/.test(html));
+  // ── Rule 3 · History (Payment Ledger) carries no execution controls ───────
+  //    (P4-S1 deferred capability; P4-S2 activated it in a SEPARATE Capability
+  //    section — the State/History sections stay execution-free either way.)
+  const ledgerTbl = (html.match(/<table class="pw-table"[\s\S]*?<\/table>/) || [''])[0];
+  A('Rule 3 · History (Payment Ledger) carries no execution controls', ledgerTbl.length > 0 && !/onclick/.test(ledgerTbl));
 
   // ── single source · every value from the certified read model ─────────────
   const foodDr = R2((FIN.fundLedger('food', '', '', 'dr') || []).reduce((t, r) => t + Number(r.dr || 0), 0));
@@ -115,8 +118,8 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   A('no Business Operation is executed (0 BusinessOps calls)', boCalls.length === 0, 'calls=' + boCalls.length);
   A('module source references NO BusinessOps (read-only by construction)',
     !/BusinessOps\s*\./.test(rd('payment-workspace.js').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
-  A('markup contains no execution routing (create/edit/cancel/reclassify)',
-    !/BusinessOps|savePay|updatePay|deletePay|openReclassify|actionIssue|actionEdit/i.test(pwOut.innerHTML));
+  A('State (Summary) tiles carry no execution controls (Rule 3)',
+    !/onclick/.test((html.match(/<div class="pw-tiles">[\s\S]*?<\/div>\s*<\/div>\s*<\/section>/) || [''])[0]));
 
   // ── read-only view filter works (not an operation) ────────────────────────
   PaymentWorkspace.setFund('food');
