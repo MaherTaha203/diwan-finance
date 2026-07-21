@@ -3,27 +3,27 @@
      A living governance RECORD (not a rule): it states the current architectural
      baseline of the platform and the next planning activity. Updated by appending
      a new dated entry at each phase closeout — never by rewriting history.
-     This artifact changes NO governance rule (GOV-WS-01 remains v1.4, untouched).
+     This artifact changes NO governance rule (GOV-WS-01 v1.5 remains untouched).
      ═══════════════════════════════════════════════════════════════════════════ -->
 
 # Program — Architectural Baseline & Roadmap
 
 **Document ID:** GOV‑PROG‑BR‑01
 **Status:** ACTIVE (living record)
-**Current Architectural Baseline:** `main` @ `d2a7454` (P5‑OBS‑S1 merged · PR #120)
-**Last updated:** 2026‑07‑21 — P5‑OBS closeout (GOV‑P5‑OBS‑CR‑01)
-**Active governance:** GOV‑WS‑01 v1.4 (Rules 1–6).
+**Current Architectural Baseline:** `main` @ `72b46ad` (P‑DUES‑S2 merged · PR #126)
+**Last updated:** 2026‑07‑21 — P‑DUES closeout (GOV‑PDUES‑CR‑01)
+**Active governance:** GOV‑WS‑01 v1.5 (Component Taxonomy + Rules 1–6).
 
 ---
 
 ## 1 · Current Architectural Baseline
 
-The platform now consists of a certified foundation, three operational Business
+The platform now consists of a certified foundation, **four** operational Business
 Modules, and one Observability Layer above them.
 
 ### FOUNDATION
-- **Governance** — GOV‑WS‑01 v1.4; the constitutional compliance register; the
-  phase specifications and completion reports.
+- **Governance** — GOV‑WS‑01 v1.5 (Component Taxonomy + Rules 1–6); the constitutional
+  compliance register; the phase specifications and completion reports.
 - **Accounting Constitution** (P0) — frozen.
 - **Accounting Core** (FIN / FIN2 / FinContract + atomic RPCs) — frozen; the sole
   executor of financial logic.
@@ -36,11 +36,12 @@ Modules, and one Observability Layer above them.
 | **P2 — Member Financial Lifecycle** | Member obligations & operational workspace | **COMPLETE & FROZEN** |
 | **P3 — Collection Operations** | Receipts / money‑in (BO‑01…BO‑05) | **COMPLETE & FROZEN** |
 | **P4 — Payment Voucher Workspace** | Payments / money‑out (BO‑01…BO‑05) | **COMPLETE & FROZEN** |
+| **P‑DUES — Annual Subscriptions / Dues** | Annual dues State/History + apply (BO‑10) & onboard (BO‑07) | **COMPLETE & FROZEN** |
 
 ### OBSERVABILITY LAYER
 | Layer | Scope | Status |
 |---|---|---|
-| **P5 — Treasury / Financial Position** | Read‑only unified financial position (State + Movement) above P2/P3/P4 | **COMPLETE & FROZEN** |
+| **P5 — Treasury / Financial Position** | Read‑only unified financial position (State + Movement) above the modules | **COMPLETE & FROZEN** |
 
 Each operational module *executes* its domain by orchestrating certified Business
 Operations (GOV‑WS‑01 Rule 4). The Observability Layer *executes nothing* — it
@@ -55,7 +56,10 @@ projects certified Read Models (Rule 4 N/A).
 | P2 | Member Financial Lifecycle | (P2 slices merged) | — |
 | P3 | Collection Operations · Receipts | (P3 slices merged) | — |
 | P4 | Payment Voucher Workspace | **GOV‑P4‑CR‑01** | `7448745` |
-| P5‑OBS | Treasury Observability Layer | **GOV‑P5‑OBS‑CR‑01** | **`d2a7454`** |
+| P5‑OBS | Treasury Observability Layer | **GOV‑P5‑OBS‑CR‑01** | `d2a7454` |
+| P6‑000 | Architectural Evolution Assessment | **GOV‑P6‑SPEC‑01** (frozen) | `c1f528e` |
+| GOV‑WS‑01 v1.5 | Governance Evolution Specification | ratified (PR #123) | `95dd5bb` |
+| P‑DUES | Annual Subscriptions / Dues Module | **GOV‑PDUES‑CR‑01** | **`72b46ad`** |
 
 ## 3 · Governance Status
 
@@ -64,44 +68,41 @@ projects certified Read Models (Rule 4 N/A).
 - **P2 — CLOSED & FROZEN**
 - **P3 — CLOSED & FROZEN**
 - **P4 — CLOSED & FROZEN**
-- **P5‑OBS‑000 — FROZEN** (layer specification)
 - **P5‑OBS — COMPLETE & FROZEN** (Treasury Observability Layer)
-- **GOV‑WS‑01 v1.4 — ACTIVE**
+- **P6‑000 — COMPLETE & FROZEN** (Architectural Evolution Assessment)
+- **GOV‑WS‑01 v1.5 — ACTIVE** (the single governance reference after P6)
+- **P‑DUES‑000 — APPROVED & FROZEN** · **P‑DUES‑S1 / S2 — COMPLETE & FROZEN**
+- **P‑DUES — COMPLETE & FROZEN** (Annual Subscriptions / Dues module)
 
-No further implementation belongs to P5‑OBS unless a future architectural or owner
-decision explicitly reopens it.
+No further implementation belongs to a completed/frozen module unless a future
+architectural or owner decision explicitly reopens it.
 
 ## 4 · Roadmap — Next Planning Activity
 
-### ▶ P6‑000 · Architectural Evolution Assessment — **OPEN (planning only)**
+**No implementation is authorized.** With P‑DUES complete, the program awaits the next
+**Architectural Discovery → Classification** (GOV‑WS‑01 v1.5 §8) or a **Phase Order**.
+Any next candidate must be classified before implementation (v1.5 §8) and cleared
+through the Governance Decision Matrix (v1.5 §7).
 
-The next planning activity is **P6‑000**, an **Architectural Evolution Assessment**.
-Following the P5‑000 method, it shall — before any implementation — determine the
-**next highest‑value architectural evolution** now that the three operational
-modules and the Treasury Observability Layer are complete. It shall:
-
-- classify every remaining candidate into one architectural category (Business
-  Module · Cross‑cutting Capability · Business Rule · Governance Enhancement ·
-  Observability / Reporting Layer);
-- prioritize by architectural value on the certified foundation (orchestration
-  only; no new accounting; GOV‑WS‑01 respected);
-- recommend the highest‑value next step and the path(s) to reach it.
-
-**Known open candidates carried forward** (each remains a separate, individually‑gated
-decision — none is pre‑selected as P6):
-- **Approval Workflow (GAP‑P1)** — cross‑cutting Capability; needs a new certified BO
-  + a Business‑Contract (Part A) amendment.
-- **Liquidity Guard (GAP‑P2)** — Business Rule; accounting‑core precondition.
-- **Annual Subscriptions / Dues Operations** — the top operational Business Module on
-  the certified foundation (BO‑10 / BO‑07 reuse).
-- **BO‑06 historical‑deficit settlement** — deferred certified operation.
-- **Cash Management / Reconciliation** — new physical‑cash/reconcile concept (low
-  readiness).
-- **Governance Enhancement** — e.g. codifying "Observability Layer" as a first‑class
-  GOV‑WS‑01 artifact type.
-
-**No implementation for P6 may begin until the P6‑000 assessment is reviewed,
-approved, and frozen.**
+**Known candidates carried forward** (each a separate, individually‑gated decision —
+none pre‑selected):
+- **Approval Workflow (GAP‑P1)** — Cross‑Cutting Capability; needs an ADR + a new
+  certified BO + a Business‑Contract (Part A) amendment.
+- **Liquidity Guard (GAP‑P2)** — Cross‑Cutting Capability / financial invariant; pairs
+  with GAP‑P1 (a merged pre‑execution control), Constitutional Review required.
+- **BO‑06 historical‑deficit settlement** — Deferred (constitutional; blocked on a
+  settlement policy).
+- **Cash Management / Reconciliation** — Deferred (needs a new cash‑location foundation).
+- **Governance Enhancements** —
+  - codify "Observability Layer" as a first‑class GOV‑WS‑01 artifact type (candidate v1.6);
+  - **GOV‑013 · AI Engineering Team Framework** — a proposed permanent multi‑agent
+    engineering governance (Chief Architect · Implementation · QA · Architecture
+    Compliance · Business Rules Auditor · Regression · Observability · Data Integrity ·
+    UI/UX · Security · Documentation · Release Readiness, under an Engineering
+    Coordinator). Recorded here as a Governance Enhancement candidate; requires its own
+    formal governance order (not opened by the P‑DUES closeout).
+- **Reservations (existing, non‑financial)** — a Governance ruling on its standing
+  (per P6‑000), not an implementation.
 
 ---
 
