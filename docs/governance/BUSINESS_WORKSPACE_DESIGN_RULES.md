@@ -8,12 +8,12 @@
 # Business Workspace — Design Rules
 
 **Document ID:** GOV‑WS‑01
-**Version:** 1.3 (FROZEN)
+**Version:** 1.4 (FROZEN)
 **Status:** RATIFIED · STANDING
-**Established:** 2026‑07‑20 · Rules 1–2 (P2‑S2) · Rule 3 (P2‑S3) · Rule 4 (P3‑000) · Rule 5 (P4‑000)
+**Established:** 2026‑07‑20 · Rules 1–2 (P2‑S2) · Rule 3 (P2‑S3) · Rule 4 (P3‑000) · Rule 5 (P4‑000) · Rule 6 (P4‑S1)
 **Scope:** every Business Workspace of Diwan — all current and future Business Modules.
-Rules 1–3 apply to **every** Business Workspace; Rule 4 applies to every **Operational** Workspace;
-Rule 5 applies to every **Business Module**.
+Rules 1–3 and Rule 6 apply to **every** Business Workspace; Rule 4 applies to every **Operational**
+Workspace; Rule 5 applies to every **Business Module**.
 
 ---
 
@@ -112,6 +112,24 @@ four moments distinct and never collapses them:
   future modules). *(E.g. P4 **owns** issue / edit / cancel / correct of payment vouchers; it
   explicitly **does not own** the approval workflow (GAP‑P1) or the liquidity guard (GAP‑P2).)*
 
+## Rule 6 · One source of operational truth (every Business Workspace)
+
+> **Every Business Workspace shall expose only one source of operational truth. Multiple views
+> (Summary, Ledger, Timeline, …) are permitted only as different PROJECTIONS of the same certified
+> operational state.**
+
+- A workspace has a single certified operational state (the certified read models). Every view —
+  Summary, Ledger, Timeline, hero figures, tiles — is a **projection** of that same state, computed
+  the same way from the same certified source. No view holds its own cached, recomputed, or
+  divergent number.
+- Two views that show the same quantity agree **because they read the same certified value**, not
+  because they are separately kept in sync — there is no second copy to drift.
+- Reinforces Rule 1 at the view layer: the prohibition is not only on a second source of *data*, but
+  on a second source of *operational truth* across a workspace's views.
+- Applies to every Business Workspace. *(E.g. the Payment workspace's hero total, Summary total, and
+  Ledger footer total are one projection of the certified `FIN.fundLedger` debits — never three
+  separate sums.)*
+
 ---
 
 ## Application
@@ -134,6 +152,8 @@ four moments distinct and never collapses them:
   ratified at the P3‑000 approval. Supersedes 1.1.
 - **1.3** — added Rule 5 (declare the Business Boundary: owns / does not own — every Business
   Module), ratified at the P4‑000 approval. Supersedes 1.2.
+- **1.4** — added Rule 6 (one source of operational truth; views are projections of the same
+  certified state — every Business Workspace), ratified at the P4‑S1 approval. Supersedes 1.3.
 
 ---
 
