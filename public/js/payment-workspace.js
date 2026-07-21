@@ -1,29 +1,33 @@
-/* ═══ PAYMENT VOUCHER WORKSPACE — P4 · Slice 1 (read-only) ═════════════════════
+/* ═══ PAYMENT VOUCHER WORKSPACE — P4 · Slices 1–2 ═════════════════════════════
    The third Business Module surface (P4-000, approved & frozen). The operational
    environment for money LEAVING the organization (Payment / Disbursement
    Vouchers) — the outflow mirror of the P3 Collection Operations Workspace.
-   Slice 1 establishes VISIBILITY BEFORE CAPABILITY: the payment State and History.
+     • Slice 1 established VISIBILITY: the payment State and History (read-only).
+     • Slice 2 activates CAPABILITY: issue / edit / cancel payment vouchers.
 
    BUSINESS BOUNDARY (GOV-WS-01 Rule 5):
-     • OWNS — presenting the disbursement State and History from certified read
-       models; (from P4-S2) issue / edit / cancel / correct payment vouchers via
-       certified Business Operations.
-     • DOES NOT OWN — the approval workflow (GAP-P1) and the liquidity/budget guard
-       (GAP-P2); both are separate gated business decisions. No receipts (P3), no
-       member lifecycle (P2), no BO-06.
+     • OWNS — presenting the disbursement State/History from certified read models;
+       and (P4-S2) issue / edit / cancel payment vouchers via certified BOs.
+     • DOES NOT OWN — corrections (BO-04/05, reserved for P4-S3), the approval
+       workflow (GAP-P1), the liquidity/budget guard (GAP-P2), BO-06. No receipts
+       (P3), no member lifecycle (P2).
 
-   ORCHESTRATION ONLY — and, in Slice 1, strictly READ-ONLY:
-     • every displayed value originates from a certified Read Model
-       (FIN.fundLedger debit rows = the certified payment ledger; FIN.foodBalance /
-       diwanBalance = the certified fund position = liquidity available to pay).
-       Totals are the sum of certified ledger debits — the same figure the certified
-       fund statement shows as total expense — never a new accounting rule.
-     • NO Business Operation is executed, no create/edit/cancel, no approval, no
-       accounting logic, no second source of truth.
+   ORCHESTRATION ONLY, on the certified foundation:
+     • DISPLAY — every value originates from a certified Read Model (FIN.fundLedger
+       debit rows = the certified payment ledger; FIN.foodBalance / diwanBalance =
+       fund liquidity). Totals are the sum of certified ledger debits — the same
+       figure the certified fund statement shows as expense — never a new accounting
+       rule. ONE source of operational truth: hero / Summary / Ledger totals are one
+       projection of the same certified state, never separate sums (Rule 6).
+     • EXECUTION — the workspace never calls a Business Operation or mutates state
+       itself. Each capability DELEGATES to an existing certified flow that routes
+       to a certified Business Operation: issue → window.openPay → savePay → BO-01;
+       edit → window.editPay → updatePay → BO-02; cancel → deletePay → BO-03. No
+       BO-04/05 (P4-S3), no approval, no liquidity guard, no accounting logic.
 
-   Architecture: Workspace → Certified Read Models. Capability is intentionally
-   deferred to P4-S2 (a separate order). GOV-WS-01: State → History (no Capability
-   section, no execution controls); Rule 2 (one dominant Primary Business Question).
+   GOV-WS-01 v1.4: Rule 2 (one dominant Primary Business Question); Rule 3 (State /
+   History / Capability in separate sections); Rule 4 (Intent → Authorization →
+   Execution via a certified BO → Result from a certified Read Model).
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -119,9 +123,54 @@
       + (s.rows.length > 40 ? '<div class="pw-more">' + T('عرض أحدث 40 حركة', 'showing the latest 40 events') + '</div>' : ''));
   }
 
-  /* SECTION 4 · Workspace Navigation — READ-ONLY orientation links to related
-     certified views. NO capability, NO execution controls, NO inactive buttons:
-     operational capability arrives in P4-S2. */
+  /* The single dominant next legitimate operation (the order's Primary Business
+     Question: "what payment operation am I legitimately allowed to perform next?").
+     Chosen from AUTHORITY only — an orchestration choice, never accounting. Routes
+     to the certified create flow (issue → openPay → savePay → BO-01). */
+  function nextOperation() {
+    const canW = (typeof can !== 'undefined' && can.write && can.write());
+    return canW
+      ? { enabled: true, label: T('إصدار سند صرف', 'Issue a payment'), run: "window.PaymentWorkspace.actionIssue()" }
+      : { enabled: false, label: T('قراءة فقط · لا صلاحية تنفيذ', 'read-only · no execution permission') };
+  }
+
+  /* SECTION 4 · Operational Actions (CAPABILITY — activated in P4-S2). GOV-WS-01
+     Rule 3 keeps this a DEDICATED Capability section, never mixed into State or
+     History (the ledger rows carry no execution controls). Rule 4: Intent (choose
+     action / voucher) → Authorization (can.write / can.admin) → Execution
+     (EXCLUSIVELY via an existing certified flow that routes to a certified Business
+     Operation) → Result (re-read from certified Read Models). The workspace itself
+     executes no Business Operation and mutates no state. BO-04/05 remain in P4-S3. */
+  function sectionCapability(s) {
+    const canW = (typeof can !== 'undefined' && can.write && can.write());
+    const canA = (typeof can !== 'undefined' && can.admin && can.admin());
+    const why = t => '<span class="pw-cap-why">' + t + '</span>';
+    const lbl = (icon, text, bo) => '<span class="pw-cap-l"><i class="ti ' + icon + '"></i>' + text + '<span class="pw-cap-bo">' + bo + '</span></span>';
+    // BO-01 · Issue payment → certified new-payment flow (openPay → savePay → BO-01)
+    const issue = canW
+      ? '<div class="pw-cap-row">' + lbl('ti-plus', T('إصدار سند صرف جديد', 'Issue a new payment'), 'BO-01')
+        + '<span class="pw-cap-act">'
+        + '<button class="pw-op pw-op-pri" onclick="window.PaymentWorkspace.actionIssue(\'food\')"><i class="ti ti-receipt-2"></i>' + T('غداء', 'Food') + '</button>'
+        + '<button class="pw-op pw-op-pri" onclick="window.PaymentWorkspace.actionIssue(\'diwan\')"><i class="ti ti-receipt-2"></i>' + T('ديوان', 'Diwan') + '</button></span></div>'
+      : '<div class="pw-cap-row pw-cap-off">' + lbl('ti-plus', T('إصدار سند صرف جديد', 'Issue a new payment'), 'BO-01') + why(T('يتطلب صلاحية كتابة', 'requires write permission')) + '</div>';
+    // BO-02 / BO-03 · Edit / cancel a selected payment → certified editor
+    const editable = s.rows.filter(r => r.id);
+    const opts = editable.map(r => '<option value="' + E(r.id) + '">' + E(r.no || '—') + ' · ' + E(r.name || '—') + ' · ₪' + M(r.amount) + ' (' + fundLabel(r.fund) + ')</option>').join('');
+    const edit = !canA
+      ? '<div class="pw-cap-row pw-cap-off">' + lbl('ti-edit', T('تعديل / إلغاء سند', 'Edit / cancel a payment'), 'BO-02 · BO-03') + why(T('يتطلب صلاحية مدير', 'requires admin')) + '</div>'
+      : editable.length
+        ? '<div class="pw-cap-row">' + lbl('ti-edit', T('تعديل / إلغاء سند', 'Edit / cancel a payment'), 'BO-02 · BO-03')
+          + '<span class="pw-cap-act"><select id="pw-edit-sel" class="pw-sel">' + opts + '</select>'
+          + '<button class="pw-op" onclick="window.PaymentWorkspace.actionEdit()"><i class="ti ti-external-link"></i>' + T('فتح المحرّر المعتمد', 'Open certified editor') + '</button></span></div>'
+        : '<div class="pw-cap-row pw-cap-off">' + lbl('ti-edit', T('تعديل / إلغاء سند', 'Edit / cancel a payment'), 'BO-02 · BO-03') + why(T('لا سندات في هذا النطاق', 'no vouchers in scope')) + '</div>';
+    const note = '<div class="pw-cap-note"><i class="ti ti-shield-check"></i><span>'
+      + T('النية ← الصلاحية ← التنفيذ عبر عملية أعمال معتمدة فقط ← النتيجة من نموذج القراءة المعتمد · لا منطق محاسبي داخل مساحة العمل · التصحيح (BO-04/05) والموافقة (GAP-P1) وحارس السيولة (GAP-P2) خارج نطاق هذه الشريحة.',
+          'Intent → Authorization → Execution via a certified Business Operation only → Result from the certified read model · no accounting logic in the workspace · corrections (BO-04/05), approval (GAP-P1) & liquidity guard (GAP-P2) are out of this slice.') + '</span></div>';
+    return card('ti-player-play', T('العمليات التشغيلية', 'Operational Actions'), T('ما الذي يمكنني تنفيذه قانونيًا الآن؟', 'What may I legitimately execute now?'), issue + edit + note);
+  }
+
+  /* SECTION 5 · Workspace Navigation — READ-ONLY orientation links to related
+     certified views. Not capability (no execution); kept separate (Rule 3). */
   function sectionNav() {
     const link = (p, icon, label) => '<button class="pw-nav-lnk" onclick="window.nav&&window.nav(\'' + p + '\')"><i class="ti ' + icon + '"></i>' + label + '</button>';
     const links = [
@@ -129,11 +178,8 @@
       link('diwan-stmt', 'ti-file-description', T('كشف صندوق الديوان', 'Diwan fund statement')),
       link('collection-workspace', 'ti-cash', T('بيئة التحصيل', 'Collection workspace'))
     ].join('');
-    const note = '<div class="pw-defer"><i class="ti ti-lock"></i><span>'
-      + T('القدرات التشغيلية (إصدار · تعديل · إلغاء · تصحيح سندات الصرف) تُضاف في الشريحة الثانية P4-S2 — لا تنفيذ في هذه الشريحة.',
-          'Operational capability (issue · edit · cancel · correct payments) arrives in P4-S2 — no execution in this slice.') + '</span></div>';
-    return card('ti-compass', T('التنقّل في مساحة العمل', 'Workspace Navigation'), T('إلى أين أذهب من هنا؟ (قراءة فقط)', 'Where to from here? (read-only)'),
-      '<div class="pw-nav">' + links + '</div>' + note);
+    return card('ti-compass', T('التنقّل في مساحة العمل', 'Workspace Navigation'), T('إلى أين أذهب من هنا؟', 'Where to from here?'),
+      '<div class="pw-nav">' + links + '</div>');
   }
 
   function fillFundTabs() {
@@ -146,21 +192,28 @@
     const out = document.getElementById('pw-out'); if (!out) return;
     if (typeof FIN === 'undefined' || !FIN.fundLedger) { out.innerHTML = ''; return; }
     const s = paymentState(_pwFund);
-    // GOV-WS-01 Rule 2 — one dominant Primary Business Question: the payment state.
+    const nxt = nextOperation();
+    // GOV-WS-01 Rule 2 — one dominant Primary Business Question. As an Operational
+    // Workspace (P4-S2) it leads with the operation the user may legitimately
+    // perform next; the disbursed total is the supporting state figure (one
+    // projection of the certified debits — Rule 6).
     out.innerHTML = '<div class="pw-shell">'
       + '<div class="pw-hero">'
-      +   '<div class="pw-hero-id"><span class="pw-hero-badge">' + T('بيئة الصرف التشغيلية · قراءة فقط', 'Payment Operations · read-only') + '</span>'
+      +   '<div class="pw-hero-id"><span class="pw-hero-badge">' + T('بيئة الصرف التشغيلية', 'Payment Operations') + '</span>'
       +     '<div class="pw-hero-name">' + T('المدفوعات', 'Payments') + '</div>'
-      +     '<div class="pw-hero-q">' + T('ما المدفوعات القائمة، وما حالتها التشغيلية الحالية؟', 'What payments exist, and what is their current operational state?') + '</div>'
+      +     '<div class="pw-hero-q">' + T('ما المدفوعات القائمة، وما العملية التي يُسمح لي بتنفيذها قانونيًا الآن؟', 'What payments exist, and what payment operation am I legitimately allowed to perform next?') + '</div>'
       +   '</div>'
       +   '<div class="pw-hero-state">'
       +     '<div class="pw-hero-bal">₪ ' + M(s.total) + '</div>'
       +     '<div class="pw-hero-sub">' + T(s.count + ' سند · اليوم: ' + s.today.count + ' (₪ ' + M(s.today.total) + ')', s.count + ' vouchers · today: ' + s.today.count + ' (₪ ' + M(s.today.total) + ')') + '</div>'
+      +     (nxt.enabled
+        ? '<button class="pw-hero-cta" onclick="' + nxt.run + '"><i class="ti ti-minus"></i>' + nxt.label + '</button>'
+        : '<span class="pw-hero-cta pw-hero-cta-off">' + nxt.label + '</span>')
       +   '</div>'
       + '</div>'
       + '<div class="pw-tabs">' + fillFundTabs() + '</div>'
       + '<div class="pw-cols">'
-      + sectionSummary(s) + sectionLedger(s) + sectionTimeline(s) + sectionNav()
+      + sectionSummary(s) + sectionLedger(s) + sectionTimeline(s) + sectionCapability(s) + sectionNav()
       + '</div></div>';
   }
 
@@ -174,8 +227,21 @@
   }
 
   const PaymentWorkspace = {
-    version: 1, paymentRows, paymentState, renderWorkspace,
-    setFund(f) { _pwFund = (f === 'food' || f === 'diwan') ? f : 'all'; renderWorkspace(); }
+    version: 2, paymentRows, paymentState, nextOperation, renderWorkspace,
+    setFund(f) { _pwFund = (f === 'food' || f === 'diwan') ? f : 'all'; renderWorkspace(); },
+    /* BO-01 · Issue payment — opens the existing certified create flow
+       (window.openPay → savePay → BusinessOps.createVoucher{payment}). No BO call here. */
+    actionIssue(fund) {
+      if (typeof window === 'undefined' || typeof window.openPay !== 'function') return;
+      if (fund === 'food' || fund === 'diwan') window.openPay(fund); else window.openPay();   // generic → user picks the fund in the certified form
+    },
+    /* BO-02 / BO-03 · Edit / cancel — opens the existing certified payment editor
+       (window.editPay → updatePay → BO-02 · deletePay → BO-03). No BO call here. */
+    actionEdit() {
+      const sel = (typeof document !== 'undefined') && document.getElementById('pw-edit-sel');
+      const id = sel && sel.value;
+      if (id && typeof window !== 'undefined' && typeof window.editPay === 'function') window.editPay(id);
+    }
   };
   if (typeof window !== 'undefined') window.PaymentWorkspace = PaymentWorkspace;
   if (typeof module !== 'undefined' && module.exports) module.exports = PaymentWorkspace;
