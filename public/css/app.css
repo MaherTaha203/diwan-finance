@@ -2384,6 +2384,8 @@ button.mw-op.mw-op-module>.ti{color:var(--warn,#b9761d)}
   border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);max-width:340px}
 .pw-cap-off{opacity:.62;background:var(--bg2)}
 .pw-cap-why{font-size:11px;font-weight:600;color:var(--neg,#b4322e)}
+.pw-cap-sub{display:flex;align-items:center;gap:7px;margin:12px 2px 8px;font-size:12px;font-weight:700;color:var(--tx2,var(--tx3))}
+.pw-cap-sub .ti{font-size:15px;color:var(--gold,var(--accent,#2B3A5C))}
 .pw-cap-note{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;border:1px dashed var(--bd2);
   border-radius:10px;background:var(--bg3);font-size:11.5px;color:var(--tx3);line-height:1.6}
 .pw-cap-note .ti{font-size:15px;margin-top:1px;flex:none;color:var(--accent,#2B3A5C)}
