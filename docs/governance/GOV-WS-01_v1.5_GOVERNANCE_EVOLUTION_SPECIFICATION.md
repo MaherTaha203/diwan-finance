@@ -134,8 +134,11 @@ dependencies · Lifecycle · Review requirements.**
   (State + History) with read/navigation/export affordances only.
 - **Allowed dependencies.** Certified Read Models (read‑only); navigation into modules.
 - **Forbidden dependencies.** **No** Business Operation, **no** mutation, **no**
-  accounting logic, **no** second source of truth. **Rule 4 does not apply** (nothing
-  is executed).
+  accounting logic, **no** second source of truth, and **no re‑interpretation of
+  accounting semantics** — an Observability Layer presents certified figures with their
+  certified *meaning*; it must never relabel, re‑bucket, re‑derive, net, or re‑aggregate
+  them into a new accounting meaning (any such transformation is accounting logic and
+  belongs to the Accounting Core). **Rule 4 does not apply** (nothing is executed).
 - **Lifecycle.** Spec (`P‑xxx‑OBS‑000`) → (typically one) read‑only slice → Completion
   Report → **FROZEN**.
 - **Review requirements.** Architectural Review; a conformance test proving read‑only /
@@ -144,11 +147,19 @@ dependencies · Lifecycle · Review requirements.**
 ### 2.7 · Cross‑Cutting Capabilities
 - **Purpose.** A control/behaviour that spans multiple modules (e.g. an approval
   lifecycle or a liquidity guard across voucher types — GAP‑P1 / GAP‑P2).
+- **Nature — horizontal, not hierarchical.** A Cross‑Cutting Capability is **not a
+  hierarchical layer** in the certified stack: it does not sit "above" or "below" the
+  Operational Modules, and nothing depends *downward through* it. It is a **horizontal
+  capability** that attaches **sideways** to several modules at a declared seam. Its
+  placement in the §3 diagram is an *attachment point across* modules, **not a rank** in
+  the dependency order.
 - **Responsibilities.** Provide a shared control at a well‑defined seam (typically a
   pre‑execution gate); own its own control‑state, not the domain state it gates.
 - **Allowed dependencies.** Certified Read Models (read); Certified Business Operations
   (it usually *requires a new certified BO*); the modules it gates, via a declared seam.
-- **Forbidden dependencies.** Must not duplicate a module's domain logic; must not
+- **Forbidden dependencies.** Must not duplicate a module's domain logic; **must not own
+  Domain Entities** (members, vouchers, funds, subscriptions, reservations — those belong
+  to the Operational Modules and the Accounting Core, never to a capability); must not
   bypass the certified write path; must not become a general‑purpose engine beyond its
   declared seam.
 - **Lifecycle.** ADR(s) → (usually) a new certified BO + Business‑Contract amendment →
@@ -195,8 +206,10 @@ dependencies · Lifecycle · Review requirements.**
 │  RUNTIME APPLICATION LAYERS                                                │
 │                                                                           │
 │   Operational Business Modules   (P2 · P3 · P4 · … execute via BOs)         │
-│            ▼ may use                                                        │
-│   Cross‑Cutting Capabilities     (shared controls / gates across modules)   │
+│     ◀───────────────────────────────────────────────────────────────▶      │
+│     │  Cross‑Cutting Capabilities  (HORIZONTAL — shared controls that       │
+│     │  attach SIDEWAYS to modules at a declared seam; NOT a stack rank)     │
+│     ◀───────────────────────────────────────────────────────────────▶      │
 │            ▼ observed by                                                    │
 │   Observability Layers           (P5 Treasury · read‑only projection)       │
 │            ▼ feed                                                           │
@@ -213,8 +226,9 @@ dependencies · Lifecycle · Review requirements.**
 **Reading the diagram.** Governance sits above everything (it governs, it does not
 run). The certified Foundation is the spine: Constitution → Core → (Read Models /
 Business Operations). Operational Modules execute *only* through Business Operations
-and read *only* through Read Models; Cross‑Cutting Capabilities sit *between* modules
-as shared controls; Observability Layers sit *above* modules as read‑only projections;
+and read *only* through Read Models; Cross‑Cutting Capabilities attach **horizontally**
+across modules as shared controls (a sideways seam, **not** a layer in the rank);
+Observability Layers sit *above* modules as read‑only projections;
 Reports/Export are the read‑only tail. Platform Infrastructure is a *supporting* column
 touching every layer technically but **holding no business rule**.
 
@@ -278,7 +292,9 @@ accounting logic · read/write · state ownership · testing expectations.**
 - **Ownership.** Owns a read‑only unified view above the modules.
 - **Responsibilities.** State + History projections; read/navigation/export only.
 - **Business logic.** **None** (no legitimacy decisions, no workflow).
-- **Accounting logic.** **None.**
+- **Accounting logic.** **None** — and **no re‑interpretation of accounting semantics**:
+  no relabelling, re‑bucketing, netting, or re‑deriving of a certified figure's meaning.
+  A displayed value equals a certified Read Model **with its certified meaning intact**.
 - **Read/write.** **Read‑only**; **no** write path at all.
 - **State ownership.** Owns *no* state; every figure equals a certified Read Model (Rule
   6). **Rule 4 N/A.**
@@ -297,8 +313,10 @@ accounting logic · read/write · state ownership · testing expectations.**
   Constitutional Review.
 - **Read/write.** Read certified Read Models; write via a certified BO (usually its own
   new one); never bypass the write path.
-- **State ownership.** Owns only its control‑state; never the domain/financial state it
-  gates.
+- **State ownership.** Owns only its control‑state (e.g. a pending‑approval record);
+  **never owns a Domain Entity** (member, voucher, fund, subscription, reservation) and
+  never the domain/financial state it gates — those remain owned by the Operational
+  Modules and the Accounting Core.
 - **Testing.** Conformance tests for the control at each gated module; a certification
   test for any new BO; Golden Baseline unchanged.
 
@@ -306,8 +324,14 @@ accounting logic · read/write · state ownership · testing expectations.**
 - **Ownership.** Owns technical services (persistence, identity/authority, audit, i18n,
   UI shell/nav, tooling).
 - **Responsibilities.** Reliable, generic technical capability for all layers.
-- **Business logic.** **Forbidden.**
-- **Accounting logic.** **Forbidden.**
+- **Business logic.** **Explicitly forbidden.** Platform Infrastructure must contain **no
+  business rule, no legitimacy decision, no workflow, no domain branching, and no
+  accounting decision** of any kind. It provides the *mechanism* (persist, authenticate,
+  log, render, translate) and never the *policy*. Any business/accounting logic found in
+  infrastructure is a boundary violation and must be moved to an Operational Module, a
+  Cross‑Cutting Capability, or the certified Foundation.
+- **Accounting logic.** **Explicitly forbidden** (as above — infrastructure holds no
+  financial meaning or computation).
 - **Read/write.** Provides the *mechanism* for read/write; makes no business decision
   about them.
 - **State ownership.** Owns technical/session state only — never financial or domain
@@ -341,6 +365,11 @@ a proposal would:
    Review — e.g. a liquidity bound).
 7. **Introduce a new Platform Infrastructure concept** that other layers will build on
    (e.g. a cash‑location model).
+8. **Remove, retire, or merge an existing architectural component type** from the §2
+   taxonomy. A deletion is as architecturally significant as an introduction — it changes
+   what the platform is permitted to contain and what every downstream classification may
+   choose — so retiring a component type (or collapsing two types into one) is an
+   ADR‑mandatory decision, never a silent edit.
 
 An ADR is **not** required for: a new Operational Module or Observability Layer that
 follows an existing pattern with no new dependency edge and no new BO (a spec + slice
@@ -375,10 +404,31 @@ rows takes the **union** of their gates.
 
 ---
 
-## 8 · Scope Governance (classification before implementation)
+## 8 · Scope Governance (discovery → classification, before implementation)
+
+### 8.1 · Architectural Discovery (mandatory — precedes classification)
+
+**Classification must be preceded by an Architectural Discovery step.** Before a
+candidate can be placed in a category, a discovery pass over the repository and the
+certified surface is required to establish the *facts* the classification depends on:
+
+- what **already exists** that the candidate could reuse — certified Read Models,
+  Certified Business Operations, prior modules, existing infrastructure;
+- what the candidate would **truly require** — a new certified BO? a new invariant? a
+  new foundational concept? a new dependency edge?
+- whether the candidate is **already partly built** or lives **outside the certified
+  spine** (as discovery surfaced the non‑financial Reservations module in P6‑000);
+- which §2 component type the facts point to — and which they rule out.
+
+Discovery prevents mis‑classification (e.g. calling a Platform‑Infrastructure gap a
+"module", or forcing an Observability Layer into the Business‑Module frame). Its output
+is the evidence base for the classification that follows. **Only after Discovery is a
+candidate classified.**
+
+### 8.2 · Classification
 
 **No implementation may begin until a candidate is classified** into exactly one of the
-following, via an assessment in the P6‑000 style (classification‑first):
+following, via an assessment in the P6‑000 style (discovery‑first, then classification):
 
 | Category | Meaning | Typical gate before build |
 |---|---|---|
@@ -467,11 +517,19 @@ the platform‑level framework of §2–§8.
 - **1.2** — added Rule 4 (P3‑000). Supersedes 1.1.
 - **1.3** — added Rule 5 (P4‑000). Supersedes 1.2.
 - **1.4** — added Rule 6 (P4‑S1). Supersedes 1.3.
-- **1.5** — *(this specification, pending approval & freeze)* — **additive platform
+- **1.5** — *(this specification, pending final approval & freeze)* — **additive platform
   governance evolution**: official Component Taxonomy (§2), canonical Layer Diagram (§3),
   Dependency Rules (§4), Component Boundary Rules (§5), ADR Requirements (§6), Governance
   Decision Matrix (§7), and Scope Governance (§8). **Changes none of Rules 1–6.**
   Supersedes 1.4 as the single governance reference upon freeze.
+  - **1.5 · review amendments (PR #123 — Approved with minor architectural amendments):**
+    (1) clarified Cross‑Cutting Capabilities as a **horizontal** capability, not a
+    hierarchical layer (§2.7, §3); (2) added an **explicit** prohibition of Business
+    Logic in Platform Infrastructure (§5.4); (3) prohibited owning **Domain Entities**
+    inside Cross‑Cutting Capabilities (§2.7, §5.3); (4) prohibited **re‑interpreting
+    accounting semantics** inside Observability Layers (§2.6, §5.2); (5) added a mandatory
+    **Architectural Discovery** phase before Classification in Scope Governance (§8.1);
+    (6) added an **ADR trigger for removing/retiring a component type** (§6.8).
 
 ---
 
