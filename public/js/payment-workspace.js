@@ -1,16 +1,17 @@
-/* ═══ PAYMENT VOUCHER WORKSPACE — P4 · Slices 1–2 ═════════════════════════════
+/* ═══ PAYMENT VOUCHER WORKSPACE — P4 · Slices 1–3 ═════════════════════════════
    The third Business Module surface (P4-000, approved & frozen). The operational
    environment for money LEAVING the organization (Payment / Disbursement
    Vouchers) — the outflow mirror of the P3 Collection Operations Workspace.
      • Slice 1 established VISIBILITY: the payment State and History (read-only).
-     • Slice 2 activates CAPABILITY: issue / edit / cancel payment vouchers.
+     • Slice 2 activated CAPABILITY: issue / edit / cancel payment vouchers.
+     • Slice 3 completes it with advanced CORRECTIONS: reclassify / split a payment.
+   After Slice 3 the payment-voucher module is functionally complete for the roadmap.
 
    BUSINESS BOUNDARY (GOV-WS-01 Rule 5):
      • OWNS — presenting the disbursement State/History from certified read models;
-       and (P4-S2) issue / edit / cancel payment vouchers via certified BOs.
-     • DOES NOT OWN — corrections (BO-04/05, reserved for P4-S3), the approval
-       workflow (GAP-P1), the liquidity/budget guard (GAP-P2), BO-06. No receipts
-       (P3), no member lifecycle (P2).
+       and issue / edit / cancel / reclassify / split payment vouchers via certified BOs.
+     • DOES NOT OWN — the approval workflow (GAP-P1), the liquidity/budget guard
+       (GAP-P2), BO-06. No receipts (P3), no member lifecycle (P2).
 
    ORCHESTRATION ONLY, on the certified foundation:
      • DISPLAY — every value originates from a certified Read Model (FIN.fundLedger
@@ -163,10 +164,22 @@
           + '<span class="pw-cap-act"><select id="pw-edit-sel" class="pw-sel">' + opts + '</select>'
           + '<button class="pw-op" onclick="window.PaymentWorkspace.actionEdit()"><i class="ti ti-external-link"></i>' + T('فتح المحرّر المعتمد', 'Open certified editor') + '</button></span></div>'
         : '<div class="pw-cap-row pw-cap-off">' + lbl('ti-edit', T('تعديل / إلغاء سند', 'Edit / cancel a payment'), 'BO-02 · BO-03') + why(T('لا سندات في هذا النطاق', 'no vouchers in scope')) + '</div>';
+    // BO-04 / BO-05 · advanced corrections (P4-S3) → certified reclassify flow.
+    // Corrective PBQ: "how can I legitimately correct an existing payment while
+    // preserving accounting integrity?" Shown even when illegitimate (disabled).
+    const correctHead = '<div class="pw-cap-sub"><i class="ti ti-tools"></i>'
+      + T('كيف أصحّح عملية صرف قائمة مع الحفاظ على السلامة المحاسبية؟', 'How can I legitimately correct an existing payment while preserving accounting integrity?') + '</div>';
+    const correct = !canA
+      ? '<div class="pw-cap-row pw-cap-off">' + lbl('ti-replace', T('تصحيح التصنيف / تقسيم سند', 'Correct classification / split a payment'), 'BO-04 · BO-05') + why(T('يتطلب صلاحية مدير', 'requires admin')) + '</div>'
+      : editable.length
+        ? '<div class="pw-cap-row">' + lbl('ti-replace', T('تصحيح التصنيف / تقسيم سند', 'Correct classification / split a payment'), 'BO-04 · BO-05')
+          + '<span class="pw-cap-act"><select id="pw-correct-sel" class="pw-sel">' + opts + '</select>'
+          + '<button class="pw-op" onclick="window.PaymentWorkspace.actionCorrect()"><i class="ti ti-external-link"></i>' + T('فتح إعادة التصنيف المعتمدة', 'Open certified reclassify') + '</button></span></div>'
+        : '<div class="pw-cap-row pw-cap-off">' + lbl('ti-replace', T('تصحيح التصنيف / تقسيم سند', 'Correct classification / split a payment'), 'BO-04 · BO-05') + why(T('لا سندات في هذا النطاق', 'no vouchers in scope')) + '</div>';
     const note = '<div class="pw-cap-note"><i class="ti ti-shield-check"></i><span>'
-      + T('النية ← الصلاحية ← التنفيذ عبر عملية أعمال معتمدة فقط ← النتيجة من نموذج القراءة المعتمد · لا منطق محاسبي داخل مساحة العمل · التصحيح (BO-04/05) والموافقة (GAP-P1) وحارس السيولة (GAP-P2) خارج نطاق هذه الشريحة.',
-          'Intent → Authorization → Execution via a certified Business Operation only → Result from the certified read model · no accounting logic in the workspace · corrections (BO-04/05), approval (GAP-P1) & liquidity guard (GAP-P2) are out of this slice.') + '</span></div>';
-    return card('ti-player-play', T('العمليات التشغيلية', 'Operational Actions'), T('ما الذي يمكنني تنفيذه قانونيًا الآن؟', 'What may I legitimately execute now?'), issue + edit + note);
+      + T('النية ← الصلاحية ← التنفيذ عبر عملية أعمال معتمدة فقط ← النتيجة من نموذج القراءة المعتمد · لا منطق محاسبي أو تصحيحي داخل مساحة العمل · الموافقة (GAP-P1) وحارس السيولة (GAP-P2) وتسوية العجز (BO-06) خارج النطاق.',
+          'Intent → Authorization → Execution via a certified Business Operation only → Result from the certified read model · no accounting or correction logic in the workspace · approval (GAP-P1), liquidity guard (GAP-P2) & deficit settlement (BO-06) remain out of scope.') + '</span></div>';
+    return card('ti-player-play', T('العمليات التشغيلية', 'Operational Actions'), T('ما الذي يمكنني تنفيذه قانونيًا الآن؟', 'What may I legitimately execute now?'), issue + edit + correctHead + correct + note);
   }
 
   /* SECTION 5 · Workspace Navigation — READ-ONLY orientation links to related
@@ -227,7 +240,7 @@
   }
 
   const PaymentWorkspace = {
-    version: 2, paymentRows, paymentState, nextOperation, renderWorkspace,
+    version: 3, paymentRows, paymentState, nextOperation, renderWorkspace,
     setFund(f) { _pwFund = (f === 'food' || f === 'diwan') ? f : 'all'; renderWorkspace(); },
     /* BO-01 · Issue payment — opens the existing certified create flow
        (window.openPay → savePay → BusinessOps.createVoucher{payment}). No BO call here. */
@@ -241,6 +254,14 @@
       const sel = (typeof document !== 'undefined') && document.getElementById('pw-edit-sel');
       const id = sel && sel.value;
       if (id && typeof window !== 'undefined' && typeof window.editPay === 'function') window.editPay(id);
+    },
+    /* BO-04 / BO-05 · Correct classification / split — opens the existing certified
+       reclassify flow (window.openReclassify → doReclassify → reclassifyVoucher →
+       BO-04 full / BO-05 split). No BO call and no correction logic here. */
+    actionCorrect() {
+      const sel = (typeof document !== 'undefined') && document.getElementById('pw-correct-sel');
+      const id = sel && sel.value;
+      if (id && typeof window !== 'undefined' && typeof window.openReclassify === 'function') window.openReclassify('payment', id);
     }
   };
   if (typeof window !== 'undefined') window.PaymentWorkspace = PaymentWorkspace;

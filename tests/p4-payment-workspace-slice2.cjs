@@ -89,7 +89,7 @@ const between = (html, startRe, endRe) => { const s = html.search(startRe); if (
   A('Capability section renders (Operational Actions)', /ما الذي يمكنني تنفيذه قانونيًا الآن/.test(html));
   A('capability · issue affordance tagged BO-01', /pw-cap-bo">BO-01/.test(html) && /actionIssue\('food'\)/.test(html) && /actionIssue\('diwan'\)/.test(html));
   A('capability · edit/cancel affordance tagged BO-02 · BO-03', /pw-cap-bo">BO-02 · BO-03/.test(html) && /pw-edit-sel/.test(html) && /actionEdit\(\)/.test(html));
-  A('BO-04/05 are NOT offered (reserved for P4-S3)', !/pw-cap-bo">BO-04/.test(html) && !/pw-cap-bo">BO-05/.test(html));
+  A('BO-06 is never offered as a capability', !/pw-cap-bo">BO-06/.test(html));
   A('Rule 4 · Intent → Authorization → Execution → Result note present', /النية ← الصلاحية ← التنفيذ عبر عملية أعمال معتمدة فقط ← النتيجة/.test(html));
 
   // ── Rule 3 · State & History sections carry NO execution controls ─────────
