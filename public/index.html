@@ -466,6 +466,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
       <div class="nb" role="button" tabindex="0" data-p="annual-debt"><i class="ti ti-report-money"></i><span class="nb-t">تقرير المديونية</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="delinquent"><i class="ti ti-user-exclamation"></i><span class="nb-t">الأعضاء المتأخرون</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
       <div class="nb" role="button" tabindex="0" data-p="annual"><i class="ti ti-calendar"></i><span class="nb-t">الاشتراكات السنوية</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
+      <div class="nb" role="button" tabindex="0" data-p="dues-workspace"><i class="ti ti-calendar-stats"></i><span class="nb-t">بيئة الاشتراكات</span><button class="nb-star" tabindex="-1" aria-label="تثبيت في المفضّلة"><i class="ti ti-star"></i></button></div>
     </div>
   </div>
   <div class="nbg" data-g="system">
@@ -630,6 +631,10 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   <div class="pg" id="pg-treasury-workspace">
     <div class="ph"><div><div class="ph-t">الخزينة والمركز المالي</div><div class="ph-s">Treasury / Financial Position · Observability Layer (read-only)</div></div></div>
     <div id="tw-out"></div>
+  </div>
+  <div class="pg" id="pg-dues-workspace">
+    <div class="ph"><div><div class="ph-t">بيئة الاشتراكات السنوية</div><div class="ph-s">Annual Subscriptions / Dues Workspace · State + History (read-only)</div></div></div>
+    <div id="dw-out"></div>
   </div>
   <div class="pg" id="pg-annual-debt">
     <div class="ph"><div><div class="ph-t">تقرير المديونية السنوية</div><div class="ph-s" id="annual-debt-sub"></div></div><div class="ph-a"><button class="btn sm" onclick="window.prtAnnualDebt()"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-annual-debt')"><i class="ti ti-download"></i><span data-i18n="common.export_dd">تصدير ▼</span></button><div class="export-dropdown-menu" id="exp-annual-debt"><button class="export-dropdown-item" onclick="window.exportPageExcel('annual-debt')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('annual-debt')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div></div></div>
@@ -1131,6 +1136,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/collection-workspace.js?v=3.0"></script>
 <script defer src="/js/payment-workspace.js?v=3.0"></script>
 <script defer src="/js/treasury-workspace.js?v=1.0"></script>
+<script defer src="/js/dues-workspace.js?v=1.0"></script>
 <script defer src="/js/reservations.js?v=1.0"></script>
 <script defer src="/js/print.js?v=2.1"></script>
 <script defer src="/js/reports.js?v=2.1"></script>
