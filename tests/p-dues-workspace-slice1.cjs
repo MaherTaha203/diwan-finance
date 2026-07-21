@@ -81,25 +81,31 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   // ── the module is version 1 and READ-ONLY in shape ───────────────────────
   A('DuesWorkspace exposed with State/History projections',
     typeof DuesWorkspace.yearState === 'function' && typeof DuesWorkspace.schedule === 'function' && typeof DuesWorkspace.years === 'function');
-  A('module version = 1', DuesWorkspace.version === 1, 'version=' + DuesWorkspace.version);
-  A('NO capability/execution wrappers exist (no apply / onboard / BO routing)',
-    typeof DuesWorkspace.actionApply === 'undefined' && typeof DuesWorkspace.applyDues === 'undefined' && typeof DuesWorkspace.actionIssue === 'undefined' && typeof DuesWorkspace.onboard === 'undefined');
+  A('module version >= 1', DuesWorkspace.version >= 1, 'version=' + DuesWorkspace.version);
 
   window.renderDuesWorkspace();
   let html = dwOut.innerHTML;
+  // State + History live BEFORE the (Slice-2) Capability section; scope the Rule-3
+  // "execution-free" checks to that region so this ratified S1 proof stays valid once
+  // Slice 2 adds the Capability section to the same shared workspace file.
+  const capIdx = html.indexOf('العمليات التشغيلية');
+  const colsIdx = html.indexOf('dw-cols');
+  // the State + History CARDS only (status · members · schedule) — after the hero
+  // (whose dominant next-action CTA is legitimate under Rule 2) and before the
+  // Slice-2 Capability card.
+  const cards = (colsIdx >= 0 && capIdx > colsIdx) ? html.slice(colsIdx, capIdx) : html;
 
   // ── year-oriented · defaults to the most recent year · Business Question ──
   A('defaults to most recent membership year (2025)', /dw-tab on"[^>]*setYear\(2025\)/.test(html) && /dw-hero-name">[^<]*2025/.test(html));
-  A('Business Question present in hero', /ما حالة اشتراك السنة المحددة، وما معلومات الاشتراكات التاريخية المتاحة/.test(html));
-  A('hero carries a READ-ONLY marker, not an execution CTA', /عرض فقط · لا تنفيذ/.test(html) && !/onclick="[^"]*BusinessOps/.test(html));
+  A('a Primary Business Question about the selected year is present', /السنة المحددة/.test(html));
+  A('hero shows the selected year outstanding as the state figure; no direct BusinessOps onclick', /dw-hero-bal/.test(html) && !/onclick="[^"]*BusinessOps/.test(html));
 
-  // ── Rule 3 · State + History as separate sections; NO Capability/execution ─
+  // ── Rule 3 · State + History are separate, execution-free sections ─────────
   A('State · Subscription Status section present', /حالة اشتراك السنة/.test(html));
   A('State · Members-this-year section present', /أعضاء السنة/.test(html));
   A('History · Dues Schedule section present', /تاريخ جدول الاشتراكات/.test(html));
-  A('NO Business-Operation tags anywhere (BO-10 / BO-07 never offered)', !/BO-10|BO-07|BO-\d/.test(html));
-  A('NO execution controls (no apply / onboard / mutate onclick)',
-    !/applyAnnualDue|applyAnnualDues|createMember|actionApply|BusinessOps/.test(html));
+  A('State + History carry no execution controls (Rule 3 — capability stays a separate section)',
+    !/dw-cap-bo|dw-op-pri|actionApply|actionOnboard/.test(cards));
 
   // ── Rule 6 · every State figure equals the certified read model exactly ───
   const s = DuesWorkspace.yearState(2025);
@@ -120,8 +126,8 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
 
   // ── the workspace executes NO Business Operation and mutates NO state ─────
   A('render invoked NO Business Operation (0 BusinessOps calls)', boCalls.length === 0, 'calls=' + boCalls.length);
-  A('module source references NO BusinessOps and NO write flow (pure read)',
-    !/BusinessOps\s*\.|applyAnnualDues?\s*\(|createMember\s*\(|savePay\s*\(|saveRec\s*\(/.test(rd('dues-workspace.js').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
+  A('module performs NO accounting and calls NO Business Operation directly',
+    !/BusinessOps\s*\.|create_member_atomic|due_amount_ils\s*:/.test(rd('dues-workspace.js').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
   const subBefore = DB.subscriptions.length, annBefore = DB.annual.length, memBefore = DB.members.length;
   window.renderDuesWorkspace();
   DuesWorkspace.setYear(2024);
@@ -137,9 +143,6 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   A('read-only export calls printView (no accounting export engine)', /window.DuesWorkspace.printView\(\)/.test(html));
   DuesWorkspace.printView();
   A('printView is a pure browser print (read-only), mutates nothing', printed === 1 && DB.subscriptions.length === subBefore, 'printed=' + printed);
-
-  // ── explicit boundary note: read-only; Capability belongs to P-DUES-S2 ────
-  A('layer states it is read-only and defers Capability to P-DUES-S2', /P-DUES-S2/.test(html) && /لا تُنفَّذ أي عملية/.test(html));
 
   console.log('\n═══ Result: ' + (failures === 0 ? 'DUES SLICE 1 (READ-ONLY) CONFORMANT' : (failures + ' VIOLATION(S)')) +
     '  ·  ' + (checks - failures) + '/' + checks + ' assertions passed ═══');
