@@ -207,5 +207,33 @@ module.exports = [
       { label: 'صفوف الاشتراكات زادت (جدول العضو الجديد)', pass: a.subsCount > b.subsCount, detail: b.subsCount + ' → ' + a.subsCount },
       { label: 'لا خزينة تغيّرت (إنشاء التزامٍ لا قبض)', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
     ]
+  },
+  {
+    id: 'FOC-016',
+    title: 'تعديل عضو (BO-08)',
+    member: 'LAB-003',
+    narrative: 'المدير يصحّح اسم العضو خالد علي دون مساس بأرقامه المالية.',
+    business: 'تُحدَّث بيانات العضو التعريفية فقط (الاسم). لم يتغيّر رصيده ولا اشتراكاته ولا أي خزينة — التعديل إداريّ لا ماليّ.',
+    laws: ['6 التتبّع'],
+    op: { type: 'editMember', member: 'LAB-003', newName: 'خالد علي المحترم' },
+    expect: (b, a) => [
+      { label: 'اسم العضو تغيّر إلى الجديد', pass: a.namesByCode['LAB-003'] === 'خالد علي المحترم' && b.namesByCode['LAB-003'] !== a.namesByCode['LAB-003'], detail: b.namesByCode['LAB-003'] + ' → ' + a.namesByCode['LAB-003'] },
+      { label: 'رصيد العضو لم يتغيّر', pass: eq(a.members['LAB-003'].finalBalance, b.members['LAB-003'].finalBalance), detail: b.members['LAB-003'].finalBalance + ' → ' + a.members['LAB-003'].finalBalance },
+      { label: 'لا خزينة تغيّرت', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-017',
+    title: 'إلغاء/تعطيل عضو (BO-09)',
+    member: 'LAB-004',
+    narrative: 'المدير يُعطّل العضو سارة محمود. لا يُمحى تاريخها؛ تُصبح غير فعّالة فقط.',
+    business: 'العضو أصبح غير فعّال (عدد الأعضاء الفعّالين −1)، لكن سنداته وتاريخه محفوظة (لا محو). لم تتأثّر أي خزينة — التعطيل إداريّ لا ماليّ.',
+    laws: ['5 حفظ التاريخ', '6 التتبّع'],
+    op: { type: 'cancelMember', member: 'LAB-004' },
+    expect: (b, a) => [
+      { label: 'عدد الأعضاء الفعّالين −1', pass: a.activeCount === b.activeCount - 1, detail: b.activeCount + ' → ' + a.activeCount },
+      { label: 'إجمالي الأعضاء لم ينقص (لا محو للتاريخ)', pass: a.membersCount === b.membersCount, detail: b.membersCount + ' → ' + a.membersCount },
+      { label: 'لا خزينة تغيّرت', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
   }
 ];

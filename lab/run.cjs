@@ -117,6 +117,8 @@ const SNAPSHOT = () => {
     treasuries: { food: R2(c.food), diwan: R2(c.diwan), defRem: R2(c.historical_deficit_remaining), over: R2(c.overflow_to_food) },
     members,
     membersCount: (DB.members || []).length,
+    activeCount: (DB.members || []).filter(m => m.is_active !== false).length,
+    namesByCode: Object.fromEntries((DB.members || []).filter(m => m.member_code).map(m => [m.member_code, m.name])),
     subsCount: (DB.subscriptions || []).length,
     registers: { cashN: FIN2.cashDonationRegister().length, cashS: R2(FIN2.cashDonationRegister().reduce((s, x) => s + Number(x.amount || 0), 0)), inkN: FIN2.inkindRegister().length },
     auditN: (DB.audit_log || []).length,
@@ -164,6 +166,20 @@ const EXECUTE = async (op) => {
     const n0 = (window.__seed.members || []).length;
     await window.saveMember(); await wait(600);
     return (window.__seed.members || []).length > n0;
+  }
+  if (op.type === 'editMember') {
+    const mid = (DB.members.find(m => m.member_code === op.member) || {}).id;
+    window.editMember(mid); await wait(250);
+    if (op.newName) set('edit-mem-name', op.newName);
+    if (op.notes != null) set('edit-mem-notes', op.notes);
+    await window.updateMember(); await wait(500);
+    return true;
+  }
+  if (op.type === 'cancelMember') {
+    const mid = (DB.members.find(m => m.member_code === op.member) || {}).id;
+    window.editMember(mid); await wait(250);
+    await window.deleteMember(); await wait(500);
+    return true;
   }
   if (op.type === 'payment') {
     window.openPay(op.fund); await wait(200);
