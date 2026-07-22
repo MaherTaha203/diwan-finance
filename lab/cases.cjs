@@ -108,5 +108,76 @@ module.exports = [
       { label: 'خزينة الغداء لم تتغيّر (لا فائض)', pass: eq(a.treasuries.food, b.treasuries.food), detail: b.treasuries.food + ' → ' + a.treasuries.food },
       { label: 'الديوان لم يتغيّر', pass: eq(a.treasuries.diwan, b.treasuries.diwan), detail: a.treasuries.diwan }
     ]
+  },
+  {
+    id: 'FOC-007',
+    title: 'تحصيل ذمّة تاريخية من عضو (ق4)',
+    member: 'LAB-001',
+    narrative: 'محمد أحمد (عليه 750، منها ذمّة تاريخية 350) يسدّد 300 من ذمّته التاريخية. تُصنَّف «تحصيل ذمّة» فتدخل خزينة العجز وتُخفّض ذمّته الشخصية معًا.',
+    business: 'التحصيل ظهر في كشفَي العضو والعجز معًا: قلّت ذمّة العضو 300 (من 750 إلى 450)، ودخلت خزينة العجز المشتركة 300 (من 3000 إلى 2700). وليس تبرّعًا عامًّا فلم يُدرَج في سجلّ التبرّعات. الغداء والديوان لم يتغيّرا.',
+    laws: ['1 حفظ القيمة', '4 التصنيف الصريح', '8 العهدة', '9 حدّ العجز'],
+    op: { type: 'receipt', fund: 'donation', payerType: 'member', member: 'LAB-001', amount: 300, kind: 'cash', display: 'food', alloc: 'reduce_deficit' },
+    expect: (b, a) => [
+      { label: 'صُنّف «تحصيل ذمّة تاريخية» ووجهته خزينة العجز', pass: a.lastReceipt && a.lastReceipt.movement_type === 'historical_debt_collection' && a.lastReceipt.destination_treasury === 'historical_deficit', detail: JSON.stringify(a.lastReceipt) },
+      { label: 'ذمّة العضو 750 → 450 (قلّت 300)', pass: eq(a.members['LAB-001'].finalBalance, 450), detail: b.members['LAB-001'].finalBalance + ' → ' + a.members['LAB-001'].finalBalance },
+      { label: 'خزينة العجز −3000 → −2700 (استلمت 300)', pass: eq(a.treasuries.defRem, b.treasuries.defRem + 300), detail: b.treasuries.defRem + ' → ' + a.treasuries.defRem },
+      { label: 'مُستبعَد من سجلّ التبرّعات (ليس تبرّعًا عامًّا)', pass: a.registers.cashN === b.registers.cashN, detail: b.registers.cashN + ' → ' + a.registers.cashN },
+      { label: 'الغداء والديوان لم يتغيّرا', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-008',
+    title: 'تبرّع نقدي للديوان (غير عضو)',
+    member: 'LAB-001',
+    narrative: 'متبرّعٌ غير عضو يتبرّع 400 لخزينة الديوان. مالٌ يدخل الديوان فقط.',
+    business: 'دخل التبرّع خزينة الديوان (+400 من 5000 إلى 5400) وأُدرِج في سجلّ التبرّعات. لم تتأثّر خزينتا الغداء والعجز ولا أرصدة الأعضاء، لأن وجهته الديوان حصرًا.',
+    laws: ['1 حفظ القيمة', '4 التصنيف الصريح', '8 العهدة'],
+    op: { type: 'receipt', fund: 'diwan', diwanType: 'donation', payerType: 'nonmember', payerName: 'متبرّع الديوان', amount: 400 },
+    expect: (b, a) => [
+      { label: 'صُنّف «تبرّع نقدي للديوان» ووجهته الديوان', pass: a.lastReceipt && a.lastReceipt.destination_treasury === 'diwan', detail: JSON.stringify(a.lastReceipt) },
+      { label: 'خزينة الديوان 5000 → 5400', pass: eq(a.treasuries.diwan, b.treasuries.diwan + 400), detail: b.treasuries.diwan + ' → ' + a.treasuries.diwan },
+      { label: 'الغداء والعجز لم يتغيّرا', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-009',
+    title: 'تبرّع عيني/خدمي (سجلّ فقط، لا نقد)',
+    member: 'LAB-004',
+    narrative: 'سارة محمود تتبرّع عينيًّا (تجهيزات) بقيمة 1200. توثيقٌ في سجلّ العينيّات دون أي خزينة.',
+    business: 'التبرّع العينيّ سُجِّل في سجلّ العينيّات فقط (+1)، ولم يدخل أي خزينة نقدية ولم يغيّر أي رصيد — لأن العينيّ لا يُخلط بالنقديّ إطلاقًا.',
+    laws: ['3 مصدر واحد', '4 التصنيف الصريح'],
+    op: { type: 'receipt', fund: 'donation', payerType: 'member', member: 'LAB-004', amount: 1200, kind: 'inkind', category: 'equipment' },
+    expect: (b, a) => [
+      { label: 'صُنّف «تبرّع عيني» بلا وجهة خزينة', pass: a.lastReceipt && a.lastReceipt.movement_type === 'donation_inkind' && !a.lastReceipt.destination_treasury, detail: JSON.stringify(a.lastReceipt) },
+      { label: 'سجلّ العينيّات +1', pass: a.registers.inkN === b.registers.inkN + 1, detail: b.registers.inkN + ' → ' + a.registers.inkN },
+      { label: 'كل الخزائن لم تتغيّر', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' },
+      { label: 'سجلّ التبرّعات النقدية لم يتغيّر', pass: a.registers.cashN === b.registers.cashN, detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-010',
+    title: 'مصروف غداء',
+    member: 'LAB-001',
+    narrative: 'صرفٌ من خزينة الغداء بمبلغ 200 لمستفيدٍ غير عضو.',
+    business: 'خرج المال من خزينة الغداء (−200، من 0 إلى −200). لم تتأثّر خزينتا الديوان والعجز ولا أرصدة الأعضاء — الصرف من الغداء حصرًا (لا يُصرَف من خزينةٍ لم يدخلها المال).',
+    laws: ['1 حفظ القيمة', '4 التصنيف الصريح', '8 العهدة'],
+    op: { type: 'payment', fund: 'food', benType: 'nonmember', benName: 'مورّد الغداء', amount: 200, expense: 'other' },
+    expect: (b, a) => [
+      { label: 'خزينة الغداء −200', pass: eq(a.treasuries.food, b.treasuries.food - 200), detail: b.treasuries.food + ' → ' + a.treasuries.food },
+      { label: 'الديوان والعجز لم يتغيّرا', pass: eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-011',
+    title: 'مصروف ديوان',
+    member: 'LAB-001',
+    narrative: 'صرفٌ من خزينة الديوان بمبلغ 300 لمستفيدٍ غير عضو.',
+    business: 'خرج المال من خزينة الديوان (−300، من 5000 إلى 4700). لم تتأثّر خزينتا الغداء والعجز — الصرف من الديوان حصرًا.',
+    laws: ['1 حفظ القيمة', '4 التصنيف الصريح', '8 العهدة'],
+    op: { type: 'payment', fund: 'diwan', benType: 'nonmember', benName: 'مورّد الديوان', amount: 300, expense: 'other' },
+    expect: (b, a) => [
+      { label: 'خزينة الديوان −300', pass: eq(a.treasuries.diwan, b.treasuries.diwan - 300), detail: b.treasuries.diwan + ' → ' + a.treasuries.diwan },
+      { label: 'الغداء والعجز لم يتغيّرا', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
   }
 ];

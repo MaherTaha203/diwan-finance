@@ -135,6 +135,7 @@ const EXECUTE = async (op) => {
     if (op.payerName) set('rec-payer-name', op.payerName);
     set('rec-amount', op.amount); document.getElementById('rec-amount').dispatchEvent(new Event('input'));
     set('rec-date', today);
+    if (op.fund === 'diwan' && op.diwanType) set('rec-diwan-type', op.diwanType);
     if (op.fund === 'donation') {
       set('rec-don-kind', op.kind || 'cash'); window.onDonKindChange && window.onDonKindChange(); await wait(60);
       if ((op.kind || 'cash') === 'cash') { set('rec-don-display', op.display); window.onDonDisplayChange && window.onDonDisplayChange(); await wait(60); if (op.alloc) set('rec-don-alloc-type', op.alloc); }
@@ -143,6 +144,20 @@ const EXECUTE = async (op) => {
     const n0 = window.__seed.receipts.length;
     await window.saveRec(false); await wait(3300); /* guardSave throttles 3s */
     return window.__seed.receipts.length > n0;
+  }
+  if (op.type === 'payment') {
+    window.openPay(op.fund); await wait(200);
+    set('pay-fund', op.fund);
+    set('pay-beneficiary-type', op.benType || 'nonmember'); window.onPayBenType && window.onPayBenType(); await wait(80);
+    if (op.member && memberId) set('pay-member', memberId);
+    if (op.benName) set('pay-ben-name', op.benName);
+    set('pay-amount', op.amount); const pa = document.getElementById('pay-amount'); if (pa) pa.dispatchEvent(new Event('input'));
+    set('pay-date', today);
+    if (op.expense) set('pay-expense', op.expense);
+    if (op.method) set('pay-method', op.method);
+    const n0 = (window.__seed.payments || []).length;
+    await window.savePay(false); await wait(3300);
+    return (window.__seed.payments || []).length > n0;
   }
   return false;
 };
