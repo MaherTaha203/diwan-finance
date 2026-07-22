@@ -275,20 +275,25 @@ async function shoot(page, dir, phase, memberCode) {
 
   // permanent certification dashboard
   const ALL_FOC = require('./foc-index.cjs'); // full FOC chapter list + pending status
+  let BLOCKED = {}; try { BLOCKED = require('./blocked.cjs'); } catch (e) {} // OWNER DECISION REQUIRED chapters (no capture path)
   const doneMap = {}; report.forEach(r => { doneMap[r.c.id] = { st: statusOf(r), a: `${r.pass}/${r.checks.length}`, shots: shotList(r.c.id).length }; });
   let db = `# لوحة الشهادة الدستورية — Constitutional Certification Dashboard\n\n`;
   db += `آخر تحديث: ${new Date().toISOString()} · المنصّة: المختبر الدستوري المجمَّد (\`lab/\`)\n\n`;
   const certN = report.filter(r => statusOf(r) === 'CERTIFIED').length;
   const failN = report.filter(r => statusOf(r) === 'FAILED').length;
-  const odrN = report.filter(r => statusOf(r) === 'OWNER DECISION REQUIRED').length;
+  const odrN = Object.keys(BLOCKED).length + report.filter(r => statusOf(r) === 'OWNER DECISION REQUIRED').length;
+  // first chapter that is neither certified nor owner-decision = where strict-order stops
+  const firstBlock = ALL_FOC.find(f => BLOCKED[f.id]);
   db += `**التغطية:** ${certN}/${ALL_FOC.length} فصلًا مُعتمَدًا (${Math.round(certN / ALL_FOC.length * 100)}%) · FAILED: ${failN} · OWNER DECISION: ${odrN} · لقطات: ${report.reduce((s, r) => s + shotList(r.c.id).length, 0)}\n\n`;
+  if (firstBlock) db += `> ⏸ **الحملة متوقّفة عند ${firstBlock.id}** (قرار مالكٍ مطلوب) — بحكم الترتيب الصارم لا يُتابَع إلى ما بعده قبل قرارك.\n\n`;
   db += `| الفصل | العنوان | الحالة | التحقّقات | لقطات | تجاري | دستوري | انحدار | تاريخ |\n|---|---|---|---|---|---|---|---|---|\n`;
   for (const f of ALL_FOC) {
     const d = doneMap[f.id];
     if (d) db += `| ${f.id} | ${f.title} | **${d.st}** | ${d.a} | ${d.shots} | ✅ | ${d.st === 'CERTIFIED' ? '✅' : '⏸'} | ✅ | ${today} |\n`;
+    else if (BLOCKED[f.id]) db += `| ${f.id} | ${f.title} | **OWNER DECISION REQUIRED** | — | — | ⏸ | ⏸ | — | ${today} |\n`;
     else db += `| ${f.id} | ${f.title} | PENDING | — | — | — | — | — | — |\n`;
   }
-  db += `\n> الشهادة مُولَّدة آليًّا من تشغيلٍ حقيقيّ في المختبر — لا يُعتمَد فصلٌ دون أدلّة كاملة. الفصول PENDING تُعتمَد لاحقًا بالترتيب الصارم.\n`;
+  db += `\n> الشهادة مُولَّدة آليًّا من تشغيلٍ حقيقيّ في المختبر — لا يُعتمَد فصلٌ دون أدلّة كاملة. فصول OWNER DECISION موثَّقة يدويًّا (بلا تنفيذٍ ممكن). الفصول PENDING تُعتمَد لاحقًا بالترتيب الصارم بعد رفع الحظر.\n`;
   fs.writeFileSync(path.join(CERT, 'DASHBOARD.md'), db);
 
   console.log(`\nتقرير: lab/results/REPORT.md · شهادات: lab/certification/ · لقطات: lab/screenshots/<FOC-ID>/`);
