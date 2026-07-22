@@ -235,5 +235,34 @@ module.exports = [
       { label: 'إجمالي الأعضاء لم ينقص (لا محو للتاريخ)', pass: a.membersCount === b.membersCount, detail: b.membersCount + ' → ' + a.membersCount },
       { label: 'لا خزينة تغيّرت', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
     ]
+  },
+  {
+    id: 'FOC-018',
+    title: 'تعديل سند (BO-02)',
+    member: 'LAB-001',
+    narrative: 'يُنشأ إيصال اشتراك 200 لمحمد أحمد، ثم يُعدَّل مبلغه إلى 350 مع حفظ النسخة السابقة.',
+    business: 'التعديل حفظ نسخةً كاملةً من الحالة القديمة (لا محو)، وانعكس الفرق على الخزينة والكشف: صار الإيصال 350، فخزينة الغداء تعكس 350 ورصيد العضو نقص 350 (750 → 400). رقم السند لم يتغيّر.',
+    laws: ['5 حفظ التاريخ', '6 التتبّع', '7 الذرّية', '11 حرمة الفترة المقفلة'],
+    op: { type: 'editReceipt', create: { fund: 'food', payerType: 'member', member: 'LAB-001', amount: 200 }, newAmount: 350, reason: 'تصحيح المبلغ' },
+    expect: (b, a) => [
+      { label: 'مبلغ السند بعد التعديل = 350', pass: a.lastReceipt && eq(a.lastReceipt.amount_ils, 350), detail: JSON.stringify(a.lastReceipt) },
+      { label: 'خزينة الغداء تعكس المبلغ المعدَّل (0 → 350)', pass: eq(a.treasuries.food, b.treasuries.food + 350), detail: b.treasuries.food + ' → ' + a.treasuries.food },
+      { label: 'رصيد العضو 750 → 400 (سُدّد 350)', pass: eq(a.members['LAB-001'].finalBalance, 400), detail: b.members['LAB-001'].finalBalance + ' → ' + a.members['LAB-001'].finalBalance },
+      { label: 'الديوان والعجز لم يتغيّرا', pass: eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-019',
+    title: 'إلغاء سند (BO-03)',
+    member: 'LAB-004',
+    narrative: 'يُنشأ تبرّع غداء 500 من سارة محمود، ثم يُلغى. الإلغاء يبطل أثره المالي مع بقائه في التاريخ.',
+    business: 'الإلغاء أعاد الوضع كما كان: خزينة الغداء عادت إلى ما قبل التبرّع، وسجلّ التبرّعات النقدية عاد كما كان. السند نفسه لم يُمحَ (محفوظ كنسخةٍ ملغاة) — الإبطال حالةٌ محفوظة لا حذف.',
+    laws: ['1 حفظ القيمة', '5 حفظ التاريخ', '6 التتبّع'],
+    op: { type: 'cancelReceipt', create: { fund: 'donation', payerType: 'member', member: 'LAB-004', amount: 500, kind: 'cash', display: 'food', alloc: 'support_current' } },
+    expect: (b, a) => [
+      { label: 'خزينة الغداء عادت كما كانت (أثر السند أُبطِل)', pass: eq(a.treasuries.food, b.treasuries.food), detail: b.treasuries.food + ' → ' + a.treasuries.food },
+      { label: 'سجلّ التبرّعات عاد كما كان', pass: a.registers.cashN === b.registers.cashN, detail: b.registers.cashN + ' → ' + a.registers.cashN },
+      { label: 'الديوان والعجز لم يتغيّرا', pass: eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
   }
 ];
