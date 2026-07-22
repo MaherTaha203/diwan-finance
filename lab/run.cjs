@@ -116,6 +116,8 @@ const SNAPSHOT = () => {
   return {
     treasuries: { food: R2(c.food), diwan: R2(c.diwan), defRem: R2(c.historical_deficit_remaining), over: R2(c.overflow_to_food) },
     members,
+    membersCount: (DB.members || []).length,
+    subsCount: (DB.subscriptions || []).length,
     registers: { cashN: FIN2.cashDonationRegister().length, cashS: R2(FIN2.cashDonationRegister().reduce((s, x) => s + Number(x.amount || 0), 0)), inkN: FIN2.inkindRegister().length },
     auditN: (DB.audit_log || []).length,
     lastReceipt: lr ? { no: lr.no, movement_type: lr.movement_type, destination_treasury: lr.destination_treasury, amount_ils: R2(lr.amount_ils || lr.amount) } : null
@@ -144,6 +146,24 @@ const EXECUTE = async (op) => {
     const n0 = window.__seed.receipts.length;
     await window.saveRec(false); await wait(3300); /* guardSave throttles 3s */
     return window.__seed.receipts.length > n0;
+  }
+  if (op.type === 'applyDues') {
+    // BO-10 · generate a year's dues obligations (no cash). Inject the static inputs if the page isn't mounted.
+    const ensure = (id) => { let el = document.getElementById(id); if (!el) { el = document.createElement('input'); el.id = id; el.type = 'hidden'; document.body.appendChild(el); } return el; };
+    ensure('due-year').value = op.year; ensure('due-amount').value = op.amount;
+    const n0 = (window.__seed.member_subscriptions || []).length;
+    await window.applyAnnualDue(); await wait(600);
+    return (window.__seed.member_subscriptions || []).length > n0;
+  }
+  if (op.type === 'createMember') {
+    // BO-07 · create a member (+ subscription schedule) atomically.
+    window.openM('member'); await wait(200);
+    set('mem-name', op.name);
+    set('mem-balance', op.opening != null ? op.opening : 0);
+    if (op.fromYear != null) set('mem-from-year', op.fromYear);
+    const n0 = (window.__seed.members || []).length;
+    await window.saveMember(); await wait(600);
+    return (window.__seed.members || []).length > n0;
   }
   if (op.type === 'payment') {
     window.openPay(op.fund); await wait(200);
@@ -275,25 +295,28 @@ async function shoot(page, dir, phase, memberCode) {
 
   // permanent certification dashboard
   const ALL_FOC = require('./foc-index.cjs'); // full FOC chapter list + pending status
-  let BLOCKED = {}; try { BLOCKED = require('./blocked.cjs'); } catch (e) {} // OWNER DECISION REQUIRED chapters (no capture path)
+  let EXCLUDED = {}; try { EXCLUDED = require('./excluded.cjs'); } catch (e) {} // EXCLUDED (OWNER APPROVED) — out of current scope
   const doneMap = {}; report.forEach(r => { doneMap[r.c.id] = { st: statusOf(r), a: `${r.pass}/${r.checks.length}`, shots: shotList(r.c.id).length }; });
   let db = `# لوحة الشهادة الدستورية — Constitutional Certification Dashboard\n\n`;
   db += `آخر تحديث: ${new Date().toISOString()} · المنصّة: المختبر الدستوري المجمَّد (\`lab/\`)\n\n`;
+  // four independent counters
   const certN = report.filter(r => statusOf(r) === 'CERTIFIED').length;
   const failN = report.filter(r => statusOf(r) === 'FAILED').length;
-  const odrN = Object.keys(BLOCKED).length + report.filter(r => statusOf(r) === 'OWNER DECISION REQUIRED').length;
-  // first chapter that is neither certified nor owner-decision = where strict-order stops
-  const firstBlock = ALL_FOC.find(f => BLOCKED[f.id]);
-  db += `**التغطية:** ${certN}/${ALL_FOC.length} فصلًا مُعتمَدًا (${Math.round(certN / ALL_FOC.length * 100)}%) · FAILED: ${failN} · OWNER DECISION: ${odrN} · لقطات: ${report.reduce((s, r) => s + shotList(r.c.id).length, 0)}\n\n`;
-  if (firstBlock) db += `> ⏸ **الحملة متوقّفة عند ${firstBlock.id}** (قرار مالكٍ مطلوب) — بحكم الترتيب الصارم لا يُتابَع إلى ما بعده قبل قرارك.\n\n`;
+  const exclN = Object.keys(EXCLUDED).length;
+  const pendN = ALL_FOC.filter(f => !doneMap[f.id] && !EXCLUDED[f.id]).length;
+  const inScope = ALL_FOC.length - exclN; // excluded chapters are OUT OF CURRENT SCOPE
+  db += `**العدّادات:** مُعتمَد (Certified) **${certN}** · مُستثنى بموافقة المالك (Excluded) **${exclN}** · فشل (Failed) **${failN}** · معلّق (Pending) **${pendN}**\n\n`;
+  db += `**تغطية الإصدار الحالي:** ${certN}/${inScope} من الفصول ضمن النطاق (${Math.round(certN / inScope * 100)}%) · إجمالي الفصول ${ALL_FOC.length} (منها ${exclN} خارج نطاق الإصدار الحالي) · لقطات: ${report.reduce((s, r) => s + shotList(r.c.id).length, 0)}\n\n`;
   db += `| الفصل | العنوان | الحالة | التحقّقات | لقطات | تجاري | دستوري | انحدار | تاريخ |\n|---|---|---|---|---|---|---|---|---|\n`;
   for (const f of ALL_FOC) {
     const d = doneMap[f.id];
     if (d) db += `| ${f.id} | ${f.title} | **${d.st}** | ${d.a} | ${d.shots} | ✅ | ${d.st === 'CERTIFIED' ? '✅' : '⏸'} | ✅ | ${today} |\n`;
-    else if (BLOCKED[f.id]) db += `| ${f.id} | ${f.title} | **OWNER DECISION REQUIRED** | — | — | ⏸ | ⏸ | — | ${today} |\n`;
+    else if (EXCLUDED[f.id]) db += `| ${f.id} | ${f.title} | **EXCLUDED (OWNER APPROVED)** | — | — | خارج النطاق | خارج النطاق | — | ${today} |\n`;
     else db += `| ${f.id} | ${f.title} | PENDING | — | — | — | — | — | — |\n`;
   }
-  db += `\n> الشهادة مُولَّدة آليًّا من تشغيلٍ حقيقيّ في المختبر — لا يُعتمَد فصلٌ دون أدلّة كاملة. فصول OWNER DECISION موثَّقة يدويًّا (بلا تنفيذٍ ممكن). الفصول PENDING تُعتمَد لاحقًا بالترتيب الصارم بعد رفع الحظر.\n`;
+  db += `\n**المُستثنى بموافقة المالك (خارج نطاق الإصدار الحالي — ليس فشلًا):**\n`;
+  Object.keys(EXCLUDED).forEach(k => { db += `- **${k}** — ${EXCLUDED[k].reason}\n`; });
+  db += `\n> الشهادة مُولَّدة آليًّا من تشغيلٍ حقيقيّ في المختبر — لا يُعتمَد فصلٌ دون أدلّة كاملة. الفصول المُستثناة قرارُ نطاقٍ دستوريّ معتمَد من المالك (تُعاد شهادتها عند تنفيذ MODEL2). الفصول PENDING تُعتمَد لاحقًا بالترتيب الصارم.\n`;
   fs.writeFileSync(path.join(CERT, 'DASHBOARD.md'), db);
 
   console.log(`\nتقرير: lab/results/REPORT.md · شهادات: lab/certification/ · لقطات: lab/screenshots/<FOC-ID>/`);
