@@ -264,5 +264,67 @@ module.exports = [
       { label: 'سجلّ التبرّعات عاد كما كان', pass: a.registers.cashN === b.registers.cashN, detail: b.registers.cashN + ' → ' + a.registers.cashN },
       { label: 'الديوان والعجز لم يتغيّرا', pass: eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
     ]
+  },
+  {
+    id: 'FOC-020',
+    title: 'إعادة تصنيف سند (BO-04)',
+    member: 'LAB-001',
+    narrative: 'يُقبَض إيصال ديوان تشغيليّ 400 (إيراد تشغيل)، ثم يُعاد تصنيفه إلى «تبرّع نقدي للديوان». المالُ لا يتحرّك من خزينته — يتغيّر التصنيف فقط.',
+    business: 'إعادة التصنيف صحّحت هويّة السند دون تحريك المال: بقيت خزينة الديوان كما هي (+400 محفوظة، من 5000 إلى 5400)، لأن كلا النوعين وجهتُهما الديوان (القانون 8 — لا يخرج المال من عهدته). تغيّر نوع الحركة إلى «تبرّع نقدي للديوان»، فدخل السند سجلّ التبرّعات النقدية (+1). لم تتأثّر الغداء ولا العجز.',
+    laws: ['4 التصنيف الصريح', '6 التتبّع', '8 العهدة'],
+    op: { type: 'reclassifyReceipt', create: { fund: 'diwan', diwanType: 'operational', payerType: 'nonmember', payerName: 'متبرّع الديوان', amount: 400 }, newType: 'diwan_cash_donation', newDest: 'diwan', reason: 'تصحيح التصنيف إلى تبرّع' },
+    expect: (b, a) => [
+      { label: 'نوع الحركة صار «تبرّع نقدي للديوان»', pass: a.lastReceipt && a.lastReceipt.movement_type === 'diwan_cash_donation' && a.lastReceipt.destination_treasury === 'diwan', detail: JSON.stringify(a.lastReceipt) },
+      { label: 'خزينة الديوان محفوظة (5000 → 5400) — لا تحريك مال', pass: eq(a.treasuries.diwan, b.treasuries.diwan + 400), detail: b.treasuries.diwan + ' → ' + a.treasuries.diwan },
+      { label: 'سجلّ التبرّعات النقدية +1 (دخله بعد التصنيف)', pass: a.registers.cashN === b.registers.cashN + 1, detail: b.registers.cashN + ' → ' + a.registers.cashN },
+      { label: 'الغداء والعجز لم يتغيّرا', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-021',
+    title: 'تقسيم سند بإعادة تصنيف جزئية (BO-05)',
+    member: 'LAB-001',
+    narrative: 'يُقبَض إيصال ديوان تشغيليّ 597، ثم يُعاد تصنيف 400 منه إلى «تبرّع نقدي للديوان». يبقى 197 بتصنيفه الأصليّ، وينفصل 400 في سندٍ مرتبطٍ جديد.',
+    business: 'التقسيم حفظ القيمة كاملةً (القانون 1): 197 بقيت «إيراد تشغيل» في سندها الأصليّ، و400 انتقلت إلى سندٍ جديدٍ مرتبطٍ صُنّف «تبرّع نقدي للديوان». عدد الإيصالات زاد 2 (الأصل + المولود). خزينة الديوان محفوظة كاملةً (597، من 5000 إلى 5597) لأن الجزأين في الديوان. الشريحة المتبرَّع بها فقط (400) دخلت سجلّ التبرّعات (+1). لا مساس بالغداء أو العجز.',
+    laws: ['1 حفظ القيمة', '4 التصنيف الصريح', '6 التتبّع', '7 الذرّية', '8 العهدة'],
+    op: { type: 'reclassifyReceipt', create: { fund: 'diwan', diwanType: 'operational', payerType: 'nonmember', payerName: 'متبرّع الديوان', amount: 597 }, newType: 'diwan_cash_donation', newDest: 'diwan', partial: 400, reason: 'تقسيم: 400 تبرّع' },
+    expect: (b, a) => [
+      { label: 'عدد الإيصالات +2 (الأصل المخفَّض + المولود)', pass: a.receiptsCount === b.receiptsCount + 2, detail: b.receiptsCount + ' → ' + a.receiptsCount },
+      { label: 'السند المولود = 400 «تبرّع نقدي للديوان»', pass: a.lastReceipt && eq(a.lastReceipt.amount_ils, 400) && a.lastReceipt.movement_type === 'diwan_cash_donation', detail: JSON.stringify(a.lastReceipt) },
+      { label: 'خزينة الديوان محفوظة كاملةً (5000 → 5597)', pass: eq(a.treasuries.diwan, b.treasuries.diwan + 597), detail: b.treasuries.diwan + ' → ' + a.treasuries.diwan },
+      { label: 'سجلّ التبرّعات +1 (الشريحة المتبرَّع بها فقط)', pass: a.registers.cashN === b.registers.cashN + 1, detail: b.registers.cashN + ' → ' + a.registers.cashN },
+      { label: 'الغداء والعجز لم يتغيّرا', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-022',
+    title: 'تحويل فائض العجز إلى الغداء (Overflow)',
+    member: 'LAB-004',
+    narrative: 'يُقبَض تحصيلُ ذمّةٍ موجَّهٌ للعجز بمبلغ 9000 (المتبقّي 3000). يُسدَّد العجز المشترك بالكامل (يصير 0)، ويتحوّل الفائض 6000 تلقائيًّا إلى خزينة الغداء.',
+    business: 'المبلغ الموجَّه للعجز أكبر من العجز المتبقّي: أغلق خزينة العجز المشتركة كاملًا (−3000 → 0)، والفائض 6000 تحوّل تلقائيًّا إلى الغداء بقاعدة قراءةٍ لا صفوف تُكتب (القانون 2 — الاشتقاق، القانون 9 — حدّ العجز). فصارت خزينة الغداء 0 → 6000، وبقي الديوان دون تغيّر.',
+    laws: ['1 حفظ القيمة', '2 الاشتقاق', '9 حدّ العجز'],
+    observation: 'لتشغيل قاعدة الفائض لزم توجيهُ مبلغٍ للعجز أكبر من العجز المتبقّي (9000 > 3000). لا يملك أيُّ عضوٍ ذمّةً تاريخيةً تفوق 3000، فاختير عضوٌ مسدَّد (LAB-004، ذمّته التاريخية = 0) موجَّهًا للعجز؛ فصُنّف المبلغ «تحصيل ذمّة تاريخية» (ق4). قاعدة تحويل الفائض — موضوع هذا الفصل — عملت عملًا صحيحًا وموثَّقًا. لكنّ أثرًا جانبيًّا ظهر: تحصيلُ الذمّة (ق4) لا يُحَدُّ برصيد العضو التاريخيّ الفعليّ، فانخفض رصيد LAB-004 إلى −9000 (رصيدٌ دائنٌ كبير لا يقابله دَينٌ حقيقيّ). هذا سيناريو مُختبَريّ مُصطنَعٌ لإظهار الفائض، لا عمليةٌ طبيعية. **قرار مطلوب من المالك:** هل يُحَدُّ تحصيلُ الذمّة التاريخية عند رصيد العضو الفعليّ (منعُ رصيدٍ دائنٍ زائف)؟ لا يُصلَح شيء في الإنتاج قبل قرارك — رُصِدَ فقط دون تعديل.',
+    op: { type: 'receipt', fund: 'donation', payerType: 'member', member: 'LAB-004', amount: 9000, kind: 'cash', display: 'food', alloc: 'reduce_deficit' },
+    expect: (b, a) => [
+      { label: 'العجز المتبقّي −3000 → 0 (سُدّد بالكامل)', pass: eq(b.treasuries.defRem, -3000) && eq(a.treasuries.defRem, 0), detail: b.treasuries.defRem + ' → ' + a.treasuries.defRem },
+      { label: 'الفائض المتحوّل للغداء = 6000', pass: eq(a.treasuries.over, 6000), detail: 'overflow=' + a.treasuries.over },
+      { label: 'خزينة الغداء 0 → 6000 (استلمت الفائض)', pass: eq(a.treasuries.food, b.treasuries.food + 6000), detail: b.treasuries.food + ' → ' + a.treasuries.food },
+      { label: 'الديوان لم يتغيّر', pass: eq(a.treasuries.diwan, b.treasuries.diwan), detail: a.treasuries.diwan }
+    ]
+  },
+  {
+    id: 'FOC-023',
+    title: 'توزيع الدفعة على الأقدم أوّلًا (محرّك التوزيع)',
+    member: 'LAB-001',
+    narrative: 'محمد أحمد (عليه 750: اشتراك 2025=200، 2026=200، ذمّة تاريخية 350) يدفع 500. يُوزَّع المال على الأقدم أوّلًا: 2025 كاملًا، ثم 2026 كاملًا، ثم 100 من الذمّة التاريخية.',
+    business: 'محرّك التوزيع طبّق «الأقدم أوّلًا» على مجموعِ التزامات العضو: سدّد 2025 (200) ثم 2026 (200) ثم 100 من الذمّة التاريخية — إجمالي 500. فنزل رصيده 750 → 250، ودخل المالُ خزينة الغداء (+500). التوزيع مشتقٌّ لا مُخزَّن (القانون 2)، وصُنّف «دفعة اشتراك». لم تتأثّر الخزينتان الأخريان.',
+    laws: ['1 حفظ القيمة', '2 الاشتقاق', '3 مصدر واحد', '4 التصنيف الصريح'],
+    op: { type: 'receipt', fund: 'food', payerType: 'member', member: 'LAB-001', amount: 500 },
+    expect: (b, a) => [
+      { label: 'رصيد العضو 750 → 250 (وُزِّع 500 على الأقدم أوّلًا)', pass: eq(b.members['LAB-001'].finalBalance, 750) && eq(a.members['LAB-001'].finalBalance, 250), detail: b.members['LAB-001'].finalBalance + ' → ' + a.members['LAB-001'].finalBalance },
+      { label: 'خزينة الغداء +500', pass: eq(a.treasuries.food, b.treasuries.food + 500), detail: b.treasuries.food + ' → ' + a.treasuries.food },
+      { label: 'السند صُنّف «دفعة اشتراك» / غداء', pass: a.lastReceipt && a.lastReceipt.movement_type === 'subscription_payment' && a.lastReceipt.destination_treasury === 'food', detail: JSON.stringify(a.lastReceipt) },
+      { label: 'الديوان والعجز لم يتغيّرا', pass: eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
   }
 ];

@@ -120,6 +120,7 @@ const SNAPSHOT = () => {
     activeCount: (DB.members || []).filter(m => m.is_active !== false).length,
     namesByCode: Object.fromEntries((DB.members || []).filter(m => m.member_code).map(m => [m.member_code, m.name])),
     subsCount: (DB.subscriptions || []).length,
+    receiptsCount: (DB.receipts || []).filter(r => !r.is_deleted).length,
     registers: { cashN: FIN2.cashDonationRegister().length, cashS: R2(FIN2.cashDonationRegister().reduce((s, x) => s + Number(x.amount || 0), 0)), inkN: FIN2.inkindRegister().length },
     auditN: (DB.audit_log || []).length,
     lastReceipt: lr ? { no: lr.no, movement_type: lr.movement_type, destination_treasury: lr.destination_treasury, amount_ils: R2(lr.amount_ils || lr.amount) } : null
@@ -140,11 +141,22 @@ const EXECUTE = async (op) => {
     if (f.payerName) set('rec-payer-name', f.payerName);
     set('rec-amount', f.amount); document.getElementById('rec-amount').dispatchEvent(new Event('input'));
     set('rec-date', today);
+    if (f.fund === 'diwan' && f.diwanType) set('rec-diwan-type', f.diwanType);
     if (f.fund === 'donation') { set('rec-don-kind', f.kind || 'cash'); window.onDonKindChange && window.onDonKindChange(); await wait(60); if ((f.kind || 'cash') === 'cash') { set('rec-don-display', f.display); window.onDonDisplayChange && window.onDonDisplayChange(); await wait(60); if (f.alloc) set('rec-don-alloc-type', f.alloc); } }
     const n0 = window.__seed.receipts.length; await window.saveRec(false); await wait(3300);
     if (window.__seed.receipts.length === n0) return null;
     return DB.receipts.find(r => r.no === window.__seed.receipts[window.__seed.receipts.length - 1].no) || null;
   };
+  if (op.type === 'reclassifyReceipt') {
+    const r = await mkReceipt(op.create); if (!r) return false;
+    window.openReclassify('receipt', r.id); await wait(300);
+    set('rcl-type', op.newType); window.onReclassTypeChange && window.onReclassTypeChange(); await wait(80);
+    if (op.newDest) set('rcl-dest', op.newDest);
+    set('rcl-reason', op.reason || 'إعادة تصنيف');
+    const amt = document.getElementById('rcl-amount'); if (amt) amt.value = (op.partial != null ? op.partial : (r.amount_ils || r.amount));
+    await window.doReclassify(); await wait(700);
+    return true;
+  }
   if (op.type === 'editReceipt') {
     const r = await mkReceipt(op.create); if (!r) return false;
     window.editRec(r.id); await wait(250);
@@ -330,6 +342,7 @@ async function shoot(page, dir, phase, memberCode) {
     cm += `| سجلّ القيود (audit) | ${r.before.auditN} | ${r.after.auditN} |\n\n`;
     cm += `## المتوقَّع ↔ الفعلي (كل تحقّق)\n\n`;
     r.checks.forEach(x => { cm += `- ${x.pass ? '✅' : '❌'} ${x.label}${x.detail ? ' — `' + x.detail + '`' : ''}\n`; });
+    if (r.c.observation) cm += `\n## ملاحظة — قرار مطلوب من المالك (POSSIBLE BUG / OWNER DECISION)\n${r.c.observation}\n\n`;
     cm += `\n## القوانين الدستورية المُشارِكة\n${(r.c.laws || []).map(l => '- القانون ' + l).join('\n') || '—'}\n\n`;
     cm += `## الأدلّة (لقطات حقيقية)\n${shots.map(s => '- `lab/screenshots/' + r.c.id + '/' + s + '`').join('\n')}\n\n`;
     cm += `## معايير الشهادة\n- تشغيل المختبر نجح: ${r.errs.length ? '❌' : '✅'}\n- كل التحقّقات نجحت: ${r.pass === r.checks.length ? '✅' : '❌'} (${r.pass}/${r.checks.length})\n- لقطات موجودة: ${shots.length ? '✅' : '❌'} (${shots.length})\n- المتوقَّع = الفعلي: ${r.pass === r.checks.length ? '✅' : '❌'}\n- الامتثال الدستوري مؤكَّد: ${st === 'CERTIFIED' ? '✅' : '⏸'}\n- الشرح التجاري مكتمل: ${r.c.business ? '✅' : '❌'}\n\n`;
