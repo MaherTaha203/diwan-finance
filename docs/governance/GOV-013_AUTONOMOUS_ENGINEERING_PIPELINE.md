@@ -72,10 +72,14 @@ placement & activation (§11).
 ## 3 · Conformance
 
 GOV‑013 is a strict composition of already‑certified authority; it **extends no authority,
-adds no role, and relaxes no invariant**. The pipeline's roles are the P‑AIENG roster (S2
-IDs: **R00** Chief Architect · **R01** Coordinator · **R02–R10** the nine teams · **R11**
-Release Board). The **no‑self‑approval**, **single‑responsibility**, **bounded‑authority**
-rules and the **Chief Architect's final authority** are preserved verbatim. GOV‑WS‑02's
+adds no role, and relaxes no invariant**. The pipeline's three functions (A/B/C) are **not
+new roles** — they are execution *modes* mapped onto the frozen **P‑AIENG‑S1 roster**
+(verbatim): **R00** Chief Architect · **R01** Engineering Coordinator · **R02** Architecture
+Team · **R03** Implementation Team · **R04** Quality Team · **R05** Engineering Investigation
+Team · **R06** Business Governance Team · **R07** Data Integrity Team · **R08** Runtime
+Operations Team · **R09** Security Team · **R10** Documentation Team · **R11** Release Board.
+The **no‑self‑approval**, **single‑responsibility**, **bounded‑authority** rules and the
+**Chief Architect's final authority** are preserved verbatim. GOV‑WS‑02's
 three‑artifact separation (Specification / Execution Order / Completion Report) governs every
 phase this pipeline runs. Where GOV‑013 and any frozen artifact could appear to differ, the
 frozen artifact prevails and the divergence is a Stop Condition (§9).
@@ -116,25 +120,28 @@ free of any Stop Condition. It never overrides §9.
 ## 5 · The Three Pipeline Roles (bound to the P‑AIENG roster)
 
 ### 5.1 · Agent A — Implementation Engineer
-- **Roster binding:** R01 Coordinator orchestrating the implementing team(s) (R02 and the
-  domain team for the phase), under R00 final authority.
+- **Roster binding:** **R01** Engineering Coordinator orchestrating **R02** Architecture Team
+  (phase design) and **R03** Implementation Team (the build), under **R00** final authority.
 - **Responsibility:** plan the phase; implement all required work; run builds; run tests;
   run the Constitutional Laboratory; produce implementation evidence; commit; write the
   Implementation Report; hand over to Agent B.
 - **Prohibition:** Agent A **may never review or approve its own work** (no‑self‑approval).
 
 ### 5.2 · Agent B — Independent Reviewer
-- **Roster binding:** the review teams — R03 QA · R04 Architecture Compliance · R05 Business
-  Rules Auditor · R06 Regression · R07 Observability · R08 Data Integrity · R09 UI/UX · R10
-  Security · Documentation · R11 Release Readiness — coordinated for a single verdict.
+- **Roster binding:** the verification teams, coordinated by **R01** for a single verdict
+  under **R00** final authority — **R02** Architecture Team, **R04** Quality Team, **R05**
+  Engineering Investigation Team, **R06** Business Governance Team, **R07** Data Integrity
+  Team, **R08** Runtime Operations Team, **R09** Security Team, **R10** Documentation Team,
+  and **R11** Release Board. Agent B is a **review mode**, never R03 (which built the work) —
+  preserving no‑self‑approval.
 - **Stance:** **assume Agent A may have erred; never trust Agent A.** Perform an independent
-  review across all fifteen categories (§6).
+  review across all fifteen categories (§6); each category is owned by the team below.
 - **Verdict:** exactly one — **PASS** or **CHANGES REQUIRED**.
 - **Prohibition:** Agent B **never modifies implementation**. On CHANGES REQUIRED it produces
   a report and corrective instructions and returns the work to Agent A/C.
 
 ### 5.3 · Agent C — Corrective Engineer
-- **Roster binding:** R02 Implementation, acting solely on Agent B's findings.
+- **Roster binding:** **R03** Implementation Team, acting solely on Agent B's findings.
 - **Inputs (read‑only):** the implementation and the review report — nothing else.
 - **Responsibility:** correct **only** the review findings. **No redesign. No unrelated
   refactoring. No new improvements.** Return to Agent B. Repeat until **PASS**.
@@ -144,18 +151,19 @@ free of any Stop Condition. It never overrides §9.
 ## 6 · The Acceptance Gate
 
 **No phase may finish until Agent B produces PASS.** Every review evaluates **all fifteen**
-categories, and each receives one rating — **PASS · WARNING · FAIL**:
+categories, and each receives one rating — **PASS · WARNING · FAIL**. Each category is owned
+by a roster team (§3):
 
-| # | Category | # | Category |
-|---|---|---|---|
-| 1 | Architecture | 9 | Regression |
-| 2 | Business Logic | 10 | Constitutional Compliance |
-| 3 | Financial Integrity | 11 | User Experience |
-| 4 | Security | 12 | Code Simplicity |
-| 5 | Performance | 13 | Technical Debt |
-| 6 | Maintainability | 14 | Risk Assessment |
-| 7 | Documentation | 15 | Evidence Quality |
-| 8 | Testing | | |
+| # | Category | Owner | # | Category | Owner |
+|---|---|---|---|---|---|
+| 1 | Architecture | R02 | 9 | Regression | R04 |
+| 2 | Business Logic | R06 | 10 | Constitutional Compliance | R06 |
+| 3 | Financial Integrity | R06 | 11 | User Experience | R04 |
+| 4 | Security | R09 | 12 | Code Simplicity | R02 |
+| 5 | Performance | R08 | 13 | Technical Debt | R02 |
+| 6 | Maintainability | R02 | 14 | Risk Assessment | R05 |
+| 7 | Documentation | R10 | 15 | Evidence Quality | R11 |
+| 8 | Testing | R04 | | | |
 
 **Gate rule.** Any **FAIL** ⇒ verdict **CHANGES REQUIRED**. **WARNING**s are recorded and
 must be either resolved or explicitly accepted with a documented rationale before PASS. Only
