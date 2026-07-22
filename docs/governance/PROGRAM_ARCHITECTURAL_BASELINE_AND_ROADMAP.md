@@ -10,9 +10,9 @@
 
 **Document ID:** GOV‑PROG‑BR‑01
 **Status:** ACTIVE (living record)
-**Current Architectural Baseline:** `main` @ `72b46ad` (P‑DUES‑S2 merged · PR #126)
-**Last updated:** 2026‑07‑21 — P‑DUES closeout (GOV‑PDUES‑CR‑01)
-**Active governance:** GOV‑WS‑01 v1.5 (Component Taxonomy + Rules 1–6).
+**Current Architectural Baseline:** `main` @ `cb2ed75` (Wave 1 Pilot operationally validated & frozen · PR #137)
+**Last updated:** 2026‑07‑22 — Wave 1 Pilot Baseline Freeze (GOV‑AIENG‑W1‑FREEZE‑01)
+**Active governance:** GOV‑WS‑01 v1.5 (Component Taxonomy + Rules 1–6) · GOV‑WS‑02 (Operational Separation Principle).
 
 ---
 
@@ -47,6 +47,26 @@ Each operational module *executes* its domain by orchestrating certified Busines
 Operations (GOV‑WS‑01 Rule 4). The Observability Layer *executes nothing* — it
 projects certified Read Models (Rule 4 N/A).
 
+### PLATFORM GOVERNANCE
+| Artifact | Scope | Status |
+|---|---|---|
+| **GOV‑WS‑01 v1.5** | Component Taxonomy + Business‑Workspace Design Rules 1–6 | **ACTIVE & FROZEN** |
+| **GOV‑WS‑02** | Operational Separation Principle (3 artifacts; 6‑stage operational lifecycle) | **COMPLETE & FROZEN** |
+
+### AI ENGINEERING GOVERNANCE (governance‑only; no runtime)
+| Artifact | Scope | Status |
+|---|---|---|
+| **P‑AIENG‑000 · S1 · S2 · S3** | Organization · operationalization · certified profiles · execution framework | **COMPLETE & FROZEN** |
+| **P‑AIENG‑ACT‑001** | Progressive, waved, reversible activation (R00‑final) | **COMPLETE & FROZEN** |
+| **P‑AIENG‑W1‑000** | Wave 1 Read‑Only Engineering Activation — program | **COMPLETE & FROZEN** |
+| **P‑AIENG‑W1‑ACT‑001** | Wave 1 Controlled Activation — Specification | **COMPLETE & FROZEN** |
+| **P‑AIENG‑W1‑PILOT‑001** | Wave 1 Pilot — Execution Order | **COMPLETE & FROZEN** |
+| **Wave 1 Pilot** | one supervised read‑only advisory pass (validated · zero delta · Golden 12/12) | **SUCCESSFUL · BASELINE FROZEN** (GOV‑AIENG‑W1‑FREEZE‑01) |
+
+The AI Engineering governance track is **governance‑only** and executes nothing by itself; its
+Wave 1 read‑only activation was operationally validated by a single supervised pilot with
+**zero repository delta** and **zero governance violations**. **No Wave 2 is authorized.**
+
 ## 2 · Phase Ledger
 
 | Phase | Deliverable | Closeout | Baseline |
@@ -60,6 +80,9 @@ projects certified Read Models (Rule 4 N/A).
 | P6‑000 | Architectural Evolution Assessment | **GOV‑P6‑SPEC‑01** (frozen) | `c1f528e` |
 | GOV‑WS‑01 v1.5 | Governance Evolution Specification | ratified (PR #123) | `95dd5bb` |
 | P‑DUES | Annual Subscriptions / Dues Module | **GOV‑PDUES‑CR‑01** | **`72b46ad`** |
+| GOV‑WS‑02 | Operational Separation Principle | ratified (PR #136) | `e056749` |
+| P‑AIENG (000→W1‑ACT‑001) | AI Engineering Governance Platform + Wave 1 program | ratified (PRs #129…#137) | `cb2ed75` |
+| P‑AIENG‑W1‑PILOT | Wave 1 read‑only pilot — execution & freeze | **GOV‑AIENG‑W1‑FREEZE‑01** | **`cb2ed75`** |
 
 ## 3 · Governance Status
 
@@ -71,8 +94,14 @@ projects certified Read Models (Rule 4 N/A).
 - **P5‑OBS — COMPLETE & FROZEN** (Treasury Observability Layer)
 - **P6‑000 — COMPLETE & FROZEN** (Architectural Evolution Assessment)
 - **GOV‑WS‑01 v1.5 — ACTIVE** (the single governance reference after P6)
+- **GOV‑WS‑02 — COMPLETE & FROZEN** (Operational Separation Principle)
 - **P‑DUES‑000 — APPROVED & FROZEN** · **P‑DUES‑S1 / S2 — COMPLETE & FROZEN**
 - **P‑DUES — COMPLETE & FROZEN** (Annual Subscriptions / Dues module)
+- **P‑AIENG‑000 / S1 / S2 / S3 — COMPLETE & FROZEN** (AI Engineering Governance Platform)
+- **P‑AIENG‑ACT‑001 — COMPLETE & FROZEN** (progressive activation order)
+- **P‑AIENG‑W1‑000 / W1‑ACT‑001 / W1‑PILOT‑001 — COMPLETE & FROZEN** (Wave 1)
+- **Wave 1 Pilot — SUCCESSFUL · BASELINE FROZEN** (read‑only activation operationally validated;
+  zero delta; zero violations; Golden 12/12). **No Wave 2 authorized.**
 
 No further implementation belongs to a completed/frozen module unless a future
 architectural or owner decision explicitly reopens it.
