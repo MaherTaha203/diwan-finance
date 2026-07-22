@@ -83,6 +83,8 @@ Wave 1 read‑only activation was operationally validated by a single supervised
 | GOV‑WS‑02 | Operational Separation Principle | ratified (PR #136) | `e056749` |
 | P‑AIENG (000→W1‑ACT‑001) | AI Engineering Governance Platform + Wave 1 program | ratified (PRs #129…#137) | `cb2ed75` |
 | P‑AIENG‑W1‑PILOT | Wave 1 read‑only pilot — execution & freeze | **GOV‑AIENG‑W1‑FREEZE‑01** | **`cb2ed75`** |
+| FOC (Constitutional Certification Campaign) | Constitutional Laboratory + FOC‑001…025 certified/excluded | **CONSTITUTIONAL‑CERTIFICATION‑REPORT** (23/23 in‑scope · 2 owner‑excluded) | `20026b1` |
+| GOV‑013 | Autonomous Engineering Pipeline — framework | **GOV‑013** (opened by owner order 2026‑07‑22) | *(this phase)* |
 
 ## 3 · Governance Status
 
@@ -128,8 +130,9 @@ none pre‑selected):
     engineering governance (Chief Architect · Implementation · QA · Architecture
     Compliance · Business Rules Auditor · Regression · Observability · Data Integrity ·
     UI/UX · Security · Documentation · Release Readiness, under an Engineering
-    Coordinator). Recorded here as a Governance Enhancement candidate; requires its own
-    formal governance order (not opened by the P‑DUES closeout).
+    Coordinator). **→ OPENED as GOV‑013 (Autonomous Engineering Pipeline) by owner order
+    2026‑07‑22; DRAFT for review/approval/freeze. No production phase is pre‑selected by it
+    — phase selection remains owner‑gated (§4 above / GOV‑013 §9).**
 - **Reservations (existing, non‑financial)** — a Governance ruling on its standing
   (per P6‑000), not an implementation.
 
