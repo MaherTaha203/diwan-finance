@@ -179,5 +179,33 @@ module.exports = [
       { label: 'خزينة الديوان −300', pass: eq(a.treasuries.diwan, b.treasuries.diwan - 300), detail: b.treasuries.diwan + ' → ' + a.treasuries.diwan },
       { label: 'الغداء والعجز لم يتغيّرا', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
     ]
+  },
+  {
+    id: 'FOC-014',
+    title: 'توليد الاشتراكات السنوية (BO-10)',
+    member: 'LAB-001',
+    narrative: 'المدير يولّد اشتراك سنة جديدة 2027 بقيمة 200 لكل الأعضاء. التزامٌ فقط — لا مال يتحرّك.',
+    business: 'أُنشئ مستحقّ 2027 (200) لكل عضو، فارتفعت التزاماتهم: رصيد محمد أحمد 750 → 950. لم تتحرّك أي خزينة نقدية (توليد التزامٍ فقط، لا قبض). عدد صفوف الاشتراكات زاد بمقدار عدد الأعضاء.',
+    laws: ['4 التصنيف الصريح', '7 الذرّية'],
+    op: { type: 'applyDues', year: 2027, amount: 200 },
+    expect: (b, a) => [
+      { label: 'رصيد العضو 750 → 950 (أُضيف مستحقّ 2027)', pass: eq(a.members['LAB-001'].finalBalance, 950), detail: b.members['LAB-001'].finalBalance + ' → ' + a.members['LAB-001'].finalBalance },
+      { label: 'عدد صفوف الاشتراكات زاد', pass: a.subsCount > b.subsCount, detail: b.subsCount + ' → ' + a.subsCount },
+      { label: 'لا خزينة تغيّرت (توليد التزامٍ فقط)', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-015',
+    title: 'إنشاء عضو (BO-07)',
+    member: 'LAB-001',
+    narrative: 'المدير يضيف عضوًا جديدًا «مصطفى كامل» برصيدٍ افتتاحيّ 500 وجدول اشتراكاته، في عمليةٍ ذرّية واحدة.',
+    business: 'أُنشئ العضو مع جدول اشتراكاته دفعةً واحدة (كلٌّ أو لا شيء): عدد الأعضاء +1 وصفوف الاشتراكات زادت. لم تتحرّك أي خزينة نقدية — الإنشاء التزامٌ لا قبض.',
+    laws: ['7 الذرّية', '6 التتبّع'],
+    op: { type: 'createMember', name: 'مصطفى كامل', opening: 500, fromYear: 2024 },
+    expect: (b, a) => [
+      { label: 'عدد الأعضاء +1', pass: a.membersCount === b.membersCount + 1, detail: b.membersCount + ' → ' + a.membersCount },
+      { label: 'صفوف الاشتراكات زادت (جدول العضو الجديد)', pass: a.subsCount > b.subsCount, detail: b.subsCount + ' → ' + a.subsCount },
+      { label: 'لا خزينة تغيّرت (إنشاء التزامٍ لا قبض)', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
   }
 ];
