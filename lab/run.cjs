@@ -132,6 +132,33 @@ const EXECUTE = async (op) => {
   const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('change')); } };
   const today = new Date().toISOString().slice(0, 10);
   const memberId = op.member ? (DB.members.find(m => m.member_code === op.member) || {}).id : null;
+  // helper: create one receipt via the real form and return the stored row (for compound ops)
+  const mkReceipt = async (f) => {
+    window.openRec(f.fund); await wait(200);
+    set('rec-payer-type', f.payerType || 'member'); window.onPayerTypeChange && window.onPayerTypeChange(); await wait(80);
+    const mid = f.member ? (DB.members.find(m => m.member_code === f.member) || {}).id : null; if (mid) set('rec-member', mid);
+    if (f.payerName) set('rec-payer-name', f.payerName);
+    set('rec-amount', f.amount); document.getElementById('rec-amount').dispatchEvent(new Event('input'));
+    set('rec-date', today);
+    if (f.fund === 'donation') { set('rec-don-kind', f.kind || 'cash'); window.onDonKindChange && window.onDonKindChange(); await wait(60); if ((f.kind || 'cash') === 'cash') { set('rec-don-display', f.display); window.onDonDisplayChange && window.onDonDisplayChange(); await wait(60); if (f.alloc) set('rec-don-alloc-type', f.alloc); } }
+    const n0 = window.__seed.receipts.length; await window.saveRec(false); await wait(3300);
+    if (window.__seed.receipts.length === n0) return null;
+    return DB.receipts.find(r => r.no === window.__seed.receipts[window.__seed.receipts.length - 1].no) || null;
+  };
+  if (op.type === 'editReceipt') {
+    const r = await mkReceipt(op.create); if (!r) return false;
+    window.editRec(r.id); await wait(250);
+    set('edit-rec-amount', op.newAmount); set('edit-rec-reason', op.reason || 'تصحيح مبلغ');
+    await window.updateRec(); await wait(700);
+    return true;
+  }
+  if (op.type === 'cancelReceipt') {
+    const r = await mkReceipt(op.create); if (!r) return false;
+    let idel = document.getElementById('edit-rec-id'); if (!idel) { idel = document.createElement('input'); idel.id = 'edit-rec-id'; idel.type = 'hidden'; document.body.appendChild(idel); }
+    idel.value = r.id;
+    await window.deleteRec(); await wait(700);
+    return true;
+  }
   if (op.type === 'receipt') {
     window.openRec(op.fund); await wait(200);
     set('rec-payer-type', op.payerType || 'member'); window.onPayerTypeChange && window.onPayerTypeChange(); await wait(80);
