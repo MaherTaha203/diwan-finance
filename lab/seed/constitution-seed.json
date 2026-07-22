@@ -1,0 +1,42 @@
+{
+  "_readme": "Constitutional Laboratory — PERMANENT deterministic seed. NEVER production data. Recreated identically on every run. food_opening_balance opens the Historical-Deficit treasury (food opens at 0); diwan_opening_balance opens Diwan.",
+  "settings": [
+    { "key": "food_opening_balance", "value": "-3000" },
+    { "key": "diwan_opening_balance", "value": "5000" },
+    { "key": "food_opening_usd", "value": "0" },
+    { "key": "food_opening_jod", "value": "0" },
+    { "key": "diwan_opening_usd", "value": "0" },
+    { "key": "diwan_opening_jod", "value": "0" },
+    { "key": "usd_rate", "value": "3.50" },
+    { "key": "jod_rate", "value": "5.00" },
+    { "key": "locked_through_year", "value": "2024" }
+  ],
+  "annual_dues": [
+    { "id": "dues-2025", "year": 2025, "amount": 200, "applied_at": "2025-01-01T00:00:00Z", "applied_by": "LAB", "member_count": 4 },
+    { "id": "dues-2026", "year": 2026, "amount": 200, "applied_at": "2026-01-01T00:00:00Z", "applied_by": "LAB", "member_count": 4 }
+  ],
+  "members": [
+    { "id": "lab-001", "name": "محمد أحمد", "phone": null, "member_code": "LAB-001", "notes": "ذمّة تاريخية 350 · اشتراكان غير مدفوعين", "opening_balance": 0, "prepaid_subscription_ils": 0, "is_active": true, "created_at": "2025-01-01T00:00:00Z", "active_from_year": 2020, "historical_balance_ils": 350, "historical_payments_ils": 0, "credit_balance_ils": 0, "is_migration_exception": false },
+    { "id": "lab-002", "name": "أحمد يوسف", "phone": null, "member_code": "LAB-002", "notes": "بلا ذمّة تاريخية · اشتراكان غير مدفوعين", "opening_balance": 0, "prepaid_subscription_ils": 0, "is_active": true, "created_at": "2025-01-01T00:00:00Z", "active_from_year": 2020, "historical_balance_ils": 0, "historical_payments_ils": 0, "credit_balance_ils": 0, "is_migration_exception": false },
+    { "id": "lab-003", "name": "خالد علي", "phone": null, "member_code": "LAB-003", "notes": "ذمّة تاريخية صافية 300 · اشتراك 2025 مدفوع، 2026 غير مدفوع", "opening_balance": 0, "prepaid_subscription_ils": 0, "is_active": true, "created_at": "2025-01-01T00:00:00Z", "active_from_year": 2020, "historical_balance_ils": 500, "historical_payments_ils": 200, "credit_balance_ils": 0, "is_migration_exception": false },
+    { "id": "lab-004", "name": "سارة محمود", "phone": null, "member_code": "LAB-004", "notes": "كل الاشتراكات مدفوعة · لديها رصيد مستقبلي 150", "opening_balance": 0, "prepaid_subscription_ils": 0, "is_active": true, "created_at": "2025-01-01T00:00:00Z", "active_from_year": 2020, "historical_balance_ils": 0, "historical_payments_ils": 0, "credit_balance_ils": 150, "is_migration_exception": false }
+  ],
+  "member_subscriptions": [
+    { "id": "sub-001-2025", "member_id": "lab-001", "year": 2025, "due_amount_ils": 200, "paid_amount_ils": 0, "balance_ils": 200, "is_overridden": false, "override_amount_ils": null, "override_reason": null },
+    { "id": "sub-001-2026", "member_id": "lab-001", "year": 2026, "due_amount_ils": 200, "paid_amount_ils": 0, "balance_ils": 200, "is_overridden": false, "override_amount_ils": null, "override_reason": null },
+    { "id": "sub-002-2025", "member_id": "lab-002", "year": 2025, "due_amount_ils": 200, "paid_amount_ils": 0, "balance_ils": 200, "is_overridden": false, "override_amount_ils": null, "override_reason": null },
+    { "id": "sub-002-2026", "member_id": "lab-002", "year": 2026, "due_amount_ils": 200, "paid_amount_ils": 0, "balance_ils": 200, "is_overridden": false, "override_amount_ils": null, "override_reason": null },
+    { "id": "sub-003-2025", "member_id": "lab-003", "year": 2025, "due_amount_ils": 200, "paid_amount_ils": 200, "balance_ils": 0, "is_overridden": false, "override_amount_ils": null, "override_reason": null },
+    { "id": "sub-003-2026", "member_id": "lab-003", "year": 2026, "due_amount_ils": 200, "paid_amount_ils": 0, "balance_ils": 200, "is_overridden": false, "override_amount_ils": null, "override_reason": null },
+    { "id": "sub-004-2025", "member_id": "lab-004", "year": 2025, "due_amount_ils": 200, "paid_amount_ils": 200, "balance_ils": 0, "is_overridden": false, "override_amount_ils": null, "override_reason": null },
+    { "id": "sub-004-2026", "member_id": "lab-004", "year": 2026, "due_amount_ils": 200, "paid_amount_ils": 200, "balance_ils": 0, "is_overridden": false, "override_amount_ils": null, "override_reason": null }
+  ],
+  "receipts": [],
+  "payments": [],
+  "contacts": [],
+  "attachments": [],
+  "vouchers": [],
+  "voucher_versions": [],
+  "user_roles": [ { "user_id": "admin-id", "role": "admin", "full_name": "مدير المختبر" } ],
+  "audit_log": []
+}
