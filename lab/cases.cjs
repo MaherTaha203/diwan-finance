@@ -326,5 +326,36 @@ module.exports = [
       { label: 'السند صُنّف «دفعة اشتراك» / غداء', pass: a.lastReceipt && a.lastReceipt.movement_type === 'subscription_payment' && a.lastReceipt.destination_treasury === 'food', detail: JSON.stringify(a.lastReceipt) },
       { label: 'الديوان والعجز لم يتغيّرا', pass: eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
     ]
+  },
+  {
+    id: 'FOC-024',
+    title: 'أثر الترحيل (Phase 15)',
+    member: 'LAB-001',
+    narrative: 'الترحيل يُغلق السنة السابقة ويحمل أرصدتها الختامية أرصدةً افتتاحيةً لهذه السنة (العجز −3000، الديوان 5000). ثم تُجرَّب محاولةُ قبض سندٍ بتاريخٍ داخل السنة المرحّلة المقفلة (2024) — فتُرفَض.',
+    business: 'الترحيل هو جسر السنوات: ما أُقفِل في الماضي يُحمَل رصيدًا افتتاحيًّا لا يُعاد فتحه. الأرصدة المرحّلة حاضرةٌ في الأساس (العجز الافتتاحي −3000، الديوان 5000، الغداء 0)، والسنة المرحّلة (حتى 2024) مقفلةٌ حرمةً: محاولةُ قبض سندٍ بتاريخ 2024 رُفِضت، فلم يزد عدد الإيصالات ولم تتحرّك أي خزينة. هكذا يُصان تاريخُ الأرصدة (القانون 5) وحرمةُ الفترة المقفلة (القانون 11).',
+    laws: ['1 حفظ القيمة', '5 حفظ التاريخ', '11 حرمة الفترة المقفلة'],
+    op: { type: 'lockedWrite', fund: 'food', member: 'LAB-001', amount: 200, date: '2024-06-01' },
+    expect: (b, a) => [
+      { label: 'الأرصدة الافتتاحية المرحّلة حاضرة (العجز −3000، الديوان 5000)', pass: eq(b.openings.historical_deficit, -3000) && eq(b.openings.diwan, 5000) && eq(b.treasuries.defRem, -3000) && eq(b.treasuries.diwan, 5000), detail: 'opening def=' + b.openings.historical_deficit + ' diwan=' + b.openings.diwan },
+      { label: 'السنة المرحّلة مقفلة حتى 2024 (حدّ الترحيل)', pass: b.lockedThroughYear === 2024, detail: 'lockedThroughYear=' + b.lockedThroughYear },
+      { label: 'قبضُ سندٍ بتاريخ داخل السنة المقفلة رُفِض (لا زيادة إيصالات)', pass: a.receiptsCount === b.receiptsCount, detail: b.receiptsCount + ' → ' + a.receiptsCount },
+      { label: 'لا خزينة تغيّرت (الماضي المرحّل محصّن)', pass: eq(a.treasuries.food, b.treasuries.food) && eq(a.treasuries.diwan, b.treasuries.diwan) && eq(a.treasuries.defRem, b.treasuries.defRem), detail: '' }
+    ]
+  },
+  {
+    id: 'FOC-025',
+    title: 'دور MODEL2',
+    member: 'LAB-002',
+    narrative: 'يُقبَض سندُ اشتراكٍ 300 من أحمد يوسف (عليه 400). يُوثَّق دورُ MODEL2: محمَّلٌ ومُعرَّفٌ خاملًا (DEFINED_INERT_P2A)، أحداثُه تحكم تصنيف كل سند، وترتيبُ التوزيع فيه مُعلَنٌ لا مُطبَّق — فالتوزيع الفعليّ «الأقدم أوّلًا».',
+    business: 'MODEL2 هو المرجع الدستوريّ للتصنيف: كل حركةٍ ماليّةٍ نوعُها حدثٌ معرَّفٌ فيه (هنا «دفعة اشتراك»). لكنّه معرَّفٌ خاملًا (DEFINED_INERT_P2A): ترتيبُ التوزيع المُعلَن فيه (2025 ← 2026 ← تاريخيّ ← مستقبليّ) موجودٌ نصًّا لكنّه غير مُنفَّذ في التشغيل؛ التوزيع الفعليّ يجري «الأقدم أوّلًا» تجميعيًّا (رصيد العضو 400 → 100). فدور MODEL2 اليوم: يحكم التصنيف وهويّات الخزائن، ولا يُشغّل التوزيع — لم يُفعَّل. لا يُغيَّر شيءٌ فيه (أثرٌ مجمَّد).',
+    laws: ['2 الاشتقاق', '3 مصدر واحد', '4 التصنيف الصريح'],
+    op: { type: 'receipt', fund: 'food', payerType: 'member', member: 'LAB-002', amount: 300 },
+    expect: (b, a) => [
+      { label: 'MODEL2 محمَّلٌ ومُعرَّفٌ خاملًا (DEFINED_INERT_P2A) — لم يُفعَّل', pass: a.model2.loaded === true && a.model2.status === 'DEFINED_INERT_P2A', detail: 'status=' + (a.model2 && a.model2.status) },
+      { label: 'أحداث MODEL2 تحكم التصنيف: نوع السند حدثٌ معرَّف فيه', pass: a.lastReceipt && a.model2.events.indexOf(a.lastReceipt.movement_type) !== -1 && a.lastReceipt.movement_type === 'subscription_payment', detail: a.lastReceipt && a.lastReceipt.movement_type },
+      { label: 'ترتيب التوزيع مُعلَنٌ (4 خطوات) لا مُطبَّق', pass: a.model2.allocationOrder.length === 4 && a.model2.allocationOrder[0] === 'subscription_2025', detail: a.model2.allocationOrder.join(' ← ') },
+      { label: 'التوزيع الفعليّ «الأقدم أوّلًا»: رصيد العضو 400 → 100', pass: eq(b.members['LAB-002'].finalBalance, 400) && eq(a.members['LAB-002'].finalBalance, 100), detail: b.members['LAB-002'].finalBalance + ' → ' + a.members['LAB-002'].finalBalance },
+      { label: 'خزينة الغداء +300 (السند اشتراكٌ حقيقيّ)', pass: eq(a.treasuries.food, b.treasuries.food + 300), detail: b.treasuries.food + ' → ' + a.treasuries.food }
+    ]
   }
 ];
