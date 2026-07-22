@@ -121,6 +121,11 @@ const SNAPSHOT = () => {
     namesByCode: Object.fromEntries((DB.members || []).filter(m => m.member_code).map(m => [m.member_code, m.name])),
     subsCount: (DB.subscriptions || []).length,
     receiptsCount: (DB.receipts || []).filter(r => !r.is_deleted).length,
+    // carry-forward surfaces (FOC-024): prior-year closings carried as openings + the sealed year
+    lockedThroughYear: (typeof window.LOCKED_THROUGH_YEAR === 'number') ? window.LOCKED_THROUGH_YEAR : null,
+    openings: { food: R2((window.TREASURY_OPENINGS || {}).food || 0), diwan: R2((window.TREASURY_OPENINGS || {}).diwan || 0), historical_deficit: R2((window.TREASURY_OPENINGS || {}).historical_deficit || 0) },
+    // MODEL2 role surfaces (FOC-025): loaded, inert, classification authority, declared-but-not-executed allocation order
+    model2: window.MODEL2 ? { loaded: true, status: window.MODEL2.status, eventsCount: Object.keys(window.MODEL2.EVENTS || {}).length, events: Object.keys(window.MODEL2.EVENTS || {}), allocationOrder: (FIN2.allocationOrder ? FIN2.allocationOrder() : []) } : { loaded: false },
     registers: { cashN: FIN2.cashDonationRegister().length, cashS: R2(FIN2.cashDonationRegister().reduce((s, x) => s + Number(x.amount || 0), 0)), inkN: FIN2.inkindRegister().length },
     auditN: (DB.audit_log || []).length,
     lastReceipt: lr ? { no: lr.no, movement_type: lr.movement_type, destination_treasury: lr.destination_treasury, amount_ils: R2(lr.amount_ils || lr.amount) } : null
@@ -169,6 +174,18 @@ const EXECUTE = async (op) => {
     let idel = document.getElementById('edit-rec-id'); if (!idel) { idel = document.createElement('input'); idel.id = 'edit-rec-id'; idel.type = 'hidden'; document.body.appendChild(idel); }
     idel.value = r.id;
     await window.deleteRec(); await wait(700);
+    return true;
+  }
+  if (op.type === 'lockedWrite') {
+    // FOC-024 · attempt to capture a voucher DATED INSIDE the carried/locked year → must be rejected (Law 11).
+    const n0 = window.__seed.receipts.length;
+    window.openRec(op.fund || 'food'); await wait(200);
+    set('rec-payer-type', 'member'); window.onPayerTypeChange && window.onPayerTypeChange(); await wait(80);
+    if (memberId) set('rec-member', memberId);
+    set('rec-amount', op.amount || 200); document.getElementById('rec-amount').dispatchEvent(new Event('input'));
+    set('rec-date', op.date); // a date within LOCKED_THROUGH_YEAR
+    await window.saveRec(false); await wait(500);
+    // the op ITSELF succeeded (it exercised the guard); the assertions verify the write was blocked.
     return true;
   }
   if (op.type === 'receipt') {
