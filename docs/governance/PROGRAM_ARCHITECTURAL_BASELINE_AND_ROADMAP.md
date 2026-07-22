@@ -84,7 +84,8 @@ Wave 1 read‑only activation was operationally validated by a single supervised
 | P‑AIENG (000→W1‑ACT‑001) | AI Engineering Governance Platform + Wave 1 program | ratified (PRs #129…#137) | `cb2ed75` |
 | P‑AIENG‑W1‑PILOT | Wave 1 read‑only pilot — execution & freeze | **GOV‑AIENG‑W1‑FREEZE‑01** | **`cb2ed75`** |
 | FOC (Constitutional Certification Campaign) | Constitutional Laboratory + FOC‑001…025 certified/excluded | **CONSTITUTIONAL‑CERTIFICATION‑REPORT** (23/23 in‑scope · 2 owner‑excluded) | `20026b1` |
-| GOV‑013 | Autonomous Engineering Pipeline — framework | **GOV‑013** (opened by owner order 2026‑07‑22) | *(this phase)* |
+| GOV‑013 | Autonomous Engineering Pipeline — framework | **GOV‑013** (ratified · PR #150) | `b40ec03` |
+| RLS‑001 | V1 Release Candidate Certification & Packaging | **V1_BASELINE_CERTIFICATE** · tag `v1.0.0` | *(this phase)* |
 
 ## 3 · Governance Status
 
