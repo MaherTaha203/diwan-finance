@@ -57,6 +57,15 @@ async function afterLogin(){
     if(lb){lb.disabled=false;lb.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
     return;
   }
+  /* AUTH-001 — disabled accounts are denied entry (belt-and-suspenders with the
+     Edge ban + login-gate block; also terminates active tabs via authRecheckDisabled). */
+  if(role.is_disabled===true){
+    await SB.auth.signOut();CU=null;CUR=null;
+    showLoginErr(window.LANG==='en'?'Your account is disabled. Please contact the administrator.':'حسابك معطّل. الرجاء التواصل مع مسؤول النظام.');
+    const lb=document.getElementById('login-btn');
+    if(lb){lb.disabled=false;lb.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
+    return;
+  }
   const safeRole=(rawRole==='admin')?'admin':(rawRole==='reservation'?'reservation':'viewer');
   CUR={...role,role:safeRole,full_name:role.full_name||CU.email};
 

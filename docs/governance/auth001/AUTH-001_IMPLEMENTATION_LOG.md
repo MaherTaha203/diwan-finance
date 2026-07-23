@@ -20,7 +20,7 @@ MODEL2 / business‑logic changes.
 | PR | Scope | State |
 |---|---|---|
 | PR‑1 | Database migration (`login_attempts`, `user_roles` identity/status, backfill) | ✅ merged |
-| PR‑2 | `admin-users` Edge Function + User Management UI | ⏳ |
+| PR‑2 | `admin-users` Edge Function + User Management UI | 🚧 code complete · awaiting deploy |
 | PR‑3 | `login-gate` Edge Function + progressive lockout + audit (flagged) | ⏳ |
 | PR‑4 | Password policy + minimal password UI | ⏳ |
 | PR‑5 | Create‑User workflow + one‑time credentials dialog | ⏳ |
@@ -44,3 +44,19 @@ MODEL2 / business‑logic changes.
 **Backward compatibility:** additive only; no existing column altered; no login behaviour
 changed (this PR ships schema only, read by later Edge Functions). Rollback: the table/columns
 are inert and empty — safe to leave; drop only if explicitly desired.
+
+## PR‑2 — admin-users Edge Function + User Management (code complete; deploy pending)
+**Edge Function** `supabase/functions/admin-users/index.ts` (+ `_shared/auth-core.mjs`):
+admin‑JWT‑gated, `service_role`. Actions `create · update · disable · enable · unlock ·
+reset_password · force_change`; every action audited. `reset_password` **always** forces
+`must_change_password=true`. `disable` sets `is_disabled` + GoTrue ban.
+**Client** `public/js/user-admin.js` (+ `loadUsers` template update + `is_disabled` login/tab
+guards in `auth.js`/`user-admin.js`): per‑row Reset / Force‑change / Unlock / Disable‑Enable,
+and a **reusable one‑time credentials dialog** (`window.showCredentials`, emits
+`credentials_copied`). Legacy `inviteUser`/`changeRole` left untouched (create UI redesign =
+PR‑5), so PR‑2 is purely additive management — no create/login regression.
+**Deploy command (fallback workflow):** `supabase functions deploy admin-users --project-ref ralifvemgapmsgrjgazh` (Verify JWT ON).
+**Local verification:** `node --check` clean (user-admin/auth/app); `auth-core.test.mjs` 39/39;
+`constitutional-verification` 12/12; `fin2` PASS; Constitutional Laboratory (regression) — see PR.
+**Live verification (post‑deploy):** unauthenticated call → 401 `not_admin`; admin create/reset/
+disable/enable/unlock/force round‑trip; audit rows written.

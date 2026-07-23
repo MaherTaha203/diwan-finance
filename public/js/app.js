@@ -1483,16 +1483,30 @@ async function loadUsers(){
   if(!data?.length){list.innerHTML='<div class="empty"><div class="empty-t">لا يوجد مستخدمون</div></div>';return;}
   /* muted DDL role colours — same solids as the top-bar avatar (.uav) and role tags */
   const BG={admin:'#5E5578',viewer:'#3E5A78',reservation:'#3E6659'};
+  const _uEn=window.LANG==='en';
+  const _ident=u=>esc(u.email||u.phone||u.user_id);
+  const _ab=(fn,icon,label,cls)=>`<button class="btn ghost sm" title="${label}" aria-label="${label}" onclick="${fn}"><i class="ti ${icon}"></i></button>`;
   list.innerHTML=data.map(u=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;background:var(--bg2)">
+    <div style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;background:var(--bg2);flex-wrap:wrap">
       <div style="width:36px;height:36px;border-radius:50%;background:${BG[u.role]||'#5C5F65'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${(u.full_name||'م').charAt(0).toUpperCase()}</div>
-      <div style="flex:1"><div style="font-weight:500;font-size:13px">${esc(u.full_name||'—')}</div><div style="font-size:10px;color:var(--tx3)">${u.user_id}</div></div>
+      <div style="flex:1;min-width:150px">
+        <div style="font-weight:500;font-size:13px">${esc(u.full_name||'—')}${u.is_disabled?` <span class="role-tag" style="background:#8a3b3b;color:#fff;font-size:9px;padding:1px 6px">${_uEn?'Disabled':'معطّل'}</span>`:''}</div>
+        <div style="font-size:10.5px;color:var(--tx3)" dir="ltr">${_ident(u)}</div>
+      </div>
       <span class="role-tag ${u.role}">${ROLES[u.role]||u.role}</span>
       ${u.user_id!==CU?.id?`<select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)">
         <option value="viewer" ${u.role==='viewer'?'selected':''}>عارض</option>
         <option value="reservation" ${u.role==='reservation'?'selected':''}>مدير الحجوزات</option>
         <option value="admin" ${u.role==='admin'?'selected':''}>مدير</option>
-      </select>`:'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
+      </select>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${_ab(`window.adminUserReset('${u.user_id}','${(u.email||u.phone||'').replace(/'/g,"\\'")}')`,'ti-key',_uEn?'Reset password':'إعادة تعيين كلمة المرور')}
+        ${_ab(`window.adminUserForce('${u.user_id}')`,'ti-lock-exclamation',_uEn?'Force password change':'فرض تغيير كلمة المرور')}
+        ${_ab(`window.adminUserUnlock('${u.user_id}')`,'ti-lock-open',_uEn?'Unlock account':'فكّ قفل الحساب')}
+        ${u.is_disabled
+          ?_ab(`window.adminUserDisable('${u.user_id}',false)`,'ti-user-check',_uEn?'Enable user':'تفعيل المستخدم')
+          :_ab(`window.adminUserDisable('${u.user_id}',true)`,'ti-user-off',_uEn?'Disable user':'تعطيل المستخدم')}
+      </div>`:'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
     </div>`).join('');
 }
 window.changeRole=async(uid,role)=>{
