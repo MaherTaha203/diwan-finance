@@ -13,11 +13,12 @@ and is **owner‑ratified at merge**. The process was adopted by ADR‑GOV‑01.
 | **ADR‑001** | Approval Workflow — Architecture Readiness (design only, inert) | Accepted (not activated) | STR‑001 F‑03 (V1.2) |
 | **ADR‑002** | Liquidity Guard — Architecture Readiness (design only, inert) | Accepted (not enforced) | STR‑001 F‑04 (V1.2) |
 
+| **ADR‑003** | MODEL2 Activation & Explicit Stored Allocation (order Current→Historical→Future→Credit) | **Accepted & FROZEN** (OD‑01) | V2.0 · F‑05 |
+
 ## Planned (from STR‑001 §14 · Future ADR Candidates — recorded when their phase begins)
 
 | ADR | Decision to record | Phase |
 |---|---|---|
-| ADR‑003 | MODEL2 activation strategy (flagged, staged, reversible) | V2.0 · F‑05 |
 | ADR‑004 | Historical‑deficit settlement policy | V2.0 · F‑06 |
 | ADR‑005 | Refund semantics & linkage | V2.0 · F‑07 |
 | ADR‑006 | Cash‑location foundation | Deferred · F‑09 |
