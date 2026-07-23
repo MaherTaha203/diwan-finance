@@ -24,7 +24,6 @@ eq(FIN2.cashDonationRegister().length,0,'unclassified -> empty cash register');
 /* 2) classified rows exercise the full model */
 global.DB.receipts=[
   {id:'r1',no:'C1',amount_ils:100,is_deleted:false,movement_type:'historical_debt_collection',destination_treasury:'historical_deficit'},
-  {id:'r2',no:'S1',amount_ils:40, is_deleted:false,movement_type:'historical_deficit_settlement',destination_treasury:'historical_deficit'},
   {id:'r3',no:'D1',amount_ils:200,is_deleted:false,movement_type:'donation_cash',destination_treasury:'food',payer_name:'donor'},
   {id:'r4',no:'D2',amount_ils:70, is_deleted:false,movement_type:'donation_cash',destination_treasury:'diwan'},
   {id:'r5',no:'K1',amount_ils:500,is_deleted:false,movement_type:'donation_inkind',destination_treasury:null},
@@ -34,14 +33,14 @@ global.DB.payments=[{id:'p6',no:'E1',amount_ils:30,is_deleted:false,movement_typ
 eq(FIN2.isClassified(),true,'classified -> isClassified=true');
 eq(FIN2.foodTreasury(),320,'food = 200 -30 +150 = 320');
 eq(FIN2.diwanTreasury(),70,'diwan = 70');
-eq(FIN2.historicalDeficitTreasury(),-90,'deficit = +100 -40 -150 = -90');
-eq(FIN2.deficitSettlementTotal(),40,'settlement total = 40 (cash OUT)');
+eq(FIN2.historicalDeficitTreasury(),-50,'deficit = +100 -150 = -50 (no settlement outflow · CA-004 R1)');
+eq(FIN2.historicalFundingTotal(),100,'total historical funding = 100 (collection C1) · CA-004 R1');
 eq(FIN2.cashDonationRegister().length,2,'cash register = 2 donations');
 /* ق3: a classified donation_inkind voucher appears in the In-Kind register with
    its documentation value, while contributing ZERO cash to any treasury. */
 eq(FIN2.inkindRegister().length,1,'classified donation_inkind listed in the in-kind register');
 eq(FIN2.inkindRegister()[0].estimated_value,500,'in-kind register carries the documentation value');
-eq(FIN2.foodTreasury()+FIN2.diwanTreasury()+FIN2.historicalDeficitTreasury(),300,'total classified cash = 300 (in-kind excluded)');
+eq(FIN2.foodTreasury()+FIN2.diwanTreasury()+FIN2.historicalDeficitTreasury(),340,'total classified cash = 320+70-50 = 340 (in-kind excluded)');
 
 /* 3) overflow rule + 4) allocation order */
 eq(FIN2.overflowDue(500,800),300,'overflow 800 vs rem 500 -> 300');

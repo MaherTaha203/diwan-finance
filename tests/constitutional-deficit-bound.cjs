@@ -23,9 +23,16 @@
    routes the entire excess to overflow_to_food with value conserved. It fails
    loudly if the `Math.min(0, rem)` clamp is ever weakened or removed.
 
-   If a settlement-creation operation is introduced in a future phase, an
-   operation-level Detect -> Reject guard is to be added THEN (no server-side
-   aggregate re-derivation) — see the V5 ruling.
+   CA-004 R1 (2026-07-23): the internal `historical_deficit_settlement` OUTFLOW
+   was RETIRED — the software only records historical-deficit funding; external
+   settlements are intentionally outside the accounting model, so no settlement-
+   creation operation will ever exist. The Historical Deficit Treasury represents
+   the total funding accumulated inside the software; payments to historical
+   creditors are performed outside it and are intentionally not reflected in this
+   balance (the reported balance is accumulated constitutional funding recorded by
+   the system, not the external cash position after manual settlements). This proof
+   — which drives funding inflows across the boundary — is therefore the complete and
+   permanent Law-9 bound; the earlier "if a settlement op is introduced" note is moot.
 
    Run:  node tests/constitutional-deficit-bound.cjs
    Exit 0 = invariant holds at every swept point · non-zero = a violation.

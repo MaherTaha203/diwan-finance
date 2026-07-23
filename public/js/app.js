@@ -586,14 +586,13 @@ function renderTreasuryPanel(){
        is identical to the legacy FinContract.foodDeficitRemaining() figure. */
     const op=Number((window.TREASURY_OPENINGS||{}).historical_deficit||0);
     const comp=FIN2.composed();
-    const inflow=FIN2.deficitInflows();            /* gross: collections + directed donations */
-    const settled=FIN2.deficitSettlementTotal();
+    const funding=FIN2.historicalFundingTotal();   /* CA-004 R1 — Total Historical Funding (collections + directed donations + ق5) */
     total=comp.historical_deficit_remaining; neg=total<0;
     cap='المتبقّي من العجز التاريخي';
-    rule='القاعدة: العجز الأصلي + تحصيل الذمم والتبرعات الموجَّهة وتسويات الذمم من التبرعات (ق5) − تسويات العجز · عند بلوغ الصفر يتحوّل الفائض لخزينة الغداء';
+    rule='القاعدة: العجز الأصلي + التمويل التاريخي (تحصيل الذمم والتبرعات الموجَّهة وتسويات الذمم من التبرعات ق5) · عند بلوغ الصفر يتحوّل الفائض لخزينة الغداء · التسويات للدائنين تتمّ خارج النظام (CA-004 R1)';
     middle=`<div class="tp-flow">
       <div class="nd prev"><div class="t">العجز الأصلي (الافتتاحي)</div><div class="v neg">₪ ${fmt(op)}</div><div class="s">قبل 2025</div></div>
-      <div class="ar"><div class="op up">+ تحصيل وتبرعات موجَّهة وتسويات ذمم ₪ ${fmt(inflow)}</div><div class="ln"></div><div class="op dn">− تسويات العجز ₪ ${fmt(settled)}${comp.overflow_to_food>0?` · فائض محوَّل للغداء ₪ ${fmt(comp.overflow_to_food)}`:''}</div></div>
+      <div class="ar"><div class="op up">+ إجمالي التمويل التاريخي ₪ ${fmt(funding)}</div><div class="ln"></div>${comp.overflow_to_food>0?`<div class="op dn">فائض محوَّل للغداء ₪ ${fmt(comp.overflow_to_food)}</div>`:''}</div>
       <div class="nd cur"><div class="t">المتبقّي من العجز</div><div class="v${neg?' neg':''}">₪ ${fmt(total)}</div><div class="s">محسوب تلقائياً</div></div>
     </div>`;
     /* قيود العجز — كل مبلغٍ دخل العجز يُقيَّد كملاحظةٍ مرئيّة برقم سند القبض (عرض
