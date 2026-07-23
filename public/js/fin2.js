@@ -134,11 +134,16 @@
     },
 
     /* ---- Historical Deficit FUNDING (CA-004 R1) ----
-       The internal `historical_deficit_settlement` OUTFLOW was retired: payments to
-       historical creditors happen outside the software. The deficit treasury is an
-       INFORMATIONAL treasury that accumulates funding only. "Total Historical Funding"
-       is the amount the Allocation Engine has moved into the deficit treasury —
-       collections + directed donations + ق5 debt-settled slices (== deficitInflows). */
+       The internal `historical_deficit_settlement` OUTFLOW was retired: the software
+       only records historical-deficit funding; external settlements are intentionally
+       outside the accounting model. The Historical Deficit Treasury represents the
+       total funding accumulated INSIDE the software; payments to historical creditors
+       are performed outside it and are intentionally not reflected in this balance —
+       so the reported balance is accumulated constitutional funding recorded by the
+       system, not the external cash position after manual settlements. "Total
+       Historical Funding" is the amount the Allocation Engine has moved into the
+       deficit treasury — collections + directed donations + ق5 debt-settled slices
+       (== deficitInflows). */
     historicalFundingTotal(){ return FIN2.deficitInflows(); },
     historicalFunding(){ return FIN2.deficitEntries(); },
 

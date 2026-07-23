@@ -61,9 +61,11 @@
     subscription_payment:        {key:'subscription_payment',        label_ar:'دفعة اشتراك',            treasury:'food',               cash:true},
     historical_debt_collection:  {key:'historical_debt_collection',  label_ar:'تحصيل ذمة تاريخية',       treasury:'historical_deficit', cash:true},
     /* CA-004 R1 — the internal `historical_deficit_settlement` outflow was RETIRED.
-       Payments to historical creditors occur entirely OUTSIDE the software, which
-       records no settlement transaction, treasury outflow, voucher, or movement for
-       them. The deficit treasury is informational and accumulates funding only. */
+       The software only records historical-deficit FUNDING; external settlements are
+       intentionally outside the accounting model. Payments to historical creditors
+       are performed outside the software and record no settlement transaction,
+       treasury outflow, voucher, or movement — they are intentionally not reflected
+       in this balance. */
     donation_cash:               {key:'donation_cash',               label_ar:'تبرع نقدي',              treasury:'ADMIN_SELECTED',     cash:true, register:'cash_donation'},
     /* FA-01 (Financial Events Catalog) — per-destination primary donation/income events.
        All Reserved (forward-only; no existing voucher carries them; zero numeric impact).
