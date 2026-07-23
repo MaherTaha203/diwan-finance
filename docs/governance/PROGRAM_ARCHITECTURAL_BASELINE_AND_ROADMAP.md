@@ -89,7 +89,8 @@ Wave 1 read‑only activation was operationally validated by a single supervised
 | STR‑001 | Strategic Roadmap Constitution | **STR‑001** (governs post‑V1 execution order) | `de704a7` |
 | V1.1 · F‑01 | Governance v1.6 → delivered as **ADR‑GOV‑01** (Observability already first‑class in GOV‑WS‑01 v1.5 §2.6; no version bump); ADR register opened | ADR‑GOV‑01 | *(this phase)* |
 | V1.1 · F‑02 | Legacy suites quarantined (unrecoverable `roundtrip-seed.json`) — graceful skip + `tests/LEGACY_SUITES.md`; resolves R‑1/TD‑1/TD‑2 | LEGACY_SUITES.md | `4387d79` |
-| V1.2 · F‑03/F‑04 | **Architecture Readiness** (owner scope amendment): ADR‑001 Approval + ADR‑002 Liquidity Guard — **design only, inert; zero code; behaves exactly as V1.1**. Activation deferred to V2 (owner business policy + Constitutional Review) | ADR‑001 · ADR‑002 | *(this phase)* |
+| V1.2 · F‑03/F‑04 | **Architecture Readiness** (owner scope amendment): ADR‑001 Approval + ADR‑002 Liquidity Guard — **design only, inert; zero code; behaves exactly as V1.1**. Activation deferred to V2 (owner business policy + Constitutional Review) | ADR‑001 · ADR‑002 | `17f651e` |
+| V2.0‑DIS | **MODEL2 Constitutional Discovery** — discovery only; 8 sections, edge‑case register; **7 open owner decisions (OD‑01…OD‑07)** formulated (10‑part). Readiness certificates PENDING owner decisions. No code. | V2.0‑DIS_MODEL2_CONSTITUTIONAL_DISCOVERY | *(this phase)* |
 
 ## 3 · Governance Status
 
