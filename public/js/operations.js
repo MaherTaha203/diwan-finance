@@ -63,7 +63,11 @@
       preconditions: ['administrator', 'member exists'], lifecycle: 'member → deactivated (audited)', laws: [3, 5, 6] },
     'BO-10': { id: 'BO-10', name: 'Apply Annual Dues', authority: 'admin',
       preconditions: ['administrator', 'valid year+amount', 'obligation-only (no paid amount)'],
-      lifecycle: 'generate one obligation row per eligible member', laws: [3] }
+      lifecycle: 'generate one obligation row per eligible member', laws: [3] },
+    'BO-11': { id: 'BO-11', name: 'Refund Receipt', authority: 'admin',
+      preconditions: ['MODEL2 V2.0 activated', 'administrator', 'origin receipt eligible (reversible · no irreversible consequences)', 'origin period not locked', 'amount>0', 'amount ≤ remaining refundable', 'reason present'],
+      engine: 'RefundEngine.computeRefund (pure · CA-005) — full/partial · currency-preserving · funds from Origin Treasury',
+      lifecycle: '(none) → NEW refund payment ACTIVE(v1) linked to the origin receipt (a first-class movement, NOT a cancellation)', laws: [1, 5, 6, 8, 10, 11] }
   };
 
   /* ── BO-01 · Create Voucher ──────────────────────────────────────────────
@@ -262,7 +266,41 @@
     return { ok: true, data: { annual_id: (adNew && adNew.id) || null } };
   }
 
-  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues };
+  /* ── BO-11 · Refund Receipt (CA-005 · first-class movement, NOT a cancellation) ──
+     Records a NEW refund payment (outflow) linked to an origin receipt, funded from the
+     ORIGIN treasury (Law 8), full or partial and currency-preserving (Law 10), leaving the
+     origin receipt untouched (Law 5). All money math + eligibility live in the pure
+     RefundEngine (CA-005); this layer self-guards on the MODEL2 V2.0 activation flag, checks
+     authority + locked period (Law 11) + reason, then does the certified write + audit.
+     While the flag is OFF (default) it returns E_DISABLED and creates nothing — and no live
+     UI path calls it yet, so behaviour is byte-identical until Slice 7 activation. */
+  async function refundReceipt({ originId, amountILS, reason, logLabel } = {}) {
+    var RE = (typeof window !== 'undefined' && window.RefundEngine) || (typeof RefundEngine !== 'undefined' ? RefundEngine : null);
+    if (!(typeof window !== 'undefined' && window.MODEL2_ALLOCATION_ENABLED)) return fail('E_DISABLED', 'الاسترداد غير مُفعَّل (MODEL2 V2.0)');
+    if (!RE) return fail('E_ENGINE', 'محرّك الاسترداد غير متوفّر');
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب الاسترداد إلزامي');
+    const origin = (typeof DB !== 'undefined' && DB.receipts || []).find(x => x.id === originId);
+    if (!origin || origin.is_deleted) return fail('E_STATE', 'السند الأصلي غير موجود أو غير نشط');
+    const prior = RE.refundedTotal(originId, (typeof DB !== 'undefined' && DB.payments) || []);
+    const locked = isLocked(origin.receipt_date);
+    const res = RE.computeRefund({ origin, amountILS, priorRefundedILS: prior, locked });
+    if (!res.ok) return fail(res.code, res.error);
+
+    const payload = Object.assign({}, res.row, {
+      payment_date: (new Date()).toISOString().slice(0, 10),
+      fund_type: origin.fund_type || null,
+      notes: String(reason).trim(),
+      no: nextNo('PAY', (typeof DB !== 'undefined' && DB.payments) || []),   /* Law 12 — unique identity */
+      verification_token: genVerificationToken(), created_by: editor()
+    });
+    const { data, error } = await SB.from('payments').insert(payload).select().single();
+    if (error) return fail('E_WRITE', error.message);
+    try { await logAction('add', logLabel || ('استرداد سند ' + (origin.no || originId) + ' · ' + res.row.amount_ils), 'payments', data && data.id); } catch (_) {}
+    return { ok: true, data, no: payload.no, isFull: res.isFull, remainingAfter: res.remainingAfter };
+  }
+
+  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt };
   if (typeof window !== 'undefined') window.BusinessOps = BusinessOps;
   if (typeof module !== 'undefined' && module.exports) module.exports = BusinessOps;
 })();
