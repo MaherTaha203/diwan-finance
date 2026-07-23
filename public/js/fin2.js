@@ -133,13 +133,14 @@
       return table.concat(legacy);
     },
 
-    /* ---- deficit settlement events (cash OUT of the deficit treasury) ---- */
-    deficitSettlements(){
-      return classifiedRows().filter(r=>r.movement_type==='historical_deficit_settlement');
-    },
-    deficitSettlementTotal(){
-      return R2(FIN2.deficitSettlements().reduce((s,r)=>s+amountOf(r),0));
-    },
+    /* ---- Historical Deficit FUNDING (CA-004 R1) ----
+       The internal `historical_deficit_settlement` OUTFLOW was retired: payments to
+       historical creditors happen outside the software. The deficit treasury is an
+       INFORMATIONAL treasury that accumulates funding only. "Total Historical Funding"
+       is the amount the Allocation Engine has moved into the deficit treasury —
+       collections + directed donations + ق5 debt-settled slices (== deficitInflows). */
+    historicalFundingTotal(){ return FIN2.deficitInflows(); },
+    historicalFunding(){ return FIN2.deficitEntries(); },
 
     /* ---- ق5 transfers as EXPLICIT classified accounting events (V6 · Law 4) ----
        Each member food-display donation whose debt-settled slice > 0 IS a first-class

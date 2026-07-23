@@ -31,10 +31,11 @@
     historical_deficit: {
       key:'historical_deficit', kind:'cash',
       label_ar:'خزينة العجز التاريخي', label_en:'Historical Deficit Treasury',
-      contains:['historical_debt_collection','deficit_directed_donation','historical_deficit_settlement'],
+      contains:['historical_debt_collection','deficit_directed_donation'],   /* funding-only (CA-004 R1) */
       purpose:'تقليص العجز التاريخي فقط',
+      informational:true,   /* CA-004 R1 — accumulates Historical Deficit FUNDING; no internal outflow */
       overflow_to:'food',   /* when remaining deficit reaches zero, extra money moves to Food */
-      note:'تحصيل الذمم التاريخية + التبرعات الموجَّهة للعجز − تسويات العجز؛ الفائض ↦ الغداء'
+      note:'تمويل العجز التاريخي: تحصيل الذمم + التبرعات الموجَّهة للعجز؛ الفائض ↦ الغداء (لا تُسجَّل تسويات — تتم خارج النظام)'
     }
   };
 
@@ -59,10 +60,10 @@
   const EVENTS = {
     subscription_payment:        {key:'subscription_payment',        label_ar:'دفعة اشتراك',            treasury:'food',               cash:true},
     historical_debt_collection:  {key:'historical_debt_collection',  label_ar:'تحصيل ذمة تاريخية',       treasury:'historical_deficit', cash:true},
-    /* NOT an operational expense — documents settlement/delivery to beneficiaries.
-       Cash OUT of the deficit treasury (pays historical creditors); decreases the
-       remaining deficit. `outflow:true` per the EVENTS cash-direction convention. */
-    historical_deficit_settlement:{key:'historical_deficit_settlement',label_ar:'تسوية عجز تاريخي',      treasury:'historical_deficit', cash:true, outflow:true, decreases_deficit:true, operational_expense:false},
+    /* CA-004 R1 — the internal `historical_deficit_settlement` outflow was RETIRED.
+       Payments to historical creditors occur entirely OUTSIDE the software, which
+       records no settlement transaction, treasury outflow, voucher, or movement for
+       them. The deficit treasury is informational and accumulates funding only. */
     donation_cash:               {key:'donation_cash',               label_ar:'تبرع نقدي',              treasury:'ADMIN_SELECTED',     cash:true, register:'cash_donation'},
     /* FA-01 (Financial Events Catalog) — per-destination primary donation/income events.
        All Reserved (forward-only; no existing voucher carries them; zero numeric impact).
