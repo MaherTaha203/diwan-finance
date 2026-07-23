@@ -265,35 +265,9 @@ async function submit(ui,locked){
   }
 }
 
-/* ── Invite helper: generate + fill a compliant temp password ── */
-window.genInvitePass=function(){
-  var inp=document.getElementById('inv-pass'); if(!inp) return;
-  inp.value=genPassword(16);
-  inp.dispatchEvent(new Event('input'));
-  try{ navigator.clipboard&&navigator.clipboard.writeText(inp.value); }catch(_){}
-  if(typeof toast==='function') toast(T('تم توليد كلمة مرورٍ قوية ونسخها','Strong password generated & copied'),'ok');
-};
-
-/* Public API (also used by reset-password.html) */
+/* Public API — consumed by reset-password.html and by the PR-5 Create-User modal
+   (user-admin.js reuses attachPolicyUI + genPassword for the manual-password block). */
 window.AuthDS={ checkPassword:checkPassword, attachPolicyUI:attachPolicyUI,
   fingerprint:fingerprint, genPassword:genPassword, bindEyes:bindEyes,
   isLocked:function(){ return LOCKED; } };
-
-/* Wire the invite modal's live temp-password policy (static markup in index.html) */
-function wireInvite(){
-  var inp=document.getElementById('inv-pass'); if(!inp||inp.__pwWired) return;
-  inp.__pwWired=true;
-  attachPolicyUI({
-    newInput:inp,
-    meterBar:document.getElementById('inv-bar'),
-    meterLvl:document.getElementById('inv-lvl'),
-    noteEl:document.getElementById('inv-note'),
-    ctx:function(){ return {
-      email:(document.getElementById('inv-email')||{}).value||'',
-      username:(document.getElementById('inv-name')||{}).value||'' }; },
-    extraInputs:[document.getElementById('inv-email'),document.getElementById('inv-name')].filter(Boolean)
-  });
-}
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wireInvite);
-else wireInvite();
 })();

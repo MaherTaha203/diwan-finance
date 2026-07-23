@@ -650,7 +650,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-history"></i><span data-i18n="annual.history">سجل الاشتراكات المطبقة</span></div><div id="annual-list"></div></div>
   </div>
   <div class="pg" id="pg-users">
-    <div class="ph"><div><div class="ph-t">إدارة المستخدمين</div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-users')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-users"><button class="export-dropdown-item" onclick="window.exportPageExcel('users')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('users')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><button class="btn sm primary" onclick="window.openM('invite')"><i class="ti ti-user-plus"></i>دعوة مستخدم</button></div></div>
+    <div class="ph"><div><div class="ph-t">إدارة المستخدمين</div></div><div class="ph-a"><div class="export-dropdown"><button class="btn sm" onclick="togglePageExport(event,'exp-users')"><i class="ti ti-download"></i>تصدير ▼</button><div class="export-dropdown-menu" id="exp-users"><button class="export-dropdown-item" onclick="window.exportPageExcel('users')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item" onclick="window.exportPagePDF('users')"><i class="ti ti-file-type-pdf"></i>PDF</button></div></div><button class="btn sm primary" onclick="window.openCreateUser()"><i class="ti ti-user-plus"></i>إنشاء مستخدم</button></div></div>
     <div class="card"><div id="users-list"></div></div>
   </div>
   <div class="pg lx" id="pg-audit">
@@ -936,11 +936,29 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="mft"><button class="btn" onclick="window.closeM()">إلغاء</button><button class="btn primary" onclick="window.doReclassify()">اعتماد إعادة التصنيف</button></div>
   </div>
 
-  <!-- Invite User -->
-  <div class="modal" id="m-invite" style="display:none;max-width:420px">
-    <div class="mhd"><span class="mtt"><span class="mico don"><i class="ti ti-send"></i></span>دعوة مستخدم جديد</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل</label><input type="text" id="inv-name" placeholder="اسم المستخدم"></div><div class="fi full"><label>البريد الإلكتروني <span class="req">*</span></label><input type="email" id="inv-email"></div><div class="fi full"><label>كلمة المرور المؤقتة <span class="req">*</span></label><div class="inv-pass-row"><div class="auth-field"><input type="text" id="inv-pass" dir="ltr" autocomplete="off" placeholder="10+ أحرف · نوعان على الأقل"></div><button type="button" class="gen" onclick="window.genInvitePass()" title="توليد كلمة مرور قوية ونسخها"><i class="ti ti-refresh"></i>توليد</button></div><p class="pw-note" id="inv-note" aria-live="polite"></p><div class="pw-meter" style="margin-top:8px"><div class="pw-meter-track"><i id="inv-bar"></i></div><span class="pw-meter-lvl" id="inv-lvl">—</span></div></div><div class="fi full"><label>الدور</label><select id="inv-role"><option value="viewer">عارض — عرض فقط</option><option value="reservation">مدير الحجوزات — التقويم فقط</option><option value="admin">مدير — كامل الصلاحيات</option></select></div></div></div>
-    <div class="mft"><button class="btn primary" id="inv-submit" onclick="window.inviteUser()"><i class="ti ti-send"></i>إنشاء الحساب</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  <!-- Create User (AUTH-001 PR-5) — routes through the admin-users Edge Function -->
+  <div class="modal" id="m-invite" style="display:none;max-width:460px">
+    <div class="mhd"><span class="mtt"><span class="mico don"><i class="ti ti-user-plus"></i></span><span class="modal-title-text">إنشاء مستخدم جديد</span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div class="fg">
+      <div class="fi full"><label for="cu-name">الاسم الكامل</label><input type="text" id="cu-name" placeholder="اسم المستخدم"></div>
+      <div class="fi full"><label for="cu-role">الدور</label><select id="cu-role"><option value="viewer">عارض — عرض فقط</option><option value="reservation">مدير الحجوزات — التقويم فقط</option><option value="admin">مدير — كامل الصلاحيات</option></select></div>
+      <div class="fi full"><label for="cu-phone">رقم الهاتف</label><input type="tel" id="cu-phone" dir="ltr" autocomplete="off" placeholder="05XXXXXXXX"></div>
+      <div class="fi full"><label for="cu-email">البريد الإلكتروني</label><input type="email" id="cu-email" dir="ltr" autocomplete="off" placeholder="name@example.com"></div>
+      <div class="fi full"><p id="cu-idhint" style="font-size:11.5px;color:var(--tx3);margin:-4px 0 2px"><i class="ti ti-info-circle"></i> أدخل الهاتف أو البريد الإلكتروني (أحدهما على الأقل).</p></div>
+      <div class="fi full"><label>كلمة المرور المؤقتة</label>
+        <div class="cu-modes" style="display:flex;gap:18px;margin:2px 0 4px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600"><input type="radio" name="cu-mode" value="auto" checked>توليد تلقائي</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600"><input type="radio" name="cu-mode" value="manual">إدخال يدوي</label>
+        </div>
+      </div>
+      <div class="fi full" id="cu-manual-block" style="display:none">
+        <div class="inv-pass-row"><div class="auth-field"><input type="text" id="cu-pass" dir="ltr" autocomplete="new-password" placeholder="10+ أحرف · نوعان على الأقل"></div><button type="button" class="gen" onclick="window.genCreatePass()" title="توليد كلمة مرور قوية"><i class="ti ti-refresh"></i>توليد</button></div>
+        <p class="pw-note" id="cu-note" aria-live="polite"></p>
+        <div class="pw-meter" style="margin-top:8px"><div class="pw-meter-track"><i id="cu-bar"></i></div><span class="pw-meter-lvl" id="cu-lvl">—</span></div>
+      </div>
+      <div class="fi full"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600"><input type="checkbox" id="cu-force" checked>فرض تغيير كلمة المرور عند أول تسجيل دخول</label></div>
+    </div></div>
+    <div class="mft"><button class="btn primary" id="cu-submit" onclick="window.createUser()"><i class="ti ti-user-plus"></i>إنشاء المستخدم</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
   </div>
 
   <!-- Person vouchers card (external contact / manual payer) -->
@@ -1128,7 +1146,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/ui-infra.js?v=2.1"></script>
 <script defer src="/js/data.js?v=2.2"></script>
 <script defer src="/js/auth.js?v=2.1"></script>
-<script defer src="/js/auth-password.js?v=1.1"></script>
+<script defer src="/js/auth-password.js?v=1.2"></script>
 <script defer src="/js/forms.js?v=2.1"></script>
 <script defer src="/js/allocation-engine.js?v=2.1"></script>
 <script defer src="/js/allocation-integration.js?v=2.0"></script>
@@ -1145,7 +1163,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/print.js?v=2.1"></script>
 <script defer src="/js/reports.js?v=2.1"></script>
 <script defer src="/js/app.js?v=2.2"></script>
-<script defer src="/js/user-admin.js?v=1.0"></script>
+<script defer src="/js/user-admin.js?v=1.1"></script>
 <script defer src="/js/sidebar.js?v=1.0"></script>
 <script defer src="/js/floating-labels.js?v=1.0"></script>
 </body>

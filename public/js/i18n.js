@@ -232,7 +232,7 @@ const translations = {
       save_short:'حفظ',
     },
     users: {
-      title:'إدارة المستخدمين', invite:'دعوة مستخدم',
+      title:'إدارة المستخدمين', invite:'إنشاء مستخدم',
       full_name:'الاسم الكامل', email:'البريد الإلكتروني',
       temp_pass:'كلمة المرور المؤقتة', role:'الدور',
       admin:'مدير — كامل الصلاحيات',
@@ -580,7 +580,7 @@ const translations = {
       save_short:'Save',
     },
     users: {
-      title:'User Management', invite:'Invite User',
+      title:'User Management', invite:'Create User',
       full_name:'Full Name', email:'Email Address',
       temp_pass:'Temporary Password', role:'Role',
       admin:'Admin — Full access',
@@ -1158,13 +1158,12 @@ window.applyLang = function() {
   const msSel = document.querySelector('label[for="ms-member"]');
   if (msSel) msSel.textContent = window.t('nav.members');
 
-  // Invite user modal
+  // Create user modal (AUTH-001 PR-5)
   qTxt('#m-invite .modal-title-text', window.t('users.invite'));
-  qTxt('label[for="inv-name"]',  window.t('users.full_name'));
-  qTxt('label[for="inv-email"]', window.t('users.email'));
-  qTxt('label[for="inv-pass"]',  window.t('users.temp_pass'));
-  qTxt('label[for="inv-role"]',  window.t('users.role'));
-  const invRoleSel = document.getElementById('inv-role');
+  qTxt('label[for="cu-name"]',  window.t('users.full_name'));
+  qTxt('label[for="cu-email"]', window.t('users.email'));
+  qTxt('label[for="cu-role"]',  window.t('users.role'));
+  const invRoleSel = document.getElementById('cu-role');
   if (invRoleSel) {
     const opts = invRoleSel.options;
     if (opts[0]) opts[0].text = window.t('users.viewer');

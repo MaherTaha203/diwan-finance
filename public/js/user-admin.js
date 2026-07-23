@@ -64,6 +64,106 @@
     if (typeof loadUsers === 'function') loadUsers();
   };
 
+  /* ═══ Create-User workflow (PR-5) ═══
+     Owner-approved screen: Full Name · Role · Phone · Email · password mode
+     (auto default / manual) · force-change (default on). At least one of phone/email
+     is required. Creation is performed by the admin-users Edge Function (service_role);
+     on success the one-time credentials dialog reveals the temporary password once. */
+  function $(id) { return document.getElementById(id); }
+
+  window.genCreatePass = function () {
+    var inp = $('cu-pass'); if (!inp || !window.AuthDS) return;
+    inp.value = window.AuthDS.genPassword(16);
+    inp.dispatchEvent(new Event('input'));
+  };
+
+  /* Show/hide the manual-password block and (lazily) wire its live policy UI. */
+  var _cuPolicyWired = false;
+  function cuSyncMode() {
+    var manual = (document.querySelector('input[name="cu-mode"]:checked') || {}).value === 'manual';
+    var block = $('cu-manual-block'); if (block) block.style.display = manual ? '' : 'none';
+    if (manual && !_cuPolicyWired && window.AuthDS) {
+      _cuPolicyWired = true;
+      window.AuthDS.attachPolicyUI({
+        newInput: $('cu-pass'), meterBar: $('cu-bar'), meterLvl: $('cu-lvl'), noteEl: $('cu-note'),
+        ctx: function () { return { email: ($('cu-email') || {}).value || '', username: ($('cu-name') || {}).value || '' }; },
+        extraInputs: [$('cu-email'), $('cu-name')].filter(Boolean),
+      });
+    }
+  }
+
+  /* Open + reset the Create-User modal fresh each time. */
+  window.openCreateUser = function () {
+    if (!can.admin()) { toast(window.t ? window.t('errors.no_permission') : 'المدير فقط', 'err'); return; }
+    if (typeof window.openM === 'function') window.openM('invite');
+    ['cu-name', 'cu-phone', 'cu-email', 'cu-pass'].forEach(function (id) { var el = $(id); if (el) el.value = ''; });
+    var role = $('cu-role'); if (role) role.value = 'viewer';
+    var auto = document.querySelector('input[name="cu-mode"][value="auto"]'); if (auto) auto.checked = true;
+    var force = $('cu-force'); if (force) force.checked = true;
+    if ($('cu-note')) { $('cu-note').textContent = ''; $('cu-note').className = 'pw-note'; }
+    if ($('cu-bar')) { $('cu-bar').className = ''; $('cu-bar').style.width = '0'; }
+    if ($('cu-lvl')) $('cu-lvl').textContent = '—';
+    document.querySelectorAll('input[name="cu-mode"]').forEach(function (r) {
+      if (!r.__cuBound) { r.__cuBound = true; r.addEventListener('change', cuSyncMode); }
+    });
+    cuSyncMode();
+    setTimeout(function () { var n = $('cu-name'); if (n) n.focus(); }, 80);
+  };
+
+  var CREATE_ERR = {
+    identifier_required: L('أدخل الهاتف أو البريد الإلكتروني (أحدهما على الأقل).', 'Enter a phone or email (at least one).'),
+    invalid_email: L('البريد الإلكتروني غير صالح.', 'Invalid email address.'),
+    invalid_role: L('الدور المحدد غير صالح.', 'Invalid role.'),
+    weak_password: L('كلمة المرور لا تحقق السياسة — 10 أحرف على الأقل ونوعان مختلفان.', 'Password does not meet policy — at least 10 characters and two different types.'),
+    'duplicate_identifier · email': L('هذا البريد الإلكتروني مُسجَّل مسبقاً.', 'That email is already registered.'),
+    'duplicate_identifier · phone': L('رقم الهاتف هذا مُسجَّل مسبقاً.', 'That phone number is already registered.'),
+    duplicate_identifier: L('المعرّف مُسجَّل مسبقاً.', 'That identifier is already registered.'),
+    not_admin: L('صلاحيات المدير مطلوبة.', 'Administrator privileges required.'),
+  };
+
+  window.createUser = async function () {
+    if (!can.admin()) { toast(window.t ? window.t('errors.no_permission') : 'المدير فقط', 'err'); return; }
+    var name = ($('cu-name') || {}).value ? $('cu-name').value.trim() : '';
+    var role = ($('cu-role') || {}).value || 'viewer';
+    var phone = ($('cu-phone') || {}).value ? $('cu-phone').value.trim() : '';
+    var email = ($('cu-email') || {}).value ? $('cu-email').value.trim().toLowerCase() : '';
+    var mode = (document.querySelector('input[name="cu-mode"]:checked') || {}).value === 'manual' ? 'manual' : 'auto';
+    var pass = ($('cu-pass') || {}).value || '';
+    var force = !!($('cu-force') && $('cu-force').checked);
+
+    /* Client-side pre-checks (the Edge Function re-validates authoritatively). */
+    if (!phone && !email) { toast(CREATE_ERR.identifier_required, 'warn'); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast(CREATE_ERR.invalid_email, 'err'); return; }
+    if (mode === 'manual') {
+      var pol = window.AuthDS ? window.AuthDS.checkPassword(pass, { email: email, username: name }) : null;
+      if (pol && !pol.valid) { toast(CREATE_ERR.weak_password, 'err'); return; }
+    }
+
+    var btn = $('cu-submit'); if (btn) btn.disabled = true;
+    try {
+      var payload = { action: 'create', full_name: name, role: role, force_change: force, mode: mode };
+      if (phone) payload.phone = phone;
+      if (email) payload.email = email;
+      if (mode === 'manual') payload.password = pass;
+
+      var r = await call(payload);
+      if (!r.ok) {
+        var msg = CREATE_ERR[r.error] || (L('تعذّر إنشاء المستخدم', 'Could not create user') + ': ' + r.error);
+        toast(msg, 'err');
+        return;
+      }
+      if (typeof window.closeM === 'function') window.closeM();
+      var d = r.data || {};
+      /* One-time credentials dialog (identifier + temp password, revealed once). */
+      window.showCredentials({ identifier: d.identifier || email || phone, password: d.password || '', uid: d.user_id || null, kind: 'create' });
+      if (typeof loadUsers === 'function') loadUsers();
+    } catch (e) {
+      toast(L('تعذّر إنشاء المستخدم', 'Could not create user') + ': ' + String((e && e.message) || e), 'err');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  };
+
   /* Reusable ONE-TIME credentials dialog (used by reset here, and by create in PR-5).
      The password is shown once and cannot be retrieved again — only the hash is stored. */
   window.showCredentials = function (o) {
