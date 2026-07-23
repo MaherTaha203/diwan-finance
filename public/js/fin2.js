@@ -98,6 +98,12 @@
           if(key===q5Dest())   bal += q5;
         }
       });
+      /* CA-005 refunds live in the dedicated `refunds` table (not payments): each live
+         refund is an OUTFLOW from its origin treasury (Law 8). Subtract it here so the
+         origin treasury reflects the money leaving. Empty table ⇒ no effect (flag OFF). */
+      ((typeof DB!=='undefined'&&DB.refunds)||[]).forEach(rf=>{
+        if(!rf.is_deleted && rf.destination_treasury===key) bal -= Number(rf.amount_ils||rf.amount||0);
+      });
       return R2(bal);
     },
     foodTreasury(){          return FIN2.treasuryBalance('food'); },
