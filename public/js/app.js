@@ -1456,6 +1456,12 @@ btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   });
   if(!_res.ok){toast(window.t('errors.generic_error')+': '+_res.error,'err');btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';return;}
   await loadAll();
+  /* MODEL2 V2.0 Slice 2 (OD-02) — a new obligation was created; consume each member's existing
+     credit against it in the constitutional order. Flag-guarded: no-op while
+     MODEL2_ALLOCATION_ENABLED is OFF (default) ⇒ behaviour unchanged. Metadata only. */
+  if(window.MODEL2_ALLOCATION_ENABLED && window.MODEL2RecordCreditConsumption){
+    for(const _m of members){ await window.MODEL2RecordCreditConsumption(_m.id); }
+  }
   btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-plus"></i>تطبيق الاشتراك السنوي';
   toast(`✓ ${window.t('messages.annual_applied')} — ${year}`,'ok');
 };
