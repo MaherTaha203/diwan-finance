@@ -16,8 +16,11 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = api;       /* Node/tests */
   if (typeof window !== 'undefined') {                                             /* browser */
     window.MODEL2Allocation = api;
-    /* Feature flag — default OFF. Governs whether the APP uses this engine (Slice 2+). */
-    if (typeof window.MODEL2_ALLOCATION_ENABLED === 'undefined') window.MODEL2_ALLOCATION_ENABLED = false;
+    /* Feature flag — MODEL2 V2.0 ACTIVATED (Slice 8, owner-approved 2026-07-23). Governs
+       whether the APP uses this engine and the flag-gated operations (allocation recording,
+       credit consumption, refund BO-11, write-offs BO-12/13). An explicit prior assignment
+       (e.g. a settings/localStorage override) still wins. */
+    if (typeof window.MODEL2_ALLOCATION_ENABLED === 'undefined') window.MODEL2_ALLOCATION_ENABLED = true;
   }
 })(this, function () {
   'use strict';
