@@ -22,8 +22,8 @@ MODEL2 / business‑logic changes.
 | PR‑1 | Database migration (`login_attempts`, `user_roles` identity/status, backfill) | ✅ merged |
 | PR‑2 | `admin-users` Edge Function + User Management UI | 🚧 code complete · awaiting deploy |
 | PR‑3 | `login-gate` Edge Function + progressive lockout + audit (flagged) | ⏳ |
-| PR‑4 | Password policy + minimal password UI | 🚧 code complete · in PR |
-| PR‑5 | Create‑User workflow + one‑time credentials dialog | ⏳ |
+| PR‑4 | Password policy + minimal password UI | ✅ merged |
+| PR‑5 | Create‑User workflow + one‑time credentials dialog | 🚧 code complete · in PR |
 | PR‑6 | Audit completion + documentation + final verification | ⏳ |
 
 ## PR‑1 — Database migration (merged)
@@ -80,4 +80,31 @@ Function or DB change, so it lands independently of the pending function deploys
 - **`public/reset-password.html`** — same policy note + 3‑tier meter (standalone recovery screen).
 **Local verification:** `node --check` clean (auth-password/app/auth); `auth-core` 39/39;
 Constitutional Laboratory **90/90** (23/23 certified) — app boots with the new policy UI, no
+financial regression.
+
+## PR‑5 — Create‑User workflow + one‑time credentials dialog (routes through admin-users)
+Replaces the legacy client‑side `signUp` create path with the owner‑approved Create‑User screen,
+performed by the **`admin-users`** Edge Function (service_role) so identity, audit and the one‑time
+password are all server‑authoritative.
+- **`public/index.html`** — the User‑Management modal (`#m-invite`) rebuilt to the approved screen:
+  **Full Name · Role · Phone · Email**, a password‑mode radio (**auto** default / **manual**), a
+  manual‑password block (reuses `.pw-note` + 3‑tier meter), and **“force password change on first
+  login”** (default **on**). At least one of phone/email is required. Header button → «إنشاء مستخدم»
+  / `openCreateUser()`. `user-admin.js` bumped `?v=1.0 → 1.1`; `auth-password.js` `1.1 → 1.2`.
+- **`public/js/user-admin.js`** — `openCreateUser` (fresh reset + mode toggle + lazy policy wiring),
+  `createUser` (client pre‑checks → `admin-users` `create` → maps every server error code to a
+  specific bilingual message → **one‑time `showCredentials`** with identifier + temp password →
+  `loadUsers`), and `genCreatePass` (via `AuthDS.genPassword`).
+- **`public/js/app.js`** — legacy `inviteUser` (isolated `signUp` + role upsert) retired; kept as a
+  thin alias to `createUser` so older callers and the security seal still resolve.
+- **`public/js/auth-password.js`** — removed the now‑dead `genInvitePass` + `wireInvite` (their
+  `inv-*` markup is gone); `AuthDS` (checkPassword/attachPolicyUI/genPassword) now reused by the
+  Create‑User manual‑password block.
+- **`public/js/i18n.js`** — modal localization retargeted to the `cu-*` ids; `users.invite` →
+  «إنشاء مستخدم» / “Create User”.
+**Deploy dependency:** live creation requires `admin-users` deployed (`supabase functions deploy
+admin-users --project-ref ralifvemgapmsgrjgazh`, Verify JWT ON). If the function is unreachable the
+flow surfaces a clear error rather than silently failing.
+**Local verification:** `node --check` clean (user-admin/app/auth-password/i18n); `auth-core` 39/39;
+Constitutional Laboratory **90/90** (23/23 certified) — app boots with the rebuilt modal, no
 financial regression.
