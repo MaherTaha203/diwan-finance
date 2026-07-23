@@ -20,11 +20,11 @@ MODEL2 / business‑logic changes.
 | PR | Scope | State |
 |---|---|---|
 | PR‑1 | Database migration (`login_attempts`, `user_roles` identity/status, backfill) | ✅ merged |
-| PR‑2 | `admin-users` Edge Function + User Management UI | 🚧 code complete · awaiting deploy |
-| PR‑3 | `login-gate` Edge Function + progressive lockout + audit (flagged) | ⏳ |
-| PR‑4 | Password policy + minimal password UI | ✅ merged |
-| PR‑5 | Create‑User workflow + one‑time credentials dialog | 🚧 code complete · in PR |
-| PR‑6 | Audit completion + documentation + final verification | ⏳ |
+| PR‑2 | `admin-users` Edge Function + User Management UI | ✅ merged (#168) · function deploy owner‑run |
+| PR‑3 | `login-gate` Edge Function + progressive lockout + audit | 🚧 code complete (#169) · awaiting `login-gate` deploy + live‑verify |
+| PR‑4 | Password policy + minimal password UI | ✅ merged (#170) |
+| PR‑5 | Create‑User workflow + one‑time credentials dialog | ✅ merged (#171) |
+| PR‑6 | Audit completion + documentation + final verification | 🚧 code complete · in PR |
 
 ## PR‑1 — Database migration (merged)
 **Migration:** `supabase/migrations/20260723140000_auth001_login_attempts_and_user_identity.sql`
@@ -108,3 +108,31 @@ flow surfaces a clear error rather than silently failing.
 **Local verification:** `node --check` clean (user-admin/app/auth-password/i18n); `auth-core` 39/39;
 Constitutional Laboratory **90/90** (23/23 certified) — app boots with the rebuilt modal, no
 financial regression.
+
+## PR‑6 — Audit vocabulary completion + documentation + final verification
+Closes the audit surface and finalises the roadmap. Client‑only (deploy‑independent).
+- **`public/js/app.js`** — added `AUTH_AUDIT`, a single bilingual map (label + badge colour)
+  for every AUTH‑001 action code written by the Edge Functions and client auth flows:
+  `user_created · user_updated · account_enabled · account_disabled · account_unlocked ·
+  account_locked · password_reset · password_generated · password_change ·
+  force_password_change · credentials_copied · login_success · login_failed`. `auditActionLabel`
+  and the new `auditActionColor` read from it (green = grant/benign, red = block/deny, blue =
+  neutral); the audit grid badge now colours security events correctly. Added a «الأمان والحسابات»
+  optgroup to the audit filter so these events are filterable.
+- Coverage confirmed by enumerating every `audit('…')` (Edge) and `logAction('…')` (client) code —
+  all map entries present, none missing.
+**Local verification:** `node --check` clean; `auth-core` 39/39; Constitutional Laboratory
+**90/90** (23/23 certified).
+
+## Final status
+Authentication redesign is **code‑complete end‑to‑end**. Merged to `main`: PR‑1, PR‑2, PR‑4, PR‑5,
+PR‑6. **Remaining to reach fully‑live:**
+1. **`login-gate` deploy** (`supabase functions deploy login-gate --project-ref
+   ralifvemgapmsgrjgazh`, **Verify JWT OFF**) → then live‑verify the progressive‑lockout ladder
+   (15 → 5m → 15m → 1h → admin) + audit rows, and **merge PR‑3 (#169)**. Until then the client
+   falls back to direct sign‑in, so **login works with no lockout and no regression**.
+2. **`admin-users`** must be live for User Management + Create‑User (owner‑run). The client shows a
+   clear error if it is ever unreachable.
+
+No financial / MODEL2 / business‑logic surface was touched at any point; the Constitutional
+Laboratory held **90/90** on every PR.
