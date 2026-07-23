@@ -86,7 +86,9 @@ Wave 1 read‑only activation was operationally validated by a single supervised
 | FOC (Constitutional Certification Campaign) | Constitutional Laboratory + FOC‑001…025 certified/excluded | **CONSTITUTIONAL‑CERTIFICATION‑REPORT** (23/23 in‑scope · 2 owner‑excluded) | `20026b1` |
 | GOV‑013 | Autonomous Engineering Pipeline — framework | **GOV‑013** (ratified · PR #150) | `b40ec03` |
 | RLS‑001 | V1 Release Candidate Certification & Packaging | **V1_BASELINE_CERTIFICATE** · tag `v1.0.0` | `477a06d` |
-| STR‑001 | Strategic Roadmap Constitution | **STR‑001** (governs post‑V1 execution order) | *(this phase)* |
+| STR‑001 | Strategic Roadmap Constitution | **STR‑001** (governs post‑V1 execution order) | `de704a7` |
+| V1.1 · F‑01 | Governance v1.6 → delivered as **ADR‑GOV‑01** (Observability already first‑class in GOV‑WS‑01 v1.5 §2.6; no version bump); ADR register opened | ADR‑GOV‑01 | *(this phase)* |
+| V1.1 · F‑02 | Legacy suites quarantined (unrecoverable `roundtrip-seed.json`) — graceful skip + `tests/LEGACY_SUITES.md`; resolves R‑1/TD‑1/TD‑2 | LEGACY_SUITES.md | *(this phase)* |
 
 ## 3 · Governance Status
 
