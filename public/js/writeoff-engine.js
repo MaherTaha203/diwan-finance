@@ -50,7 +50,42 @@
     return { ok: true, row: row, amount: debt };
   }
 
-  function isDebtWriteOff(mt) { return mt === 'debt_write_off'; }
+  /* Compute a proposed Credit Write-off (CA-007 · Slice 6). Inputs:
+       member           — the member row (must exist and be permanently departed)
+       outstandingCredit — the member's current outstanding CREDIT (creditBalance, > 0)
+     Member credit is NEVER auto-refunded and must NOT remain a perpetual liability
+     (OD-06/OD-07): on permanent departure it is resolved to zero by this explicit,
+     audited, NON-CASH member-ledger event. Returns {ok:false,...} or {ok:true,row,amount}
+     with a FROZEN proposed credit_write_off record; the member is never mutated (Law 5). */
+  function computeCreditWriteOff(opts) {
+    opts = opts || {};
+    var member = opts.member;
+    var credit = R2(opts.outstandingCredit);
 
-  return { version: 'v2.0-slice5', computeDebtWriteOff: computeDebtWriteOff, isDebtWriteOff: isDebtWriteOff, R2: R2 };
+    if (!member) return { ok: false, code: 'E_INELIGIBLE', error: 'العضو غير موجود' };
+    if (member.is_active !== false) return { ok: false, code: 'E_ACTIVE', error: 'العضو ما زال نشطًا — الشطب يكون عند المغادرة الدائمة أو الوفاة فقط' };
+    if (!(credit > EPS)) return { ok: false, code: 'E_NOCREDIT', error: 'لا يوجد رصيد دائن قابل للشطب' };
+
+    var row = Object.freeze({
+      movement_type: 'credit_write_off',
+      member_id: member.id != null ? member.id : null,
+      payer_name: member.full_name || member.name || null,
+      amount: credit,
+      amount_ils: credit,
+      currency: 'ILS',
+      exchange_rate: 1,
+      destination_treasury: null,           /* NON-CASH — no treasury movement, no refund (Law 8 untouched) */
+      fund_type: 'writeoff',                /* neutral — excluded from food/diwan/donation cash views */
+      is_write_off: true
+    });
+
+    return { ok: true, row: row, amount: credit };
+  }
+
+  function isDebtWriteOff(mt) { return mt === 'debt_write_off'; }
+  function isCreditWriteOff(mt) { return mt === 'credit_write_off'; }
+  function isWriteOff(mt) { return mt === 'debt_write_off' || mt === 'credit_write_off'; }
+
+  return { version: 'v2.0-slice6', computeDebtWriteOff: computeDebtWriteOff, computeCreditWriteOff: computeCreditWriteOff,
+    isDebtWriteOff: isDebtWriteOff, isCreditWriteOff: isCreditWriteOff, isWriteOff: isWriteOff, R2: R2 };
 });

@@ -71,7 +71,11 @@
     'BO-12': { id: 'BO-12', name: 'Debt Write-off', authority: 'admin',
       preconditions: ['MODEL2 V2.0 activated', 'administrator', 'member permanently departed (is_active=false)', 'outstanding debt > 0', 'reason present'],
       engine: 'WriteOffEngine.computeDebtWriteOff (pure · CA-007) — resolves the outstanding receivable to zero; NON-CASH member-ledger event',
-      lifecycle: '(none) → NEW debt_write_off record ACTIVE(v1); member outstanding receivable → 0 (explicit closure, never a silent deletion)', laws: [1, 3, 5, 6] }
+      lifecycle: '(none) → NEW debt_write_off record ACTIVE(v1); member outstanding receivable → 0 (explicit closure, never a silent deletion)', laws: [1, 3, 5, 6] },
+    'BO-13': { id: 'BO-13', name: 'Credit Write-off', authority: 'admin',
+      preconditions: ['MODEL2 V2.0 activated', 'administrator', 'member permanently departed (is_active=false)', 'outstanding credit > 0', 'reason present'],
+      engine: 'WriteOffEngine.computeCreditWriteOff (pure · CA-007) — resolves the outstanding credit to zero; NON-CASH; never refunded (OD-06/OD-07)',
+      lifecycle: '(none) → NEW credit_write_off record ACTIVE(v1); member outstanding credit → 0 (explicit closure, not a refund, never a perpetual liability)', laws: [1, 3, 5, 6] }
   };
 
   /* ── BO-01 · Create Voucher ──────────────────────────────────────────────
@@ -336,7 +340,39 @@
     return { ok: true, data, no: payload.no, amount: res.amount };
   }
 
-  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt, writeOffDebt };
+  /* ── BO-13 · Credit Write-off (CA-007 · member permanent departure/death) ─────
+     Resolves a departed member's OUTSTANDING CREDIT to zero via an explicit, audited,
+     NON-CASH member-ledger record. Member credit is NEVER auto-refunded and must not
+     remain a perpetual liability (OD-06/OD-07) — Law 1/5/6. The outstanding credit is
+     read from the single source (FIN.memberStatement.creditBalance); the pure
+     WriteOffEngine validates (departed · credit>0) and builds the record; this layer
+     self-guards on the MODEL2 V2.0 activation flag, checks authority + reason, then does
+     the certified write + audit. Flag OFF → E_DISABLED and nothing is created. */
+  async function writeOffCredit({ memberId, reason, logLabel } = {}) {
+    var WE = (typeof window !== 'undefined' && window.WriteOffEngine) || (typeof WriteOffEngine !== 'undefined' ? WriteOffEngine : null);
+    if (!(typeof window !== 'undefined' && window.MODEL2_ALLOCATION_ENABLED)) return fail('E_DISABLED', 'شطب الرصيد الدائن غير مُفعَّل (MODEL2 V2.0)');
+    if (!WE) return fail('E_ENGINE', 'محرّك الشطب غير متوفّر');
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب الشطب إلزامي');
+    const member = (typeof DB !== 'undefined' && DB.members || []).find(x => x.id === memberId);
+    if (!member) return fail('E_STATE', 'العضو غير موجود');
+    const credit = (typeof FIN !== 'undefined' && FIN.memberStatement) ? Number(FIN.memberStatement(memberId).creditBalance || 0) : 0;
+    const res = WE.computeCreditWriteOff({ member, outstandingCredit: credit });
+    if (!res.ok) return fail(res.code, res.error);
+
+    const payload = Object.assign({}, res.row, {
+      receipt_date: (new Date()).toISOString().slice(0, 10),
+      notes: String(reason).trim(),
+      no: nextNo('CWO', (typeof DB !== 'undefined' && DB.receipts) || []),   /* Law 12 — unique identity */
+      verification_token: genVerificationToken(), created_by: editor()
+    });
+    const { data, error } = await SB.from('receipts').insert(payload).select().single();
+    if (error) return fail('E_WRITE', error.message);
+    try { await logAction('add', logLabel || ('شطب رصيد دائن لعضو ' + (member.full_name || memberId) + ' · ' + res.amount), 'receipts', data && data.id); } catch (_) {}
+    return { ok: true, data, no: payload.no, amount: res.amount };
+  }
+
+  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt, writeOffDebt, writeOffCredit };
   if (typeof window !== 'undefined') window.BusinessOps = BusinessOps;
   if (typeof module !== 'undefined' && module.exports) module.exports = BusinessOps;
 })();

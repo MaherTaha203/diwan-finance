@@ -97,6 +97,11 @@
        running balance). Immutable history is preserved (Law 5) — a NEW record, never
        a silent deletion (Law 1/6). */
     debt_write_off:              {key:'debt_write_off',              label_ar:'شطب ذمة (مغادرة/وفاة)',  treasury:null,                 cash:false, reduces_member_debt:true, member_closure:true},
+    /* CA-007 — Credit Write-off: on a member's PERMANENT departure/death, any
+       OUTSTANDING member CREDIT is resolved to zero by an explicit, audited, NON-CASH
+       member-ledger event. Credit is NEVER auto-refunded and must NOT remain a
+       perpetual liability (OD-06/OD-07). Immutable history preserved (Law 5). */
+    credit_write_off:            {key:'credit_write_off',            label_ar:'شطب رصيد دائن (مغادرة/وفاة)', treasury:null,             cash:false, reduces_member_credit:true, member_closure:true},
     reclassification:            {key:'reclassification',            label_ar:'إعادة تصنيف',            treasury:null,                 cash:false, corrects_classification_only:true}
   };
 

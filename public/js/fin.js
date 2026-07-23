@@ -80,6 +80,14 @@ const FIN={
       .filter(r => !r.is_deleted && r.movement_type==='debt_write_off' && r.member_id===memberId && inRange(r.receipt_date))
       .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب ذمة · Debt Write-off', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'writeoff'}); return s + Number(r.amount_ils||r.amount||0); }, 0);
 
+    /* CA-007 — Credit Write-off (member permanent departure/death): a NON-CASH member-
+       ledger DEBIT that resolves the member's outstanding CREDIT (never refunded, never a
+       perpetual liability). A NEW record, immutable history preserved. Zero rows today ⇒
+       byte-identical until MODEL2 V2.0 activation. */
+    const creditWrittenOff = (DB.receipts||[])
+      .filter(r => !r.is_deleted && r.movement_type==='credit_write_off' && r.member_id===memberId && inRange(r.receipt_date))
+      .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب رصيد دائن · Credit Write-off', cr:0, dr:Number(r.amount_ils||r.amount||0), cls:'creditwriteoff'}); return s + Number(r.amount_ils||r.amount||0); }, 0);
+
     /* ITEM 9 — Debt Settlement from the member's food donations (debt-priority). */
     const debtSettled = Number(FIN.allocateFoodDonations().perMember[memberId] || 0);
     if(debtSettled > 0){
@@ -94,10 +102,10 @@ const FIN={
 
     const totalDues = rows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
     const totalPaid = rows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
-    const finalBalance = openingDebt + totalDues - totalPaid - debtSettled - debtWrittenOff;   /* >0 owed · <0 credit · CA-007 write-off resolves debt */
+    const finalBalance = openingDebt + totalDues - totalPaid - debtSettled - debtWrittenOff + creditWrittenOff;   /* >0 owed · <0 credit · CA-007 write-offs resolve debt (−) and credit (+) toward zero */
     const creditBalance = finalBalance < 0 ? -finalBalance : 0;
 
-    return {member, rows, openingBalance:openingDebt, totalDues, totalPaid, debtSettled, debtWrittenOff, prepaidEffective:0, finalBalance, creditBalance};
+    return {member, rows, openingBalance:openingDebt, totalDues, totalPaid, debtSettled, debtWrittenOff, creditWrittenOff, prepaidEffective:0, finalBalance, creditBalance};
   },
 
   /* Approved balance terminology (Phase 11.5). Sign unchanged. */
