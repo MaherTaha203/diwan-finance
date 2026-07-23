@@ -8,7 +8,7 @@ Agent C integration. Frozen decisions reopen only by explicit owner constitution
 |---|---|---|---|---|
 | **OD‑01** | MODEL2 allocation activation & order | **FROZEN (2026‑07‑23)** | **Policy C** — activate MODEL2; explicit **stored** allocation; order **Current‑Year → Historical Debt → Future‑Year → Credit**; **forward‑only** (no historical reallocation); **non‑configurable** | ADR‑003 · CA‑001 |
 | **OD‑02** | Credit consumption order & trigger | **FROZEN (2026‑07‑23)** | **Policy A** — credit consumed **automatically, only at creation of a new obligation**, in the CA‑001 order; remainder stays credit; every consumption a permanent payment‑grade allocation record; no manual step | CA‑002 |
-| OD‑03 | Intra‑step tie‑break & historical vouchers | **PARTLY RESOLVED by OD‑01** (forward‑only settled); only intra‑step tie‑break remains | — | (pending) |
+| **OD‑03** | Intra‑step tie‑break, ordering & current‑year definition | **FROZEN (2026‑07‑23)** | **Policy A** — Future‑Year = earliest‑year‑first; deterministic same‑year tie‑break by creation timestamp → immutable unique id (never DB order); historical forward‑only (OD‑01); "Current‑Year" = org's designated operating year, independent of period‑lock | CA‑003 |
 | OD‑04 | BO‑06 historical‑deficit settlement policy | **OPEN** | — | (pending) |
 | OD‑05 | Refund policy | **OPEN** | — | (pending) |
 | OD‑06 | Credit lifecycle (expiry / cross‑year / cross‑program) | **OPEN** | — | (pending) |
@@ -16,4 +16,4 @@ Agent C integration. Frozen decisions reopen only by explicit owner constitution
 
 **Readiness gate:** the MODEL2 Constitutional Readiness Certificate and MODEL2 Engineering Readiness
 Certificate issue only after **all** OD‑01…OD‑07 are FROZEN and Agent B's global constitutional review
-passes. **1 of 7 frozen.**
+passes. **3 of 7 frozen** (OD‑01, OD‑02, OD‑03).
