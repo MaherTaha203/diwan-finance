@@ -15,12 +15,14 @@ and is **owner‑ratified at merge**. The process was adopted by ADR‑GOV‑01.
 
 | **ADR‑003** | MODEL2 Activation & Explicit Stored Allocation (order Current→Historical→Future→Credit) | **Accepted & FROZEN** (OD‑01) | V2.0 · F‑05 |
 
+| **ADR‑004** | BO‑06 Historical‑Deficit Settlement (aggregate; funded from deficit treasury; Law 9) | **Accepted & FROZEN** (OD‑04) | V2.0 · F‑06 |
+
+| **ADR‑005** | Refund Policy — first‑class refund movement (origin‑funded; prohibited after close; ≠ cancellation) | **Accepted & FROZEN** (OD‑05) | V2.0 · F‑07 |
+
 ## Planned (from STR‑001 §14 · Future ADR Candidates — recorded when their phase begins)
 
 | ADR | Decision to record | Phase |
 |---|---|---|
-| ADR‑004 | Historical‑deficit settlement policy | V2.0 · F‑06 |
-| ADR‑005 | Refund semantics & linkage | V2.0 · F‑07 |
 | ADR‑006 | Cash‑location foundation | Deferred · F‑09 |
 
 *New ADRs are appended to the index above; history is never rewritten.*
