@@ -7,7 +7,7 @@ Agent C integration. Frozen decisions reopen only by explicit owner constitution
 | OD | Title | Status | Ruling (summary) | Artifacts |
 |---|---|---|---|---|
 | **OD‑01** | MODEL2 allocation activation & order | **FROZEN (2026‑07‑23)** | **Policy C** — activate MODEL2; explicit **stored** allocation; order **Current‑Year → Historical Debt → Future‑Year → Credit**; **forward‑only** (no historical reallocation); **non‑configurable** | ADR‑003 · CA‑001 |
-| OD‑02 | Credit consumption order & trigger | **OPEN** — re‑review vs the amended order before presenting (owner instruction) | — | (pending) |
+| **OD‑02** | Credit consumption order & trigger | **FROZEN (2026‑07‑23)** | **Policy A** — credit consumed **automatically, only at creation of a new obligation**, in the CA‑001 order; remainder stays credit; every consumption a permanent payment‑grade allocation record; no manual step | CA‑002 |
 | OD‑03 | Intra‑step tie‑break & historical vouchers | **PARTLY RESOLVED by OD‑01** (forward‑only settled); only intra‑step tie‑break remains | — | (pending) |
 | OD‑04 | BO‑06 historical‑deficit settlement policy | **OPEN** | — | (pending) |
 | OD‑05 | Refund policy | **OPEN** | — | (pending) |

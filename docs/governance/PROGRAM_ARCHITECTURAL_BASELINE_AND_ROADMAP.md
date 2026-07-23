@@ -91,7 +91,7 @@ Wave 1 read‑only activation was operationally validated by a single supervised
 | V1.1 · F‑02 | Legacy suites quarantined (unrecoverable `roundtrip-seed.json`) — graceful skip + `tests/LEGACY_SUITES.md`; resolves R‑1/TD‑1/TD‑2 | LEGACY_SUITES.md | `4387d79` |
 | V1.2 · F‑03/F‑04 | **Architecture Readiness** (owner scope amendment): ADR‑001 Approval + ADR‑002 Liquidity Guard — **design only, inert; zero code; behaves exactly as V1.1**. Activation deferred to V2 (owner business policy + Constitutional Review) | ADR‑001 · ADR‑002 | `17f651e` |
 | V2.0‑DIS | **MODEL2 Constitutional Discovery** — discovery only; 8 sections, edge‑case register; **7 open owner decisions (OD‑01…OD‑07)** formulated (10‑part). Readiness certificates PENDING owner decisions. No code. | V2.0‑DIS_MODEL2_CONSTITUTIONAL_DISCOVERY | `7328ad1` |
-| CDS · OD‑01 | **Constitutional Decision Session — OD‑01 FROZEN**: MODEL2 approved; explicit **stored** allocation; order **Current→Historical→Future→Credit**; forward‑only; non‑configurable. Decision‑only (no code). | ADR‑003 · CA‑001 | *(this session)* |
+| CDS · OD‑01…02 | **Constitutional Decision Sessions (frozen)** — OD‑01: MODEL2 approved; explicit **stored** allocation; order **Current→Historical→Future→Credit**; forward‑only; non‑configurable. OD‑02: credit auto‑consumed only at new‑obligation creation, same order, permanent allocation record. Decision‑only (no code). | ADR‑003 · CA‑001 · CA‑002 | *(this session)* |
 
 ## 3 · Governance Status
 
