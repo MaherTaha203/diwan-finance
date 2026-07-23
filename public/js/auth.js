@@ -12,24 +12,61 @@
    are shared globals resolved at call time — after every script executed. */
 
 /* ═══ AUTH ═══ */
+/* AUTH-001 — the login button resets + messages (kept identical to the legacy UX). */
+function _loginResetBtn(){ const b=document.getElementById('login-btn'); if(b){b.disabled=false;b.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';} }
+function _wrongCredMsg(){ return window.t?window.t('login.wrong_credentials'):'رقم الهاتف أو البريد أو كلمة المرور غير صحيحة'; }
+function _lockMessage(d){
+  const en=window.LANG==='en';
+  const base=en
+    ? 'Login has been temporarily disabled to protect your account after multiple unsuccessful login attempts. Please wait until the lock period ends, or contact the system administrator if the problem continues.'
+    : 'تم إيقاف تسجيل الدخول مؤقتاً لحماية حسابك بعد عدّة محاولات دخول غير ناجحة. يُرجى الانتظار حتى انتهاء مدة الإيقاف، أو التواصل مع مسؤول النظام إذا استمرت المشكلة.';
+  if(d&&d.scope==='admin') return en
+    ? 'Your account has been locked for security after repeated failed login attempts. Only a system administrator can unlock it.'
+    : 'تم قفل حسابك لأسبابٍ أمنية بعد تكرار محاولات الدخول الفاشلة. لا يمكن فكّ القفل إلا عبر مسؤول النظام.';
+  if(d&&d.retry_after_seconds){ const m=Math.ceil(d.retry_after_seconds/60); return base+(en?` (about ${m} min)`:` (نحو ${m} دقيقة)`); }
+  return base;
+}
+
 window.login=async function(){
-  let input=document.getElementById('l-email').value.trim();
+  const rawInput=document.getElementById('l-email').value.trim();
   const pass=document.getElementById('l-pass').value;
   const btn=document.getElementById('login-btn');
   const err=document.getElementById('login-err');
-  if(!input||!pass){
+  if(!rawInput||!pass){
     showLoginErr(window.LANG==='en'?'Please enter your phone/email and password':'يرجى إدخال رقم الهاتف أو البريد وكلمة المرور');
     return;
   }
-  const isPhone=/^[0-9+\s\-]{7,15}$/.test(input.replace(/\s/g,''));
-  if(isPhone){
-    const phone=input.replace(/[\s\-]/g,'');
-    input=phone+'@diwan-fainance.com';
-  }
   btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   err.classList.remove('show');
+
+  /* AUTH-001 — route through the server-authoritative login-gate (progressive lockout +
+     audit). Resilient: on a genuine infra error (function undeployed / 5xx / network) we
+     fall back to a direct sign-in so login keeps working; a business verdict (disabled /
+     locked / invalid) is honoured and never falls back. */
+  if(window.USE_LOGIN_GATE!==false){
+    try{
+      const r=await SB.functions.invoke('login-gate',{ body:{ identifier:rawInput, password:pass } });
+      if(!r.error && r.data && typeof r.data==='object'){
+        const d=r.data;
+        if(d.disabled){ showLoginErr(window.LANG==='en'?'Your account is disabled. Please contact the administrator.':'حسابك معطّل. الرجاء التواصل مع مسؤول النظام.'); _loginResetBtn(); return; }
+        if(d.locked){ showLoginErr(_lockMessage(d)); _loginResetBtn(); return; }
+        if(d.ok && d.access_token){
+          const{data:sd,error:se}=await SB.auth.setSession({access_token:d.access_token,refresh_token:d.refresh_token});
+          if(se||!sd?.user){ showLoginErr(_wrongCredMsg()); _loginResetBtn(); return; }
+          CU=sd.user; await afterLogin(); return;
+        }
+        showLoginErr(_wrongCredMsg()); _loginResetBtn(); return;   /* ok:false → invalid credentials */
+      }
+      /* r.error → infra problem → fall through to the direct fallback below */
+    }catch(_){ /* network/SDK error → fallback */ }
+  }
+
+  /* FALLBACK — direct sign-in (login-gate unavailable). Preserves the exact legacy path,
+     including the synthetic phone→email mapping (domain unchanged). */
+  let input=rawInput;
+  if(/^[0-9+\s\-]{7,15}$/.test(input.replace(/\s/g,''))){ input=input.replace(/[\s\-]/g,'')+'@diwan-fainance.com'; }
   const{data,error}=await SB.auth.signInWithPassword({email:input,password:pass});
-  if(error){showLoginErr(window.t?window.t('login.wrong_credentials'):'رقم الهاتف أو البريد أو كلمة المرور غير صحيحة');btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';return;}
+  if(error){ showLoginErr(_wrongCredMsg()); _loginResetBtn(); return; }
   CU=data.user;
   await afterLogin();
 };
