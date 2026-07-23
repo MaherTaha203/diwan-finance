@@ -290,7 +290,7 @@
     if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب الاسترداد إلزامي');
     const origin = (typeof DB !== 'undefined' && DB.receipts || []).find(x => x.id === originId);
     if (!origin || origin.is_deleted) return fail('E_STATE', 'السند الأصلي غير موجود أو غير نشط');
-    const prior = RE.refundedTotal(originId, (typeof DB !== 'undefined' && DB.payments) || []);
+    const prior = RE.refundedTotal(originId, (typeof DB !== 'undefined' && DB.refunds) || []);   /* dedicated refunds table (S2) */
     const locked = isLocked(origin.receipt_date);
     const res = RE.computeRefund({ origin, amountILS, priorRefundedILS: prior, locked });
     if (!res.ok) return fail(res.code, res.error);
@@ -299,12 +299,12 @@
       payment_date: (new Date()).toISOString().slice(0, 10),
       fund_type: origin.fund_type || null,
       notes: String(reason).trim(),
-      no: nextNo('PAY', (typeof DB !== 'undefined' && DB.payments) || []),   /* Law 12 — unique identity */
+      no: nextNo('RFND', (typeof DB !== 'undefined' && DB.refunds) || []),   /* Law 12 — unique identity */
       verification_token: genVerificationToken(), created_by: editor()
     });
-    const { data, error } = await SB.from('payments').insert(payload).select().single();
+    const { data, error } = await SB.from('refunds').insert(payload).select().single();   /* dedicated table; payments untouched */
     if (error) return fail('E_WRITE', error.message);
-    try { await logAction('add', logLabel || ('استرداد سند ' + (origin.no || originId) + ' · ' + res.row.amount_ils), 'payments', data && data.id); } catch (_) {}
+    try { await logAction('add', logLabel || ('استرداد سند ' + (origin.no || originId) + ' · ' + res.row.amount_ils), 'refunds', data && data.id); } catch (_) {}
     return { ok: true, data, no: payload.no, isFull: res.isFull, remainingAfter: res.remainingAfter };
   }
 
@@ -331,12 +331,12 @@
     const payload = Object.assign({}, res.row, {
       receipt_date: (new Date()).toISOString().slice(0, 10),
       notes: String(reason).trim(),
-      no: nextNo('WO', (typeof DB !== 'undefined' && DB.receipts) || []),   /* Law 12 — unique identity */
+      no: nextNo('WO', (typeof DB !== 'undefined' && DB.member_write_offs) || []),   /* Law 12 — unique identity */
       verification_token: genVerificationToken(), created_by: editor()
     });
-    const { data, error } = await SB.from('receipts').insert(payload).select().single();
+    const { data, error } = await SB.from('member_write_offs').insert(payload).select().single();   /* dedicated table; receipts untouched */
     if (error) return fail('E_WRITE', error.message);
-    try { await logAction('add', logLabel || ('شطب ذمة عضو ' + (member.full_name || memberId) + ' · ' + res.amount), 'receipts', data && data.id); } catch (_) {}
+    try { await logAction('add', logLabel || ('شطب ذمة عضو ' + (member.full_name || memberId) + ' · ' + res.amount), 'member_write_offs', data && data.id); } catch (_) {}
     return { ok: true, data, no: payload.no, amount: res.amount };
   }
 
@@ -363,12 +363,12 @@
     const payload = Object.assign({}, res.row, {
       receipt_date: (new Date()).toISOString().slice(0, 10),
       notes: String(reason).trim(),
-      no: nextNo('CWO', (typeof DB !== 'undefined' && DB.receipts) || []),   /* Law 12 — unique identity */
+      no: nextNo('CWO', (typeof DB !== 'undefined' && DB.member_write_offs) || []),   /* Law 12 — unique identity */
       verification_token: genVerificationToken(), created_by: editor()
     });
-    const { data, error } = await SB.from('receipts').insert(payload).select().single();
+    const { data, error } = await SB.from('member_write_offs').insert(payload).select().single();   /* dedicated table; receipts untouched */
     if (error) return fail('E_WRITE', error.message);
-    try { await logAction('add', logLabel || ('شطب رصيد دائن لعضو ' + (member.full_name || memberId) + ' · ' + res.amount), 'receipts', data && data.id); } catch (_) {}
+    try { await logAction('add', logLabel || ('شطب رصيد دائن لعضو ' + (member.full_name || memberId) + ' · ' + res.amount), 'member_write_offs', data && data.id); } catch (_) {}
     return { ok: true, data, no: payload.no, amount: res.amount };
   }
 

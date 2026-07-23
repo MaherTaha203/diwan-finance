@@ -76,7 +76,7 @@ const FIN={
        ledger credit that resolves the member's outstanding receivable. Preserves
        immutable history (a NEW record, never a silent deletion). Zero rows today ⇒
        byte-identical until MODEL2 V2.0 activation. */
-    const debtWrittenOff = (DB.receipts||[])
+    const debtWrittenOff = ((typeof DB!=='undefined'&&DB.member_write_offs)||[])
       .filter(r => !r.is_deleted && r.movement_type==='debt_write_off' && r.member_id===memberId && inRange(r.receipt_date))
       .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب ذمة · Debt Write-off', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'writeoff'}); return s + Number(r.amount_ils||r.amount||0); }, 0);
 
@@ -84,7 +84,7 @@ const FIN={
        ledger DEBIT that resolves the member's outstanding CREDIT (never refunded, never a
        perpetual liability). A NEW record, immutable history preserved. Zero rows today ⇒
        byte-identical until MODEL2 V2.0 activation. */
-    const creditWrittenOff = (DB.receipts||[])
+    const creditWrittenOff = ((typeof DB!=='undefined'&&DB.member_write_offs)||[])
       .filter(r => !r.is_deleted && r.movement_type==='credit_write_off' && r.member_id===memberId && inRange(r.receipt_date))
       .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب رصيد دائن · Credit Write-off', cr:0, dr:Number(r.amount_ils||r.amount||0), cls:'creditwriteoff'}); return s + Number(r.amount_ils||r.amount||0); }, 0);
 

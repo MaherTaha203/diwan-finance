@@ -50,7 +50,7 @@ function updateRateDisplay(){
    window.loadAll keeps its original fetch+render behavior for every other
    caller (post-save refresh flows) — no behavior change outside login. */
 async function loadAllData(){
-    const[r1,r2,r3,r4,r5,r6,r7]=await Promise.all([
+    const[r1,r2,r3,r4,r5,r6,r7,,r8,r9]=await Promise.all([
       SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support,movement_type,destination_treasury,source_treasury,movement_reason,register_category').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version,movement_type,destination_treasury,source_treasury,movement_reason').order('payment_date',{ascending:false}),
       SB.from('members').select(
@@ -66,9 +66,14 @@ async function loadAllData(){
          these second-source fields. */
       SB.from('member_subscriptions').select('id,member_id,year,due_amount_ils,paid_amount_ils'),
       loadAttachCounts(),   /* independent read — same round trip instead of a serial one */
+      /* MODEL2 V2.0 (S2) — dedicated tables read by the balance models; empty until the
+         allocation flag is enabled, so today they contribute nothing. */
+      SB.from('refunds').select('id,no,movement_type,origin_receipt_id,member_id,amount,amount_ils,currency,destination_treasury,payment_date,is_deleted'),
+      SB.from('member_write_offs').select('id,no,movement_type,member_id,amount,amount_ils,receipt_date,is_deleted'),
     ]);
     DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
     DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];DB.subscriptions=r7.data||[];DB._alloc=null;
+    DB.refunds=r8.data||[];DB.member_write_offs=r9.data||[];
     DB._loaded=true;   /* P0 — mark a successful load so read-only panels can tell "not loaded yet" from a genuine zero */
 }
 async function loadAll(){
