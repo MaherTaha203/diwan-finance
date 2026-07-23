@@ -91,6 +91,12 @@
        origin (FEM-01 E-14), never freely chosen — the admin cannot refund from a
        treasury the money never entered. */
     refund:                      {key:'refund',                      label_ar:'استرداد',               treasury:'FROM_LINKED_ORIGIN', cash:true, outflow:true, reverses:'linked_receipt'},
+    /* CA-007 — Debt Write-off: on a member's PERMANENT departure/death, the member's
+       outstanding RECEIVABLE is resolved to zero by an explicit, audited, NON-CASH
+       member-ledger event (no treasury movement; it only reduces the member's own
+       running balance). Immutable history is preserved (Law 5) — a NEW record, never
+       a silent deletion (Law 1/6). */
+    debt_write_off:              {key:'debt_write_off',              label_ar:'شطب ذمة (مغادرة/وفاة)',  treasury:null,                 cash:false, reduces_member_debt:true, member_closure:true},
     reclassification:            {key:'reclassification',            label_ar:'إعادة تصنيف',            treasury:null,                 cash:false, corrects_classification_only:true}
   };
 

@@ -67,7 +67,11 @@
     'BO-11': { id: 'BO-11', name: 'Refund Receipt', authority: 'admin',
       preconditions: ['MODEL2 V2.0 activated', 'administrator', 'origin receipt eligible (reversible · no irreversible consequences)', 'origin period not locked', 'amount>0', 'amount ≤ remaining refundable', 'reason present'],
       engine: 'RefundEngine.computeRefund (pure · CA-005) — full/partial · currency-preserving · funds from Origin Treasury',
-      lifecycle: '(none) → NEW refund payment ACTIVE(v1) linked to the origin receipt (a first-class movement, NOT a cancellation)', laws: [1, 5, 6, 8, 10, 11] }
+      lifecycle: '(none) → NEW refund payment ACTIVE(v1) linked to the origin receipt (a first-class movement, NOT a cancellation)', laws: [1, 5, 6, 8, 10, 11] },
+    'BO-12': { id: 'BO-12', name: 'Debt Write-off', authority: 'admin',
+      preconditions: ['MODEL2 V2.0 activated', 'administrator', 'member permanently departed (is_active=false)', 'outstanding debt > 0', 'reason present'],
+      engine: 'WriteOffEngine.computeDebtWriteOff (pure · CA-007) — resolves the outstanding receivable to zero; NON-CASH member-ledger event',
+      lifecycle: '(none) → NEW debt_write_off record ACTIVE(v1); member outstanding receivable → 0 (explicit closure, never a silent deletion)', laws: [1, 3, 5, 6] }
   };
 
   /* ── BO-01 · Create Voucher ──────────────────────────────────────────────
@@ -300,7 +304,39 @@
     return { ok: true, data, no: payload.no, isFull: res.isFull, remainingAfter: res.remainingAfter };
   }
 
-  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt };
+  /* ── BO-12 · Debt Write-off (CA-007 · member permanent departure/death) ──────
+     Resolves a departed member's OUTSTANDING RECEIVABLE to zero via an explicit,
+     audited, NON-CASH member-ledger record — never a silent deletion (Law 1/5/6). The
+     outstanding amount is read from the single source (FIN.memberStatement.finalBalance);
+     the pure WriteOffEngine validates (departed · debt>0) and builds the record; this
+     layer self-guards on the MODEL2 V2.0 activation flag, checks authority + reason, then
+     does the certified write + audit. Flag OFF → E_DISABLED and nothing is created, and no
+     live UI path calls it, so behaviour is byte-identical until Slice 7. */
+  async function writeOffDebt({ memberId, reason, logLabel } = {}) {
+    var WE = (typeof window !== 'undefined' && window.WriteOffEngine) || (typeof WriteOffEngine !== 'undefined' ? WriteOffEngine : null);
+    if (!(typeof window !== 'undefined' && window.MODEL2_ALLOCATION_ENABLED)) return fail('E_DISABLED', 'شطب الذمم غير مُفعَّل (MODEL2 V2.0)');
+    if (!WE) return fail('E_ENGINE', 'محرّك الشطب غير متوفّر');
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب الشطب إلزامي');
+    const member = (typeof DB !== 'undefined' && DB.members || []).find(x => x.id === memberId);
+    if (!member) return fail('E_STATE', 'العضو غير موجود');
+    const outstanding = (typeof FIN !== 'undefined' && FIN.memberStatement) ? Number(FIN.memberStatement(memberId).finalBalance || 0) : 0;
+    const res = WE.computeDebtWriteOff({ member, outstandingDebt: outstanding });
+    if (!res.ok) return fail(res.code, res.error);
+
+    const payload = Object.assign({}, res.row, {
+      receipt_date: (new Date()).toISOString().slice(0, 10),
+      notes: String(reason).trim(),
+      no: nextNo('WO', (typeof DB !== 'undefined' && DB.receipts) || []),   /* Law 12 — unique identity */
+      verification_token: genVerificationToken(), created_by: editor()
+    });
+    const { data, error } = await SB.from('receipts').insert(payload).select().single();
+    if (error) return fail('E_WRITE', error.message);
+    try { await logAction('add', logLabel || ('شطب ذمة عضو ' + (member.full_name || memberId) + ' · ' + res.amount), 'receipts', data && data.id); } catch (_) {}
+    return { ok: true, data, no: payload.no, amount: res.amount };
+  }
+
+  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt, writeOffDebt };
   if (typeof window !== 'undefined') window.BusinessOps = BusinessOps;
   if (typeof module !== 'undefined' && module.exports) module.exports = BusinessOps;
 })();
