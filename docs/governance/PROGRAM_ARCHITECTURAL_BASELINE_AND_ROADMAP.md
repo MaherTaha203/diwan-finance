@@ -85,7 +85,8 @@ Wave 1 read‑only activation was operationally validated by a single supervised
 | P‑AIENG‑W1‑PILOT | Wave 1 read‑only pilot — execution & freeze | **GOV‑AIENG‑W1‑FREEZE‑01** | **`cb2ed75`** |
 | FOC (Constitutional Certification Campaign) | Constitutional Laboratory + FOC‑001…025 certified/excluded | **CONSTITUTIONAL‑CERTIFICATION‑REPORT** (23/23 in‑scope · 2 owner‑excluded) | `20026b1` |
 | GOV‑013 | Autonomous Engineering Pipeline — framework | **GOV‑013** (ratified · PR #150) | `b40ec03` |
-| RLS‑001 | V1 Release Candidate Certification & Packaging | **V1_BASELINE_CERTIFICATE** · tag `v1.0.0` | *(this phase)* |
+| RLS‑001 | V1 Release Candidate Certification & Packaging | **V1_BASELINE_CERTIFICATE** · tag `v1.0.0` | `477a06d` |
+| STR‑001 | Strategic Roadmap Constitution | **STR‑001** (governs post‑V1 execution order) | *(this phase)* |
 
 ## 3 · Governance Status
 
@@ -111,8 +112,14 @@ architectural or owner decision explicitly reopens it.
 
 ## 4 · Roadmap — Next Planning Activity
 
-**No implementation is authorized.** With P‑DUES complete, the program awaits the next
-**Architectural Discovery → Classification** (GOV‑WS‑01 v1.5 §8) or a **Phase Order**.
+**Post‑V1, the roadmap is governed by STR‑001 (Strategic Roadmap Constitution).** Execution is
+now roadmap‑driven: the GOV‑013 pipeline runs the STR‑001 order (§16) — **V1.1 (F‑01 Governance
+v1.6, F‑02 test‑fixture debt) → V1.2 (F‑03 Approval + F‑04 Liquidity, paired) → V2.0 (F‑05 MODEL2
+activation → F‑06 BO‑06 → F‑07 Refund → F‑08 re‑certification) → Deferred (F‑09 Cash Management)**.
+V1.1 runs autonomously (F‑01's GOV‑WS‑01 v1.6 amendment owner‑ratified at merge); V1.2/V2.0/
+Deferred carry explicit owner gates (business policy / constitutional review). See STR‑001 §§3, 14, 18.
+
+The historical rule below is superseded by STR‑001 for post‑V1 work and retained for context:
 Any next candidate must be classified before implementation (v1.5 §8) and cleared
 through the Governance Decision Matrix (v1.5 §7).
 
