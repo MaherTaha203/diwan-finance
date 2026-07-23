@@ -22,7 +22,7 @@ MODEL2 / business‑logic changes.
 | PR‑1 | Database migration (`login_attempts`, `user_roles` identity/status, backfill) | ✅ merged |
 | PR‑2 | `admin-users` Edge Function + User Management UI | 🚧 code complete · awaiting deploy |
 | PR‑3 | `login-gate` Edge Function + progressive lockout + audit (flagged) | ⏳ |
-| PR‑4 | Password policy + minimal password UI | ⏳ |
+| PR‑4 | Password policy + minimal password UI | 🚧 code complete · in PR |
 | PR‑5 | Create‑User workflow + one‑time credentials dialog | ⏳ |
 | PR‑6 | Audit completion + documentation + final verification | ⏳ |
 
@@ -60,3 +60,24 @@ PR‑5), so PR‑2 is purely additive management — no create/login regression.
 `constitutional-verification` 12/12; `fin2` PASS; Constitutional Laboratory (regression) — see PR.
 **Live verification (post‑deploy):** unauthenticated call → 401 `not_admin`; admin create/reset/
 disable/enable/unlock/force round‑trip; audit rows written.
+
+## PR‑4 — Password policy + minimal password UI (client‑only; deploy‑independent)
+Aligns the **client** password experience with the owner‑ratified final policy and the
+`auth-core.mjs` server rule — **≥10 chars AND ≥2 of** {upper, lower, number, symbol}. No Edge
+Function or DB change, so it lands independently of the pending function deploys.
+- **`public/js/auth-password.js`** — `checkPassword` rewritten to the frozen rule (new `classCount`
+  helper mirroring `auth-core.passwordClasses`). Returns `{valid, level(0/1/2), levelLabel, message}`
+  with **one actionable hint at a time** (length → second‑class → accepted). The old 12‑char /
+  8‑item checklist (incl. the similarity + common‑password gates the owner dropped) and its now‑dead
+  `FORBIDDEN`/`COMMON`/`tokensOf` data were removed. `attachPolicyUI` paints a single `.pw-note` line
+  + a **3‑tier meter** (red = below policy · amber = meets · green = strong) instead of the grid
+  checklist; `checksEl` kept as a back‑compat alias for `noteEl`.
+- **`public/css/app.css`** — meter collapsed from 5 colour levels to 3 (l0 red / l1 amber / l2 green);
+  `.pw-checks` grid replaced by a `.pw-note` single‑line style; mobile + invite‑modal rules updated.
+- **`public/index.html`** — change‑password overlay + invite modal markup switched `pw-checks`/
+  `inv-checks` → `pw-note`/`inv-note`; invite placeholder retext to «10+ أحرف · نوعان على الأقل»;
+  `auth-password.js` bumped `?v=1.0 → 1.1`.
+- **`public/reset-password.html`** — same policy note + 3‑tier meter (standalone recovery screen).
+**Local verification:** `node --check` clean (auth-password/app/auth); `auth-core` 39/39;
+Constitutional Laboratory **90/90** (23/23 certified) — app boots with the new policy UI, no
+financial regression.
