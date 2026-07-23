@@ -13,55 +13,27 @@
 'use strict';
 var T=function(ar,en){ return (typeof window!=='undefined'&&window.LANG==='en')?en:ar; };
 
-/* ── Policy data ─────────────────────────────────────────────── */
-var FORBIDDEN=['password','admin','123456','qwerty','welcome','diwan','taha','ديوان','طه'];
-var COMMON=['password','passw0rd','password1','password123','12345678','123456789','1234567890',
-  'qwertyuiop','administrator','welcome1','iloveyou','letmein','monkey','dragon','football',
-  'baseball','master','login','abc123','abcd1234','111111','000000','654321','123123','121212',
-  '112233','555555','666666','777777','987654321','sunshine','princess','superman','batman',
-  'trustno1','shadow','michael','jennifer','computer','internet','secret','freedom','whatever',
-  'qazwsx','zaq12wsx','asdfghjkl','zxcvbnm','hello123','charlie','starwars','pokemon','naruto',
-  'samsung','google','myspace1'];
-
-function tokensOf(ctx){
-  var t=[];
-  var push=function(s){ s=String(s||'').toLowerCase().trim(); if(s.length>=3) t.push(s); };
-  if(ctx){
-    String(ctx.username||'').split(/[\s._@-]+/).forEach(push);
-    var em=String(ctx.email||'').toLowerCase();
-    if(em){ push(em); var local=em.split('@')[0]; push(local); local.split(/[._-]+/).forEach(push); }
-  }
-  return t;
+/* checkPassword — AUTH-001 FINAL policy: ≥10 chars AND ≥2 of {upper,lower,digit,symbol}.
+   Mirrors supabase/functions/_shared/auth-core.mjs (single frozen rule, two runtimes).
+   Returns {valid, level(0 weak|1 good|2 strong), levelLabel, message} — ONE message at a
+   time (length → classes → OK). `ctx` retained for signature compatibility (unused now:
+   the owner-ratified policy intentionally drops the similarity/common-word gates). */
+function classCount(pw){
+  return (/[A-Z]/.test(pw)?1:0)+(/[a-z]/.test(pw)?1:0)+(/[0-9]/.test(pw)?1:0)+(/[^A-Za-z0-9]/.test(pw)?1:0);
 }
-
-/* checkPassword(pw, ctx{email,username}) → {items, score, level, levelLabel, valid} */
 function checkPassword(pw, ctx){
   pw=String(pw||'');
-  var low=pw.toLowerCase();
-  var hitWord=FORBIDDEN.some(function(w){ return low.indexOf(w)>=0; });
-  var hitCommon=hitWord||COMMON.indexOf(low)>=0;
-  var userOnly=tokensOf({username:ctx&&ctx.username});
-  var mailOnly=tokensOf({email:ctx&&ctx.email});
-  var hitU=userOnly.some(function(tk){return low.indexOf(tk)>=0;});
-  var hitM=mailOnly.some(function(tk){return low.indexOf(tk)>=0;});
-  var items=[
-    {id:'len',     ok:pw.length>=12,        label:T('12 حرفاً على الأقل','Minimum 12 characters')},
-    {id:'upper',   ok:/[A-Z]/.test(pw),     label:T('حرف كبير (A-Z)','Uppercase letter')},
-    {id:'lower',   ok:/[a-z]/.test(pw),     label:T('حرف صغير (a-z)','Lowercase letter')},
-    {id:'digit',   ok:/[0-9]/.test(pw),     label:T('رقم (0-9)','Number')},
-    {id:'special', ok:/[^A-Za-z0-9]/.test(pw), label:T('رمز خاص (!@#…)','Special character')},
-    {id:'nouser',  ok:pw.length>0&&!hitU,   label:T('لا تشبه اسم المستخدم','Not similar to username')},
-    {id:'nomail',  ok:pw.length>0&&!hitM,   label:T('لا تشبه البريد الإلكتروني','Not similar to email')},
-    {id:'nocommon',ok:pw.length>0&&!hitCommon, label:T('ليست كلمة مرور شائعة','Not a common password')}
-  ];
-  var core=items.slice(0,5).filter(function(i){return i.ok;}).length;
-  var score=core+(pw.length>=16?1:0)+(pw.length>=20?1:0);
-  if(hitCommon||items[5].ok===false||items[6].ok===false) score=Math.min(score,1);
-  var level = score<=1?0 : score<=3?1 : score===4?2 : score===5?3 : 4;
-  var labels=[T('ضعيفة جداً','Very weak'),T('ضعيفة','Weak'),T('متوسطة','Medium'),T('قوية','Strong'),T('ممتازة','Excellent')];
-  var valid=items.every(function(i){return i.ok;});
-  if(!valid) level=Math.min(level,3);
-  return {items:items, score:score, level:level, levelLabel:pw.length?labels[level]:'—', valid:valid};
+  var n=classCount(pw);
+  var valid = pw.length>=10 && n>=2;
+  // 3-tier advisory strength: 0 doesn't meet policy · 1 meets · 2 strong.
+  var level = !valid ? 0 : (pw.length>=14 && n>=3) ? 2 : 1;
+  var labels=[T('ضعيفة','Weak'),T('جيدة','Good'),T('قوية','Strong')];
+  var message = null;              // ONE actionable hint at a time
+  if(pw.length===0) message=null;
+  else if(pw.length<10) message=T('10 أحرف على الأقل','At least 10 characters');
+  else if(n<2) message=T('أضِف نوعاً ثانياً: حرف/رقم/رمز','Add a second type: letter, number, or symbol');
+  else message=T('كلمة مرورٍ مقبولة','Password meets requirements');
+  return {valid:valid, level:level, levelLabel:pw.length?labels[level]:'—', message:message, items:[]};
 }
 
 /* ── Reuse-history fingerprints (last 5) — salted SHA-256 via Web Crypto ── */
@@ -93,14 +65,15 @@ function attachPolicyUI(o){
   function paint(){
     var ctx=o.ctx?o.ctx():{};
     res=checkPassword(o.newInput.value,ctx);
-    if(o.checksEl){
-      o.checksEl.innerHTML=res.items.map(function(i){
-        return '<li class="'+(i.ok?'ok':'bad')+'"><i class="ti '+(i.ok?'ti-circle-check-filled':'ti-circle-x')+'"></i><span>'+i.label+'</span></li>';
-      }).join('');
+    var has=!!o.newInput.value;
+    var noteEl=o.noteEl||o.checksEl;   // checksEl kept for signature compat (now a single note line)
+    if(noteEl){
+      noteEl.textContent=has?(res.message||''):'';
+      noteEl.className='pw-note'+(has?(res.valid?' ok':' bad'):'');
     }
     if(o.meterBar){
-      o.meterBar.className='l'+res.level+(o.newInput.value?' on':'');
-      o.meterBar.style.width=(o.newInput.value?Math.max(8,Math.min(100,(res.score/7)*100)):0)+'%';
+      o.meterBar.className='l'+res.level+(has?' on':'');
+      o.meterBar.style.width=(has?[34,67,100][res.level]:0)+'%';
     }
     if(o.meterLvl){ o.meterLvl.textContent=res.levelLabel; o.meterLvl.className='pw-meter-lvl l'+res.level; }
     if(o.matchEl){
@@ -164,7 +137,7 @@ function screenHTML(locked){
     +field('pw-cur',T('كلمة المرور الحالية','Current password'),'current-password','ti-lock')
     +field('pw-new',T('كلمة المرور الجديدة','New password'),'new-password','ti-lock-plus')
     +'<div class="pw-meter" aria-hidden="true"><div class="pw-meter-track"><i id="pw-bar"></i></div><span class="pw-meter-lvl" id="pw-lvl" role="status" aria-live="polite">—</span></div>'
-    +'<ul class="pw-checks" id="pw-checks" aria-live="polite"></ul>'
+    +'<p class="pw-note" id="pw-note" aria-live="polite"></p>'
     +field('pw-cnf',T('تأكيد كلمة المرور','Confirm password'),'new-password','ti-lock-check')
     +'<div class="pw-match off" id="pw-match" aria-live="polite"></div>'
     +'<button type="button" class="auth-btn" id="pw-save" disabled><i class="ti ti-lock-check"></i><span>'+T('حفظ كلمة المرور','Save password')+'</span></button>'
@@ -194,7 +167,7 @@ function ensureScreen(locked){
     confirmInput:document.getElementById('pw-cnf'),
     meterBar:document.getElementById('pw-bar'),
     meterLvl:document.getElementById('pw-lvl'),
-    checksEl:document.getElementById('pw-checks'),
+    noteEl:document.getElementById('pw-note'),
     matchEl:document.getElementById('pw-match'),
     saveBtn:document.getElementById('pw-save'),
     ctx:function(){ var u=(typeof CU!=='undefined'&&CU)||{}; var m=u.user_metadata||{};
@@ -314,7 +287,7 @@ function wireInvite(){
     newInput:inp,
     meterBar:document.getElementById('inv-bar'),
     meterLvl:document.getElementById('inv-lvl'),
-    checksEl:document.getElementById('inv-checks'),
+    noteEl:document.getElementById('inv-note'),
     ctx:function(){ return {
       email:(document.getElementById('inv-email')||{}).value||'',
       username:(document.getElementById('inv-name')||{}).value||'' }; },
