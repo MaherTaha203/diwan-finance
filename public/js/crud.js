@@ -164,6 +164,12 @@ window.saveRec=async function(print=false){
   const data=_res.data, no=_res.no;
   window.closeM();
   await loadAll();
+  /* MODEL2 V2.0 Slice 2 (OD-01) — record the payment's ordered allocation. Flag-guarded:
+     no-op while MODEL2_ALLOCATION_ENABLED is OFF (default) ⇒ behaviour unchanged. Metadata only;
+     never alters balances, never blocks the receipt. */
+  if(window.MODEL2_ALLOCATION_ENABLED && window.MODEL2RecordAllocation && fund==='food' && payerType==='member' && cls.movement_type==='subscription_payment'){
+    await window.MODEL2RecordAllocation(memberId, no, amountILS);
+  }
   toast(window.t('messages.receipt_saved')+' '+no,'ok');
   await SB.from('vouchers').upsert({id:no,type:fund==='food'?'Receipt Voucher — Food Fund':fund==='diwan'?'Receipt Voucher — Diwan Fund':'Donation Voucher',fund:fund==='food'?'Food Fund':fund==='diwan'?'Diwan Fund':'Food Fund',date:fmtDate2(date),amount:fmtD(amountILS)+' ILS',description:notes||'Receipt Voucher',prepared_by:CUR?.full_name||CU?.email});
   if(print) setTimeout(()=>window.prtRec(data.id),300);
