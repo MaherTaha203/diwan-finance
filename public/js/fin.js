@@ -424,6 +424,51 @@ const FIN={
       .map(m=>({name:m.name,phone:m.phone||'',historical:Number(m.historical_balance_ils||0),balance:FIN.memberBalance(m.id)}));
     return [];
   },
+
+  /* ═══ CCR-001 · IG-006 — FC-003 · FD-006 / FD-013 (incl. merged IG-021) ═══
+     THE single debt-report row model. Screen, print and Excel all consume THIS
+     model with the same view state (selected years + category filter), so every
+     surface shows byte-identical figures (FD-006) and no surface derives its
+     own (FD-013). Non-cash resolutions (donation debt settlement ق5 + CA-007
+     write-offs) are explicit components, so the report reconciles even when
+     member_write_offs carries rows (former IG-021):
+       current = hist + duesAll − paidAll − resolutions
+       where paidAll = totalPaid (historical + stored subscription + live food
+       + ق4) and resolutions = debtSettled + writtenOff − creditWrittenOff. */
+  debtReportRows(opts){
+    const o=opts||{};
+    const years=o.years?new Set(Array.from(o.years).map(Number)):null;   /* null ⇒ all years */
+    const r2=FIN._r2;
+    const all=DB.members.filter(m=>m.is_active!==false).map(m=>{
+      const st=FIN.memberStatement(m.id);
+      let selSub=0,selPaid=0;
+      (DB.subscriptions||[]).filter(s=>s.member_id===m.id).forEach(s=>{
+        if(!years||years.has(Number(s.year))){ selSub+=Number(s.due_amount_ils||0); selPaid+=Number(s.paid_amount_ils||0); }
+      });
+      const debtSettled=Number(st.debtSettled||0);
+      const writtenOff=Number(st.debtWrittenOff||0);
+      const creditWrittenOff=Number(st.creditWrittenOff||0);
+      return { id:m.id, code:m.member_code||'—', name:m.name, phone:m.phone||'',
+        hist:st.openingBalance, histPaid:Number(m.historical_payments_ils||0),
+        selSub:r2(selSub), selPaid:r2(selPaid),
+        duesAll:st.totalDues, paidAll:st.totalPaid,
+        debtSettled, writtenOff, creditWrittenOff,
+        resolutions:r2(debtSettled+writtenOff-creditWrittenOff),
+        current:st.finalBalance };
+    });
+    const f=o.filter||'all';
+    let rows=all;
+    if(f==='debtors')        rows=rows.filter(r=>r.current>0.005);
+    else if(f==='creditors') rows=rows.filter(r=>r.current<-0.005);
+    else if(f==='zero')      rows=rows.filter(r=>Math.abs(r.current)<=0.005);
+    rows=rows.slice().sort((a,b)=>b.current-a.current);
+    const totals=rows.reduce((t,r)=>({hist:t.hist+r.hist,histPaid:t.histPaid+r.histPaid,
+      selSub:t.selSub+r.selSub,selPaid:t.selPaid+r.selPaid,
+      resolutions:t.resolutions+r.resolutions,current:t.current+r.current}),
+      {hist:0,histPaid:0,selSub:0,selPaid:0,resolutions:0,current:0});
+    Object.keys(totals).forEach(k=>totals[k]=r2(totals[k]));
+    return { rows, totals, totalMembers:all.length, filter:f };
+  },
 };
 
 /* Canonical bilingual labels for the three Food Fund movement classes (presentation only). */
