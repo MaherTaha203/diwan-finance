@@ -138,6 +138,61 @@ const FIN={
     });
     return { byYear, isDelinquent:unpaidCount>0, unpaidCount };
   },
+  /* ═══ CCR-001 · IG-001 — Constitutional payment allocation (FC-003 · FD-002) ═══
+     Read-time derivation of the constitutional waterfall: outstanding annual
+     subscriptions (OLDEST unpaid first) → then the historical carried balance.
+     Attributed history is preserved (FD-003): stored per-year paid and pre-system
+     historical payments keep their recorded targets, and ق4 historical-debt
+     collections reduce the historical balance per their constitutional meaning
+     (FC-003 Ch. 3.4). The UNATTRIBUTED credit pool — live member food receipts,
+     Item-9 donation debt settlements, and any per-target overpayment excess — is
+     walked by the SINGLE ordered engine (MODEL2Allocation; one ordering source,
+     FD-011). The TOTAL outstanding is always memberStatement().finalBalance
+     (order-invariant; single source — FD-006): this accessor only distributes it
+     across obligations for settled/delinquency derivation (consumed by IG-003). */
+  memberAllocation(memberId){
+    const m=DB.members.find(x=>x.id===memberId);
+    const r2=FIN._r2;
+    if(!m) return {perYear:{}, historical:{seed:0,allocated:0,remaining:0}, pool:0, creditRemaining:0, outstanding:0};
+    let pool=0;
+    const perYear={};
+    (DB.subscriptions||[]).filter(s=>s.member_id===memberId).forEach(s=>{
+      const y=Number(s.year), due=Number(s.due_amount_ils||0), paid=Number(s.paid_amount_ils||0);
+      pool=r2(pool+Math.max(0,paid-due));                         /* overpaid excess → unattributed pool */
+      if(!perYear[y]) perYear[y]={due:0,remaining_seed:0,allocated:0,remaining:0,settled:false};
+      perYear[y].due=r2(perYear[y].due+due);
+      perYear[y].remaining_seed=r2(perYear[y].remaining_seed+Math.max(0,due-paid));
+    });
+    const q4=DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection'&&r.member_id===memberId)
+      .reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    let histSeed=r2(Number(m.historical_balance_ils||0)-Number(m.historical_payments_ils||0)-q4);
+    if(histSeed<0){ pool=r2(pool-histSeed); histSeed=0; }          /* over-collected history → pool */
+    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId)
+      .reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    const donSettled=Number(FIN.allocateFoodDonations().perMember[memberId]||0);
+    pool=r2(pool+liveFood+donSettled);
+    const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),remaining:perYear[y].remaining_seed,createdAt:y+'-01-01'}));
+    if(histSeed>0) obligations.push({id:'hist',kind:'historical',remaining:histSeed,createdAt:'2000-01-01'});
+    const eng=(typeof window!=='undefined'&&window.MODEL2Allocation)||null;
+    let creditRemaining=pool, histAllocated=0;
+    if(eng&&pool>0&&obligations.length){
+      const res=eng.computeAllocation({currentYear:new Date().getFullYear(),amount:pool,obligations});
+      res.allocations.forEach(a=>{
+        if(a.obligation_kind==='historical') histAllocated=r2(histAllocated+a.amount_allocated);
+        else if(perYear[a.year]) perYear[a.year].allocated=r2(perYear[a.year].allocated+a.amount_allocated);
+      });
+      creditRemaining=res.creditRemaining;
+    }
+    Object.keys(perYear).forEach(y=>{
+      const p=perYear[y];
+      p.remaining=r2(p.remaining_seed-p.allocated);
+      p.settled=(p.due<=0)||(p.remaining<=0.005);
+    });
+    return { perYear,
+      historical:{seed:histSeed,allocated:r2(histAllocated),remaining:r2(histSeed-histAllocated)},
+      pool:r2(pool), creditRemaining:r2(creditRemaining),
+      outstanding:FIN.memberStatement(memberId).finalBalance };
+  },
   /* Item 9 — member base (pre-donation) debt = opening + dues − payments. */
   _memberBaseBalance(memberId){
     const m=DB.members.find(x=>x.id===memberId); if(!m) return 0;
