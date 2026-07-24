@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    MODEL2 V2.0 · SLICE 1 — Stored Ordered Allocation Engine  (INERT · FLAG OFF)
-   Implements the frozen constitution:
-     · CA-001  allocation order: Current-Year → Historical Debt → Future-Year → Credit
+   Implements FINANCIAL-CONSTITUTION-003 (frozen & ratified 2026-07-24):
+     · FD-002  allocation order: outstanding annual subscriptions (OLDEST unpaid first)
+               → then the historical carried balance; any remainder stays Member Credit
+               (CCR-001 IG-001 — supersedes the pre-constitutional CA-001 order)
      · CA-002  credit is consumed only at obligation creation (same order); remainder stays credit
      · CA-003  deterministic ordering: earliest-year-first, then creation timestamp, then immutable id
-               (never dependent on database/query order); "Current-Year" = org operating year
-     · CA-006  continuous running balance ⇒ "Historical Debt" = all debt BEFORE the current
-               operating year (opening balance + any prior-year dues), aggregated
+               (never dependent on database/query order)
    This module is PURE and UN-WIRED: nothing in the app calls it while MODEL2_ALLOCATION_ENABLED
    is OFF (default). It changes no runtime behaviour. Wiring happens in Slice 2 behind the flag.
    Records produced here are IMMUTABLE (Object.freeze). Forward-only: never reallocates history.
@@ -28,24 +28,24 @@
   'use strict';
   var R2 = function (n) { return Math.round((Number(n) || 0) * 100) / 100; };
 
-  /* Constitutional category rank (CA-001): Current-Year=0 · Historical=1 · Future=2.
-     Historical (CA-006) = the opening/pre-system debt AND any prior-year dues (year < currentYear). */
+  /* Constitutional category rank — FINANCIAL-CONSTITUTION-003 · FD-002 (CCR-001 IG-001):
+     1. Outstanding annual subscription liabilities, OLDEST unpaid year first (rank 0).
+     2. Only then the historical carried balance (rank 1 — always LAST).
+     (Supersedes the pre-constitutional CA-001 Current-Year→Historical→Future order.)
+     `currentYear` is retained for API compatibility; FD-002 makes the order
+     independent of the operating year. */
   function categoryRank(ob, currentYear) {
-    if (ob.kind === 'historical') return 1;
-    var y = Number(ob.year), cy = Number(currentYear);
-    if (y === cy) return 0;
-    if (y < cy) return 1;
-    return 2;
+    return ob.kind === 'historical' ? 1 : 0;
   }
 
-  /* Deterministic ordering (CA-003): category → earliest-year-first → creation timestamp →
+  /* Deterministic ordering: category (FD-002) → earliest-year-first → creation timestamp →
      immutable unique id. Never relies on input/storage order. Pure (copies before sorting). */
   function orderObligations(obligations, currentYear) {
     return (obligations || []).slice().sort(function (a, b) {
       var ca = categoryRank(a, currentYear), cb = categoryRank(b, currentYear);
       if (ca !== cb) return ca - cb;
-      var ya = a.kind === 'historical' ? -Infinity : Number(a.year);
-      var yb = b.kind === 'historical' ? -Infinity : Number(b.year);
+      var ya = a.kind === 'historical' ? Infinity : Number(a.year);
+      var yb = b.kind === 'historical' ? Infinity : Number(b.year);
       if (ya !== yb) return ya - yb;                                   /* earliest-year-first */
       var ta = new Date(a.createdAt || 0).getTime(), tb = new Date(b.createdAt || 0).getTime();
       if (ta !== tb) return ta - tb;                                   /* creation timestamp */

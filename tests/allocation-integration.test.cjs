@@ -31,22 +31,25 @@ ok(I.resolveCurrentYear({ current_operating_year: 'x' }, 2030) === 2030, 'curren
   ok(partial.some(o => o.year === 2025 && o.remaining === 50), 'partial-paid year → remaining 50');
 })();
 
-/* 3 · OD-01 end-to-end: current-year 2026, pay 500 → 2026(200) then historical(300) */
+/* 3 · OD-01 end-to-end under FC-003 · FD-002 (CCR-001 IG-001): pay 500 →
+   subscriptions OLDEST first — 2025(200) then 2026(200) — then historical(100). */
 (() => {
   const obs = I.buildObligations(data, 'm1');
   const r = A.computeAllocation({ currentYear: 2026, amount: 500, obligations: obs });
-  ok(eqA(r.allocations.map(a => [a.obligation_kind, a.year, a.amount_allocated]), [['due', 2026, 200], ['historical', null, 300]]),
-    'OD-01: current 2026(200) → historical(300); 2025 (prior→historical) after opening, untouched here');
+  ok(eqA(r.allocations.map(a => [a.obligation_kind, a.year, a.amount_allocated]),
+    [['due', 2025, 200], ['due', 2026, 200], ['historical', null, 100]]),
+    'OD-01 (FD-002): 2025(200) → 2026(200) → historical(100)');
   ok(r.creditRemaining === 0, 'OD-01: no credit remainder');
 })();
 
-/* 4 · OD-02 credit consumption: a 250 credit at obligation creation, current-year 2026
-       → consumes 2026(200) then historical(50) in constitutional order */
+/* 4 · OD-02 credit consumption under FD-002: a 250 credit at obligation creation
+   → consumes 2025(200) then 2026(50) — historical last, untouched here. */
 (() => {
   const obs = I.buildObligations(data, 'm1');
   const r = A.computeAllocation({ currentYear: 2026, amount: 250, obligations: obs });
-  ok(eqA(r.allocations.map(a => [a.obligation_kind, a.year, a.amount_allocated]), [['due', 2026, 200], ['historical', null, 50]]),
-    'OD-02: credit 250 consumed 2026(200) then historical(50)');
+  ok(eqA(r.allocations.map(a => [a.obligation_kind, a.year, a.amount_allocated]),
+    [['due', 2025, 200], ['due', 2026, 50]]),
+    'OD-02 (FD-002): credit 250 consumed 2025(200) then 2026(50)');
 })();
 
 console.log('\n' + (fail === 0 ? '✅ ALL PASS' : '❌ ' + fail + ' FAILED') + ' · ' + pass + ' checks');

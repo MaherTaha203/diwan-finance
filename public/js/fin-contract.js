@@ -36,6 +36,9 @@
     memberStatement(...a){      return F().memberStatement(...a); },
     memberBalance(...a){        return F().memberBalance(...a); },
     memberDelinquency(...a){    return F().memberDelinquency(...a); },
+    /* CCR-001 IG-001 — constitutional allocation accessor (FD-002/FD-011). FIN is a
+       top-level lexical const (not window.FIN), so resolve it the way fin2.js does. */
+    memberAllocation(...a){     const f=(typeof FIN!=='undefined'&&FIN)||null; return f?f.memberAllocation(...a):null; },
     allocateFoodDonations(...a){return F().allocateFoodDonations(...a); },
     fundLedger(...a){           return F().fundLedger(...a); },
     subscriptionYears(...a){    return F().subscriptionYears(...a); },
