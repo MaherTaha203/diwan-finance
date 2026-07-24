@@ -1519,73 +1519,44 @@ window.changeRole=async(uid,role)=>{
   await logAction('edit',`تغيير دور ${prevRole?.full_name||uid}: من ${ROLES[prevRole?.role]||prevRole?.role||'—'} إلى ${ROLES[safeRole]}`,'user_roles',uid);
   toast(window.t('messages.role_changed')+': '+ROLES[safeRole],'ok');loadUsers();
 };
-window.inviteUser=async()=>{
-  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
-  const email=document.getElementById('inv-email').value.trim().toLowerCase();
-  const pass=document.getElementById('inv-pass').value;
-  const roleRaw=document.getElementById('inv-role').value;
-  const safeRole=(roleRaw==='admin')?'admin':(roleRaw==='reservation')?'reservation':'viewer';
-  const name=document.getElementById('inv-name').value.trim();
-
-  /* ── Real, specific validation messages (no more generic "خطأ") ── */
-  if(!email||!pass){toast(window.t('errors.required'),'warn');return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('بريد إلكتروني غير صالح: '+email,'err');return;}
-  /* EB-08 — temp passwords obey the same AuthDS policy (12+ chars, mixed classes, not common) */
-  const _pol=window.AuthDS?window.AuthDS.checkPassword(pass,{email:email,username:name}):null;
-  if(_pol&&!_pol.valid){toast('كلمة المرور المؤقتة لا تحقق السياسة — 12 حرفاً على الأقل مع حرف كبير وصغير ورقم ورمز، وألا تكون شائعة. استخدم زر «توليد».','err');return;}
-  if(!_pol&&pass.length<12){toast('كلمة المرور قصيرة جداً — 12 حرفاً على الأقل','err');return;}
-
-  const btn=document.getElementById('inv-submit'); if(btn){btn.disabled=true;}
-  try{
-    /* Create the auth user on an ISOLATED client so the admin's own
-       session is never swapped out (signUp() would otherwise sign the
-       admin in as the brand-new user). persistSession:false keeps it out
-       of localStorage entirely, leaving SB (the admin) untouched. */
-    const tmp=supabase.createClient(window.__SB_URL,window.__SB_ANON,{
-      auth:{persistSession:false,autoRefreshToken:false,storageKey:'sb-provision-tmp'}
-    });
-    const{data,error}=await tmp.auth.signUp({
-      email,password:pass,
-      options:{data:{full_name:name||email,must_change_password:true}}
-    });
-
-    /* Surface the ACTUAL error verbatim — do not hide it. */
-    if(error){
-      toast('فشل إنشاء الحساب: '+error.message+(error.status?` (${error.status})`:''),'err');
-      return;
-    }
-    /* GoTrue returns a user with an EMPTY identities array when the email
-       is already registered (anti-enumeration). Treat that as a real error. */
-    if(!data||!data.user){toast('فشل إنشاء الحساب: لم يُرجع الخادم مستخدماً','err');return;}
-    if(Array.isArray(data.user.identities)&&data.user.identities.length===0){
-      toast('هذا البريد مُسجَّل مسبقاً: '+email,'err');return;
-    }
-    const newId=data.user.id;
-
-    /* Assign the role via the MAIN client (still the admin), and CHECK the
-       error — the old code swallowed it, so RLS denials were invisible. */
-    const{error:roleErr}=await SB.from('user_roles')
-      .upsert({user_id:newId,role:safeRole,full_name:name||email},{onConflict:'user_id'});
-    if(roleErr){
-      toast('أُنشئ الحساب لكن فشل تعيين الدور: '+roleErr.message,'err');
-      return;
-    }
-    await logAction('add',`إنشاء مستخدم: ${email} — دور: ${ROLES[safeRole]}`,'user_roles',newId);
-    window.closeM();
-    /* If email confirmation is required the user has no session yet. */
-    const needsConfirm=!data.session;
-    toast(window.t('messages.account_created')+': '+email+(needsConfirm?' — يتطلب تأكيد البريد':''),'ok');
-    loadUsers();
-  }catch(e){
-    toast('فشل إنشاء الحساب: '+(e&&e.message?e.message:String(e)),'err');
-  }finally{
-    if(btn){btn.disabled=false;}
-  }
-};
+/* Legacy client-side create (isolated signUp + role upsert) was retired in AUTH-001
+   PR-5. User creation now routes through the admin-users Edge Function (service_role)
+   via window.createUser in user-admin.js, which also issues phone identity, the
+   one-time credentials dialog, and the full audit trail. Kept as a thin alias so any
+   older caller — and the security seal below — still resolves. */
+window.inviteUser=function(){ if(typeof window.createUser==='function') return window.createUser(); };
 
 /* ═══ AUDIT — Data Grid (Note 9) ═══ */
 window.AUDIT_FILTER={q:'',action:'',page:1,pageSize:25};
-function auditActionLabel(a){return a==='add'?window.t('audit.act_add'):a==='delete'?window.t('audit.act_delete'):a==='edit'?window.t('audit.act_edit'):a||'—';}
+/* AUTH-001 audit vocabulary — action codes written by the Edge Functions
+   (admin-users / login-gate) and the client auth flows, with bilingual labels
+   and a badge colour (green = benign/grant, red = block/deny, blue = neutral). */
+const AUTH_AUDIT={
+  user_created:{ar:'إنشاء مستخدم',en:'User created',c:'green'},
+  user_updated:{ar:'تعديل مستخدم',en:'User updated',c:'blue'},
+  account_enabled:{ar:'تفعيل حساب',en:'Account enabled',c:'green'},
+  account_disabled:{ar:'تعطيل حساب',en:'Account disabled',c:'red'},
+  account_unlocked:{ar:'فكّ قفل الحساب',en:'Account unlocked',c:'green'},
+  account_locked:{ar:'قفل الحساب',en:'Account locked',c:'red'},
+  password_reset:{ar:'إعادة تعيين كلمة المرور',en:'Password reset',c:'blue'},
+  password_generated:{ar:'توليد كلمة مرور',en:'Password generated',c:'blue'},
+  password_change:{ar:'تغيير كلمة المرور',en:'Password changed',c:'blue'},
+  force_password_change:{ar:'فرض تغيير كلمة المرور',en:'Force password change',c:'blue'},
+  credentials_copied:{ar:'نسخ معلومات الدخول',en:'Credentials copied',c:'blue'},
+  login_success:{ar:'تسجيل دخول ناجح',en:'Login success',c:'green'},
+  login_failed:{ar:'محاولة دخول فاشلة',en:'Login failed',c:'red'},
+};
+function auditActionLabel(a){
+  if(a==='add')return window.t('audit.act_add');
+  if(a==='edit')return window.t('audit.act_edit');
+  if(a==='delete')return window.t('audit.act_delete');
+  const m=AUTH_AUDIT[a]; if(m) return window.LANG==='en'?m.en:m.ar;
+  return a||'—';
+}
+function auditActionColor(a){
+  if(a==='add')return 'green'; if(a==='delete')return 'red'; if(a==='edit')return 'blue';
+  const m=AUTH_AUDIT[a]; return m?m.c:'blue';
+}
 window.onAuditFilter=function(){
   AUDIT_FILTER.q=(document.getElementById('audit-q')?.value||'').toLowerCase();
   AUDIT_FILTER.action=document.getElementById('audit-action')?.value||'';
@@ -1606,6 +1577,15 @@ function renderAudit(){
         <option value="add">إضافة</option>
         <option value="edit">تعديل</option>
         <option value="delete">حذف</option>
+        <optgroup label="الأمان والحسابات">
+          <option value="user_created">إنشاء مستخدم</option>
+          <option value="account_disabled">تعطيل حساب</option>
+          <option value="account_locked">قفل الحساب</option>
+          <option value="account_unlocked">فكّ قفل الحساب</option>
+          <option value="password_reset">إعادة تعيين كلمة المرور</option>
+          <option value="login_failed">محاولة دخول فاشلة</option>
+          <option value="login_success">تسجيل دخول ناجح</option>
+        </optgroup>
       </select>
     </div>
     <div class="tw"><table class="dt"><thead><tr>
@@ -1626,7 +1606,7 @@ function renderAuditGrid(){
   if(f.page>pages) f.page=pages;
   const start=(f.page-1)*f.pageSize;
   const page=rows.slice(start,start+f.pageSize);
-  const badge=a=>{const c=a==='add'?'green':a==='delete'?'red':'blue';return `<span class="badge ${c}" style="font-size:10px">${auditActionLabel(a)}</span>`;};
+  const badge=a=>`<span class="badge ${auditActionColor(a)}" style="font-size:10px">${auditActionLabel(a)}</span>`;
   body.innerHTML=page.map(a=>`<tr>
     <td style="white-space:nowrap;color:var(--tx3);font-size:11px">${fdate(a.created_at?.slice(0,10))}</td>
     <td>${badge(a.action)}</td>

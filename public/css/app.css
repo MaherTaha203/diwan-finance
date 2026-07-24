@@ -1347,19 +1347,14 @@ body.role-reservation .rate-chip{display:none!important}
 .pw-meter{display:flex;align-items:center;gap:12px;margin:-4px 0 12px;}
 .pw-meter-track{flex:1;height:6px;border-radius:6px;background:var(--bg3);overflow:hidden;}
 .pw-meter-track i{display:block;height:100%;width:0;border-radius:6px;transition:width .35s cubic-bezier(.22,1,.36,1),background-color .35s;}
-.pw-meter-track i.l0{background:#B23B34}.pw-meter-track i.l1{background:#B0722A}
-.pw-meter-track i.l2{background:#9A7016}.pw-meter-track i.l3{background:#46604E}.pw-meter-track i.l4{background:#3F8A5E}
+/* 3-tier advisory meter: 0 doesn't meet policy (red) · 1 meets (amber) · 2 strong (green) */
+.pw-meter-track i.l0{background:#B23B34}.pw-meter-track i.l1{background:#B0722A}.pw-meter-track i.l2{background:#3F8A5E}
 .pw-meter-lvl{font-size:11.5px;font-weight:700;min-width:64px;text-align:start;color:var(--tx3);transition:color .3s;}
-.pw-meter-lvl.l0{color:#B23B34}.pw-meter-lvl.l1{color:#B0722A}.pw-meter-lvl.l2{color:#9A7016}
-.pw-meter-lvl.l3{color:#46604E}.pw-meter-lvl.l4{color:var(--pos)}
-/* live checklist */
-.pw-checks{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:0 0 16px;padding:12px 14px;
-  background:var(--bg3);border:1px solid var(--bd);border-radius:10px;}
-.pw-checks li{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--tx3);transition:color .25s;}
-.pw-checks li i{font-size:15px;flex:none;transition:transform .2s,color .25s;}
-.pw-checks li.ok{color:var(--tx);}
-.pw-checks li.ok i{color:var(--pos);transform:scale(1.05);}
-.pw-checks li.bad i{color:var(--tx3);}
+.pw-meter-lvl.l0{color:#B23B34}.pw-meter-lvl.l1{color:#B0722A}.pw-meter-lvl.l2{color:var(--pos)}
+/* single policy note (one actionable hint at a time) */
+.pw-note{font-size:11.5px;font-weight:600;min-height:17px;margin:-2px 0 16px;color:var(--tx3);transition:color .25s;}
+.pw-note.bad{color:#B23B34;}
+.pw-note.ok{color:var(--pos);}
 /* confirm match */
 .pw-match{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;min-height:20px;margin:-6px 0 14px;transition:opacity .2s;}
 .pw-match.off{opacity:0;}
@@ -1405,13 +1400,12 @@ body.role-reservation .rate-chip{display:none!important}
 .inv-pass-row .gen{flex:none;padding:0 13px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg2);color:var(--accent);
   font-family:var(--fn);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;}
 .inv-pass-row .gen:hover{background:var(--bg3);}
-#m-invite .pw-checks{grid-template-columns:1fr 1fr;margin-top:10px;}
+#m-invite .pw-note{margin-top:10px;margin-bottom:0;}
 #m-invite .auth-field input{height:44px;font-size:13.5px;}
 /* responsive */
 @media (max-width:560px){
   .auth-screen{padding:0;align-items:stretch;}
   .auth-card{max-width:100%;min-height:100%;border-radius:0;border:none;padding:30px 22px 24px;}
-  .pw-checks{grid-template-columns:1fr;}
 }
 @media (prefers-reduced-motion:reduce){
   .auth-screen.on,.auth-card,.auth-card.shake,.auth-btn.ready,.pw-eye.pop i{animation:none;}
