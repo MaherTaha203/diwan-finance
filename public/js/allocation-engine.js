@@ -16,11 +16,13 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = api;       /* Node/tests */
   if (typeof window !== 'undefined') {                                             /* browser */
     window.MODEL2Allocation = api;
-    /* Feature flag — MODEL2 V2.0 ACTIVATED (Slice 8, owner-approved 2026-07-23). Governs
-       whether the APP uses this engine and the flag-gated operations (allocation recording,
-       credit consumption, refund BO-11, write-offs BO-12/13). An explicit prior assignment
-       (e.g. a settings/localStorage override) still wins. */
-    if (typeof window.MODEL2_ALLOCATION_ENABLED === 'undefined') window.MODEL2_ALLOCATION_ENABLED = true;
+    /* Feature flag — CONSTITUTIONAL CONFORMANCE HOLD (CCR-001 Rev A · IG-000).
+       OFF until the flag-gated operations conform to FINANCIAL-CONSTITUTION-003:
+       the allocation order must match FD-002 (IG-001) and a refund must recreate
+       member debt per FD-009 (IG-012). While OFF, allocation recording, credit
+       consumption, refund BO-11 and write-offs BO-12/13 are inert no-ops.
+       An explicit prior assignment (settings/localStorage override) still wins. */
+    if (typeof window.MODEL2_ALLOCATION_ENABLED === 'undefined') window.MODEL2_ALLOCATION_ENABLED = false;
   }
 })(this, function () {
   'use strict';
