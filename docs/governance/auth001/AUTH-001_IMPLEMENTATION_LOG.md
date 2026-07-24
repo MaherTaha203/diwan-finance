@@ -20,8 +20,8 @@ MODEL2 / business‑logic changes.
 | PR | Scope | State |
 |---|---|---|
 | PR‑1 | Database migration (`login_attempts`, `user_roles` identity/status, backfill) | ✅ merged |
-| PR‑2 | `admin-users` Edge Function + User Management UI | ✅ merged (#168) · function deploy owner‑run |
-| PR‑3 | `login-gate` Edge Function + progressive lockout + audit | 🚧 code complete (#169) · awaiting `login-gate` deploy + live‑verify |
+| PR‑2 | `admin-users` Edge Function + User Management UI | ✅ merged (#168) · **function DEPLOYED (v1, verify_jwt ON)** |
+| PR‑3 | `login-gate` Edge Function + progressive lockout + audit | ✅ merged (#169) · **function DEPLOYED (v1, verify_jwt OFF)** |
 | PR‑4 | Password policy + minimal password UI | ✅ merged (#170) |
 | PR‑5 | Create‑User workflow + one‑time credentials dialog | ✅ merged (#171) |
 | PR‑6 | Audit completion + documentation + final verification | ✅ merged (#172) |
@@ -144,15 +144,24 @@ Closes the audit surface and finalises the roadmap. Client‑only (deploy‑inde
 **Local verification:** `node --check` clean; `auth-core` 39/39; Constitutional Laboratory
 **90/90** (23/23 certified).
 
-## Final status
-Authentication redesign is **code‑complete end‑to‑end**. Merged to `main`: PR‑1, PR‑2, PR‑4, PR‑5,
-PR‑6. **Remaining to reach fully‑live:**
-1. **`login-gate` deploy** (`supabase functions deploy login-gate --project-ref
-   ralifvemgapmsgrjgazh`, **Verify JWT OFF**) → then live‑verify the progressive‑lockout ladder
-   (15 → 5m → 15m → 1h → admin) + audit rows, and **merge PR‑3 (#169)**. Until then the client
-   falls back to direct sign‑in, so **login works with no lockout and no regression**.
-2. **`admin-users`** must be live for User Management + Create‑User (owner‑run). The client shows a
-   clear error if it is ever unreachable.
+## Final status — COMPLETE
+Authentication redesign is **complete and live end‑to‑end**. All six PRs merged to `main`
+(PR‑1 … PR‑6) and **both Edge Functions are deployed and ACTIVE** on `ralifvemgapmsgrjgazh`:
+- **`admin-users`** — v1, `verify_jwt = ON` (id `d0fd0526…`). Powers User Management + Create‑User.
+- **`login-gate`** — v1, `verify_jwt = OFF` (id `9e08fe53…`). Server‑authoritative login + lockout.
+
+**Deployment verified (server‑side, MCP):** both functions `ACTIVE` in `list_edge_functions`;
+schema they depend on confirmed — `login_attempts` (9 cols, RLS enabled, **0 policies →
+service_role only**, 0 rows), `user_roles` identity columns (`email`/`phone`/`is_disabled`)
+present, 2 users backfilled. Container egress to Supabase is blocked, so the functions were
+deployed and inspected via the Supabase MCP, not curl.
+
+**Owner in‑app functional check (exercises the running functions over HTTP):**
+- **Login** with a correct password → dashboard; audit shows `login_success`.
+- **Lockout** — wrong password ~15× on one account → 15th returns the 5‑minute lock with the
+  human‑readable message; audit shows `login_failed` ×15 + `account_locked`. «فكّ قفل الحساب»
+  in User Management clears it (`account_unlocked`).
+- **Create‑User** and per‑row **Reset / Disable / Enable / Force‑change** → succeed with audit rows.
 
 No financial / MODEL2 / business‑logic surface was touched at any point; the Constitutional
 Laboratory held **90/90** on every PR.
