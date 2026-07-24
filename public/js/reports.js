@@ -259,24 +259,18 @@ window.prtDonStmt=function(mode){
   /* POST-REVIEW FIX 4 — deficit-directed movements belong to the Food Fund
      (historical deficit is an accounting destination inside Food), never the
      donations statement. They appear in the fund/member statements instead. */
-  const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.destination_treasury!=='historical_deficit');
   /* Domain 3 (§4.2 enforcement) — the printed CASH total must never conflate the
-     in-kind documentary value. Split: cash donations vs in-kind/service (FE-008,
-     documentary only, no cash). The in-kind value is shown SEPARATELY, never in
-     the cash total or the cash directions. Constitutional display correction
-     (FM-01 §8/§9.2 phase 3); treasuries and the cash register are untouched. */
-  const _isInkind=r=>r.movement_type==='donation_inkind';
-  const cashRows=rows.filter(r=>!_isInkind(r));
-  const inkindRows=rows.filter(_isInkind);
-  const cashTot=cashRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-  const inkindTot=inkindRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-  const toFood=cashRows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-  const toDiwan=cashTot-toFood;
-  /* ITEM 9 — recognized donation portions (after member debt settlement). */
-  const foodDeficit=FIN.foodSettlementReserve();   // Historical Deficit Donation -> Reserve
-  const foodSupport=FIN.foodCurrentSupportTotal(); // Current Support Donation
-  const foodDebt=FIN.foodDebtSettlementTotal();    // Debt Settlement (NOT a donation)
-  const _dalloc=FIN.allocateFoodDonations();
+     in-kind documentary value; the in-kind value is shown SEPARATELY (FE-008).
+     IG-007 (FD-013/FD-011): the whole register model (rows, cash/in-kind split,
+     fund directions, recognized allocation figures) comes from the engine. */
+  const D=FIN.donationRegister();
+  const rows=D.rows;
+  const _isInkind=r=>FIN.isInkindDonation(r);
+  const cashTot=D.cashTot, inkindTot=D.inkindTot, toDiwan=D.toDiwan;
+  const foodDeficit=D.foodDeficit;   // Historical Deficit Donation -> Reserve
+  const foodSupport=D.foodSupport;   // Current Support Donation
+  const foodDebt=D.foodDebt;         // Debt Settlement (NOT a donation)
+  const _dalloc={perReceipt:D.perReceipt};
   const donDir=r=>{
     /* Domain 3 (Display Principle) — an in-kind/service donation is documentary,
        never a diwan-directed cash donation; label it by its category. */
@@ -293,7 +287,7 @@ window.prtDonStmt=function(mode){
     +'<td>'+fmtDate2(r.receipt_date)+'</td>'
     +'<td>'+esc(r.no)+'</td>'
     +'<td>'+esc(r.payer_name||gmn(r.member_id)||'—')+'</td>'
-    +'<td><span class="cr">₪ '+fmt(r.amount_ils||r.amount)+'</span></td>'
+    +'<td><span class="cr">₪ '+fmt(FIN.amountOf(r))+'</span></td>'
     +'<td>'+(r.currency!=='ILS'?esc(r.currency):'ILS')+'</td>'
     +'<td>'+donDir(r)+'</td>'
     +'<td>'+esc(r.notes||'—')+'</td></tr>').join('');

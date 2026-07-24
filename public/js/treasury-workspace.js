@@ -45,7 +45,6 @@
   const T = (ar, en) => (_en() ? en : ar);
   const E = s => (typeof esc === 'function') ? esc(s) : String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const M = n => (typeof fmt === 'function' ? fmt(n) : String(n));
-  const R2 = n => Math.round((Number(n) || 0) * 100) / 100;
   const fundLabel = f => f === 'food' ? T('الغداء', 'Food') : f === 'diwan' ? T('الديوان', 'Diwan') : T('التبرعات', 'Donations');
 
   let _twPeriod = 'all';   // read-only view filter over the movement history — no execution
@@ -63,46 +62,26 @@
      certified cash treasuries (food + diwan); each figure equals the same certified
      value shown in the fund statements / dashboard (Rule 6). */
   function position() {
+    /* IG-007 (FD-013): the engine owns the position model; this is a pure read. */
     const F = (typeof FIN !== 'undefined') ? FIN : null;
-    const g = fn => (F && F[fn]) ? R2(F[fn]()) : 0;
-    const food = g('foodBalance'), diwan = g('diwanBalance'), don = g('donBalance');
-    const deficit = g('foodDeficitRemaining');       // ≤ 0 · remaining historical deficit
-    const netFood = g('foodNetPosition');            // food + deficit
-    const reserve = g('foodSettlementReserve');
-    const support = g('foodCurrentSupportTotal');
-    const debtSettled = g('foodDebtSettlementTotal');
-    return {
-      food, diwan, don,
-      combined: R2(food + diwan),                    // the two certified cash treasuries
-      deficit, netFood,
-      netCombined: R2(netFood + diwan),              // combined position net of the historical deficit
-      reserve, support, debtSettled
-    };
+    if (F && F.treasuryPosition) return F.treasuryPosition();
+    return { food: 0, diwan: 0, don: 0, combined: 0, deficit: 0, netFood: 0, netCombined: 0, reserve: 0, support: 0, debtSettled: 0 };
   }
 
   /* the cross-fund MOVEMENT — certified credit (in) / debit (out) rows across the
      two operational cash funds over the selected period. Pure read of
      FIN.fundLedger; no accounting is computed here. */
   function movementRows(period) {
-    if (typeof FIN === 'undefined' || !FIN.fundLedger) return [];
-    const [from, to] = periodRange(period);
-    const rows = [];
-    ['food', 'diwan'].forEach(f => (FIN.fundLedger(f, from, to) || []).forEach(r => {
-      if (r.type === 'cr' || r.type === 'dr') {
-        rows.push({ id: r.id, date: r.date, no: r.no, name: r.name, desc: r.desc, fund: f, in: Number(r.cr || 0), out: Number(r.dr || 0), type: r.type });
-      }
-    }));
-    rows.sort((a, b) => new Date(b.date) - new Date(a.date));   // most recent first
-    return rows;
+    return movementState(period).rows;
   }
 
-  /* movement State — a pure projection over the certified ledger rows (totals in /
-     out / net flow for the period). Never a separate accounting rule. */
+  /* movement State — the engine computes rows AND totals (IG-007 · FD-013);
+     the workspace only selects the period. */
   function movementState(period) {
-    const rows = movementRows(period);
-    const totalIn = R2(rows.reduce((t, r) => t + r.in, 0));
-    const totalOut = R2(rows.reduce((t, r) => t + r.out, 0));
-    return { period, rows, count: rows.length, totalIn, totalOut, net: R2(totalIn - totalOut) };
+    if (typeof FIN === 'undefined' || !FIN.cashMovement) return { period, rows: [], count: 0, totalIn: 0, totalOut: 0, net: 0 };
+    const [from, to] = periodRange(period);
+    const m = FIN.cashMovement(from, to);
+    return { period, rows: m.rows, count: m.count, totalIn: m.totalIn, totalOut: m.totalOut, net: m.net };
   }
 
   function card(icon, title, question, body, span) {

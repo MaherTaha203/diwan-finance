@@ -269,7 +269,7 @@ const D={
     const q=(document.getElementById('q-food-rec')?.value||'').toLowerCase();
     let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food');
     if(q)d=d.filter(r=>(r.no+(r.payer_name||gmn(r.member_id))+(r.notes||'')).toLowerCase().includes(q));
-    const tot=d.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const tot=d.reduce((s,r)=>s+FIN.amountOf(r),0);   /* IG-007: engine amount read */
     const sub=document.getElementById('food-rec-sub');
     if(sub)sub.innerHTML=`<span class="stc">${d.length} إيصال</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['food-rec'])PS['food-rec']=1;
@@ -282,7 +282,7 @@ const D={
       <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(r.no)}')">${esc(r.no)}</span></td>
       <td class="c-date">${fdate(r.receipt_date)}</td>
       <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(r.no)}')">${esc(r.payer_name||gmn(r.member_id))}</span></td>
-      <td class="num pos-amt c-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="num pos-amt c-amt">₪ ${fmt(FIN.amountOf(r))}</td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td class="c-notes">${esc(r.notes||'—')}</td>
       <td class="tda">
@@ -295,7 +295,7 @@ const D={
     const q=(document.getElementById('q-food-pay')?.value||'').toLowerCase();
     let d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food');
    if(q)d=d.filter(p=>(p.no+(p.beneficiary_name||gmn(p.member_id))+(p.notes||'')).toLowerCase().includes(q));
-    const tot=d.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+    const tot=d.reduce((s,p)=>s+FIN.amountOf(p),0);   /* IG-007: engine amount read */
     const sub=document.getElementById('food-pay-sub');
     if(sub)sub.innerHTML=`<span class="stc">${d.length} سند</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['food-pay'])PS['food-pay']=1;
@@ -308,7 +308,7 @@ const D={
       <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(p.no)}')">${esc(p.no)}</span></td>
       <td class="c-date">${fdate(p.payment_date)}</td>
       <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(p.no)}')">${esc(p.beneficiary_name||gmn(p.member_id))}</span></td>
-      <td class="num neg-amt c-amt">₪ ${fmt(p.amount_ils||p.amount)}</td>
+      <td class="num neg-amt c-amt">₪ ${fmt(FIN.amountOf(p))}</td>
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
       <td class="c-notes">${esc(p.notes||'—')}</td>
       <td class="tda">
@@ -321,7 +321,7 @@ const D={
     const q=(document.getElementById('q-diwan-rec')?.value||'').toLowerCase();
     let d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan');
     if(q)d=d.filter(r=>(r.no+(r.payer_name||gmn(r.member_id))+(r.notes||'')).toLowerCase().includes(q));
-    const tot=d.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const tot=d.reduce((s,r)=>s+FIN.amountOf(r),0);   /* IG-007: engine amount read */
     const sub=document.getElementById('diwan-rec-sub');
     if(sub)sub.innerHTML=`<span class="stc">${d.length} إيصال</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['diwan-rec'])PS['diwan-rec']=1;
@@ -334,7 +334,7 @@ const D={
       <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(r.no)}')">${esc(r.no)}</span></td>
       <td class="c-date">${fdate(r.receipt_date)}</td>
       <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(r.no)}')">${esc(r.payer_name||gmn(r.member_id))}</span></td>
-      <td class="num pos-amt c-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="num pos-amt c-amt">₪ ${fmt(FIN.amountOf(r))}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'diwan'}">${r.currency}</span></td>
       <td><span class="badge green">${L.method(r.payment_method)}</span></td>
       <td class="c-notes">${esc(r.notes||'—')}</td>
@@ -350,7 +350,7 @@ const D={
     let d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan');
     if(q)d=d.filter(p=>(p.no+(p.beneficiary_name||gmn(p.member_id))+(p.notes||'')).toLowerCase().includes(q));
     if(ft)d=d.filter(p=>p.expense_type===ft);
-    const tot=d.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+    const tot=d.reduce((s,p)=>s+FIN.amountOf(p),0);   /* IG-007: engine amount read */
     const sub=document.getElementById('diwan-pay-sub');
     if(sub)sub.innerHTML=`<span class="stc">${d.length} سند</span><span class="stc navy">₪ ${fmt(tot)}</span>`;
     if(!PS['diwan-pay'])PS['diwan-pay']=1;
@@ -363,7 +363,7 @@ const D={
       <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(p.no)}')">${esc(p.no)}</span></td>
       <td class="c-date">${fdate(p.payment_date)}</td>
       <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(p.no)}')">${esc(p.beneficiary_name||gmn(p.member_id))}</span></td>
-      <td class="num neg-amt c-amt">₪ ${fmt(p.amount_ils||p.amount)}</td>
+      <td class="num neg-amt c-amt">₪ ${fmt(FIN.amountOf(p))}</td>
       <td><span class="badge diwan">${L.expense(p.expense_type)}</span></td>
       <td><span class="badge gray">${L.method(p.payment_method)}</span></td>
       <td class="c-notes">${esc(p.notes||'—')}</td>
@@ -382,12 +382,13 @@ const D={
     if(q)d=d.filter(r=>(r.payer_name||gmn(r.member_id)||'').toLowerCase().includes(q));
     /* Domain 3 — filter by donation category/destination (search ownership). */
     const _ft=document.getElementById('f-don-type')?.value||'';
-    if(_ft==='inkind') d=d.filter(r=>r.movement_type==='donation_inkind');
+    if(_ft==='inkind') d=d.filter(r=>FIN.isInkindDonation(r));
     else if(_ft==='cash') d=d.filter(r=>FIN2.isCashDonation(r.movement_type));
     else if(_ft==='cash-food') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='food');
     else if(_ft==='cash-diwan') d=d.filter(r=>FIN2.isCashDonation(r.movement_type)&&r.destination_treasury==='diwan');
-    const _cash=d.filter(r=>FIN2.isCashDonation(r.movement_type)).reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const _doc=d.filter(r=>r.movement_type==='donation_inkind').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    /* IG-007: single engine predicates + engine amount reads (FD-011). */
+    const _cash=d.filter(r=>FIN2.isCashDonation(r.movement_type)).reduce((s,r)=>s+FIN.amountOf(r),0);
+    const _doc=d.filter(r=>FIN.isInkindDonation(r)).reduce((s,r)=>s+FIN.amountOf(r),0);
     const sub=document.getElementById('don-sub');
     if(sub)sub.innerHTML=`<span class="stc">${d.length} تبرع</span><span class="stc navy">نقدي ₪ ${fmt(_cash)}</span><span class="stc">توثيقي ₪ ${fmt(_doc)}</span>`;
     if(!PS['don'])PS['don']=1;
@@ -400,7 +401,7 @@ const D={
       <td class="c-no"><span class="doc lnk-no" onclick="window.openVoucherByNo('${esc(r.no)}')">${esc(r.no)}</span></td>
       <td class="c-date">${fdate(r.receipt_date)}</td>
       <td class="c-name"><span class="lnk-nm" onclick="window.openPersonByVoucher('${esc(r.no)}')">${esc(r.payer_name||gmn(r.member_id))}</span></td>
-      <td class="num c-amt don-amt">₪ ${fmt(r.amount_ils||r.amount)}</td>
+      <td class="num c-amt don-amt">₪ ${fmt(FIN.amountOf(r))}</td>
       <td><span class="badge ${r.currency==='ILS'?'gray':'don'}">${r.currency}</span></td>
       <td>${(function(){
         /* P2-D — the authoritative classification (owner-approved layer). */
@@ -415,7 +416,7 @@ const D={
             return `<span class="badge wr">${en?'Deficit-Settling Donation':'تبرع سداد عجز تاريخي'}</span>`;
           return `<span class="badge ${r.destination_treasury==='food'?'food':r.destination_treasury==='diwan'?'diwan':'wr'}">${en?'Cash':'نقدي'} ← ${dl[r.destination_treasury]||'—'}</span>`;
         }
-        if(r.movement_type==='donation_inkind')
+        if(FIN.isInkindDonation(r))
           return `<span class="badge gray">${en?'In-kind / Service (record only)':'عيني/خدمي — توثيقي'}</span>`;
         return `<span class="badge gray">${en?'Unclassified':'غير مُصنَّف'}</span>`;
       })()}</td>
@@ -551,8 +552,8 @@ function renderTreasuryPanel(){
 
   if(fund==='diwan'){
     const opening=Number(window.DIWAN_OPENING||0);
-    const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+    const _lvD=FIN.fundLedgerView('diwan','','','');   /* IG-007: engine totals */
+    const income=_lvD.totalCr, expense=_lvD.totalDr;
     /* P1 — the authoritative total comes from FIN (single source); income/expense
        remain only to render the flow breakdown below. Value-identical to opening+income-expense. */
     total=FinContract.diwanBalance(); neg=total<0;
@@ -566,8 +567,8 @@ function renderTreasuryPanel(){
     const remDeficit=FinContract.foodDeficitRemaining();
     const reserve=FIN.foodSettlementReserve();
     const a=FIN.allocateFoodDonations();
-    const income=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const expense=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+    const _lvF=FIN.fundLedgerView('food','','','');    /* IG-007: engine totals */
+    const income=_lvF.totalCr, expense=_lvF.totalDr;
     const operational=FIN._r2(income-expense);
     total=FinContract.foodBalance(); neg=total<0;
     cap='رصيد صندوق الغداء الحالي';
@@ -743,9 +744,9 @@ window.openPersonByVoucher=function(no){
 window.openPersonCard=function(name, contactId){
   const nm=String(name||'').trim();
   const recs=DB.receipts.filter(r=>!r.is_deleted&&!r.member_id&&((contactId&&r.contact_id===contactId)||(r.payer_name||'').trim()===nm))
-    .map(r=>({kind:'receipt',no:r.no,date:r.receipt_date,amount:Number(r.amount_ils||r.amount||0),desc:r.notes||''}));
+    .map(r=>({kind:'receipt',no:r.no,date:r.receipt_date,amount:FIN.amountOf(r),desc:r.notes||''}));
   const pays=DB.payments.filter(p=>!p.is_deleted&&!p.member_id&&(p.beneficiary_name||'').trim()===nm)
-    .map(p=>({kind:'payment',no:p.no,date:p.payment_date,amount:Number(p.amount_ils||p.amount||0),desc:(typeof L!=='undefined'&&L.expense?L.expense(p.expense_type):'')||p.notes||''}));
+    .map(p=>({kind:'payment',no:p.no,date:p.payment_date,amount:FIN.amountOf(p),desc:(typeof L!=='undefined'&&L.expense?L.expense(p.expense_type):'')||p.notes||''}));
   const all=recs.concat(pays).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
   const totIn=recs.reduce((s,x)=>s+x.amount,0), totOut=pays.reduce((s,x)=>s+x.amount,0);
   const t=document.getElementById('person-card-title'); if(t) t.textContent=nm||'سندات الشخص';
@@ -795,11 +796,9 @@ function renderDash(){
 
   const _isEn=window.LANG==='en';
   /* ── Approved hybrid: hero band (greeting · status · today stats · action) ──
-     Presentation only: today figures are display sums over already-loaded DB rows. */
-  const _t0=today();
-  const _recToday=DB.receipts.filter(r=>!r.is_deleted&&r.receipt_date===_t0);
-  const _payToday=DB.payments.filter(p=>!p.is_deleted&&p.payment_date===_t0);
-  const _netToday=_recToday.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0)-_payToday.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+     IG-007 (FD-013): today figures come from the engine; presentation formats only. */
+  const _day=FIN.dayTotals(today());
+  const _netToday=_day.net;
   const _hr=new Date().getHours();
   const _greet=_isEn?(_hr<12?'Good morning':'Good evening'):(_hr<12?'صباح الخير':'مساء الخير');
   const _uname=(CUR?.full_name||CU?.email||'').split(' ')[0]||'';
@@ -826,7 +825,7 @@ function renderDash(){
     <span class="st"><i></i>${_isEn?'Data up to date':'البيانات محدّثة'} · <span class="mono">${new Date().toLocaleDateString('en-CA')}</span></span>
     <div class="hstat">
       <div><div class="k">${_isEn?'Net today':'صافي اليوم'}</div><div class="v ${_netToday>=0?'up':''} mono">${_netToday>=0?'+':'−'} ₪ ${fmt(Math.abs(_netToday))}</div></div>
-      <div><div class="k">${_isEn?"Today's vouchers":'سندات اليوم'}</div><div class="v mono">${_recToday.length+_payToday.length}</div></div>
+      <div><div class="k">${_isEn?"Today's vouchers":'سندات اليوم'}</div><div class="v mono">${_day.count}</div></div>
       <div><div class="k">${_isEn?'Active members':'أعضاء نشطون'}</div><div class="v mono">${DB.members.filter(m=>m.is_active).length}</div></div>
     </div>
     <span class="sp"></span>
@@ -842,7 +841,7 @@ function renderDash(){
   if(_kpis){
     const lightKp=(t,v,i,k)=>`<div class="kp" style="animation-delay:${i*70}ms"><div class="l">${t}</div>
       <div class="v mono ${v<0?'neg-t':''}" data-val="${v}" data-k="${k}">₪ ${v<0?'−':''}${fmt(Math.abs(v))}</div></div>`;
-    const avail=Math.round((db+fb)*100)/100;
+    const avail=FIN.treasuryPosition().combined;   /* IG-007: engine-owned combined treasuries */
     _kpis.innerHTML=
       lightKp(_isEn?'Food Treasury':'خزينة الغداء',fb,0,'fb')
       +lightKp(_isEn?'Historical Deficit Settlement':'حساب تسوية العجز التاريخي',rd,1,'rd')
@@ -852,7 +851,7 @@ function renderDash(){
         <div class="mini">
           <div class="mc">${_isEn?'Available':'المتاح · الخزينتان'}<b class="mono">₪ ${fmt(Math.abs(avail))}</b></div>
           <div class="mc hot">${_isEn?'Net today':'صافي اليوم'}<b class="mono">${_netToday>=0?'+':'−'}₪ ${fmt(Math.abs(_netToday))}</b></div>
-          <div class="mc">${_isEn?"Today's vouchers":'سندات اليوم'}<b class="mono">${_recToday.length+_payToday.length}</b></div>
+          <div class="mc">${_isEn?"Today's vouchers":'سندات اليوم'}<b class="mono">${_day.count}</b></div>
         </div></div>`;
     countUpKpis();
   }
@@ -866,8 +865,8 @@ function renderDash(){
 
 
   const allOps=[
-    ...DB.receipts.filter(r=>!r.is_deleted).slice(0,5).map(r=>({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),amt:r.amount_ils||r.amount,type:'rec',fund:r.fund_type,no:r.no})),
-    ...DB.payments.filter(p=>!p.is_deleted).slice(0,5).map(p=>({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),amt:p.amount_ils||p.amount,type:'pay',fund:p.fund_type,no:p.no})),
+    ...DB.receipts.filter(r=>!r.is_deleted).slice(0,5).map(r=>({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),amt:FIN.amountOf(r),type:'rec',fund:r.fund_type,no:r.no})),
+    ...DB.payments.filter(p=>!p.is_deleted).slice(0,5).map(p=>({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),amt:FIN.amountOf(p),type:'pay',fund:p.fund_type,no:p.no})),
   ].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
   document.getElementById('recent-ops').innerHTML=allOps.length?allOps.map(op=>`
     <div class="mv">
@@ -884,7 +883,7 @@ function renderDash(){
     const _late3=_dl.rows.filter(r=>r.d&&r.d.unpaidCount>=3).length;
     const _lateAll=_dl.rows.filter(r=>r.d&&r.d.isDelinquent).length;
     const tasks=[];
-    if(_recToday.length+_payToday.length>0) tasks.push({t:`مراجعة سندات اليوم (${_recToday.length+_payToday.length})`,go:()=>"window.nav('diwan-rec')"});
+    if(_day.count>0) tasks.push({t:`مراجعة سندات اليوم (${_day.count})`,go:()=>"window.nav('diwan-rec')"});
     if(_lateAll>0) tasks.push({t:`متابعة ${_lateAll} أعضاء متأخرين`,go:()=>"window.nav('delinquent')"});
     tasks.push({t:'كشوف الأعضاء المدينين',go:()=>"window.nav('annual-debt')"});
     tasks.push({t:'طباعة كشف صندوق',go:()=>"window.nav('food-stmt')"});
@@ -934,7 +933,8 @@ window.renderStmt=function(fund){
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
   const out=document.getElementById(fund+'-stmt-out');
-  const rows=FIN.fundLedger(fund,from,to,type);   /* FIN logic unchanged */
+  const lv=FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
+  const rows=lv.rows;
   const _en=window.LANG==='en';
   const isFood=fund==='food';
   const fundLabel=isFood?(_en?'Food Fund':'صندوق الغداء'):(_en?'Diwan Fund':'صندوق الديوان');
@@ -955,16 +955,15 @@ window.renderStmt=function(fund){
     out.innerHTML='<div class="acct-stmt">'+head+'<div class="as-empty">'+L.noData('ops')+'</div></div>';
     return;
   }
-  let bal=0,totalCr=0,totalDr=0;
+  const totalCr=lv.totalCr,totalDr=lv.totalDr,bal=lv.closing;
   const body=rows.map(r=>{
-    bal+=r.cr-r.dr;totalCr+=r.cr;totalDr+=r.dr;
     return '<tr>'
       +'<td class="as-c">'+fdate(r.date)+'</td>'
       +'<td class="as-desc">'+(r.no?'<span class="lnk-nm" onclick="window.openPersonByVoucher(\''+esc(r.no)+'\')">'+esc(r.name||'—')+'</span>':esc(r.name||'—'))+'</td>'
       +'<td class="as-desc">'+esc(r.desc)+'</td>'
       +'<td class="as-num as-cr">'+(r.cr>0?'₪ '+fmt(r.cr):(r.type==='don'?'<span style="color:var(--don);font-size:11px">'+(_en?'Donation':'تبرع')+'</span>':'—'))+'</td>'
       +'<td class="as-num as-dr">'+(r.dr>0?'₪ '+fmt(r.dr):'—')+'</td>'
-      +'<td class="as-num as-bal">₪ '+fmt(bal)+'</td>'
+      +'<td class="as-num as-bal">₪ '+fmt(r.run)+'</td>'
       +'<td class="as-note">'+esc(r.note||'')+'</td>'
       +'</tr>';
   }).join('');
@@ -1026,13 +1025,13 @@ window.renderMemberStmt=function(){
   const T=(ar,en)=>_en?en:ar;
   const printDate=new Date().toLocaleDateString('en-GB');
 
-  const st=FIN.memberStatement(mid,from,to);
+  /* IG-007 (FD-013): the engine supplies carried balance, movement rows and
+     period totals; this renderer formats only. */
+  const _v=FIN.memberStatementView(mid,from,to);
+  const st=_v.statement;
   const _alloc=FIN.allocateFoodDonations();
-
-  /* Carried balance before 31/12/2024 — same inputs the engine reads. */
-  const histDue=Number(member.historical_balance_ils||0);
-  const histPaid=Number(member.historical_payments_ils||0);
-  const carried=histDue-histPaid;
+  const histPaid=_v.histPaid;
+  const carried=_v.carried;
 
   /* Manual receipt no. lives inside the payment voucher Notes; surface ONLY the
      number (never the raw notes text). Tune the keywords if your notes differ. */
@@ -1047,8 +1046,8 @@ window.renderMemberStmt=function(){
 
   /* Movement rows = engine rows minus the two folded historical (date '—') rows,
      whose net is already represented by `carried`. Running balances are unchanged. */
-  const moves=st.rows.filter(r=>r.date!=='—');
-  let totSub=0, totPay=0;
+  const moves=_v.moves;
+  const totSub=_v.totSub, totPay=_v.totPay;
   const bodyRows=[];
   /* Explicit, symmetric balance-polarity marker (DDL-02 B-3): every balance cell
      shows دائن/مدين for BOTH polarities — never credit-labelled / debit-by-absence. */
@@ -1069,8 +1068,6 @@ window.renderMemberStmt=function(){
   );
 
   moves.forEach(r=>{
-    totSub+=Number(r.dr||0);
-    totPay+=Number(r.cr||0);
     const isReceipt = r.no && r.no!=='—';
     const year = (r.date && r.date!=='—') ? String(r.date).slice(0,4) : '—';
     const sysNo = isReceipt ? esc(r.no) : '—';
@@ -1097,10 +1094,10 @@ window.renderMemberStmt=function(){
                   : T('الحساب مسدد بالكامل','Fully settled');
 
   /* Donation transparency (do NOT affect the balance) — retained for auditors. */
-  const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&r.movement_type!=='historical_debt_collection'); /* ق4: collections live in the main ledger */
+  const dons=FIN.memberDonations(mid); /* ق4: collections live in the main ledger */
   const donSplit=d=>{
     const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
-    if(d.donation_display_fund!=='food') return T('تبرع ديوان','Diwan Donation')+' ₪'+fmt(d.amount_ils||d.amount);
+    if(d.donation_display_fund!=='food') return T('تبرع ديوان','Diwan Donation')+' ₪'+fmt(FIN.amountOf(d));
     const p=[];
     if(sp.debtSettled>0) p.push(T('تسوية ذمة','Debt Settlement')+' ₪'+fmt(sp.debtSettled));
     if(sp.toDeficit>0)   p.push(T('تبرع عجز تاريخي','Historical Deficit')+' ₪'+fmt(sp.toDeficit));
@@ -1111,7 +1108,7 @@ window.renderMemberStmt=function(){
     '<div class="as-don"><div class="as-don-h">'
     +T('حركات التبرعات (للشفافية — لا تؤثّر على الرصيد)','Donation movements (transparency — do not affect the balance)')
     +'</div>'
-    +dons.map(d=>'<div class="as-don-r"><span>'+fdate(d.receipt_date)+' — '+donSplit(d)+'</span><span class="as-don-v">₪ '+fmt(d.amount_ils||d.amount)+'</span></div>').join('')
+    +dons.map(d=>'<div class="as-don-r"><span>'+fdate(d.receipt_date)+' — '+donSplit(d)+'</span><span class="as-don-v">₪ '+fmt(FIN.amountOf(d))+'</span></div>').join('')
     +'</div>'
   ) : '';
 
@@ -1760,8 +1757,7 @@ window.exportCSV=function(type){
   if(type==='food-stmt'){
     const from=document.getElementById('food-stmt-from')?.value||'';
     const to=document.getElementById('food-stmt-to')?.value||'';
-    const stmtRows=FIN.fundLedger('food',from,to,'');
-    let bal=0;
+    const stmtRows=FIN.fundLedgerView('food',from,to,'').rows; /* IG-007: engine running balance */
     h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
     const _en=window.LANG==='en';
     const summary=[
@@ -1772,14 +1768,13 @@ window.exportCSV=function(type){
       [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FinContract.foodNetPosition(),'','',''],
       ['','','','','','','']
     ];
-    rows=[...summary,...stmtRows.map(r=>{bal+=r.cr-r.dr;return[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',bal,r.note||''];})];
+    rows=[...summary,...stmtRows.map(r=>[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',r.run,r.note||''])];
   }else if(type==='diwan-stmt'){
     const from=document.getElementById('diwan-stmt-from')?.value||'';
     const to=document.getElementById('diwan-stmt-to')?.value||'';
-    const stmtRows=FIN.fundLedger('diwan',from,to,'');
-    let bal=0;
+    const stmtRows=FIN.fundLedgerView('diwan',from,to,'').rows; /* IG-007: engine running balance */
     h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
-    rows=stmtRows.map(r=>{bal+=r.cr-r.dr;return[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',bal,r.note||''];});
+    rows=stmtRows.map(r=>[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',r.run,r.note||'']);
   }else if(type==='member-stmt'){
     /* V-01 FIX: use canonical FIN.memberStatement() — single source of truth (Phase 15) */
     const mid=document.getElementById('ms-member')?.value;
@@ -1793,18 +1788,18 @@ window.exportCSV=function(type){
     ]);
   }else if(type==='food-rec'){
     h=['رقم','التاريخ','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
-    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').map(r=>[r.no,r.receipt_date,r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
+    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').map(r=>[r.no,r.receipt_date,r.payer_name||gmn(r.member_id),FIN.amountOf(r),r.currency,r.payment_method,r.notes]);
   }else if(type==='food-pay'){
     h=['رقم','التاريخ','المستفيد','المبلغ ₪','طريقة الصرف','ملاحظات'];
-    rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),p.amount_ils||p.amount,p.payment_method,p.notes]);
+    rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),FIN.amountOf(p),p.payment_method,p.notes]);
   }else if(type==='diwan-rec'){
     /* Domain 1 — surface the FE-004/FE-005 split on the diwan export too (additive column). */
     const _det=mt=>mt==='diwan_operational_income'?'إيراد تشغيلي':mt==='diwan_cash_donation'?'تبرع نقدي':'—';
     h=['رقم','التاريخ','نوع الحدث','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
-    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').map(r=>[r.no,r.receipt_date,_det(r.movement_type),r.payer_name||gmn(r.member_id),r.amount_ils||r.amount,r.currency,r.payment_method,r.notes]);
+    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').map(r=>[r.no,r.receipt_date,_det(r.movement_type),r.payer_name||gmn(r.member_id),FIN.amountOf(r),r.currency,r.payment_method,r.notes]);
   }else if(type==='diwan-pay'){
     h=['رقم','التاريخ','المستفيد','المبلغ ₪','الفئة','ملاحظات'];
-    rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),p.amount_ils||p.amount,L.expense(p.expense_type),p.notes]);
+    rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),FIN.amountOf(p),L.expense(p.expense_type),p.notes]);
   }else{
     h=['العملية','الوصف','المستخدم','التاريخ'];
     rows=DB.audit.map(a=>[a.action,a.description,a.user_name,a.created_at]);
@@ -1851,7 +1846,7 @@ window.exportMemberStmt=function(format){
 
   /* EXCEL */
   if(format==='excel'){
-    const _dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&r.movement_type!=='historical_debt_collection'&&inRange(r.receipt_date)); /* ق4 */
+    const _dons=FIN.memberDonations(mid,from,to); /* IG-007 · ق4 excluded by the engine */
     const _alloc=FIN.allocateFoodDonations();
     const _donRows=[];
     if(_dons.length){
@@ -1866,7 +1861,7 @@ window.exportMemberStmt=function(format){
           if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
           label=parts.join(' · ')||'تبرع';
         } else label='تبرع ديوان';
-        _donRows.push([d.receipt_date,d.no,label,Number(d.amount_ils||d.amount||0)]);
+        _donRows.push([d.receipt_date,d.no,label,FIN.amountOf(d)]);
       });
       _donRows.push(['تسوية الذمة تخفّض رصيد العضو · التبرعات الأخرى للشفافية فقط ولا تؤثّر على الرصيد']);
     }
@@ -1917,22 +1912,22 @@ window.exportPagePDF=function(type){
   const fund=type.startsWith('food')?'food':'diwan';
 
   if(type==='food-rec'||type==='diwan-rec'){
-    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund);
+    const d=FIN.voucherExportRows('rec',fund);   /* IG-007: engine row model */
     let total=0;
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u062f\u0627\u0641\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0637\u0631\u064a\u0642\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
-    d.sort((a,b)=>new Date(a.receipt_date)-new Date(b.receipt_date)).forEach(r=>{
-      const amt=Number(r.amount_ils||r.amount||0);total+=amt;
-      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.member_id?gmn(r.member_id):r.payer_name||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.method(r.payment_method)}</td><td>${esc(r.notes||'')}</td></tr>`;
+    d.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(r=>{
+      const amt=r.amount;total+=amt;
+      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.date}</td><td>${esc(r.member_id?gmn(r.member_id):r.payer_name||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.method(r.payment_method)}</td><td>${esc(r.notes)}</td></tr>`;
     });
     tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0625\u064a\u0635\u0627\u0644)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
   else if(type==='food-pay'||type==='diwan-pay'){
-    const d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund);
+    const d=FIN.voucherExportRows('pay',fund);   /* IG-007: engine row model */
     let total=0;
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0641\u0626\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
-    d.sort((a,b)=>new Date(a.payment_date)-new Date(b.payment_date)).forEach(p=>{
-      const amt=Number(p.amount_ils||p.amount||0);total+=amt;
-      tableHTML+=`<tr><td>${esc(p.no)}</td><td>${p.payment_date}</td><td>${esc(p.beneficiary_name||gmn(p.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.expense(p.expense_type)}</td><td>${esc(p.notes||'')}</td></tr>`;
+    d.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(p=>{
+      const amt=p.amount;total+=amt;
+      tableHTML+=`<tr><td>${esc(p.no)}</td><td>${p.date}</td><td>${esc(p.beneficiary_name||gmn(p.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.expense(p.expense_type)}</td><td>${esc(p.notes)}</td></tr>`;
     });
     tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0633\u0646\u062f)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
   }
@@ -1943,16 +1938,15 @@ window.exportPagePDF=function(type){
     /* Domain 3 (\u00a74.2) \u2014 mirror prtDonStmt: the printed CASH total must never
        conflate the in-kind documentary value. Cash = non-in-kind; in-kind is
        summed and shown SEPARATELY, its rows labelled documentary. */
-    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
-    const _ink=r=>r.movement_type==='donation_inkind';
+    const d=FIN.voucherExportRows('don');   /* IG-007: engine row model (FD-013) */
     let cashTot=0,inkTot=0;
     tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
     d.forEach(r=>{
-      const amt=Number(r.amount_ils||r.amount||0); if(_ink(r))inkTot+=amt; else cashTot+=amt;
-      const dir=_ink(r)
+      const amt=r.amount; if(r.inkind)inkTot+=amt; else cashTot+=amt;
+      const dir=r.inkind
         ? (window.LANG==='en'?'In-kind/Service \u00b7 documentary':'\u0639\u064a\u0646\u064a/\u062e\u062f\u0645\u064a \u00b7 \u062a\u0648\u062b\u064a\u0642\u064a')+(r.register_category?' ('+esc(r.register_category)+')':'')
-        : (r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.food_donation_allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'');
-      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.receipt_date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${dir}</td><td>${esc(r.notes||'')}</td></tr>`;
+        : r.display_fund+(r.display_fund==='food'?(r.allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'');
+      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${dir}</td><td>${esc(r.notes)}</td></tr>`;
     });
     tableHTML+=`<tr class="final"><td colspan="3">${window.LANG==='en'?'Cash Total (in-kind excluded \u2014 \u00a74.2)':'\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0646\u0642\u062f\u064a (\u0627\u0644\u0639\u064a\u0646\u064a \u0645\u0633\u062a\u0628\u0639\u064e\u062f \u2014 \u00a74.2)'}</td><td>\u20aa ${fmt(cashTot)}</td><td>${window.LANG==='en'?'in-kind: \u20aa':'\u0639\u064a\u0646\u064a \u062a\u0648\u062b\u064a\u0642\u064a: \u20aa'} ${fmt(inkTot)}</td><td></td></tr></tbody></table>`;
   }
@@ -1998,29 +1992,28 @@ window.exportPageExcel=function(type){
   let wsData=[];
   const fname='diwan-'+type+'-'+today();
 
+  /* IG-007 (FD-013): financial row models come from FIN.voucherExportRows;
+     this exporter maps them to localized cells only. */
   if(type==='food-rec'||type==='diwan-rec'){
-    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund);
     wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u062f\u0627\u0641\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u0627\u0644\u0637\u0631\u064a\u0642\u0629','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.member_id?gmn(r.member_id):r.payer_name||'',Number(r.amount_ils||r.amount||0),L.method(r.payment_method),r.notes||'']));
+    FIN.voucherExportRows('rec',fund).forEach(r=>wsData.push([r.no,r.date,r.member_id?gmn(r.member_id):r.payer_name||'',r.amount,L.method(r.payment_method),r.notes]));
   }
   else if(type==='food-pay'||type==='diwan-pay'){
-    const d=DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund);
     wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f','\u0627\u0644\u0645\u0628\u0644\u063a','\u0627\u0644\u0641\u0626\u0629','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    d.forEach(p=>wsData.push([p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id)||'',Number(p.amount_ils||p.amount||0),L.expense(p.expense_type),p.notes||'']));
+    FIN.voucherExportRows('pay',fund).forEach(p=>wsData.push([p.no,p.date,p.beneficiary_name||gmn(p.member_id)||'',p.amount,L.expense(p.expense_type),p.notes]));
   }
   else if(type==='don'){
-    const d=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation');
     wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u062a\u0628\u0631\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u064a\u0638\u0647\u0631 \u0641\u064a','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
     /* Domain 3 (Display Principle) — mark in-kind rows as documentary, never blank/cash. */
-    d.forEach(r=>wsData.push([r.no,r.receipt_date,r.payer_name||gmn(r.member_id)||'',Number(r.amount_ils||r.amount||0),
-      r.movement_type==='donation_inkind'
+    FIN.voucherExportRows('don').forEach(r=>wsData.push([r.no,r.date,r.payer_name||gmn(r.member_id)||'',r.amount,
+      r.inkind
         ? (window.LANG==='en'?'In-kind/Service · documentary':'عيني/خدمي · توثيقي')+(r.register_category?' ('+r.register_category+')':'')
-        : (r.donation_display_fund||'')+(r.donation_display_fund==='food'?(r.food_donation_allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.food_donation_allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),
-      r.notes||'']));
+        : r.display_fund+(r.display_fund==='food'?(r.allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),
+      r.notes]));
   }
   else if(type==='members'){
     wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
-    DB.members.filter(m=>m.is_active!==false).forEach(m=>wsData.push([m.name,m.phone||'',Number(m.historical_balance_ils||0),FIN.memberBalance(m.id)]));
+    FIN.voucherExportRows('members').forEach(m=>wsData.push([m.name,m.phone,m.historical,m.balance]));
   }
   else if(type==='annual'){
     wsData=[['\u0627\u0644\u0633\u0646\u0629','\u0627\u0644\u0645\u0628\u0644\u063a','\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621','\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629','\u0627\u0644\u062a\u0627\u0631\u064a\u062e']];
