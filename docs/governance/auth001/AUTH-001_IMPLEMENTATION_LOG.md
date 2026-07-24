@@ -24,7 +24,7 @@ MODEL2 / business‑logic changes.
 | PR‑3 | `login-gate` Edge Function + progressive lockout + audit | 🚧 code complete (#169) · awaiting `login-gate` deploy + live‑verify |
 | PR‑4 | Password policy + minimal password UI | ✅ merged (#170) |
 | PR‑5 | Create‑User workflow + one‑time credentials dialog | ✅ merged (#171) |
-| PR‑6 | Audit completion + documentation + final verification | 🚧 code complete · in PR |
+| PR‑6 | Audit completion + documentation + final verification | ✅ merged (#172) |
 
 ## PR‑1 — Database migration (merged)
 **Migration:** `supabase/migrations/20260723140000_auth001_login_attempts_and_user_identity.sql`
@@ -60,6 +60,26 @@ PR‑5), so PR‑2 is purely additive management — no create/login regression.
 `constitutional-verification` 12/12; `fin2` PASS; Constitutional Laboratory (regression) — see PR.
 **Live verification (post‑deploy):** unauthenticated call → 401 `not_admin`; admin create/reset/
 disable/enable/unlock/force round‑trip; audit rows written.
+
+## PR‑3 — login-gate Edge Function + progressive lockout + audit (code complete; deploy pending)
+**Edge Function** `supabase/functions/login-gate/index.ts` (`verify_jwt = false`): enforces the
+**mandatory order** — normalize/resolve identifier → disabled → admin‑lock → timed‑lock →
+validate credentials → (fail: `attempts++` / escalate / audit) | (success: reset / audit /
+issue session). Non‑cumulative ladder (fresh 15 per stage → 5m → 15m → 1h → admin) via the
+shared `onFailure`/`onSuccess`/`lockStatus`; success and admin‑unlock both reset to initial
+state. Always 200 with a structured verdict; audits `login_success` / `login_failed` /
+`account_locked`.
+**Client** `public/js/auth.js`: `window.login` routes through `login-gate` (`window.USE_LOGIN_GATE
+!== false`) and **falls back to the legacy direct sign‑in on a genuine infra error** (undeployed /
+5xx / network) so login always works; a business verdict (disabled / locked / invalid) is honoured
+and never falls back. Human‑readable lock message (owner decision 8), bilingual, with retry hint.
+Legacy synthetic phone→email mapping preserved in the fallback (domain unchanged).
+**Deploy command (fallback workflow):** `supabase functions deploy login-gate --project-ref ralifvemgapmsgrjgazh` (**Verify JWT OFF**).
+**Local verification:** `node --check` clean; `auth-core` 39/39 (lockout ladder); Constitutional
+Laboratory 90/90 (app boots with the rerouted login); `constitutional-verification` 12/12; `fin2` PASS.
+**Live verification (post‑deploy):** correct password → session; wrong password increments; 15th →
+5‑minute lock + message; unlock via admin‑users resets; audit rows for each. Before deploy, the
+client fallback keeps login working (no lockout) — no login regression at any point.
 
 ## PR‑4 — Password policy + minimal password UI (client‑only; deploy‑independent)
 Aligns the **client** password experience with the owner‑ratified final policy and the
