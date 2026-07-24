@@ -81,17 +81,17 @@ module.exports = [
   },
   {
     id: 'FOC-005',
-    title: 'تبرّع غذائي من عضو مَدين — أولوية سداد الدَّين (ق5)',
+    title: 'تبرّع غذائي عام من عضو مَدين — لا يمسّ الذمّة (FC-003 · FD-008)',
     member: 'LAB-002',
-    narrative: 'أحمد يوسف عليه اشتراكان (دَينه 400). يتبرّع 500 للغداء: يُسدَّد دَينه 400 أولًا (تحويل داخلي غداء←عجز)، ويبقى 100 تبرّعًا. الشريحة المسدِّدة مُستبعَدة من سجلّ التبرّعات.',
-    business: 'التبرّع سدّد دَين العضو أولًا (400): خرجت هذه الشريحة من الغداء ودخلت خزينة العجز (تحويل داخلي متوازن)، وبقيت 100 تبرّعًا للغداء. لأن الشريحة سدّدت دَينًا فهي ليست تبرّعًا عامًّا، فلم تُدرَج في سجلّ التبرّعات.',
-    laws: ['1 حفظ القيمة', '2 الاشتقاق', '4 هويّة معلنة', '8 العهدة', '9 حدّ العجز'],
+    narrative: 'أحمد يوسف عليه اشتراكان (دَينه 400). يتبرّع 500 للغداء تبرّعًا عامًّا (بلا تخصيص سداد). دستوريًّا (FD-008): التبرّع العام لا يمسّ ذمّة العضو أبدًا — يدخل كلّه خزينة الغداء ويُدرَج في سجلّ التبرّعات، ويبقى دَينه 400 كما هو.',
+    business: 'بموجب الدستور المالي المجمَّد (FC-003 · FD-008 · CCR-001 IG-002): لا يُسدَّد دَينُ عضوٍ من تبرّعٍ إلا بتخصيصٍ صريح (التوزيع اليدوي بشريحة سداد). هذا تبرّعٌ عامٌّ غير مخصَّص، فدخل كلّه (+500) خزينة الغداء وأُدرِج في سجلّ التبرّعات النقدية، ولم يتغيّر رصيد العضو (400) ولا خزينة العجز. (الأثر التاريخي للتبرّعات في السنوات المقفلة محفوظٌ كما هو — FD-004.)',
+    laws: ['1 حفظ القيمة', '4 التصنيف الصريح', '8 العهدة', 'FD-008 التخصيص الصريح'],
     op: { type: 'receipt', fund: 'donation', payerType: 'member', member: 'LAB-002', amount: 500, kind: 'cash', display: 'food', alloc: 'support_current' },
     expect: (b, a) => [
-      { label: 'دَين العضو 400 → 0', pass: eq(b.members['LAB-002'].finalBalance, 400) && eq(a.members['LAB-002'].finalBalance, 0), detail: b.members['LAB-002'].finalBalance + ' → ' + a.members['LAB-002'].finalBalance },
-      { label: 'خزينة الغداء +100 فقط (الفائض بعد الدَّين)', pass: eq(a.treasuries.food, b.treasuries.food + 100), detail: b.treasuries.food + ' → ' + a.treasuries.food },
-      { label: 'خزينة العجز −3000 → −2600 (استلمت شريحة الدَّين 400)', pass: eq(a.treasuries.defRem, b.treasuries.defRem + 400), detail: b.treasuries.defRem + ' → ' + a.treasuries.defRem },
-      { label: 'الشريحة المسدِّدة مُستبعَدة من سجلّ التبرّعات', pass: a.registers.cashN === b.registers.cashN, detail: b.registers.cashN + ' → ' + a.registers.cashN }
+      { label: 'دَين العضو لم يتغيّر (400 → 400) — تبرّعٌ عامٌّ لا يسدِّد', pass: eq(b.members['LAB-002'].finalBalance, 400) && eq(a.members['LAB-002'].finalBalance, 400), detail: b.members['LAB-002'].finalBalance + ' → ' + a.members['LAB-002'].finalBalance },
+      { label: 'خزينة الغداء +500 كاملة', pass: eq(a.treasuries.food, b.treasuries.food + 500), detail: b.treasuries.food + ' → ' + a.treasuries.food },
+      { label: 'خزينة العجز لم تتغيّر (لا شريحة سداد)', pass: eq(a.treasuries.defRem, b.treasuries.defRem), detail: b.treasuries.defRem + ' → ' + a.treasuries.defRem },
+      { label: 'أُدرِج في سجلّ التبرّعات النقدية (+1) — تبرّعٌ عامٌّ كامل', pass: a.registers.cashN === b.registers.cashN + 1, detail: b.registers.cashN + ' → ' + a.registers.cashN }
     ]
   },
   {

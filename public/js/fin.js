@@ -218,7 +218,17 @@ const FIN={
       .slice().sort((a,b)=>(new Date(a.receipt_date)-new Date(b.receipt_date))||String(a.id).localeCompare(String(b.id)));
     const autoRows=foodDon.filter(r=>r.manual_allocation!==true);
     const manualRows=foodDon.filter(r=>r.manual_allocation===true);
-    const donations=autoRows.map(r=>({id:r.id,memberId:r.member_id||null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
+    /* CCR-001 IG-002 — FC-003 · FD-008: only a donation EXPLICITLY designated to settle
+       debt reduces member debt; a GENERAL donation never does. Explicit designation is the
+       manual allocation split (manual_debt_settlement > 0, handled below as manualRows).
+       AUTO rows therefore carry NO debt-settlement eligibility in OPEN fiscal years.
+       Donations dated in CLOSED years (≤ locked year) keep their recognized historical
+       effect unchanged — FD-004: closed-period history is immutable (CCR-001 Rev A §B-5). */
+    const _lockY=(typeof lockedThroughYear==='function')?lockedThroughYear()
+      :(typeof window!=='undefined'&&Number.isFinite(window.LOCKED_THROUGH_YEAR))?window.LOCKED_THROUGH_YEAR
+      :(new Date().getFullYear()-1);
+    const _inClosedYear=r=>{ const y=new Date(r.receipt_date).getFullYear(); return Number.isFinite(y)&&y<=_lockY; };
+    const donations=autoRows.map(r=>({id:r.id,memberId:_inClosedYear(r)?(r.member_id||null):null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
     const baseDebt={};
     donations.forEach(d=>{ if(d.memberId!=null&&baseDebt[d.memberId]===undefined) baseDebt[d.memberId]=FIN._memberBaseBalance(d.memberId); });
     const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
