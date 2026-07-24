@@ -749,6 +749,36 @@ window.updateMember=async function(){
     Object.assign(upd, bal>=0
       ? {historical_balance_ils:bal, historical_payments_ils:0, credit_balance_ils:0}
       : {historical_balance_ils:0, historical_payments_ils:-bal, credit_balance_ils:-bal});
+    /* ═══ CCR-001 · IG-005A — FC-003 FD-005 / FD-031 / FD-004 ═══
+       An opening-balance change is a LIABILITY change and must leave a system
+       financial document. Documentation-first and BLOCKING: an immutable
+       version snapshot (voucher_versions · kind 'member_opening') plus a
+       dedicated audit line are written BEFORE the member row changes; if the
+       documentation cannot be written, the change is refused (FD-031 — no
+       liability may change without a system financial document). */
+    try{
+      const _newNet=Math.round(bal*100)/100;
+      const pre={ id:_m.id, no:_m.member_code||_m.id, version:1,
+        created_by:_m.created_by, created_at:_m.created_at, name:_m.name,
+        historical_balance_ils:Number(_m.historical_balance_ils||0),
+        historical_payments_ils:Number(_m.historical_payments_ils||0),
+        net_opening:oldNet };
+      const post=Object.assign({},pre,{
+        historical_balance_ils:upd.historical_balance_ils,
+        historical_payments_ils:upd.historical_payments_ils,
+        net_opening:_newNet });
+      const{data:_vh}=await SB.from('voucher_versions').select('version_no')
+        .eq('voucher_kind','member_opening').eq('voucher_id',_m.id)
+        .order('version_no',{ascending:false}).limit(1);
+      const _nv=(_vh&&_vh.length?Number(_vh[0].version_no):1)+1;
+      await recordVoucherVersion('member_opening',pre,post,
+        `تغيير الرصيد الافتتاحي · Opening balance change ₪${fmt(oldNet)} → ₪${fmt(_newNet)}`,_nv);
+      await logAction('opening_balance_change',
+        `تغيير الرصيد الافتتاحي للعضو ${name}: ₪${fmt(oldNet)} → ₪${fmt(_newNet)}`,'members',_m.id);
+    }catch(_e){
+      toast('🔏 تعذّر توثيق تغيير الرصيد الافتتاحي — لم يُحفَظ التعديل: '+((_e&&_e.message)||_e),'err');
+      return;
+    }
   }
   /* BO-08 · Edit Member — via the Business Operations layer. */
   const _res=await BusinessOps.editMember({id, changes:upd, logLabel:`تعديل بيانات عضو: ${name}`});

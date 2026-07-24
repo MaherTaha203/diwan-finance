@@ -1543,6 +1543,7 @@ const AUTH_AUDIT={
   password_change:{ar:'تغيير كلمة المرور',en:'Password changed',c:'blue'},
   force_password_change:{ar:'فرض تغيير كلمة المرور',en:'Force password change',c:'blue'},
   credentials_copied:{ar:'نسخ معلومات الدخول',en:'Credentials copied',c:'blue'},
+  opening_balance_change:{ar:'تغيير رصيد افتتاحي',en:'Opening balance change',c:'blue'},
   login_success:{ar:'تسجيل دخول ناجح',en:'Login success',c:'green'},
   login_failed:{ar:'محاولة دخول فاشلة',en:'Login failed',c:'red'},
 };
@@ -2158,6 +2159,31 @@ window.saveSettings = async function(){
   const fOpJod=parseFloat(document.getElementById('set-food-opening-jod')?.value)||0;
   const dOpUsd=parseFloat(document.getElementById('set-diwan-opening-usd')?.value)||0;
   const dOpJod=parseFloat(document.getElementById('set-diwan-opening-jod')?.value)||0;
+  /* ═══ CCR-001 · IG-005A — FC-003 FD-005 / FD-031 ═══
+     Fund-opening changes re-base fund history: documentation-first and BLOCKING.
+     Each change writes an immutable version snapshot (voucher_versions · kind
+     'fund_opening') + a dedicated audit line BEFORE the setting is written; if
+     documentation fails, the settings save is refused. */
+  const _openChanges=[];
+  if(Number(window.FOOD_OPENING||0)!==foodOpening)   _openChanges.push({fund:'الغداء', id:'settings:food_opening_balance',  old:Number(window.FOOD_OPENING||0),  nw:foodOpening});
+  if(Number(window.DIWAN_OPENING||0)!==diwanOpening) _openChanges.push({fund:'الديوان', id:'settings:diwan_opening_balance', old:Number(window.DIWAN_OPENING||0), nw:diwanOpening});
+  try{
+    for(const c of _openChanges){
+      const pre ={id:c.id,no:c.id,version:1,fund:c.fund,opening:c.old};
+      const post={id:c.id,no:c.id,version:1,fund:c.fund,opening:c.nw};
+      const{data:_vh}=await SB.from('voucher_versions').select('version_no')
+        .eq('voucher_kind','fund_opening').eq('voucher_id',c.id)
+        .order('version_no',{ascending:false}).limit(1);
+      const _nv=(_vh&&_vh.length?Number(_vh[0].version_no):1)+1;
+      await recordVoucherVersion('fund_opening',pre,post,
+        `تغيير الرصيد الافتتاحي (${c.fund}) ₪${fmt(c.old)} → ₪${fmt(c.nw)}`,_nv);
+      await logAction('opening_balance_change',
+        `تغيير الرصيد الافتتاحي لخزينة ${c.fund}: ₪${fmt(c.old)} → ₪${fmt(c.nw)}`,'settings',null);
+    }
+  }catch(_e){
+    toast('🔏 تعذّر توثيق تغيير الرصيد الافتتاحي — لم تُحفَظ الإعدادات: '+((_e&&_e.message)||_e),'err');
+    return;
+  }
   const updates = [
     {key:'food_opening_balance',  value: String(foodOpening)},
     {key:'diwan_opening_balance', value: String(diwanOpening)},
