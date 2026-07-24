@@ -130,13 +130,28 @@ const FIN={
     return Array.from(ys).sort((a,b)=>a-b);
   },
   memberDelinquency(memberId){
+    /* ═══ CCR-001 · IG-003 — FC-003 · FD-007 / FD-001 ═══
+       Delinquency is determined by the REAL outstanding balance (FD-001:
+       settled ⇔ outstanding ≤ 0), and per-year settled status derives from the
+       constitutional FD-002 allocation (IG-001 accessor) — never from stored
+       subscription rows alone. A member whose payments arrived as food receipts
+       shows the years the waterfall covers; a member current on subscriptions
+       but carrying historical debt IS delinquent. byYear keeps its legacy shape
+       {due, paid, remaining, settled} so every consumer (delinquent report,
+       dues workspace, dashboard debts, member lifecycle) conforms through this
+       single accessor (FD-011). */
+    const alloc=FIN.memberAllocation(memberId);
     const byYear={}; let unpaidCount=0;
-    (DB.subscriptions||[]).filter(s=>s.member_id===memberId).forEach(s=>{
-      const due=Number(s.due_amount_ils||0), paid=Number(s.paid_amount_ils||0);
-      byYear[Number(s.year)]={ due, paid, remaining:FIN._r2(Math.max(0,due-paid)), settled:(due<=0)||(paid>=due) };
-      if(due>0 && paid<due) unpaidCount++;
+    Object.keys(alloc.perYear).forEach(y=>{
+      const p=alloc.perYear[y];
+      const remaining=FIN._r2(p.remaining);
+      byYear[Number(y)]={ due:p.due, paid:FIN._r2(p.due-remaining), remaining, settled:(p.due<=0)||p.settled };
+      if(p.due>0 && !p.settled) unpaidCount++;
     });
-    return { byYear, isDelinquent:unpaidCount>0, unpaidCount };
+    const outstanding=FIN._r2(alloc.outstanding);
+    return { byYear, unpaidCount, outstanding,
+      historicalRemaining:alloc.historical.remaining,
+      isDelinquent: outstanding>0.005 };
   },
   /* ═══ CCR-001 · IG-001 — Constitutional payment allocation (FC-003 · FD-002) ═══
      Read-time derivation of the constitutional waterfall: outstanding annual
