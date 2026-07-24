@@ -232,7 +232,7 @@ function buildRecVoucher(r){
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(meth)+'</div></div>'
     +cur+note
     +'</div>'
-    +'<div class="amount"><div class="big cr">₪ '+fmt(r.amount_ils||r.amount)+'</div><div class="words">'+amountToWordsEn(r.amount_ils||r.amount)+'</div></div>'
+    +'<div class="amount"><div class="big cr">₪ '+fmt(FIN.amountOf(r))+'</div><div class="words">'+amountToWordsEn(FIN.amountOf(r))+'</div></div>'
     +reportDfoot(verifyUrl,'diwan-finance.com/verify<span class="tok">'+esc(r.verification_token||'')+'</span>')
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
@@ -252,7 +252,7 @@ function buildPayVoucher(p){
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(L.method(p.payment_method))+'</div></div>'
     +cur+note+appr
     +'</div>'
-    +'<div class="amount"><div class="big dr">₪ '+fmt(p.amount_ils||p.amount)+'</div><div class="words">'+amountToWordsEn(p.amount_ils||p.amount)+'</div></div>'
+    +'<div class="amount"><div class="big dr">₪ '+fmt(FIN.amountOf(p))+'</div><div class="words">'+amountToWordsEn(FIN.amountOf(p))+'</div></div>'
     +reportDfoot(verifyUrl,'diwan-finance.com/verify<span class="tok">'+esc(p.verification_token||'')+'</span>')
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
@@ -303,25 +303,24 @@ window.buildFundStatementHTML=function(fund){
   const from=document.getElementById(fund+'-stmt-from')?.value||'';
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
-  const rows=FIN.fundLedger(fund,from,to,type);   /* FIN logic unchanged */
+  const lv=FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
   const fundLabel=fund==='food'?window.t('receipts.fund_food'):window.t('receipts.fund_diwan');
-  let bal=0,totCr=0,totDr=0,openBal=0;
-  const rowsHTML=rows.map((r,i)=>{
-    bal+=r.cr-r.dr;totCr+=r.cr;totDr+=r.dr;
-    if(i===0&&r.type==='open')openBal=r.cr-r.dr;
+  const bal=lv.closing,totCr=lv.totalCr,totDr=lv.totalDr,openBal=lv.opening;
+  const rowsHTML=lv.rows.map(r=>{
     let crCell;
     if(r.cr>0){ crCell='<span class="cr">₪ '+fmt(r.cr)+'</span>'; }
     else if(r.type==='don'){
       /* P9 — informational food-donation row: classify Historical vs Current Support and
-         show the amount. cr stays 0 so the current balance is NOT affected (display only). */
+         show the amount. cr stays 0 so the current balance is NOT affected (display only).
+         IG-007: classification + amount come from the engine's single predicates. */
       const _dr=DB.receipts.find(x=>x.id===r.id);
-      const _amt=_dr?Number(_dr.amount_ils||_dr.amount||0):0;
-      const _hist=_dr?(_dr.manual_allocation?(Number(_dr.manual_historical_donation||0)>0):(_dr.food_donation_allocation==='reduce_deficit')):false;
+      const _amt=_dr?FIN.amountOf(_dr):0;
+      const _hist=_dr?FIN.foodDonationClass(_dr)==='historical':false;
       const _lbl=fund==='food'?(_hist?(window.LANG==='en'?'Historical Donation':'تبرع تاريخي'):(window.LANG==='en'?'Current Support':'دعم حالي')):window.t('receipts.fund_don');
       crCell='<span class="cr">+₪ '+fmt(_amt)+' · '+_lbl+'</span>';
     } else { crCell='—'; }
     const drCell=r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—';
-    return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(bal)+'</td><td>'+esc(r.note||'')+'</td></tr>';
+    return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(r.run)+'</td><td>'+esc(r.note||'')+'</td></tr>';
   }).join('');
   const period=(from&&to?fmtDate2(from)+' — '+fmtDate2(to):from?window.t('stmt.date_from')+' '+fmtDate2(from):to?window.t('stmt.date_to')+' '+fmtDate2(to):window.t('stmt.all_periods'));
   const balCls=bal>=0?'pos':'neg';
@@ -371,19 +370,10 @@ window.prtMemberStmt=function(mode){
   const from=document.getElementById('ms-from')?.value||'';
   const to=document.getElementById('ms-to')?.value||'';
 
-  /* ── date range filter ── */
-  const fd=from?new Date(from):null;
-  const td=to?new Date(to):null;
-  const inRange=d=>{
-    if(!d||d==='—') return true;
-    const dt=new Date(d);
-    if(fd&&dt<fd) return false;
-    if(td&&dt>td) return false;
-    return true;
-  };
-
-  /* PHASE 11.5 — single source of truth (engine includes capped prepaid credit row) */
-  const st=FIN.memberStatement(mid,from,to);
+  /* PHASE 11.5 — single source of truth (engine includes capped prepaid credit row).
+     IG-007 (FD-013): one engine view supplies statement + carried + period totals. */
+  const _msv=FIN.memberStatementView(mid,from,to);
+  const st=_msv.statement;
   const openBal=st.openingBalance, totalDues=st.totalDues, totalPaid=st.totalPaid;
   const finalBal=st.finalBalance;
   const _en=window.LANG==='en';
@@ -395,7 +385,7 @@ window.prtMemberStmt=function(mode){
     }
     return _en?'Diwan Donation':'تبرع ديوان';
   };
-  const dons=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===mid&&r.movement_type!=='historical_debt_collection'&&inRange(r.receipt_date)); /* ق4 */
+  const dons=FIN.memberDonations(mid,from,to); /* IG-007 · ق4 excluded by the engine */
   const _alloc=FIN.allocateFoodDonations();
   const donSplit=d=>{
     const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
@@ -409,7 +399,7 @@ window.prtMemberStmt=function(mode){
   const donsHTML=dons.length?('<div class="period" style="margin-top:10px">'+(_en?'Donation movements':'حركات التبرعات')+'</div>'
     +'<div style="font-size:10px;color:var(--muted);margin:4px 0">'+(_en?'Debt Settlement reduces the member balance. Historical Deficit Donation and Current Support Donation are shown for transparency only and do not affect the member balance.':'تسوية الذمة تخفّض رصيد العضو. تبرع العجز التاريخي وتبرع الدعم الحالي يُعرضان للشفافية فقط ولا يؤثّران على رصيد العضو.')+'</div>'
     +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Movement breakdown':'تفصيل الحركة')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
-    +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donSplit(d)+'</td><td><span class="cr">₪ '+fmt(d.amount_ils||d.amount)+'</span></td></tr>').join('')
+    +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donSplit(d)+'</td><td><span class="cr">₪ '+fmt(FIN.amountOf(d))+'</span></td></tr>').join('')
     +'</tbody></table>'):'';
   const printDate=new Date().toLocaleDateString('en-GB');
   const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`${window.t('stmt.date_from')} ${fmtDate2(from)}`:to?`${window.t('stmt.date_to')} ${fmtDate2(to)}`:window.t('stmt.all_periods');
@@ -425,9 +415,9 @@ window.prtMemberStmt=function(mode){
     m=s.match(/^\s*#?\s*(\d{1,9})\s*$/);
     return m?m[1]:'';
   };
-  const _hd=Number(member.historical_balance_ils||0), _hp=Number(member.historical_payments_ils||0), _carried=_hd-_hp;
-  const moves=st.rows.filter(r=>r.date!=='—');
-  let totSub=0, totPay=0;
+  const _hp=_msv.histPaid, _carried=_msv.carried;
+  const moves=_msv.moves;
+  const totSub=_msv.totSub, totPay=_msv.totPay;
   const balTxt=v=>'<span class="num">₪ '+fmt(Math.abs(v))+'</span>'+(v>0?'<span class="tag dr">'+(_en?'Dr':'مدين')+'</span>':v<0?'<span class="tag cr">'+(_en?'Cr':'دائن')+'</span>':'');
   const cell=v=>v>0?'<span class="num">₪ '+fmt(v)+'</span>':'<span class="mut">—</span>';
   let tbody='<tr>'
@@ -435,7 +425,6 @@ window.prtMemberStmt=function(mode){
     +'<td class="c mut">—</td><td class="c mut">—</td><td class="c mut">—</td><td class="mut">—</td><td class="mut">—</td>'
     +'<td class="bal">'+balTxt(_carried)+'</td></tr>';
   moves.forEach(r=>{
-    totSub+=Number(r.dr||0); totPay+=Number(r.cr||0);
     const isReceipt=r.no&&r.no!=='—';
     const year=(r.date&&r.date!=='—')?String(r.date).slice(0,4):'—';
     const sysNo=isReceipt?esc(r.no):'—';

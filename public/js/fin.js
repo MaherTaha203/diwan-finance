@@ -311,6 +311,119 @@ const FIN={
     rows.sort((a,b)=>new Date(a.date)-new Date(b.date));
     return rows;
   },
+
+  /* ═══ CCR-001 · IG-007 — FC-003 · FD-013 / FD-011 ═══
+     Presentation accessors: every figure a report/screen/print/export shows is
+     produced HERE, from the same engine outputs, so no formula lives in
+     presentation code. Pure projections — no new accounting rule, values are
+     byte-identical to the sums the presentation layer previously computed. */
+
+  /* Fund statement view: ledger rows + running balance + totals (screen & print). */
+  fundLedgerView(fund,from,to,typeFilter){
+    const rows=FIN.fundLedger(fund,from,to,typeFilter);
+    let bal=0,totalCr=0,totalDr=0,opening=0;
+    const view=rows.map((r,i)=>{
+      bal+=r.cr-r.dr; totalCr+=r.cr; totalDr+=r.dr;
+      if(i===0&&r.type==='open') opening=r.cr-r.dr;
+      return Object.assign({},r,{run:bal});
+    });
+    return {rows:view,opening,totalCr,totalDr,closing:bal};
+  },
+
+  /* Member statement view: carried balance + movement rows + period totals
+     (screen & print consume this; they format only). */
+  memberStatementView(memberId,from,to){
+    const st=FIN.memberStatement(memberId,from,to);
+    const m=st.member||{};
+    const histDue=Number(m.historical_balance_ils||0);
+    const histPaid=Number(m.historical_payments_ils||0);
+    const moves=st.rows.filter(r=>r.date!=='—');
+    let totSub=0,totPay=0;
+    moves.forEach(r=>{ totSub+=Number(r.dr||0); totPay+=Number(r.cr||0); });
+    return {statement:st,moves,carried:histDue-histPaid,histDue,histPaid,totSub,totPay,finalBalance:st.finalBalance};
+  },
+
+  /* Member donation movements (transparency list on the member statement; ق4
+     collections excluded — they live in the main ledger). */
+  memberDonations(memberId,from,to){
+    const fd=from?new Date(from):null, td=to?new Date(to):null;
+    const inRange=d=>{ if(!d||d==='—') return true; const dt=new Date(d); if(fd&&dt<fd) return false; if(td&&dt>td) return false; return true; };
+    return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===memberId&&r.movement_type!=='historical_debt_collection'&&inRange(r.receipt_date));
+  },
+
+  /* Canonical stored-amount read (ILS figure of a voucher row). */
+  amountOf(r){ return Number(r.amount_ils||r.amount||0); },
+
+  /* Single in-kind predicate (FE-008 documentary donations). */
+  isInkindDonation(r){ return r.movement_type==='donation_inkind'; },
+
+  /* Single historical-vs-current classification for a food-display donation
+     (manual-allocation aware — the one authoritative predicate). */
+  foodDonationClass(r){
+    const hist=r.manual_allocation?(Number(r.manual_historical_donation||0)>0):(r.food_donation_allocation==='reduce_deficit');
+    return hist?'historical':'current';
+  },
+
+  /* Donation register model (donations statement/report): rows + cash/in-kind
+     split + fund direction totals + recognized allocation figures. */
+  donationRegister(){
+    const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.destination_treasury!=='historical_deficit');
+    const cashRows=rows.filter(r=>!FIN.isInkindDonation(r));
+    const inkindRows=rows.filter(r=>FIN.isInkindDonation(r));
+    const cashTot=cashRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const inkindTot=inkindRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const toFood=cashRows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    return {rows,cashRows,inkindRows,cashTot,inkindTot,toFood,toDiwan:cashTot-toFood,
+      foodDebt:FIN.foodDebtSettlementTotal(),foodDeficit:FIN.foodSettlementReserve(),foodSupport:FIN.foodCurrentSupportTotal(),
+      perReceipt:FIN.allocateFoodDonations().perReceipt};
+  },
+
+  /* Certified treasury position (dashboard + treasury workspace). */
+  treasuryPosition(){
+    const r2=FIN._r2;
+    const food=r2(FIN.foodBalance()), diwan=r2(FIN.diwanBalance()), don=r2(FIN.donBalance());
+    const deficit=r2(FIN.foodDeficitRemaining()), netFood=r2(FIN.foodNetPosition());
+    return {food,diwan,don,combined:r2(food+diwan),deficit,netFood,netCombined:r2(netFood+diwan),
+      reserve:r2(FIN.foodSettlementReserve()),support:r2(FIN.foodCurrentSupportTotal()),debtSettled:r2(FIN.foodDebtSettlementTotal())};
+  },
+
+  /* Cross-fund cash movement (food + diwan credit/debit rows) with period totals. */
+  cashMovement(from,to){
+    const rows=[];
+    ['food','diwan'].forEach(f=>(FIN.fundLedger(f,from,to)||[]).forEach(r=>{
+      if(r.type==='cr'||r.type==='dr')
+        rows.push({id:r.id,date:r.date,no:r.no,name:r.name,desc:r.desc,fund:f,in:Number(r.cr||0),out:Number(r.dr||0),type:r.type});
+    }));
+    rows.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const totalIn=FIN._r2(rows.reduce((t,r)=>t+r.in,0));
+    const totalOut=FIN._r2(rows.reduce((t,r)=>t+r.out,0));
+    return {rows,count:rows.length,totalIn,totalOut,net:FIN._r2(totalIn-totalOut)};
+  },
+
+  /* Day totals (dashboard hero): vouchers and net cash flow of one date. */
+  dayTotals(dateStr){
+    const rec=DB.receipts.filter(r=>!r.is_deleted&&r.receipt_date===dateStr);
+    const pay=DB.payments.filter(p=>!p.is_deleted&&p.payment_date===dateStr);
+    const recTotal=rec.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const payTotal=pay.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+    return {recCount:rec.length,payCount:pay.length,count:rec.length+pay.length,recTotal,payTotal,net:recTotal-payTotal};
+  },
+
+  /* Row models for the universal Excel exporters — presentation maps these to
+     localized cells; no financial field is read or coalesced in app code. */
+  voucherExportRows(kind,fund){
+    if(kind==='rec') return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund)
+      .map(r=>({no:r.no,date:r.receipt_date,member_id:r.member_id,payer_name:r.payer_name,amount:FIN.amountOf(r),payment_method:r.payment_method,notes:r.notes||''}));
+    if(kind==='pay') return DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund)
+      .map(p=>({no:p.no,date:p.payment_date,member_id:p.member_id,beneficiary_name:p.beneficiary_name,amount:FIN.amountOf(p),expense_type:p.expense_type,notes:p.notes||''}));
+    if(kind==='don') return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation')
+      .map(r=>({no:r.no,date:r.receipt_date,member_id:r.member_id,payer_name:r.payer_name,amount:FIN.amountOf(r),
+        inkind:FIN.isInkindDonation(r),register_category:r.register_category||'',
+        display_fund:r.donation_display_fund||'',allocation:r.food_donation_allocation||'',notes:r.notes||''}));
+    if(kind==='members') return DB.members.filter(m=>m.is_active!==false)
+      .map(m=>({name:m.name,phone:m.phone||'',historical:Number(m.historical_balance_ils||0),balance:FIN.memberBalance(m.id)}));
+    return [];
+  },
 };
 
 /* Canonical bilingual labels for the three Food Fund movement classes (presentation only). */
