@@ -15,24 +15,19 @@
    still wraps prtAnnualDebt/prtDelinquent/prtDonStmt after definition.
    No load-time side effects. */
 
-/* ═══ A2 — Annual Debt Report (reporting only · FIN.* = single source of truth) ═══ */
+/* ═══ A2 — Annual Debt Report (reporting only · FIN.* = single source of truth) ═══
+   IG-006 (FD-006/FD-013): screen, print and Excel all consume the ONE engine
+   row model (FIN.debtReportRows) with the SAME view state — byte-identical
+   figures on every surface; this layer formats only. */
 let _adFilter='all';
-function annualDebtRows(filter){
-  const f=filter||_adFilter;
-  let rows=DB.members.filter(m=>m.is_active!==false).map(m=>{
-    const st=FIN.memberStatement(m.id);
-    return {code:m.member_code||'—', name:m.name, phone:m.phone||'',
-      opening:st.openingBalance, dues:st.totalDues,
-      paid:FIN._r2(st.totalPaid+(st.debtSettled||0)), current:st.finalBalance};
-  });
-  if(f==='debtors')        rows=rows.filter(r=>r.current>0.005);
-  else if(f==='creditors') rows=rows.filter(r=>r.current<-0.005);
-  else if(f==='zero')      rows=rows.filter(r=>Math.abs(r.current)<=0.005);
-  return rows.sort((a,b)=>b.current-a.current);
+function annualDebtModel(filter){
+  adEnsureYears();
+  return FIN.debtReportRows({years:_adYears,filter:filter||_adFilter});
 }
-function _adHead(){ return window.LANG==='en'
-  ? ['Member No.','Member Name','Phone','Historical Balance','Subscription Dues','Total Paid','Current Balance']
-  : ['رقم العضو','اسم العضو','الهاتف','رصيد افتتاحي','اشتراكات مستحقة','إجمالي المدفوع','الرصيد الحالي']; }
+function annualDebtRows(filter){ return annualDebtModel(filter).rows; }
+function _adHead(){ const en=window.LANG==='en'; return en
+  ? ['Member No.','Member Name','Phone','Debt until 31/12/2024','Paid until 31/12/2024','Selected subscriptions','Selected payments','Settlements & write-offs','Current final balance']
+  : ['رقم العضو','اسم العضو','الهاتف','الذمم حتى 31/12/2024','المسدد حتى 31/12/2024','اشتراكات السنوات المحددة','مدفوعات السنوات المحددة','تسويات وشطب','الرصيد النهائي الحالي']; }
 function _adCurCell(c){
   if(c>0.005)  return '<span class="dr">₪ '+fmt(c)+' '+(window.LANG==='en'?'debit':'مدين')+'</span>';
   if(c<-0.005) return '<span class="cr">₪ '+fmt(-c)+' '+(window.LANG==='en'?'credit':'دائن')+'</span>';
@@ -62,31 +57,14 @@ window.toggleAdYear=function(y){
   if(_adYears.has(y)) _adYears.delete(y); else _adYears.add(y);
   renderAnnualDebt();
 };
-/* Per-member aggregation over selected years — SUMS OF EXISTING STORED VALUES ONLY (no new calc) */
-function adMemberSelected(mid){
-  let sub=0,paid=0;
-  (DB.subscriptions||[]).filter(s=>s.member_id===mid).forEach(s=>{
-    if(_adYears && _adYears.has(Number(s.year))){ sub+=Number(s.due_amount_ils||0); paid+=Number(s.paid_amount_ils||0); }
-  });
-  return {sub,paid};
-}
 function renderAnnualDebt(){
   const el=document.getElementById('annual-debt-list'); if(!el) return;
   const en=window.LANG==='en';
   const avail=adEnsureYears();
-  /* Rows: historical figures + selected-year aggregation + authoritative FIN final balance */
-  let rows=DB.members.filter(m=>m.is_active!==false).map(m=>{
-    const st=FIN.memberStatement(m.id);
-    const seld=adMemberSelected(m.id);
-    return {id:m.id, code:m.member_code||'—', name:m.name, phone:m.phone||'',
-      hist:Number(m.historical_balance_ils||0), histPaid:Number(m.historical_payments_ils||0),
-      selSub:seld.sub, selPaid:seld.paid, current:st.finalBalance};
-  });
-  const total=rows.length;
-  if(_adFilter==='debtors')        rows=rows.filter(r=>r.current>0.005);
-  else if(_adFilter==='creditors') rows=rows.filter(r=>r.current<-0.005);
-  else if(_adFilter==='zero')      rows=rows.filter(r=>Math.abs(r.current)<=0.005);
-  rows.sort((a,b)=>b.current-a.current);
+  /* IG-006: THE engine model — same rows the print/Excel surfaces consume. */
+  const model=annualDebtModel();
+  const rows=model.rows;
+  const total=model.totalMembers;
 
   const subEl=document.getElementById('annual-debt-sub');
   if(subEl) subEl.innerHTML='<span class="stc navy">'+rows.length+(en?' of ':' من ')+total+(en?' members':' عضوًا')+'</span>';
@@ -97,21 +75,23 @@ function renderAnnualDebt(){
     ? avail.map(y=>{const on=_adYears.has(y.year);return '<button class="adr-ychip'+(on?' on':'')+'" onclick="toggleAdYear('+y.year+')"><span class="ck"><i class="ti '+(on?'ti-square-check':'ti-square')+'"></i></span>'+y.year+'<span class="amt">('+fmt(y.due)+' ₪)</span></button>';}).join('')
     : '<span style="font-size:12px;color:var(--tx3)">'+(en?'No subscription years yet':'لا توجد سنوات اشتراك')+'</span>';
 
-  const head='<th>'+(en?'Member No.':'رقم العضو')+'</th><th>'+(en?'Member Name':'اسم العضو')+'</th><th>'+(en?'Phone':'الهاتف')+'</th>'
-    +'<th class="as-num">'+(en?'Debt until 31/12/2024':'الذمم حتى 31/12/2024')+'</th><th class="as-num">'+(en?'Paid until 31/12/2024':'المسدد حتى 31/12/2024')+'</th>'
-    +'<th class="as-num">'+(en?'Selected subscriptions':'اشتراكات السنوات المحددة')+'</th><th class="as-num">'+(en?'Selected payments':'مدفوعات السنوات المحددة')+'</th>'
-    +'<th class="as-num">'+(en?'Current final balance':'الرصيد النهائي الحالي')+'</th>';
+  const hd=_adHead();
+  const head='<th>'+hd[0]+'</th><th>'+hd[1]+'</th><th>'+hd[2]+'</th>'
+    +'<th class="as-num">'+hd[3]+'</th><th class="as-num">'+hd[4]+'</th>'
+    +'<th class="as-num">'+hd[5]+'</th><th class="as-num">'+hd[6]+'</th>'
+    +'<th class="as-num">'+hd[7]+'</th><th class="as-num">'+hd[8]+'</th>';
   /* screen-coloured final balance cell (same thresholds as the print _adCurCell) */
   const curCell=c=> c>0.005?'<span class="as-dr">₪ '+fmt(c)+(en?' debit':' مدين')+'</span>':c<-0.005?'<span class="as-cr">₪ '+fmt(-c)+(en?' credit':' دائن')+'</span>':'<span style="color:var(--tx3)">₪ 0</span>';
 
-  let tHist=0,tHistPaid=0,tSub=0,tPaid=0;
-  const bodyRows=rows.map(r=>{tHist+=r.hist;tHistPaid+=r.histPaid;tSub+=r.selSub;tPaid+=r.selPaid;
-    return '<tr><td>'+esc(r.code)+'</td><td class="as-desc"><span class="lnk-nm" onclick="window.openPersonStmt(\''+esc(r.id)+'\')">'+esc(r.name)+'</span></td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
+  const t=model.totals;
+  const bodyRows=rows.map(r=>
+    '<tr><td>'+esc(r.code)+'</td><td class="as-desc"><span class="lnk-nm" onclick="window.openPersonStmt(\''+esc(r.id)+'\')">'+esc(r.name)+'</span></td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
       +'<td class="as-num">₪ '+fmt(r.hist)+'</td><td class="as-num as-cr">₪ '+fmt(r.histPaid)+'</td>'
       +'<td class="as-num">₪ '+fmt(r.selSub)+'</td><td class="as-num as-cr">₪ '+fmt(r.selPaid)+'</td>'
-      +'<td class="as-num">'+curCell(r.current)+'</td></tr>';}).join('');
+      +'<td class="as-num'+(r.resolutions?' as-cr':'')+'">₪ '+fmt(r.resolutions)+'</td>'
+      +'<td class="as-num">'+curCell(r.current)+'</td></tr>').join('');
   const foot='<tfoot><tr><td colspan="3">'+(en?'Total':'الإجمالي')+' ('+rows.length+')</td>'
-    +'<td class="as-num">₪ '+fmt(tHist)+'</td><td class="as-num">₪ '+fmt(tHistPaid)+'</td><td class="as-num">₪ '+fmt(tSub)+'</td><td class="as-num">₪ '+fmt(tPaid)+'</td><td></td></tr></tfoot>';
+    +'<td class="as-num">₪ '+fmt(t.hist)+'</td><td class="as-num">₪ '+fmt(t.histPaid)+'</td><td class="as-num">₪ '+fmt(t.selSub)+'</td><td class="as-num">₪ '+fmt(t.selPaid)+'</td><td class="as-num">₪ '+fmt(t.resolutions)+'</td><td></td></tr></tfoot>';
 
   el.innerHTML='<div class="acct-stmt">'
     +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
@@ -132,14 +112,22 @@ function renderAnnualDebt(){
 window.prtAnnualDebt=function(mode){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const en=window.LANG==='en';
-  const rows=annualDebtRows();
-  const total=DB.members.filter(m=>m.is_active!==false).length;
+  /* IG-006 (FD-006): SAME engine model + SAME view state as the screen —
+     the printed figures are byte-identical to the rendered ones. */
+  const model=annualDebtModel();
+  const rows=model.rows, t=model.totals, total=model.totalMembers;
   const head=_adHead().map(h=>'<th>'+h+'</th>').join('');
-  const body=rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td><td>₪ '+fmt(r.opening)+'</td><td>₪ '+fmt(r.dues)+'</td><td><span class="cr">₪ '+fmt(r.paid)+'</span></td><td class="bal">'+_adCurCell(r.current)+'</td></tr>').join('');
+  const body=rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
+    +'<td>₪ '+fmt(r.hist)+'</td><td><span class="cr">₪ '+fmt(r.histPaid)+'</span></td>'
+    +'<td>₪ '+fmt(r.selSub)+'</td><td><span class="cr">₪ '+fmt(r.selPaid)+'</span></td>'
+    +'<td>'+(r.resolutions?'<span class="cr">₪ '+fmt(r.resolutions)+'</span>':'₪ 0')+'</td>'
+    +'<td class="bal">'+_adCurCell(r.current)+'</td></tr>').join('');
+  const foot='<tr class="final"><td colspan="3">'+(en?'Total':'الإجمالي')+' ('+rows.length+')</td>'
+    +'<td>₪ '+fmt(t.hist)+'</td><td>₪ '+fmt(t.histPaid)+'</td><td>₪ '+fmt(t.selSub)+'</td><td>₪ '+fmt(t.selPaid)+'</td><td>₪ '+fmt(t.resolutions)+'</td><td></td></tr>';
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
   const b=reportHeader(en?'Annual Debt Report':'تقرير المديونية السنوية',{sub:window.t('stmt.currency_note')})
     +'<div class="period">'+(en?'Filter: ':'التصنيف: ')+_adFilterLabel()+' · '+(en?'Shown: ':'المعروض: ')+rows.length+' / '+total+'</div>'
-    +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
+    +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+foot+'</tbody></table>'
     +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
   if(mode==='pdf') savePrintPDF(css,b,'annual-debt-'+today(),'landscape'); else openPrintWin(css,b);
