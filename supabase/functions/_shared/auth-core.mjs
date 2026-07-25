@@ -95,8 +95,14 @@ export function onSuccess(row) {
 }
 
 /* Apply a FAILURE → increment; on the 15th of a stage escalate (timed lock or admin lock).
-   Returns {next, verdict} where verdict.scope ∈ {null,'timed','admin'}. */
-export function onFailure(row, now) {
+   Returns {next, verdict} where verdict.scope ∈ {null,'timed','admin'}.
+   AUTH-002 F-2 — opts.adminExempt: administrator accounts are NEVER driven into the terminal
+   admin_locked state (which only another admin could clear — a deadlock for a sole admin).
+   Instead the final stage re-issues a self-expiring 1-hour timed lock indefinitely, so brute
+   force is still throttled but the account can always recover on its own. Default (no opts)
+   is byte-identical to the original ladder — the terminal admin lock still applies to
+   non-admin accounts. */
+export function onFailure(row, now, opts = {}) {
   const level = (row && row.escalation_level) || 0;
   const attempts = ((row && row.attempts_in_stage) || 0) + 1;
   if (attempts < MAX_ATTEMPTS) {
@@ -109,7 +115,13 @@ export function onFailure(row, now) {
     return { next: { attempts_in_stage: 0, escalation_level: level + 1, locked_until: until, admin_locked: false },
              verdict: { locked: true, scope: 'timed', retryAfterMs: LOCK_MS[level] } };
   }
-  // level === 3 → terminal administrative lock.
+  // level === 3 (final stage). Non-admin → terminal administrative lock.
+  // Admin (F-2) → recurring 1-hour timed lock, never terminal.
+  if (opts.adminExempt) {
+    const ms = LOCK_MS[LOCK_MS.length - 1];
+    return { next: { attempts_in_stage: 0, escalation_level: level, locked_until: new Date(now + ms).toISOString(), admin_locked: false },
+             verdict: { locked: true, scope: 'timed', retryAfterMs: ms } };
+  }
   return { next: { attempts_in_stage: 0, escalation_level: level, locked_until: null, admin_locked: true },
            verdict: { locked: true, scope: 'admin', retryAfterMs: null } };
 }

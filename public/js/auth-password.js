@@ -228,28 +228,27 @@ async function submit(ui,locked){
   var btn=document.getElementById('pw-save');
   btn.disabled=true; btn.innerHTML='<span class="auth-spin"></span>';
   setMsg('');
-  var u=(typeof CU!=='undefined'&&CU)||{}, meta=u.user_metadata||{};
   try{
-    /* 1 — verify the current password on an ISOLATED client (never swaps the session) */
-    if(u.email&&typeof supabase!=='undefined'&&window.__SB_URL){
-      var tmp=supabase.createClient(window.__SB_URL,window.__SB_ANON,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'sb-pwv-tmp'}});
-      var v=await tmp.auth.signInWithPassword({email:u.email,password:cur});
-      try{ await tmp.auth.signOut(); }catch(_){}
-      if(v.error){ fail(T('كلمة المرور الحالية غير صحيحة','Current password is incorrect')); return; }
+    /* AUTH-002 D4 — the whole security-sensitive sequence runs SERVER-SIDE in the
+       change-password Edge Function: current-password verification, reuse-history check,
+       the password set, clearing the forced-change flag (app_metadata — the client cannot),
+       and revoking every OTHER session. The client only collects input and shows the verdict.
+       (Verifying the current password, checking reuse, and clearing the lock on the client —
+       the old path — is exactly what finding A-1 exploited.) */
+    var r=await SB.functions.invoke('change-password',{ body:{ current_password:cur, new_password:nw } });
+    var d=(r&&r.data&&typeof r.data==='object')?r.data:null;
+    if((r&&r.error)||!d||!d.ok){
+      var code=(d&&d.error)||'';
+      var msg = code==='wrong_current'   ? T('كلمة المرور الحالية غير صحيحة','Current password is incorrect')
+              : code==='password_reused' ? T('لا يمكن إعادة استخدام إحدى كلمات المرور الخمس الأخيرة','You cannot reuse one of your last five passwords')
+              : code==='same_as_current' ? T('كلمة المرور الجديدة مطابقة للحالية','New password must differ from the current one')
+              : code==='weak_password'   ? T('كلمة المرور لا تحقق السياسة','Password does not meet the policy')
+              : T('تعذّر تغيير كلمة المرور','Could not change the password');
+      fail(msg); return;
     }
-    if(nw===cur){ fail(T('كلمة المرور الجديدة مطابقة للحالية','New password must differ from the current one')); return; }
-    /* 2 — reuse prevention: last 5 salted fingerprints in user metadata */
-    var hist=Array.isArray(meta.pw_history)?meta.pw_history.slice():[];
-    var fpNew=await fingerprint(nw,u.id), fpCur=await fingerprint(cur,u.id);
-    if(fpNew&&hist.indexOf(fpNew)>=0){ fail(T('لا يمكن إعادة استخدام إحدى كلمات المرور الخمس الأخيرة','You cannot reuse one of your last five passwords')); return; }
-    var newHist=[fpNew,fpCur].concat(hist).filter(function(x,i,a){return x&&a.indexOf(x)===i;}).slice(0,5);
-    /* 3 — the actual change (secure hashing is server-side in Supabase Auth) */
-    var r=await SB.auth.updateUser({password:nw,data:{must_change_password:false,pw_history:newHist}});
-    if(r.error){ fail(T('تعذّر التغيير: ','Change failed: ')+r.error.message); return; }
-    try{ if(r.data&&r.data.user) CU=r.data.user; }catch(_){}
-    /* 4 — audit trail */
-    try{ if(typeof logAction==='function') await logAction('password_change',T('تغيير كلمة المرور','Password changed'),'auth',null); }catch(_){}
-    /* 5 — success experience → redirect */
+    /* refresh the local session user so the cleared flag is reflected immediately */
+    try{ var g=await SB.auth.getUser(); if(g&&g.data&&g.data.user) CU=g.data.user; }catch(_){}
+    /* success experience → redirect (audit is written server-side in the Edge Function) */
     var card=document.querySelector('#pass-screen .auth-card');
     if(card) card.classList.add('done');
     setTimeout(function(){
