@@ -177,6 +177,24 @@ function donationDestLabelAr(r){
        : '—';
 }
 
+/* ═══ CCR-001 · IG-019 — FC-001 · FD-018 ═══
+   A member's donation appears on his statement as an INDEPENDENT event in the
+   constitutional form «تبرع — [الصندوق الوجهة]», read from the STORED
+   destination (donationDestLabelAr — IG-017's single mapping). A settlement
+   suffix appears ONLY when the allocation engine actually settled debt from
+   that donation (explicit FD-008 designation under the IG-002 gate; historical
+   settlements keep displaying because they enter the balance — FD-006).
+   One label rule for all three statement surfaces: screen · print · Excel. */
+function donationStmtLabel(r, settled, en){
+  const dest = en
+    ? (r.movement_type==='donation_inkind' ? 'In-kind — documentary (no cash destination)'
+       : (function(d){ return d==='food'?'Food Fund':d==='diwan'?'Diwan Treasury':d==='historical_deficit'?'Historical Deficit Account':'—'; })(r.destination_treasury||r.donation_display_fund))
+    : donationDestLabelAr(r);
+  const base = (en?'Donation — ':'تبرع — ') + dest;
+  const s = Number(settled)||0;
+  return s>0 ? base + (en?' · Debt Settlement ₪':' · تسوية ذمة ₪') + fmt(s) : base;
+}
+
 /* ═══ A0.5 — Identity v3 branding · single source of truth for every report/print surface ═══ */
 const BRAND_NAME='ديوان آل طه';
 const BRAND_SUBTITLE='نظام الإدارة المالية';
@@ -396,29 +414,14 @@ window.prtMemberStmt=function(mode){
   const openBal=st.openingBalance, totalDues=st.totalDues, totalPaid=st.totalPaid;
   const finalBal=st.finalBalance;
   const _en=window.LANG==='en';
-  const donCat=d=>{
-    if(d.donation_display_fund==='food'){
-      if(d.food_donation_allocation==='reduce_deficit') return _en?'Historical Deficit Donation':'تبرع عجز تاريخي';
-      if(d.food_donation_allocation==='support_current') return _en?'Food Donation · Current Support':'تبرع غداء · دعم حالي';
-      return _en?'Food Donation':'تبرع غداء';
-    }
-    return _en?'Diwan Donation':'تبرع ديوان';
-  };
   const dons=FIN.memberDonations(mid,from,to); /* IG-007 · ق4 excluded by the engine */
   const _alloc=FIN.allocateFoodDonations();
-  const donSplit=d=>{
-    const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
-    if(d.donation_display_fund!=='food') return (_en?'Diwan Donation':'تبرع ديوان');
-    const parts=[];
-    if(sp.debtSettled>0) parts.push(mcLabel('debt')+' ₪'+fmt(sp.debtSettled));
-    if(sp.toDeficit>0)   parts.push(mcLabel('deficit')+' ₪'+fmt(sp.toDeficit));
-    if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
-    return parts.length?parts.join(' · '):donCat(d);
-  };
+  /* IG-019 (FD-018) — each donation is one independent-event row labelled with
+     its STORED destination fund; settlement suffix only when debt was settled. */
   const donsHTML=dons.length?('<div class="period" style="margin-top:10px">'+(_en?'Donation movements':'حركات التبرعات')+'</div>'
-    +'<div style="font-size:10px;color:var(--muted);margin:4px 0">'+(_en?'Debt Settlement reduces the member balance. Historical Deficit Donation and Current Support Donation are shown for transparency only and do not affect the member balance.':'تسوية الذمة تخفّض رصيد العضو. تبرع العجز التاريخي وتبرع الدعم الحالي يُعرضان للشفافية فقط ولا يؤثّران على رصيد العضو.')+'</div>'
-    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Movement breakdown':'تفصيل الحركة')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
-    +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donSplit(d)+'</td><td><span class="cr">₪ '+fmt(FIN.amountOf(d))+'</span></td></tr>').join('')
+    +'<div style="font-size:10px;color:var(--muted);margin:4px 0">'+(_en?'A donation is an independent event and does not affect the member balance unless explicitly designated to settle debt; only then a Debt Settlement is shown.':'التبرع حدث مستقل لا يؤثّر على رصيد العضو إلا إذا خُصِّص صراحةً لتسوية الذمة؛ عندها فقط تظهر تسوية ذمة.')+'</div>'
+    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Description':'البيان')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
+    +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donationStmtLabel(d,(_alloc.perReceipt[d.id]||{}).debtSettled,_en)+'</td><td><span class="cr">₪ '+fmt(FIN.amountOf(d))+'</span></td></tr>').join('')
     +'</tbody></table>'):'';
   const printDate=new Date().toLocaleDateString('en-GB');
   const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`${window.t('stmt.date_from')} ${fmtDate2(from)}`:to?`${window.t('stmt.date_to')} ${fmtDate2(to)}`:window.t('stmt.all_periods');

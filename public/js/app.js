@@ -1096,22 +1096,16 @@ window.renderMemberStmt=function(){
                   : finBal<0?T('للعضو رصيد دائن','Credit balance — owed to member')
                   : T('الحساب مسدد بالكامل','Fully settled');
 
-  /* Donation transparency (do NOT affect the balance) — retained for auditors. */
+  /* Donation transparency (do NOT affect the balance) — retained for auditors.
+     IG-019 (FD-018): independent-event form «تبرع — [الصندوق الوجهة]» from the
+     stored destination (donationStmtLabel — print.js, one rule for all surfaces);
+     settlement suffix only when the engine actually settled debt. */
   const dons=FIN.memberDonations(mid); /* ق4: collections live in the main ledger */
-  const donSplit=d=>{
-    const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
-    if(d.donation_display_fund!=='food') return T('تبرع ديوان','Diwan Donation')+' ₪'+fmt(FIN.amountOf(d));
-    const p=[];
-    if(sp.debtSettled>0) p.push(T('تسوية ذمة','Debt Settlement')+' ₪'+fmt(sp.debtSettled));
-    if(sp.toDeficit>0)   p.push(T('تبرع عجز تاريخي','Historical Deficit')+' ₪'+fmt(sp.toDeficit));
-    if(sp.toCurrent>0)   p.push(T('دعم حالي','Current Support')+' ₪'+fmt(sp.toCurrent));
-    return p.length?p.join(' · '):T('تبرع غداء','Food Donation');
-  };
   const donHTML = dons.length ? (
     '<div class="as-don"><div class="as-don-h">'
-    +T('حركات التبرعات (للشفافية — لا تؤثّر على الرصيد)','Donation movements (transparency — do not affect the balance)')
+    +T('حركات التبرعات (حدث مستقل — لا يؤثّر على الرصيد إلا بتخصيص تسوية صريح)','Donation movements (independent events — affect the balance only on explicit settlement designation)')
     +'</div>'
-    +dons.map(d=>'<div class="as-don-r"><span>'+fdate(d.receipt_date)+' — '+donSplit(d)+'</span><span class="as-don-v">₪ '+fmt(FIN.amountOf(d))+'</span></div>').join('')
+    +dons.map(d=>'<div class="as-don-r"><span>'+fdate(d.receipt_date)+' — '+donationStmtLabel(d,(_alloc.perReceipt[d.id]||{}).debtSettled,window.LANG==='en')+'</span><span class="as-don-v">₪ '+fmt(FIN.amountOf(d))+'</span></div>').join('')
     +'</div>'
   ) : '';
 
@@ -1856,20 +1850,13 @@ window.exportMemberStmt=function(format){
     const _alloc=FIN.allocateFoodDonations();
     const _donRows=[];
     if(_dons.length){
-      _donRows.push([],['حركات التبرعات · Donation movements'],['التاريخ','رقم السند','تفصيل الحركة','المبلغ ₪']);
+      /* IG-019 (FD-018) — independent-event label from the stored destination
+         (donationStmtLabel — one rule for screen · print · Excel). */
+      _donRows.push([],['حركات التبرعات · Donation movements'],['التاريخ','رقم السند','البيان','المبلغ ₪']);
       _dons.forEach(d=>{
-        let label;
-        if(d.donation_display_fund==='food'){
-          const sp=_alloc.perReceipt[d.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
-          const parts=[];
-          if(sp.debtSettled>0) parts.push(mcLabel('debt')+' ₪'+fmt(sp.debtSettled));
-          if(sp.toDeficit>0)   parts.push(mcLabel('deficit')+' ₪'+fmt(sp.toDeficit));
-          if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
-          label=parts.join(' · ')||'تبرع';
-        } else label='تبرع ديوان';
-        _donRows.push([d.receipt_date,d.no,label,FIN.amountOf(d)]);
+        _donRows.push([d.receipt_date,d.no,donationStmtLabel(d,(_alloc.perReceipt[d.id]||{}).debtSettled,false),FIN.amountOf(d)]);
       });
-      _donRows.push(['تسوية الذمة تخفّض رصيد العضو · التبرعات الأخرى للشفافية فقط ولا تؤثّر على الرصيد']);
+      _donRows.push(['التبرع حدث مستقل لا يؤثّر على رصيد العضو إلا إذا خُصِّص صراحةً لتسوية الذمة']);
     }
     const doExcel=()=>{
       const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064f \u062a\u062d\u0645\u064a\u0644 \u0645\u0643\u062a\u0628\u0629 Excel...','info');return;}
