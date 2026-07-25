@@ -163,6 +163,20 @@ window.savePrintPDF=savePrintPDF;
 
 function fundLabelAr(ft){return ft==='food'?'صندوق الغداء':ft==='donation'?'صندوق التبرعات':'صندوق الديوان';}
 
+/* ═══ CCR-001 · IG-017 — FC-003 · FD-017 ═══
+   The DESTINATION fund of a donation, read from the STORED destination fields:
+   the classified accounting destination (destination_treasury) wins; legacy
+   unclassified rows fall back to donation_display_fund. In-kind donations are
+   documentary and carry no cash destination by design. */
+function donationDestLabelAr(r){
+  if(r.movement_type==='donation_inkind') return 'عيني/خدمي — توثيقي (بلا وجهة نقدية)';
+  const d=r.destination_treasury||r.donation_display_fund;
+  return d==='food'?'صندوق الغداء'
+       : d==='diwan'?'خزينة الديوان'
+       : d==='historical_deficit'?'حساب العجز التاريخي'
+       : '—';
+}
+
 /* ═══ A0.5 — Identity v3 branding · single source of truth for every report/print surface ═══ */
 const BRAND_NAME='ديوان آل طه';
 const BRAND_SUBTITLE='نظام الإدارة المالية';
@@ -227,6 +241,8 @@ function buildRecVoucher(r){
     +'<div class="rows">'
     +'<div class="row"><div class="lbl">التاريخ</div><div class="val">'+fmtDate2(r.receipt_date)+'</div></div>'
     +'<div class="row"><div class="lbl">الصندوق</div><div class="val">'+fundLabelAr(r.fund_type)+'</div></div>'
+    /* IG-017 (FD-017): a donation receipt explicitly displays its DESTINATION fund. */
+    +(r.fund_type==='donation'?'<div class="row"><div class="lbl">الصندوق الوجهة</div><div class="val">'+donationDestLabelAr(r)+'</div></div>':'')
     +(r.movement_type==='diwan_operational_income'?'<div class="row"><div class="lbl">نوع الحدث</div><div class="val">إيراد الديوان التشغيلي</div></div>':r.movement_type==='diwan_cash_donation'?'<div class="row"><div class="lbl">نوع الحدث</div><div class="val">تبرع نقدي للديوان</div></div>':'')
     +'<div class="row"><div class="lbl">استلمنا من</div><div class="val">'+esc(r.payer_name||gmn(r.member_id))+'</div></div>'
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(meth)+'</div></div>'
