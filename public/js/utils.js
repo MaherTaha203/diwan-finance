@@ -12,7 +12,12 @@ const fmtD=n=>Number(n||0).toFixed(2);
 const fdate=d=>{if(!d)return'—';try{const dt=new Date(d);return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();}catch(e){return d;}};
 const gm=id=>DB.members.find(m=>m.id===id);
 const gmn=id=>gm(id)?.name||'—';
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* Escapes the five HTML/attribute-significant characters. Quotes are escaped too
+   so values interpolated into single- or double-quoted attributes and inline
+   on* handlers cannot break out (audit H4: a crafted attachment file_name could
+   otherwise inject executable JS into an onclick string). Text-node contexts are
+   unaffected — an escaped quote renders as the quote. */
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 /* P0 — next voucher number from the MAX existing suffix (+1), never a row count.
    A count-based scheme reused a live number whenever a gap existed (a hard-deleted
    or filtered row), silently colliding with an existing voucher. Max-based numbering
