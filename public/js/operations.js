@@ -75,7 +75,13 @@
     'BO-13': { id: 'BO-13', name: 'Credit Write-off', authority: 'admin',
       preconditions: ['MODEL2 V2.0 activated', 'administrator', 'member permanently departed (is_active=false)', 'outstanding credit > 0', 'reason present'],
       engine: 'WriteOffEngine.computeCreditWriteOff (pure · CA-007) — resolves the outstanding credit to zero; NON-CASH; never refunded (OD-06/OD-07)',
-      lifecycle: '(none) → NEW credit_write_off record ACTIVE(v1); member outstanding credit → 0 (explicit closure, not a refund, never a perpetual liability)', laws: [1, 3, 5, 6] }
+      lifecycle: '(none) → NEW credit_write_off record ACTIVE(v1); member outstanding credit → 0 (explicit closure, not a refund, never a perpetual liability)', laws: [1, 3, 5, 6] },
+    'BO-14': { id: 'BO-14', name: 'Close Fiscal Year (FD-012/FD-030 · CCR-001 IG-015)', authority: 'admin',
+      preconditions: ['System Director (administrator — FD-029)', 'year > current locked_through_year', 'today ≥ 1 February of the following year (31-January rule)', 'reason present'],
+      lifecycle: 'settings.locked_through_year → year, with a distinct fiscal_close audit event (who/when/why); lock state changes ONLY through this action or BO-15', laws: [5, 6, 11] },
+    'BO-15': { id: 'BO-15', name: 'Reopen Fiscal Year (FD-012 · CCR-001 IG-015)', authority: 'admin',
+      preconditions: ['System Director (administrator — FD-029)', 'year currently closed (year ≤ locked_through_year)', 'reason present'],
+      lifecycle: 'settings.locked_through_year → year−1, with a distinct fiscal_reopen audit event (who/when/why); re-close is equally explicit (BO-14)', laws: [5, 6, 11] }
   };
 
   /* ── BO-01 · Create Voucher ──────────────────────────────────────────────
@@ -402,7 +408,61 @@
     return { ok: true, data, no: payload.no, amount: res.amount };
   }
 
-  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt, writeOffDebt, writeOffCredit };
+  /* ── BO-14/BO-15 · Close / Reopen Fiscal Year (CCR-001 IG-015 · FD-012/FD-029/FD-030) ──
+     The fiscal lock (settings.locked_through_year — the value the IG-004 DB guard
+     enforces) may change ONLY through these two explicit, audited actions by the
+     System Director (Administrator — FD-029). Closing year Y is permitted from
+     1 February of Y+1 (the 31-January rule — FD-030, merged IG-022) and closes
+     everything through Y; reopening year Y sets the lock to Y−1. Each action
+     writes the settings row and a DISTINCT audit event (who/when/why); if the
+     audit record cannot be written the settings change is reverted — the lock
+     never moves silently. */
+  async function _setLock(value, prev) {
+    const w = await SB.from('settings').upsert({ key: 'locked_through_year', value: String(value), updated_at: now() });
+    if (w.error) return w.error.message;
+    return null;
+  }
+  function _lockNow() {
+    return (typeof window !== 'undefined' && Number.isFinite(window.LOCKED_THROUGH_YEAR))
+      ? Number(window.LOCKED_THROUGH_YEAR) : (new Date().getFullYear() - 1);
+  }
+  async function closeFiscalYear({ year, reason } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'مدير النظام فقط (FD-029)');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب الإقفال إلزامي');
+    const y = Number(year), prev = _lockNow();
+    if (!Number.isFinite(y) || y <= prev) return fail('E_STATE', 'السنة ' + year + ' مقفلة أصلاً أو غير صالحة (المقفل حتى ' + prev + ')');
+    const earliest = new Date((y + 1) + '-02-01');       /* FD-030 — الإقفال الدائم في 31 يناير التالي */
+    if (new Date(today()) < earliest) return fail('E_EARLY', '🔒 قاعدة 31 يناير (FD-030): لا يُقفَل عام ' + y + ' قبل 1/2/' + (y + 1));
+    const err = await _setLock(y, prev);
+    if (err) return fail('E_WRITE', err);
+    try {
+      await logAction('fiscal_close', 'إقفال السنة المالية حتى ' + y + ' (كان ' + prev + ') — القرار: ' + String(reason).trim(), 'settings', 'locked_through_year');
+    } catch (e) {
+      await _setLock(prev, y);                           /* lock never moves without its audit record */
+      return fail('E_HISTORY', 'تعذّر توثيق الإقفال — أُعيدت الحالة: ' + e.message);
+    }
+    if (typeof window !== 'undefined') window.LOCKED_THROUGH_YEAR = y;
+    return { ok: true, data: { locked_through_year: y, previous: prev } };
+  }
+  async function reopenFiscalYear({ year, reason } = {}) {
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'مدير النظام فقط (FD-029)');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب إعادة الفتح إلزامي');
+    const y = Number(year), prev = _lockNow();
+    if (!Number.isFinite(y) || y > prev) return fail('E_STATE', 'السنة ' + year + ' ليست مقفلة (المقفل حتى ' + prev + ')');
+    const next = y - 1;
+    const err = await _setLock(next, prev);
+    if (err) return fail('E_WRITE', err);
+    try {
+      await logAction('fiscal_reopen', 'إعادة فتح السنة المالية ' + y + ' (المقفل حتى: ' + prev + ' ← ' + next + ') — القرار: ' + String(reason).trim(), 'settings', 'locked_through_year');
+    } catch (e) {
+      await _setLock(prev, next);                        /* lock never moves without its audit record */
+      return fail('E_HISTORY', 'تعذّر توثيق إعادة الفتح — أُعيدت الحالة: ' + e.message);
+    }
+    if (typeof window !== 'undefined') window.LOCKED_THROUGH_YEAR = next;
+    return { ok: true, data: { locked_through_year: next, previous: prev, reopened: y } };
+  }
+
+  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt, writeOffDebt, writeOffCredit, closeFiscalYear, reopenFiscalYear };
   if (typeof window !== 'undefined') window.BusinessOps = BusinessOps;
   if (typeof module !== 'undefined' && module.exports) module.exports = BusinessOps;
 })();

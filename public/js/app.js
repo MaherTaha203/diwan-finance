@@ -1541,6 +1541,8 @@ const AUTH_AUDIT={
   force_password_change:{ar:'فرض تغيير كلمة المرور',en:'Force password change',c:'blue'},
   credentials_copied:{ar:'نسخ معلومات الدخول',en:'Credentials copied',c:'blue'},
   opening_balance_change:{ar:'تغيير رصيد افتتاحي',en:'Opening balance change',c:'blue'},
+  fiscal_close:{ar:'إقفال سنة مالية',en:'Fiscal year close',c:'red'},
+  fiscal_reopen:{ar:'إعادة فتح سنة مالية',en:'Fiscal year reopen',c:'orange'},
   login_success:{ar:'تسجيل دخول ناجح',en:'Login success',c:'green'},
   login_failed:{ar:'محاولة دخول فاشلة',en:'Login failed',c:'red'},
 };
@@ -2207,7 +2209,35 @@ window.saveSettings = async function(){
   toast('✓ '+window.t('messages.settings_saved'),'ok');
 };
 
+/* ═══ CCR-001 · IG-015 — FD-012/FD-029/FD-030: explicit audited close/reopen.
+   Thin adapters over BusinessOps.closeFiscalYear/reopenFiscalYear (BO-14/BO-15);
+   the lock state changes only through those actions. */
+window.closeFiscalYearUI=async function(){
+  const year=parseInt(document.getElementById('fy-year')?.value,10);
+  const reason=(document.getElementById('fy-reason')?.value||'').trim();
+  if(!Number.isFinite(year)){ toast('✋ أدخل السنة','warn'); return; }
+  if(!confirm('إقفال السنة المالية حتى '+year+' نهائياً؟ (تُصبح للقراءة فقط)')) return;
+  const _res=await BusinessOps.closeFiscalYear({year,reason});
+  if(!_res.ok){ toast(_res.error,'err'); return; }
+  toast('🔒 أُقفلت السنة المالية حتى '+year+' — قرار موثّق','ok');
+  await loadAll(); renderFiscalLockNow();
+};
+window.reopenFiscalYearUI=async function(){
+  const year=parseInt(document.getElementById('fy-year')?.value,10);
+  const reason=(document.getElementById('fy-reason')?.value||'').trim();
+  if(!Number.isFinite(year)){ toast('✋ أدخل السنة','warn'); return; }
+  if(!confirm('إعادة فتح السنة المالية '+year+'؟ (تعود قابلةً للحركات حتى إقفالها من جديد)')) return;
+  const _res=await BusinessOps.reopenFiscalYear({year,reason});
+  if(!_res.ok){ toast(_res.error,'err'); return; }
+  toast('🔓 أُعيد فتح السنة '+year+' — قرار موثّق','ok');
+  await loadAll(); renderFiscalLockNow();
+};
+function renderFiscalLockNow(){
+  const el=document.getElementById('fy-locked-now');
+  if(el) el.textContent=Number.isFinite(window.LOCKED_THROUGH_YEAR)?String(window.LOCKED_THROUGH_YEAR):'—';
+}
 function renderSettingsSummary(){
+  renderFiscalLockNow();
   const summaryCard = document.getElementById('settings-summary');
   const summaryEl   = document.getElementById('settings-bal-summary');
   if(!summaryCard||!summaryEl) return;
