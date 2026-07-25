@@ -63,6 +63,23 @@ window.saveRec=async function(print=false){
   else if(payerType==='contact') payerName=DB.contacts.find(c=>c.id===contactId)?.name||'';
   else payerName=payerNameInput;
 
+  /* ═══ CCR-001 · IG-013 — FC-003 · FD-010 ═══
+     Probable-duplicate STRONG WARNING at entry (before ANY side effect).
+     Duplicates remain permitted: confirming proceeds; cancelling saves nothing. */
+  {
+    const _dups=FIN.findProbableDuplicates({fund, memberId:(payerType==='member'?memberId:null),
+      payerName, amountILS, date});
+    if(_dups.length){
+      const _en=window.LANG==='en';
+      const d=_dups[0];
+      const _more=_dups.length>1?(_en?` (+${_dups.length-1} more)`:` (+${_dups.length-1} أخرى)`):'';
+      const msg=(_en
+        ?`⚠️ STRONG WARNING — probable DUPLICATE entry.\n\nAn existing voucher matches the same payer, the same amount and a near date:\n\nVoucher ${d.no} · ${d.receipt_date} · ₪${fmt(FIN.amountOf(d))} · ${d.payer_name||payerName}${_more}\n\nSaving again will record the amount TWICE.\n\nAre you certain you want to save a duplicate voucher?`
+        :`⚠️ تحذير قوي — إدخال مكرر محتمل.\n\nيوجد سند سابق بنفس الدافع وبنفس المبلغ وبتاريخ قريب:\n\nسند ${d.no} · ${d.receipt_date} · ₪${fmt(FIN.amountOf(d))} · ${d.payer_name||payerName}${_more}\n\nالحفظ مرة أخرى سيسجّل المبلغ مرتين.\n\nهل أنت متأكد من حفظ سندٍ مكرر؟`);
+      if(!window.confirm(msg)) return;
+    }
+  }
+
   let finalContactId=contactId;
   if(payerType==='manual'&&saveContact&&payerName){
     const{data:nc}=await SB.from('contacts').insert({name:payerName}).select().single();
