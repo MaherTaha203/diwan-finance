@@ -81,7 +81,10 @@
       lifecycle: 'settings.locked_through_year → year, with a distinct fiscal_close audit event (who/when/why); lock state changes ONLY through this action or BO-15', laws: [5, 6, 11] },
     'BO-15': { id: 'BO-15', name: 'Reopen Fiscal Year (FD-012 · CCR-001 IG-015)', authority: 'admin',
       preconditions: ['System Director (administrator — FD-029)', 'year currently closed (year ≤ locked_through_year)', 'reason present'],
-      lifecycle: 'settings.locked_through_year → year−1, with a distinct fiscal_reopen audit event (who/when/why); re-close is equally explicit (BO-14)', laws: [5, 6, 11] }
+      lifecycle: 'settings.locked_through_year → year−1, with a distinct fiscal_reopen audit event (who/when/why); re-close is equally explicit (BO-14)', laws: [5, 6, 11] },
+    'BO-16': { id: 'BO-16', name: 'Internal Fund Transfer (FD-022…FD-025 · CCR-001 IG-014)', authority: 'admin',
+      preconditions: ['System Director approval (administrator — FD-029)', 'source & destination in {diwan, food, historical_deficit} and distinct', 'ILS amount > 0 (FD-021)', 'transfer date not in a locked year', 'reason present', 'approving director named'],
+      lifecycle: '(none) → NEW IMMUTABLE Internal Transfer Voucher ACTIVE (number/date/funds/currency/reason/operator/approving director); source −amount, destination +amount — non-revenue/non-expense redistribution', laws: [1, 5, 6, 8, 11, 12] }
   };
 
   /* ── BO-01 · Create Voucher ──────────────────────────────────────────────
@@ -464,7 +467,42 @@
     return { ok: true, data: { locked_through_year: next, previous: prev, reopened: y } };
   }
 
-  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt, writeOffDebt, writeOffCredit, closeFiscalYear, reopenFiscalYear };
+  /* ── BO-16 · Internal Fund Transfer (CCR-001 IG-014 · FD-022/023/024/025) ────
+     Director-approved redistribution among the three constitutional funds.
+     Produces an IMMUTABLE Internal Transfer Voucher in the dedicated
+     `internal_transfers` table (no update/delete path exists — DB-enforced) and
+     a distinct audit event. The engine (FIN2.treasuryBalance) shifts the two
+     treasuries; receipts/payments are untouched, so revenue/expense totals and
+     member liabilities never change. The IG-004 DB guard also blocks
+     closed-year transfer dates independently of this precondition. */
+  async function transferFunds({ source, destination, amountILS, date, reason, approvingDirector, logLabel } = {}) {
+    const FUNDS = ['diwan', 'food', 'historical_deficit'];
+    if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'مدير النظام فقط (FD-029)');
+    if (!FUNDS.includes(source) || !FUNDS.includes(destination)) return fail('E_INPUT', 'الصناديق المسموحة: الديوان · الغداء · العجز التاريخي (FD-022)');
+    if (source === destination) return fail('E_INPUT', 'لا يجوز التحويل من صندوق إلى نفسه');
+    const amt = R2(Number(amountILS) || 0);
+    if (!(amt > 0)) return fail('E_AMOUNT', 'المبلغ المحاسبي بالشيكل إلزامي ويجب أن يكون أكبر من صفر (FD-021)');
+    if (!date) return fail('E_INPUT', 'تاريخ التحويل إلزامي');
+    if (isLocked(date)) return fail('E_LOCKED', '🔒 السنة المالية مقفلة — لا يمكن إنشاء تحويل بتاريخ ضمن سنة مقفلة');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب التحويل إلزامي');
+    if (!approvingDirector || !String(approvingDirector).trim()) return fail('E_INPUT', '✋ اسم المدير المعتمد إلزامي (FD-024)');
+
+    const payload = {
+      no: nextNo('TRN', (typeof DB !== 'undefined' && DB.internal_transfers) || []),   /* Law 12 — own identity */
+      movement_type: 'internal_transfer',
+      source_treasury: source, destination_treasury: destination,
+      amount: amt, amount_ils: amt, currency: 'ILS', exchange_rate: 1,               /* FD-025/FD-021 — currency identity */
+      transfer_date: date, reason: String(reason).trim(),
+      approving_director: String(approvingDirector).trim(),
+      verification_token: genVerificationToken(), created_by: editor()
+    };
+    const { data, error } = await SB.from('internal_transfers').insert(payload).select().single();
+    if (error) return fail('E_WRITE', error.message);
+    try { await logAction('fund_transfer', logLabel || ('تحويل داخلي ' + payload.no + ' — ' + source + ' ← ' + destination + ' · ₪' + amt + ' | اعتماد: ' + payload.approving_director + ' | السبب: ' + payload.reason), 'internal_transfers', data && data.id); } catch (_) {}
+    return { ok: true, data, no: payload.no };
+  }
+
+  const BusinessOps = { version: 1, CONTRACT, createVoucher, editVoucher, cancelVoucher, reclassifyVoucher, splitVoucher, createMember, editMember, cancelMember, applyAnnualDues, refundReceipt, writeOffDebt, writeOffCredit, closeFiscalYear, reopenFiscalYear, transferFunds };
   if (typeof window !== 'undefined') window.BusinessOps = BusinessOps;
   if (typeof module !== 'undefined' && module.exports) module.exports = BusinessOps;
 })();

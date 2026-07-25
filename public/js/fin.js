@@ -399,6 +399,15 @@ const FIN={
     });
   },
 
+  /* ═══ CCR-001 · IG-014 — FC-003 · FD-022…FD-025 ═══
+     Read-only register of live Internal Transfer Vouchers (newest first).
+     Presentation source for the transfers list/print (FD-013). */
+  transferRegister(){
+    return ((typeof DB!=='undefined'&&DB.internal_transfers)||[])
+      .filter(t=>!t.is_deleted)
+      .slice().sort((a,b)=>new Date(b.transfer_date)-new Date(a.transfer_date));
+  },
+
   /* Single in-kind predicate (FE-008 documentary donations). */
   isInkindDonation(r){ return r.movement_type==='donation_inkind'; },
 
