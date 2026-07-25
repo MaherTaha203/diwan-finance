@@ -95,6 +95,16 @@ const FIN={
       rows.push({date:donDates.length?donDates[donDates.length-1]:today(), no:'—', desc:'تسوية ذمة من تبرع · Debt Settlement (from donation)', cr:debtSettled, dr:0, cls:'debtsettle'});
     }
 
+    /* ═══ CCR-001 · IG-012 — FC-003 · FD-009 ═══
+       A payment refund RECREATES member debt by the refunded amount, on the
+       refund date: a member-linked refund is a DEBIT row in his ledger. (Donation
+       refunds do not exist — FD-032 — and BO-11 refuses to create them.) */
+    const refunded = ((typeof DB!=='undefined'&&DB.refunds)||[])
+      .filter(r => !r.is_deleted && r.member_id===memberId && inRange(r.payment_date))
+      .reduce((s,r) => { const a=Number(r.amount_ils||r.amount||0);
+        rows.push({date:r.payment_date, no:r.no||'—', desc:'استرداد دفعة · Payment Refund (FD-009)', cr:0, dr:a, cls:'refund'});
+        return s+a; }, 0);
+
     rows.sort((a,b)=> a.date==='—' ? -1 : b.date==='—' ? 1 : new Date(a.date)-new Date(b.date));
 
     let bal = 0;
@@ -102,10 +112,10 @@ const FIN={
 
     const totalDues = rows.filter(r=>r.cls==='due').reduce((s,r)=>s+r.dr,0);
     const totalPaid = rows.filter(r=>r.cls==='paid').reduce((s,r)=>s+r.cr,0);
-    const finalBalance = openingDebt + totalDues - totalPaid - debtSettled - debtWrittenOff + creditWrittenOff;   /* >0 owed · <0 credit · CA-007 write-offs resolve debt (−) and credit (+) toward zero */
+    const finalBalance = openingDebt + totalDues - totalPaid - debtSettled - debtWrittenOff + creditWrittenOff + refunded;   /* >0 owed · <0 credit · CA-007 write-offs resolve toward zero · FD-009 refunds recreate debt */
     const creditBalance = finalBalance < 0 ? -finalBalance : 0;
 
-    return {member, rows, openingBalance:openingDebt, totalDues, totalPaid, debtSettled, debtWrittenOff, creditWrittenOff, prepaidEffective:0, finalBalance, creditBalance};
+    return {member, rows, openingBalance:openingDebt, totalDues, totalPaid, debtSettled, debtWrittenOff, creditWrittenOff, refunded, prepaidEffective:0, finalBalance, creditBalance};
   },
 
   /* Approved balance terminology (Phase 11.5). Sign unchanged. */
@@ -192,7 +202,11 @@ const FIN={
     const wos=((typeof DB!=='undefined'&&DB.member_write_offs)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId);
     const debtWO=wos.filter(r=>r.movement_type==='debt_write_off').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
     const creditWO=wos.filter(r=>r.movement_type==='credit_write_off').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
-    pool=r2(pool+liveFood+donSettled+debtWO-creditWO);
+    /* FD-009 (IG-012): a member-linked refund takes paid money back — it leaves
+       the credit pool, recreating debt through the same FD-002 waterfall. */
+    const refunded=((typeof DB!=='undefined'&&DB.refunds)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId)
+      .reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    pool=r2(pool+liveFood+donSettled+debtWO-creditWO-refunded);
     const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),remaining:perYear[y].remaining_seed,createdAt:y+'-01-01'}));
     if(histSeed>0) obligations.push({id:'hist',kind:'historical',remaining:histSeed,createdAt:'2000-01-01'});
     const eng=(typeof window!=='undefined'&&window.MODEL2Allocation)||null;
@@ -455,11 +469,12 @@ const FIN={
       const debtSettled=Number(st.debtSettled||0);
       const writtenOff=Number(st.debtWrittenOff||0);
       const creditWrittenOff=Number(st.creditWrittenOff||0);
+      const refunded=Number(st.refunded||0);   /* FD-009 (IG-012): refunds recreate debt */
       return { id:m.id, code:m.member_code||'—', name:m.name, phone:m.phone||'',
         hist:st.openingBalance, histPaid:Number(m.historical_payments_ils||0),
         selSub:r2(selSub), selPaid:r2(selPaid),
         duesAll:st.totalDues, paidAll:st.totalPaid,
-        debtSettled, writtenOff, creditWrittenOff,
+        debtSettled, writtenOff, creditWrittenOff, refunded,
         resolutions:r2(debtSettled+writtenOff-creditWrittenOff),
         current:st.finalBalance };
     });
@@ -503,7 +518,7 @@ const FIN={
       const dl=FIN.memberDelinquency(m.id);
       const row=model.rows.find(r=>r.id===m.id);
       sumSt+=st.finalBalance;
-      const ident=st.openingBalance+st.totalDues-st.totalPaid-(st.debtSettled||0)-(st.debtWrittenOff||0)+(st.creditWrittenOff||0);
+      const ident=st.openingBalance+st.totalDues-st.totalPaid-(st.debtSettled||0)-(st.debtWrittenOff||0)+(st.creditWrittenOff||0)+(st.refunded||0);   /* FD-009 */
       const lastBal=st.rows.length?Number(st.rows[st.rows.length-1].bal||0):0;
       const wf=Object.values(al.perYear||{}).reduce((s,y)=>s+Number(y.remaining||0),0)
         +Number((al.historical||{}).remaining||0)-Number(al.creditRemaining||0);
