@@ -88,6 +88,10 @@ create trigger trg_last_admin_guard
   before update or delete on public.user_roles
   for each row execute function public.fn_last_admin_guard();
 
+-- Trigger functions must not be REST-callable (Supabase security advisor 0028/0029).
+-- Revoking EXECUTE does NOT affect trigger firing (triggers run as the table owner).
+revoke all on function public.fn_last_admin_guard() from public, anon, authenticated;
+
 comment on function public.fn_last_admin_guard() is
   'AUTH-002 F-1: refuses any UPDATE/DELETE that would leave zero enabled administrators. Enforced for all writers including service_role.';
 
