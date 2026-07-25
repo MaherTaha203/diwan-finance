@@ -11,7 +11,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('PASS ' + m); } else { fail+
 /* ── stubs ── */
 const settings = { locked_through_year: '2024' };
 const audit = [];
-const opts = { failAudit: false, failWrite: false };
+const snapshots = [];
+const opts = { failAudit: false, failWrite: false, failSnapshot: false };
 global.window = { LOCKED_THROUGH_YEAR: 2024 };
 global.today = () => '2026-07-25';
 global.SB = { from(tbl) { return {
@@ -23,7 +24,13 @@ global.SB = { from(tbl) { return {
     }
     return { error: null };
   },
-  insert() { return { select() { return { async single() { return { data: { id: 'x' }, error: null }; } }; } }; },
+  insert(row) {
+    if (tbl === 'fiscal_snapshots') {
+      if (opts.failSnapshot) return Promise.resolve({ error: { message: 'snapshot-fail' } });
+      snapshots.push(row); return Promise.resolve({ error: null });
+    }
+    return { select() { return { async single() { return { data: { id: 'x' }, error: null }; } }; } };
+  },
   update() { return { async eq() { return { error: null }; } }; },
 }; } };
 global.can = { admin: () => true, write: () => true };
@@ -36,6 +43,8 @@ global.logAction = async (action, description, table, id) => {
   audit.push({ action, description, table, id });
 };
 global.MODEL2 = { EVENTS: {} };
+/* IG-016: BO-14 requires the engine's close-snapshot builder (no snapshot ⇒ no close). */
+global.FIN = { buildCloseSnapshot: (prev, y) => ({ version: 1, closed_through: y, previous_lock: prev, years: {} }) };
 global.DB = { receipts: [], payments: [], refunds: [], members: [] };
 const BO = require('../public/js/operations.js');
 
@@ -90,6 +99,19 @@ const BO = require('../public/js/operations.js');
   ok(c7.ok === true && settings.locked_through_year === '2025'
     && audit.filter(a => a.action === 'fiscal_close').length === 2,
     're-close explicit + audited (second fiscal_close event)');
+
+  /* 8b · IG-016: every successful close persisted its snapshot; snapshot failure reverts the close */
+  ok(snapshots.length === 2 && snapshots.every(r => r.snapshot && r.closed_through === 2025),
+    'each successful close persisted an immutable snapshot row (IG-016)');
+  await BO.reopenFiscalYear({ year: 2025, reason: 'لاختبار اللقطة' });
+  opts.failSnapshot = true;
+  const c8 = await BO.closeFiscalYear({ year: 2025, reason: 'سيفشل حفظ اللقطة' });
+  opts.failSnapshot = false;
+  ok(c8.ok === false && c8.code === 'E_SNAPSHOT' && settings.locked_through_year === '2024',
+    'snapshot persistence failure → close reverted (no close without its snapshot)');
+  const c9 = await BO.closeFiscalYear({ year: 2025, reason: 'إعادة الإقفال بعد الإصلاح' });
+  ok(c9.ok === true && settings.locked_through_year === '2025' && snapshots.length === 3,
+    're-close succeeds and appends a new snapshot');
 
   /* 9 · IG-004 linkage: the DB-enforced gate follows the toggled lock value */
   ok(global.voucherLocked('2025-06-01') === true && global.voucherLocked('2026-06-01') === false,

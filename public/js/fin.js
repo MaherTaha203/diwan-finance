@@ -408,6 +408,58 @@ const FIN={
       .slice().sort((a,b)=>new Date(b.transfer_date)-new Date(a.transfer_date));
   },
 
+  /* ═══ CCR-001 · IG-016 — FC-003 · FD-004 ═══
+     Close-time report snapshots: a closed year's report must always reproduce
+     its original values. buildCloseSnapshot archives the key engine models for
+     every newly closed year at the moment of closing (consumed by BO-14, which
+     refuses to close without it); closedYearLedgerSnapshot serves the stored
+     view to exact closed-year fund-statement renders; verifyClosedYearSnapshot
+     proves byte-for-byte equality between the archive and a regeneration. */
+  buildCloseSnapshot(prevLock, year){
+    const years={};
+    for(let y=Number(prevLock)+1; y<=Number(year); y++){
+      years[y]={ food:  FIN.fundLedgerView('food',  y+'-01-01', y+'-12-31',''),
+                 diwan: FIN.fundLedgerView('diwan', y+'-01-01', y+'-12-31','') };
+    }
+    const v=FIN.verifyConsistency();
+    return { version:1, closed_through:Number(year), previous_lock:Number(prevLock), years,
+      debt_report:FIN.debtReportRows({years:null,filter:'all'}),
+      treasury:FIN.treasuryPosition(),
+      consistency:{ allMatch:v.allMatch, memberCount:v.memberCount, failedMembers:v.failedMembers.length } };
+  },
+  _yearSnapshots(y){
+    return ((typeof DB!=='undefined'&&DB.fiscal_snapshots)||[])
+      .filter(s=>s&&s.snapshot&&s.snapshot.years&&s.snapshot.years[y])
+      .slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  },
+  /* Stored close-time ledger view for an EXACT closed-year range (else null →
+     caller recomputes live). Latest snapshot covering the year wins (a reopen +
+     re-close appends a new one; history is never overwritten). */
+  closedYearLedgerSnapshot(fund, from, to){
+    const m=/^(\d{4})-01-01$/.exec(from||''), n=/^(\d{4})-12-31$/.exec(to||'');
+    if(!m||!n||m[1]!==n[1]) return null;
+    const y=Number(m[1]);
+    const lock=(typeof window!=='undefined'&&Number.isFinite(window.LOCKED_THROUGH_YEAR))?window.LOCKED_THROUGH_YEAR:null;
+    if(lock===null||y>lock) return null;
+    const snaps=FIN._yearSnapshots(y);
+    return (snaps.length&&snaps[0].snapshot.years[y][fund])?snaps[0].snapshot.years[y][fund]:null;
+  },
+  /* FD-004 verification: regenerated closed-year ledgers must equal the
+     close-time archive byte-for-byte (canonical JSON of the same model). */
+  verifyClosedYearSnapshot(year){
+    const y=Number(year);
+    const snaps=FIN._yearSnapshots(y);
+    if(!snaps.length) return {found:false, match:null, diffs:[]};
+    const stored=snaps[0].snapshot.years[y];
+    const diffs=[];
+    ['food','diwan'].forEach(f=>{
+      if(!stored[f]) return;
+      const regen=FIN.fundLedgerView(f, y+'-01-01', y+'-12-31','');
+      if(JSON.stringify(regen)!==JSON.stringify(stored[f])) diffs.push(f);
+    });
+    return {found:true, match:diffs.length===0, diffs, snapshotAt:snaps[0].created_at};
+  },
+
   /* Single in-kind predicate (FE-008 documentary donations). */
   isInkindDonation(r){ return r.movement_type==='donation_inkind'; },
 

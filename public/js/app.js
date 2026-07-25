@@ -933,12 +933,15 @@ window.renderStmt=function(fund){
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
   const out=document.getElementById(fund+'-stmt-out');
-  const lv=FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
+  /* IG-016 (FD-004): an EXACT closed-year range renders from the immutable
+     close-time snapshot (latest for the year); otherwise compute live. */
+  const _arch=(!type)?FIN.closedYearLedgerSnapshot(fund,from,to):null;
+  const lv=_arch||FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
   const rows=lv.rows;
   const _en=window.LANG==='en';
   const isFood=fund==='food';
   const fundLabel=isFood?(_en?'Food Fund':'صندوق الغداء'):(_en?'Diwan Fund':'صندوق الديوان');
-  const periodTxt=from&&to?`${fdate(from)} — ${fdate(to)}`:from?`${window.t('stmt.date_from')} ${fdate(from)}`:to?`${window.t('stmt.date_to')} ${fdate(to)}`:window.t('stmt.all_periods');
+  const periodTxt=(from&&to?`${fdate(from)} — ${fdate(to)}`:from?`${window.t('stmt.date_from')} ${fdate(from)}`:to?`${window.t('stmt.date_to')} ${fdate(to)}`:window.t('stmt.all_periods'))+(_arch?(_en?' · 🔒 close-time archive':' · 🔒 لقطة الإقفال الأرشيفية'):'');
   const printDate=new Date().toLocaleDateString('en-GB');
   const actions=can.print()?('<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtStmt(\''+fund+'\')"><i class="ti ti-printer"></i>'+window.t('common.print')+'</button></div>'):'';
   const head='<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
@@ -2217,7 +2220,8 @@ window.closeFiscalYearUI=async function(){
   const year=parseInt(document.getElementById('fy-year')?.value,10);
   const reason=(document.getElementById('fy-reason')?.value||'').trim();
   if(!Number.isFinite(year)){ toast('✋ أدخل السنة','warn'); return; }
-  if(!confirm('إقفال السنة المالية حتى '+year+' نهائياً؟ (تُصبح للقراءة فقط)')) return;
+  if(!confirm('إقفال السنة المالية حتى '+year+' نهائياً؟ (تُصبح للقراءة فقط وتُحفَظ لقطة تقاريرها)')) return;
+  await loadAll();   /* IG-016: the close snapshot must be built from FRESH data */
   const _res=await BusinessOps.closeFiscalYear({year,reason});
   if(!_res.ok){ toast(_res.error,'err'); return; }
   toast('🔒 أُقفلت السنة المالية حتى '+year+' — قرار موثّق','ok');
