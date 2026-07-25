@@ -359,7 +359,7 @@ window.reclassifyVoucher=async function(kind,voucherId,newClass,reason){
      ledgers, the member statement, the running balance and every report update
      from the live rows — with the full accounting history preserved. */
   const R2v=n=>Math.round((Number(n)||0)*100)/100;
-  const fullAmt=R2v(row.amount_ils||row.amount||0);           /* ILS value (authoritative) */
+  const fullAmt=R2v(FIN.amountOf(row));           /* FD-021: the ILS accounting amount (authoritative, engine read) */
   const partAmt=(newClass.amount!=null&&newClass.amount!=='')?R2v(newClass.amount):fullAmt;  /* entered in ILS */
   if(partAmt>0 && partAmt<fullAmt){
     /* Currency-preserving split (owner ruling): the NATIVE amount is split in the
@@ -495,14 +495,14 @@ window.openReclassify=function(kind,id){
   const sel=document.getElementById('rcl-type');
   if(sel) sel.innerHTML=Object.values(M2.EVENTS).map(e=>`<option value="${e.key}"${e.key===row.movement_type?' selected':''}>${esc(e.label_ar)} · ${esc(e.key)}</option>`).join('');
   const info=document.getElementById('rcl-info');
-  if(info) info.textContent=`${row.no} · ₪${fmt(row.amount_ils||row.amount)} · ${row.receipt_date||row.payment_date} · الحالي: ${row.movement_type||'—'} → ${row.destination_treasury||'—'}`;
+  if(info) info.textContent=`${row.no} · ₪${fmt(FIN.amountOf(row))} · ${row.receipt_date||row.payment_date} · الحالي: ${row.movement_type||'—'} → ${row.destination_treasury||'—'}`;
   const dsel=document.getElementById('rcl-dest'); if(dsel) dsel.value=row.destination_treasury||'';
   window.onReclassTypeChange();   /* sync the destination to the (initial) event type */
   const rsn=document.getElementById('rcl-reason'); if(rsn) rsn.value='';
   /* FIX 3 — default the amount field to the full voucher (full move); the admin
      may lower it for a partial split. */
   const amt=document.getElementById('rcl-amount');
-  if(amt){ amt.value=Math.round((Number(row.amount_ils||row.amount)||0)*100)/100; amt.max=amt.value; }
+  if(amt){ amt.value=Math.round(FIN.amountOf(row)*100)/100; amt.max=amt.value; }
   window.openM('reclass');
 };
 window.doReclassify=async function(){
@@ -564,7 +564,7 @@ window.editRec=function(id){
   if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 
   document.getElementById('edit-rec-id').value = id;
-  document.getElementById('edit-rec-amount').value = r.amount_ils || r.amount;
+  document.getElementById('edit-rec-amount').value = FIN.amountOf(r);
   document.getElementById('edit-rec-notes').value = r.notes || '';
   const rsn=document.getElementById('edit-rec-reason'); if(rsn) rsn.value='';
 
@@ -682,7 +682,7 @@ window.editPay=function(id){
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
   if(voucherLocked(p.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
   document.getElementById('edit-pay-id').value=id;
-  document.getElementById('edit-pay-amount').value=p.amount_ils||p.amount;
+  document.getElementById('edit-pay-amount').value=FIN.amountOf(p);
   document.getElementById('edit-pay-notes').value=p.notes||'';
   const rsn=document.getElementById('edit-pay-reason'); if(rsn) rsn.value='';
   window.openM('edit-pay');

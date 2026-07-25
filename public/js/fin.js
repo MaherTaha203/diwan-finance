@@ -64,13 +64,13 @@ const FIN={
 
     DB.receipts
       .filter(r => !r.is_deleted && r.fund_type==='food' && r.member_id===memberId && inRange(r.receipt_date))
-      .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:r.notes||'مساهمة', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'paid'}));
+      .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:r.notes||'مساهمة', cr:FIN.amountOf(r), dr:0, cls:'paid'}));
 
     /* ق4 — member-linked deficit collections reduce the member's OWN historical
        debt: a paid (credit) row in his statement for the full amount. */
     DB.receipts
       .filter(r => !r.is_deleted && r.movement_type==='historical_debt_collection' && r.member_id===memberId && inRange(r.receipt_date))
-      .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:'تحصيل ذمة تاريخية · Historical Debt Collection', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'paid'}));
+      .forEach(r => rows.push({date:r.receipt_date, no:r.no, desc:'تحصيل ذمة تاريخية · Historical Debt Collection', cr:FIN.amountOf(r), dr:0, cls:'paid'}));
 
     /* CA-007 — Debt Write-off (member permanent departure/death): a NON-CASH member-
        ledger credit that resolves the member's outstanding receivable. Preserves
@@ -78,7 +78,7 @@ const FIN={
        byte-identical until MODEL2 V2.0 activation. */
     const debtWrittenOff = ((typeof DB!=='undefined'&&DB.member_write_offs)||[])
       .filter(r => !r.is_deleted && r.movement_type==='debt_write_off' && r.member_id===memberId && inRange(r.receipt_date))
-      .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب ذمة · Debt Write-off', cr:Number(r.amount_ils||r.amount||0), dr:0, cls:'writeoff'}); return s + Number(r.amount_ils||r.amount||0); }, 0);
+      .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب ذمة · Debt Write-off', cr:FIN.amountOf(r), dr:0, cls:'writeoff'}); return s + FIN.amountOf(r); }, 0);
 
     /* CA-007 — Credit Write-off (member permanent departure/death): a NON-CASH member-
        ledger DEBIT that resolves the member's outstanding CREDIT (never refunded, never a
@@ -86,7 +86,7 @@ const FIN={
        byte-identical until MODEL2 V2.0 activation. */
     const creditWrittenOff = ((typeof DB!=='undefined'&&DB.member_write_offs)||[])
       .filter(r => !r.is_deleted && r.movement_type==='credit_write_off' && r.member_id===memberId && inRange(r.receipt_date))
-      .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب رصيد دائن · Credit Write-off', cr:0, dr:Number(r.amount_ils||r.amount||0), cls:'creditwriteoff'}); return s + Number(r.amount_ils||r.amount||0); }, 0);
+      .reduce((s,r) => { rows.push({date:r.receipt_date, no:r.no, desc:'شطب رصيد دائن · Credit Write-off', cr:0, dr:FIN.amountOf(r), cls:'creditwriteoff'}); return s + FIN.amountOf(r); }, 0);
 
     /* ITEM 9 — Debt Settlement from the member's food donations (debt-priority). */
     const debtSettled = Number(FIN.allocateFoodDonations().perMember[memberId] || 0);
@@ -101,7 +101,7 @@ const FIN={
        refunds do not exist — FD-032 — and BO-11 refuses to create them.) */
     const refunded = ((typeof DB!=='undefined'&&DB.refunds)||[])
       .filter(r => !r.is_deleted && r.member_id===memberId && inRange(r.payment_date))
-      .reduce((s,r) => { const a=Number(r.amount_ils||r.amount||0);
+      .reduce((s,r) => { const a=FIN.amountOf(r);
         rows.push({date:r.payment_date, no:r.no||'—', desc:'استرداد دفعة · Payment Refund (FD-009)', cr:0, dr:a, cls:'refund'});
         return s+a; }, 0);
 
@@ -189,23 +189,23 @@ const FIN={
       perYear[y].remaining_seed=r2(perYear[y].remaining_seed+Math.max(0,due-paid));
     });
     const q4=DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection'&&r.member_id===memberId)
-      .reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+      .reduce((s,r)=>s+FIN.amountOf(r),0);
     let histSeed=r2(Number(m.historical_balance_ils||0)-Number(m.historical_payments_ils||0)-q4);
     if(histSeed<0){ pool=r2(pool-histSeed); histSeed=0; }          /* over-collected history → pool */
     const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId)
-      .reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+      .reduce((s,r)=>s+FIN.amountOf(r),0);
     const donSettled=Number(FIN.allocateFoodDonations().perMember[memberId]||0);
     /* CA-007 write-offs (IG-008 conformance): a debt write-off resolves the
        receivable exactly like a non-cash credit (enters the FD-002 pool), and a
        credit write-off resolves outstanding credit (leaves the pool) — keeping
        this waterfall's remaining identical to memberStatement().finalBalance. */
     const wos=((typeof DB!=='undefined'&&DB.member_write_offs)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId);
-    const debtWO=wos.filter(r=>r.movement_type==='debt_write_off').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
-    const creditWO=wos.filter(r=>r.movement_type==='credit_write_off').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    const debtWO=wos.filter(r=>r.movement_type==='debt_write_off').reduce((s,r)=>s+FIN.amountOf(r),0);
+    const creditWO=wos.filter(r=>r.movement_type==='credit_write_off').reduce((s,r)=>s+FIN.amountOf(r),0);
     /* FD-009 (IG-012): a member-linked refund takes paid money back — it leaves
        the credit pool, recreating debt through the same FD-002 waterfall. */
     const refunded=((typeof DB!=='undefined'&&DB.refunds)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId)
-      .reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+      .reduce((s,r)=>s+FIN.amountOf(r),0);
     pool=r2(pool+liveFood+donSettled+debtWO-creditWO-refunded);
     const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),remaining:perYear[y].remaining_seed,createdAt:y+'-01-01'}));
     if(histSeed>0) obligations.push({id:'hist',kind:'historical',remaining:histSeed,createdAt:'2000-01-01'});
@@ -235,7 +235,7 @@ const FIN={
     const subs=(DB.subscriptions||[]).filter(s=>s.member_id===memberId);
     const subsDue=subs.reduce((s,x)=>s+Number(x.due_amount_ils||0),0);
     const subsPaid=subs.reduce((s,x)=>s+Number(x.paid_amount_ils||0),0);
-    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId).reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId).reduce((s,r)=>s+FIN.amountOf(r),0);
     return FIN._r2(Number(m.historical_balance_ils||0)+subsDue-Number(m.historical_payments_ils||0)-subsPaid-liveFood);
   },
   /* Item 9 — chronological debt-priority allocation of all food donations (memoized per load). */
@@ -264,7 +264,7 @@ const FIN={
       :(typeof window!=='undefined'&&Number.isFinite(window.LOCKED_THROUGH_YEAR))?window.LOCKED_THROUGH_YEAR
       :(new Date().getFullYear()-1);
     const _inClosedYear=r=>{ const y=new Date(r.receipt_date).getFullYear(); return Number.isFinite(y)&&y<=_lockY; };
-    const donations=autoRows.map(r=>({id:r.id,memberId:_inClosedYear(r)?(r.member_id||null):null,amount:Number(r.amount_ils||r.amount||0),allocation:r.food_donation_allocation}));
+    const donations=autoRows.map(r=>({id:r.id,memberId:_inClosedYear(r)?(r.member_id||null):null,amount:FIN.amountOf(r),allocation:r.food_donation_allocation}));
     const baseDebt={};
     donations.forEach(d=>{ if(d.memberId!=null&&baseDebt[d.memberId]===undefined) baseDebt[d.memberId]=FIN._memberBaseBalance(d.memberId); });
     const magnitude=Math.abs(Number(window.FOOD_OPENING||0));
@@ -289,7 +289,7 @@ const FIN={
      keeping this legacy figure unified with the new deficit-treasury tab.
      ق5 — the debt-settled slice of member food donations also feeds the deficit
      (it left foodBalance; see foodBalance note — net position unchanged). */
-  _histCollections(){ return FIN._r2(DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0)); },
+  _histCollections(){ return FIN._r2(DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection').reduce((s,r)=>s+FIN.amountOf(r),0)); },
   /* Foundation-B — delegates to the single canonical source (FIN2 via FinContract). */
   foodDeficitRemaining(){ return window.FinContract.foodDeficitRemaining(); },
   foodNetPosition(){ return window.FinContract.foodNetPosition(); },
@@ -297,7 +297,7 @@ const FIN={
   /* Foundation-B — delegates to the single canonical source (FIN2 via FinContract). */
   diwanBalance(){ return window.FinContract.diwanBalance(); },
   donBalance(){
-    return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation').reduce((s,r)=>s+FIN.amountOf(r),0);
   },
   fundLedger(fund,from,to,typeFilter){
     const rows=[];
@@ -313,11 +313,11 @@ const FIN={
       /* Domain 1 — label the two new Diwan events; legacy receipts unchanged (byte-identical). */
       const _dtag=mt=>mt==='diwan_operational_income'?'إيراد تشغيلي · ':mt==='diwan_cash_donation'?'تبرع نقدي · ':'';
       DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund&&inRange(r.receipt_date))
-        .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:_dtag(r.movement_type)+(r.notes||'إيصال قبض'),cr:Number(r.amount_ils||r.amount),dr:0,type:'cr',id:r.id,no:r.no}));
+        .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:_dtag(r.movement_type)+(r.notes||'إيصال قبض'),cr:FIN.amountOf(r),dr:0,type:'cr',id:r.id,no:r.no}));
     }
     if(!typeFilter||typeFilter==='dr'){
       DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund&&inRange(p.payment_date))
-        .forEach(p=>rows.push({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),desc:L.expense(p.expense_type),cr:0,dr:Number(p.amount_ils||p.amount),type:'dr',id:p.id,no:p.no}));
+        .forEach(p=>rows.push({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),desc:L.expense(p.expense_type),cr:0,dr:FIN.amountOf(p),type:'dr',id:p.id,no:p.no}));
     }
     if(!typeFilter||typeFilter==='don'){
       /* ق5 — a member donation that settles his debt is named for what it is:
@@ -326,7 +326,7 @@ const FIN={
       DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.donation_display_fund===fund&&inRange(r.receipt_date))
         .forEach(r=>{
           const q5=(perRec[r.id]||{}).debtSettled>0;
-          rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:q5?'تبرع سداد عجز تاريخي':'تبرع',cr:0,dr:0,type:'don',id:r.id,no:r.no,note:`تبرع ₪${fmt(r.amount_ils||r.amount)} — ${r.notes||''}`});
+          rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:q5?'تبرع سداد عجز تاريخي':'تبرع',cr:0,dr:0,type:'don',id:r.id,no:r.no,note:`تبرع ₪${fmt(FIN.amountOf(r))} — ${r.notes||''}`});
         });
     }
     rows.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -372,8 +372,10 @@ const FIN={
     return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===memberId&&r.movement_type!=='historical_debt_collection'&&inRange(r.receipt_date));
   },
 
-  /* Canonical stored-amount read (ILS figure of a voucher row). */
-  amountOf(r){ return Number(r.amount_ils||r.amount||0); },
+  /* Canonical accounting read (FD-021 · IG-011): the ILS accounting amount ONLY.
+     Native `amount` is never a fallback — a row without amount_ils contributes 0
+     (fail-safe) instead of silently mixing currency units. */
+  amountOf(r){ return Number(r.amount_ils||0); },
 
   /* Single in-kind predicate (FE-008 documentary donations). */
   isInkindDonation(r){ return r.movement_type==='donation_inkind'; },
@@ -391,9 +393,9 @@ const FIN={
     const rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.destination_treasury!=='historical_deficit');
     const cashRows=rows.filter(r=>!FIN.isInkindDonation(r));
     const inkindRows=rows.filter(r=>FIN.isInkindDonation(r));
-    const cashTot=cashRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const inkindTot=inkindRows.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const toFood=cashRows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
+    const cashTot=cashRows.reduce((s,r)=>s+FIN.amountOf(r),0);
+    const inkindTot=inkindRows.reduce((s,r)=>s+FIN.amountOf(r),0);
+    const toFood=cashRows.filter(r=>r.donation_display_fund==='food').reduce((s,r)=>s+FIN.amountOf(r),0);
     return {rows,cashRows,inkindRows,cashTot,inkindTot,toFood,toDiwan:cashTot-toFood,
       foodDebt:FIN.foodDebtSettlementTotal(),foodDeficit:FIN.foodSettlementReserve(),foodSupport:FIN.foodCurrentSupportTotal(),
       perReceipt:FIN.allocateFoodDonations().perReceipt};
@@ -425,8 +427,8 @@ const FIN={
   dayTotals(dateStr){
     const rec=DB.receipts.filter(r=>!r.is_deleted&&r.receipt_date===dateStr);
     const pay=DB.payments.filter(p=>!p.is_deleted&&p.payment_date===dateStr);
-    const recTotal=rec.reduce((s,r)=>s+Number(r.amount_ils||r.amount),0);
-    const payTotal=pay.reduce((s,p)=>s+Number(p.amount_ils||p.amount),0);
+    const recTotal=rec.reduce((s,r)=>s+FIN.amountOf(r),0);
+    const payTotal=pay.reduce((s,p)=>s+FIN.amountOf(p),0);
     return {recCount:rec.length,payCount:pay.length,count:rec.length+pay.length,recTotal,payTotal,net:recTotal-payTotal};
   },
 

@@ -49,7 +49,9 @@
     if (opts.locked === true) return { ok: false, code: 'E_LOCKED', error: '🔒 السنة المالية مقفلة — لا يجوز الاسترداد بعد الإقفال؛ التصحيح يكون بحركة جديدة في فترة مفتوحة' };
     if (!(amountILS > 0)) return { ok: false, code: 'E_AMOUNT', error: 'مبلغ الاسترداد يجب أن يكون أكبر من صفر' };
 
-    var originILS = R2(origin.amount_ils != null ? origin.amount_ils : origin.amount);
+    /* FD-021 (IG-011): the ILS accounting amount only — no native fallback.
+       A missing amount_ils yields 0 → remaining ≤ EPS → E_INELIGIBLE (fail-safe). */
+    var originILS = R2(Number(origin.amount_ils) || 0);
     var remaining = R2(originILS - prior);
     if (remaining <= EPS) return { ok: false, code: 'E_INELIGIBLE', error: 'السند مُسترَدٌّ بالكامل — لا يوجد مبلغٌ قابلٌ للاسترداد' };
     if (amountILS > remaining + EPS) return { ok: false, code: 'E_EXCEEDS', error: 'مبلغ الاسترداد يتجاوز المتبقّي القابل للاسترداد (' + remaining + ')' };

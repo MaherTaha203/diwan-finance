@@ -28,7 +28,9 @@
     return liveRows().filter(r=>r&&r.movement_type&&r.destination_treasury);
   }
   function eventDef(type){ const m=M(); return m&&m.EVENTS?m.EVENTS[type]:null; }
-  function amountOf(r){ return Number(r.amount_ils||r.amount||0); }
+  /* FD-021 (IG-011): the ILS accounting amount ONLY — native `amount` is never
+     a fallback (a row without amount_ils contributes 0, fail-safe). */
+  function amountOf(r){ return Number(r.amount_ils||0); }
 
   /* ق5 (2026-07-12) — the debt-settled slice of a member's food-display cash
      donation is DEFICIT money (custody in the food box, earmarked to settle the
@@ -102,7 +104,7 @@
          refund is an OUTFLOW from its origin treasury (Law 8). Subtract it here so the
          origin treasury reflects the money leaving. Empty table ⇒ no effect (flag OFF). */
       ((typeof DB!=='undefined'&&DB.refunds)||[]).forEach(rf=>{
-        if(!rf.is_deleted && rf.destination_treasury===key) bal -= Number(rf.amount_ils||rf.amount||0);
+        if(!rf.is_deleted && rf.destination_treasury===key) bal -= amountOf(rf);
       });
       return R2(bal);
     },
