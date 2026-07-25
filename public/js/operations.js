@@ -305,7 +305,10 @@
      RefundEngine (CA-005); this layer self-guards on the MODEL2 V2.0 activation flag, checks
      authority + locked period (Law 11) + reason, then does the certified write + audit.
      While the flag is OFF (default) it returns E_DISABLED and creates nothing — and no live
-     UI path calls it yet, so behaviour is byte-identical until Slice 7 activation. */
+     UI path calls it yet, so behaviour is byte-identical until Slice 7 activation.
+     FD-009 (IG-012): the member-debt effect of a member-linked refund lives in the
+     engine at read time (FIN.memberStatement/memberAllocation) — the refund row
+     recreates the member's debt on the refund date; nothing extra is written here. */
   async function refundReceipt({ originId, amountILS, reason, logLabel } = {}) {
     var RE = (typeof window !== 'undefined' && window.RefundEngine) || (typeof RefundEngine !== 'undefined' ? RefundEngine : null);
     if (!(typeof window !== 'undefined' && window.MODEL2_ALLOCATION_ENABLED)) return fail('E_DISABLED', 'الاسترداد غير مُفعَّل (MODEL2 V2.0)');
@@ -314,6 +317,9 @@
     if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب الاسترداد إلزامي');
     const origin = (typeof DB !== 'undefined' && DB.receipts || []).find(x => x.id === originId);
     if (!origin || origin.is_deleted) return fail('E_STATE', 'السند الأصلي غير موجود أو غير نشط');
+    /* CCR-001 IG-012 · FD-032 — «لا وجود لحدث استرداد تبرع»: donations are not
+       payments; a donation-origin refund is constitutionally impossible. */
+    if (origin.fund_type === 'donation') return fail('E_FORBIDDEN', 'لا وجود لاسترداد تبرع (FD-032) — الاسترداد يكون لدفعةٍ فقط');
     const prior = RE.refundedTotal(originId, (typeof DB !== 'undefined' && DB.refunds) || []);   /* dedicated refunds table (S2) */
     const locked = isLocked(origin.receipt_date);
     const res = RE.computeRefund({ origin, amountILS, priorRefundedILS: prior, locked });
