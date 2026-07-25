@@ -53,6 +53,7 @@
   let _dwSearch = '';      // member-list search text (read-only)
   let _dwApplyYear = null; // Capability (S2): the year targeted by Apply Annual Dues
   let _dwApplyAmount = 200;// Capability (S2): per-member amount for Apply Annual Dues
+  let _dwSearchTimer = null;// Audit C2: debounce handle for the members search box
 
   /* the certified set of membership years (billed / scheduled) */
   function years() {
@@ -298,6 +299,9 @@
     // certified dues operation the user may legitimately perform next; the selected
     // year's outstanding is the supporting state figure (one projection of the
     // certified surface — Rule 6). State + History (P-DUES-S1) are preserved intact.
+    const _hadSearchFocus = (document.activeElement && document.activeElement.classList
+      && document.activeElement.classList.contains('dw-search'));
+    const _caret = _hadSearchFocus ? document.activeElement.selectionStart : null;
     out.innerHTML = '<div class="dw-shell">'
       + '<div class="dw-hero">'
       +   '<div class="dw-hero-id"><span class="dw-hero-badge">' + T('الاشتراكات السنوية', 'Annual Subscriptions') + '</span>'
@@ -316,6 +320,13 @@
       + '<div class="dw-cols">'
       + sectionStatus(s) + sectionMembers(s) + sectionSchedule(s.year) + sectionCapability() + sectionNav()
       + '</div></div>';
+    /* Audit C2 — the search box lives inside the shell that this call replaces, so
+       typing would otherwise lose focus every keystroke. Restore focus + caret when
+       the re-render was driven by the search input. */
+    if (_hadSearchFocus) {
+      const si = out.querySelector('.dw-search');
+      if (si) { si.focus(); try { si.setSelectionRange(_caret, _caret); } catch (e) {} }
+    }
   }
 
   /* entry points — all read-only; setYear/setFilter/setSearch are view state, not operations */
@@ -331,7 +342,13 @@
     version: 2, years, yearState, memberRows, schedule, applyLegit, nextOperation, renderWorkspace,
     setYear(y) { _dwYear = Number(y); renderWorkspace(); },
     setFilter(f) { _dwFilter = (f === 'outstanding' || f === 'settled') ? f : 'all'; renderWorkspace(); },
-    setSearch(q) { _dwSearch = String(q == null ? '' : q); renderWorkspace(); },
+    /* Audit C2 — debounce so the per-member read model recomputes after a typing
+       pause, not on every keystroke; focus/caret are preserved by renderWorkspace. */
+    setSearch(q) {
+      _dwSearch = String(q == null ? '' : q);
+      if (_dwSearchTimer) clearTimeout(_dwSearchTimer);
+      _dwSearchTimer = setTimeout(() => { _dwSearchTimer = null; renderWorkspace(); }, 180);
+    },
     setApplyYear(y) { const n = parseInt(y, 10); if (Number.isFinite(n)) _dwApplyYear = n; renderWorkspace(); },
     setApplyAmount(a) { const n = Number(a); if (n > 0) _dwApplyAmount = n; },
     /* BO-10 · Apply Annual Dues — routes EXCLUSIVELY through the existing certified

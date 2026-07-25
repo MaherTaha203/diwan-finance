@@ -1235,6 +1235,20 @@ window.openAttach=async function(type,id,no,fund){
 
 async function renderAttachList(){
   const box=document.getElementById('attach-list');
+  /* Audit H4 — delegate the attachment actions once via data-* attributes instead
+     of interpolating the (user-controlled) file_name into inline onclick JS, where
+     HTML-entity decoding would let a crafted name break out of the JS string. The
+     values are read from decoded dataset properties, never re-parsed as code. */
+  if(box && !box.dataset.attWired){
+    box.dataset.attWired='1';
+    box.addEventListener('click',ev=>{
+      const b=ev.target.closest('button[data-att]'); if(!b) return;
+      const d=b.dataset;
+      if(d.att==='preview')  window.previewAttach(d.id,d.path,d.mime,d.name);
+      else if(d.att==='download') window.downloadAttach(d.path,d.name);
+      else if(d.att==='delete')   window.deleteAttach(d.id,d.path,d.name);
+    });
+  }
   box.innerHTML='<div style="text-align:center;padding:18px;color:var(--tx3)"><div class="spin"></div></div>';
   const col=ATTACH_CTX.type==='receipt'?'receipt_id':'payment_id';
   const{data,error}=await SB.from('attachments').select('*').eq(col,ATTACH_CTX.id).order('created_at',{ascending:false});
@@ -1251,9 +1265,9 @@ async function renderAttachList(){
         <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.file_name)}</div>
         <div style="font-size:10.5px;color:var(--tx3)">${esc(cats[a.doc_category]||a.doc_category)} · ${kb} · ${(a.created_at||'').slice(0,10)}</div>
       </div>
-      <button class="btn ghost sm" onclick="window.previewAttach('${a.id}','${esc(a.storage_path)}','${a.mime_type}','${esc(a.file_name)}')" title="${window.t('common.preview')}"><i class="ti ti-eye"></i></button>
-      <button class="btn ghost sm" onclick="window.downloadAttach('${esc(a.storage_path)}','${esc(a.file_name)}')" title="${window.t('common.download')}"><i class="ti ti-download"></i></button>
-      ${can.admin()?`<button class="btn ghost sm" style="color:var(--danger)" onclick="window.deleteAttach('${a.id}','${esc(a.storage_path)}','${esc(a.file_name)}')" title="${window.t('common.delete')}"><i class="ti ti-trash"></i></button>`:''}
+      <button class="btn ghost sm" data-att="preview" data-id="${esc(a.id)}" data-path="${esc(a.storage_path)}" data-mime="${esc(a.mime_type)}" data-name="${esc(a.file_name)}" title="${window.t('common.preview')}"><i class="ti ti-eye"></i></button>
+      <button class="btn ghost sm" data-att="download" data-path="${esc(a.storage_path)}" data-name="${esc(a.file_name)}" title="${window.t('common.download')}"><i class="ti ti-download"></i></button>
+      ${can.admin()?`<button class="btn ghost sm" style="color:var(--danger)" data-att="delete" data-id="${esc(a.id)}" data-path="${esc(a.storage_path)}" data-name="${esc(a.file_name)}" title="${window.t('common.delete')}"><i class="ti ti-trash"></i></button>`:''}
     </div>`;
   }).join('');
 }
