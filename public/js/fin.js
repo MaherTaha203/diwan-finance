@@ -185,7 +185,14 @@ const FIN={
     const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId)
       .reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
     const donSettled=Number(FIN.allocateFoodDonations().perMember[memberId]||0);
-    pool=r2(pool+liveFood+donSettled);
+    /* CA-007 write-offs (IG-008 conformance): a debt write-off resolves the
+       receivable exactly like a non-cash credit (enters the FD-002 pool), and a
+       credit write-off resolves outstanding credit (leaves the pool) — keeping
+       this waterfall's remaining identical to memberStatement().finalBalance. */
+    const wos=((typeof DB!=='undefined'&&DB.member_write_offs)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId);
+    const debtWO=wos.filter(r=>r.movement_type==='debt_write_off').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    const creditWO=wos.filter(r=>r.movement_type==='credit_write_off').reduce((s,r)=>s+Number(r.amount_ils||r.amount||0),0);
+    pool=r2(pool+liveFood+donSettled+debtWO-creditWO);
     const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),remaining:perYear[y].remaining_seed,createdAt:y+'-01-01'}));
     if(histSeed>0) obligations.push({id:'hist',kind:'historical',remaining:histSeed,createdAt:'2000-01-01'});
     const eng=(typeof window!=='undefined'&&window.MODEL2Allocation)||null;
@@ -468,6 +475,71 @@ const FIN={
       {hist:0,histPaid:0,selSub:0,selPaid:0,resolutions:0,current:0});
     Object.keys(totals).forEach(k=>totals[k]=r2(totals[k]));
     return { rows, totals, totalMembers:all.length, filter:f };
+  },
+
+  /* ═══ CCR-001 · IG-008 — FC-003 · FD-006 ═══
+     GENUINE consistency verifier. The former reconciliation compared FIN's
+     treasury delegates to FIN2 — a source to itself, structurally unable to
+     fail. This verifier compares figures that are computed along DIFFERENT
+     paths, so any drift between surfaces or engine paths is a reported defect:
+       · member layer (5 identities per member): ledger components vs stored
+         final balance; last running-balance row; FD-002 waterfall conservation
+         (Σ remaining − credit); delinquency outstanding; debt-report row.
+       · aggregate: Σ member balances (statement path) vs debt-report totals.
+       · treasury: net food position vs (food balance + remaining deficit);
+         fund-ledger closing vs Σcredit − Σdebit, per fund.
+       · item-9 conservation: per-receipt splits vs the stored receipt amount,
+         and the three totals vs Σ per-receipt splits. */
+  verifyConsistency(){
+    const r2=FIN._r2, T=0.005, checks=[];
+    const add=(k,a,b)=>{ checks.push({k,a:r2(a),b:r2(b),match:Math.abs(Number(a)-Number(b))<T}); };
+    /* — member layer — */
+    const members=DB.members.filter(m=>m.is_active!==false);
+    const model=FIN.debtReportRows({years:null,filter:'all'});
+    const failed=[]; let sumSt=0;
+    members.forEach(m=>{
+      const st=FIN.memberStatement(m.id);
+      const al=FIN.memberAllocation(m.id)||{perYear:{},historical:{},creditRemaining:0,outstanding:st.finalBalance};
+      const dl=FIN.memberDelinquency(m.id);
+      const row=model.rows.find(r=>r.id===m.id);
+      sumSt+=st.finalBalance;
+      const ident=st.openingBalance+st.totalDues-st.totalPaid-(st.debtSettled||0)-(st.debtWrittenOff||0)+(st.creditWrittenOff||0);
+      const lastBal=st.rows.length?Number(st.rows[st.rows.length-1].bal||0):0;
+      const wf=Object.values(al.perYear||{}).reduce((s,y)=>s+Number(y.remaining||0),0)
+        +Number((al.historical||{}).remaining||0)-Number(al.creditRemaining||0);
+      const bad=[];
+      if(Math.abs(ident-st.finalBalance)>=T)            bad.push('identity');
+      if(Math.abs(lastBal-st.finalBalance)>=T)          bad.push('ledger');
+      if(Math.abs(wf-st.finalBalance)>=T)               bad.push('waterfall');
+      if(Math.abs(Number(dl.outstanding)-st.finalBalance)>=T) bad.push('delinquency');
+      if(!row||Math.abs(Number(row.current)-st.finalBalance)>=T) bad.push('debt-report');
+      if(bad.length) failed.push({id:m.id,name:m.name,fails:bad.join('+')});
+    });
+    checks.push({k:'حسابات الأعضاء — 5 مطابقات لكل عضو ('+members.length+' عضوًا)',
+      a:members.length*5-failed.length, b:members.length*5, match:failed.length===0});
+    add('مجموع أرصدة الأعضاء: كشف العضو ↔ تقرير المديونية', sumSt, model.totals.current);
+    /* — treasury identities — */
+    add('صافي مركز الغداء ↔ رصيد الغداء + العجز المتبقي',
+      FIN.foodNetPosition(), Number(FIN.foodBalance())+Number(FIN.foodDeficitRemaining()));
+    const lf=FIN.fundLedgerView('food','','',''), ld=FIN.fundLedgerView('diwan','','','');
+    add('كشف الغداء: الرصيد الختامي ↔ دائن − مدين', lf.closing, lf.totalCr-lf.totalDr);
+    add('كشف الديوان: الرصيد الختامي ↔ دائن − مدين', ld.closing, ld.totalCr-ld.totalDr);
+    /* — item-9 allocation conservation — */
+    const a=FIN.allocateFoodDonations();
+    let splitSum=0, perRecOk=true;
+    Object.keys(a.perReceipt||{}).forEach(id=>{
+      const sp=a.perReceipt[id];
+      const s=Number(sp.debtSettled||0)+Number(sp.toDeficit||0)+Number(sp.toCurrent||0);
+      splitSum+=s;
+      const rec=DB.receipts.find(r=>r.id===id);
+      if(rec&&Math.abs(s-FIN.amountOf(rec))>=T) perRecOk=false;
+    });
+    checks.push({k:'قانون الحفظ (بند ٩): تقسيمات كل إيصال ↔ مبلغه المخزّن',
+      a:perRecOk?1:0, b:1, match:perRecOk});
+    add('قانون الحفظ (بند ٩): مجاميع التقسيم الثلاثة ↔ مجموع التقسيمات',
+      Number(a.debtSettlementTotal||0)+Number(a.reserveTotal||0)+Number(a.currentSupportTotal||0), splitSum);
+    return { checks, memberCount:members.length, failedMembers:failed,
+      allMatch:checks.every(c=>c.match) };
   },
 };
 

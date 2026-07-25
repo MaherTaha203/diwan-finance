@@ -303,42 +303,37 @@ window.prtDonStmt=function(mode){
    new-model engine (FIN2) must agree on each treasury/account on the production
    envelope. Read-only; touches no data. Answers the DoD questions
    «هل جميع الكشوف متطابقة؟ / هل يوجد أي اختلاف بين أي سطحين؟». */
+/* IG-008 (FD-006): the former report compared FIN's treasury delegates to FIN2
+   — a source to itself, structurally unable to fail. It now renders the GENUINE
+   engine verifier (FIN.verifyConsistency): cross-path identities that a real
+   drift between any two surfaces/paths would break. */
 window.reconcileRows=function(){
-  /* FIN is a top-level `const` (global lexical binding, NOT window.FIN) — read it
-     directly, exactly as fin2.js does. (Bug fix: the earlier window.FIN reference
-     was always undefined, so this returned []; now it genuinely reconciles.) */
-  const F=(typeof FIN!=='undefined'&&FIN)||null, F2=window.FIN2; if(!F||!F2) return [];
-  const r2=n=>Math.round((Number(n)||0)*100)/100;
-  const c=F2.composed?F2.composed():{};
-  const reg=F2.cashDonationRegister?F2.cashDonationRegister():[];
-  const memSum=r2((DB.members||[]).filter(m=>m.is_active!==false)
-    .reduce((s,m)=>s+Number(F.memberStatement(m.id).finalBalance||0),0));
-  const rows=[
-    {k:'خزينة الغداء',              legacy:r2(F.foodBalance()),            neo:r2(c.food)},
-    {k:'خزينة الديوان',             legacy:r2(F.diwanBalance()),           neo:r2(c.diwan)},
-    {k:'حساب تسوية العجز (المتبقّي)', legacy:r2(F.foodDeficitRemaining()),   neo:r2(c.historical_deficit_remaining)},
-  ].map(x=>Object.assign(x,{match:Math.abs(x.legacy-x.neo)<0.005}));
-  /* single-engine references (shown for traceability; no second surface to diff) */
-  rows.push({k:'سجل التبرعات النقدية (عدد · مجموع)',legacy:reg.length+' · '+r2(reg.reduce((s,x)=>s+Number(x.amount||0),0)),neo:'—',match:true,ref:true});
-  rows.push({k:'مجموع أرصدة حسابات الأعضاء',legacy:memSum,neo:'—',match:true,ref:true});
-  return rows;
+  const F=(typeof FIN!=='undefined'&&FIN)||null;
+  if(!F||!F.verifyConsistency) return [];
+  const v=F.verifyConsistency();
+  return v.checks.map(c=>({k:c.k,legacy:c.a,neo:c.b,match:c.match}));
 };
 window.reconcileReport=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const rows=window.reconcileRows();
-  const allMatch=rows.filter(r=>!r.ref).every(r=>r.match);
-  /* Foundation-B — the two independent engine paths were unified into ONE
-     canonical source (FinContract → FIN2). FIN's treasury functions now delegate
-     to it, so this report verifies the single source stays self-consistent
-     (the FIN delegate and FIN2 read the same figure). */
-  const body=reportHeader('تقرير مطابقة الأرصدة · Balance Reconciliation',{sub:'المالية ‹ الحسابات ‹ المطابقة (مصدرٌ واحد)'})
-    +'<div class="period">'+(allMatch?'✓ مصدرٌ قانونيٌّ واحدٌ لأرصدة الخزائن (FinContract → FIN2) — متّسقٌ تماماً، لا اختلاف بين أي سطحين':'⚠ يوجد اختلاف — راجع الصفوف المميّزة')+' · '+fmtDate2(new Date().toISOString())+'</div>'
-    +'<table class="dt"><thead><tr><th>الحساب / الخزينة</th><th>عبر FIN (مُفوِّض)</th><th>المصدر القانوني (FIN2)</th><th>الحالة</th></tr></thead><tbody>'
-    +rows.map(r=>'<tr>'+'<td>'+esc(r.k)+'</td>'
-        +'<td>'+(typeof r.legacy==='number'?'₪ '+fmt(r.legacy):esc(String(r.legacy)))+'</td>'
-        +'<td>'+(r.ref?'—':(typeof r.neo==='number'?'₪ '+fmt(r.neo):esc(String(r.neo))))+'</td>'
-        +'<td>'+(r.ref?'مرجعيّ':(r.match?'✓ متطابق':'⚠ اختلاف'))+'</td></tr>').join('')
+  const F=(typeof FIN!=='undefined'&&FIN)||null;
+  const v=F&&F.verifyConsistency?F.verifyConsistency():{checks:[],memberCount:0,failedMembers:[],allMatch:false};
+  const failHTML=v.failedMembers.length
+    ? '<div class="period" style="margin-top:10px">أعضاء غير متطابقين</div>'
+      +'<table class="dt"><thead><tr><th>العضو</th><th>الفحوص المخالفة</th></tr></thead><tbody>'
+      +v.failedMembers.slice(0,25).map(f=>'<tr><td>'+esc(f.name)+'</td><td class="dr">'+esc(f.fails)+'</td></tr>').join('')
+      +'</tbody></table>'
+    : '';
+  const body=reportHeader('تقرير المطابقة الدستورية · Constitutional Consistency',{sub:'المالية ‹ الحسابات ‹ المطابقة (FD-006)'})
+    +'<div class="period">'+(v.allMatch
+      ?'✓ جميع الكشوف متطابقة — لا اختلاف بين أي سطحين (فُحص '+v.memberCount+' عضوًا × ٥ مطابقات + هويات الخزائن وقانون الحفظ)'
+      :'⚠ يوجد اختلاف حقيقي — أي فرق بين سطحين خللٌ دستوري (FD-006)، راجع الصفوف المميّزة')
+    +' · '+fmtDate2(new Date().toISOString())+'</div>'
+    +'<table class="dt"><thead><tr><th>الفحص</th><th>القيمة أ</th><th>القيمة ب</th><th>الحالة</th></tr></thead><tbody>'
+    +v.checks.map(c=>'<tr><td>'+esc(c.k)+'</td>'
+        +'<td class="num">'+fmt(c.a)+'</td><td class="num">'+fmt(c.b)+'</td>'
+        +'<td>'+(c.match?'<span class="cr">✓ متطابق</span>':'<span class="dr">⚠ اختلاف</span>')+'</td></tr>').join('')
     +'</tbody></table>'
+    +failHTML
     +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({date:fmtDate2(new Date().toISOString())});
   openPrintWin('@page{size:A4;margin:12mm}body{font-family:var(--fa);direction:rtl;background:#fff}',body);
