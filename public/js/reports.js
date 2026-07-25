@@ -135,13 +135,23 @@ window.prtAnnualDebt=function(mode){
 
 /* ═══ A3 — Delinquent Members Report (read-only · dynamic subscription years) ═══ */
 let _delPrimary='all', _delYear='all';
+/* Historical Subscription Truth — the year cell honours the Owner-approved
+   status carried on the FIN.memberDelinquency byYear model (v.settled/v.status,
+   v.authoritative). Derived cells keep their numeric display; authoritative
+   cells show the approved status with a ● marker and never a derived figure. */
 function _delYearStatus(byYear, year){
   const v=byYear[year];
   if(!v || v.due<=0) return 'na';
-  return v.paid>=v.due ? 'settled' : 'unpaid';
+  return v.settled ? 'settled' : 'unpaid';
 }
 function _delCell(v){
   if(!v || v.due<=0) return '<span style="color:var(--faint)">—</span>';
+  if(v.authoritative){
+    const mark=' <span title="حالة تاريخية معتمدة من الإدارة" style="opacity:.65;font-size:9px">●</span>';
+    if(v.status==='paid')    return '<span class="cr">✓ مسدد</span>'+mark;
+    if(v.status==='partial') return '<span class="dr">◐ جزئي</span>'+mark;
+    return '<span class="dr">✗ غير مسدد</span>'+mark;
+  }
   if(v.paid>=v.due)  return '<span class="cr">✓ مسدد</span>';
   return '<span class="dr">✗ '+fmt(v.remaining)+' ₪</span>';
 }
@@ -228,7 +238,9 @@ window.exportDelinquentExcel=function(){
     const XLSX=window.XLSX; if(!XLSX){toast('جارٍ تحميل مكتبة Excel...','info');return;}
     const wsData=[['ديوان آل طه — تقرير الأعضاء المتأخرين'],[_delHeaderLabel()],[],head];
     rows.forEach(r=>{
-      const yc=years.map(y=>{ const v=r.d.byYear[y]; if(!v||v.due<=0) return '—'; return v.paid>=v.due?'✓ مسدد':'✗ '+fmt(v.remaining)+' ₪'; });
+      const yc=years.map(y=>{ const v=r.d.byYear[y]; if(!v||v.due<=0) return '—';
+        if(v.authoritative) return v.status==='paid'?'✓ مسدد ●':v.status==='partial'?'◐ جزئي ●':'✗ غير مسدد ●';
+        return v.paid>=v.due?'✓ مسدد':'✗ '+fmt(v.remaining)+' ₪'; });
       wsData.push([r.code, r.name, r.phone||'—'].concat(yc).concat([r.d.unpaidCount]));
     });
     const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
