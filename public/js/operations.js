@@ -40,9 +40,9 @@
     'BO-01': { id: 'BO-01', name: 'Create Voucher', authority: 'write',
       preconditions: ['authorized', 'amount>0', 'date not in locked year', 'explicit valid classification', 'unique number'],
       lifecycle: '(none) → ACTIVE(v1)', laws: [1, 4, 8, 11, 12] },
-    'BO-02': { id: 'BO-02', name: 'Edit Voucher', authority: 'admin',
+    'BO-02': { id: 'BO-02', name: 'Correct Voucher (void + replace · FD-034)', authority: 'admin',
       preconditions: ['administrator', 'voucher active', 'not locked (source & target date)', 'reason present', 'amount>0'],
-      lifecycle: 'ACTIVE → ACTIVE′(v n+1)', laws: [5, 6, 11] },
+      lifecycle: 'ACTIVE → VOID(v n+1) + NEW referencing voucher ACTIVE(v1) — approved rows are never edited', laws: [5, 6, 11] },
     'BO-03': { id: 'BO-03', name: 'Cancel Voucher', authority: 'admin',
       preconditions: ['administrator', 'voucher active', 'not locked'],
       lifecycle: 'ACTIVE → CANCELLED(v n+1)', laws: [5, 6, 11] },
@@ -102,30 +102,54 @@
     return { ok: true, data, no };
   }
 
-  /* ── BO-02 · Edit Voucher ────────────────────────────────────────────────
-     changes: the pre-built edit set (amount_ils / notes / member / allocation …),
-     WITHOUT version / updated_at — the operation bumps the version and records the
-     immutable snapshot (V8/Law 5/6). Classification fields must not be edited here. */
+  /* ── BO-02 · Correct Voucher — VOID + REPLACE (CCR-001 IG-009 · FC-003 FD-034) ──
+     Approved transactions are NEVER edited. A correction voids the incorrect
+     voucher and creates a NEW correct voucher that references the voided one
+     (reference lives in the new voucher's notes + the version snapshot + the
+     audit log — the same link pattern as BO-05 parent→child). Reclassification /
+     Partial-Split (BO-04/BO-05) remain distinct permitted events (CN-4 · A) and
+     are NOT corrections. `changes` keeps the BO-02 call shape (amount_ils /
+     notes / member / allocation / date …); classification fields must not pass
+     through here. Order: INSERT the replacement first, then void the original;
+     if the void fails the replacement is compensated (voided) and the operation
+     fails with no net change. */
   async function editVoucher({ kind, id, changes, reason, logLabel } = {}) {
     if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'المدير فقط');
     const tbl = tableOf(kind);
     const row = (typeof DB !== 'undefined' && DB[tbl] || []).find(x => x.id === id);
     if (!row || row.is_deleted) return fail('E_STATE', 'السند غير موجود أو غير نشط');
-    if (isLocked(dateOf(kind, row))) return fail('E_LOCKED', '🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند');
-    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب التعديل إلزامي');
+    if (isLocked(dateOf(kind, row))) return fail('E_LOCKED', '🔒 السنة المالية مقفلة — لا يمكن تصحيح هذا السند');
+    if (!reason || !String(reason).trim()) return fail('E_REASON', '✋ سبب التصحيح إلزامي');
     if (changes && changes.amount_ils != null && !(Number(changes.amount_ils) > 0)) return fail('E_AMOUNT', 'مبلغ غير صالح');
     const tgtDate = changes && (kind === 'payment' ? changes.payment_date : changes.receipt_date);
     if (tgtDate && isLocked(tgtDate)) return fail('E_LOCKED', '🔒 لا يمكن نقل السند إلى سنة مقفلة');
 
+    /* 1 · build the replacement from the voided voucher's state + the correction */
     const preRow = Object.assign({}, row);               /* immutable pre-state (Law 5 baseline) */
+    const arr = (typeof DB !== 'undefined' && DB[tbl]) || [];
+    const newNo = nextNo(kind === 'payment' ? 'PAY' : 'REC', arr);   /* Law 12 — own identity */
+    const repl = Object.assign({}, row, changes || {});
+    ['id', 'no', 'created_at', 'updated_at', 'version', 'verification_token'].forEach(k => { delete repl[k]; });
+    const refTag = `تصحيح للسند ${row.no} (FD-034)`;
+    repl.notes = (repl.notes ? String(repl.notes) + ' · ' : '') + refTag;
+    repl.no = newNo; repl.verification_token = genVerificationToken(); repl.created_by = editor();
+    const ins = await SB.from(tbl).insert(repl).select().single();
+    if (ins.error) return fail('E_WRITE', ins.error.message);
+
+    /* 2 · void the incorrect original (snapshot carries the forward reference) */
     const newVer = Number(row.version || 1) + 1;
-    const upd = Object.assign({}, changes, { version: newVer, updated_at: now() });
-    const { error } = await SB.from(tbl).update(upd).eq('id', id);
-    if (error) return fail('E_WRITE', error.message);
-    try { await recordVoucherVersion(kind, preRow, Object.assign({}, preRow, upd), String(reason).trim(), newVer); }
-    catch (e) { return fail('E_HISTORY', e.message); }   /* history is part of the contract — fail if it can't be recorded */
-    try { await logAction('edit', logLabel || `تعديل سند ${row.no} (نسخة ${newVer})`, tbl, id); } catch (_) {}
-    return { ok: true, data: { version: newVer }, no: row.no };
+    const voidUpd = { is_deleted: true, version: newVer, updated_at: now() };
+    const vd = await SB.from(tbl).update(voidUpd).eq('id', id);
+    if (vd.error) {                                      /* compensate: withdraw the replacement */
+      try { await SB.from(tbl).update({ is_deleted: true, updated_at: now() }).eq('id', ins.data.id); } catch (_) {}
+      return fail('E_WRITE', vd.error.message);
+    }
+    try {
+      await recordVoucherVersion(kind, preRow, Object.assign({}, preRow, voidUpd),
+        `إبطال واستبدال (FD-034) — السند البديل ${newNo} | السبب: ${String(reason).trim()}`, newVer);
+    } catch (e) { return fail('E_HISTORY', e.message); } /* history is part of the contract — fail if it can't be recorded */
+    try { await logAction('edit', logLabel || `تصحيح سند ${row.no} → إبطال + سند بديل ${newNo}`, tbl, ins.data && ins.data.id); } catch (_) {}
+    return { ok: true, data: { replacement: ins.data, voidedNo: row.no, version: newVer }, no: newNo };
   }
 
   /* ── BO-03 · Cancel Voucher ──────────────────────────────────────────────
