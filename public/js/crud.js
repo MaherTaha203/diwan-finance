@@ -656,14 +656,14 @@ if(r.fund_type==='donation' && r.donation_display_fund==='food'){
     upd.manual_allocation=false; upd.manual_debt_settlement=null; upd.manual_historical_donation=null; upd.manual_current_support=null;
   }
 }
-/* BO-02 · Edit Voucher — route the certified write + immutable version snapshot
-   through the Business Operations layer (P1-000 Part A; V8 versioning). */
+/* BO-02 · Correct Voucher (IG-009 · FD-034) — void + replace through the
+   Business Operations layer: the approved row is never edited. */
 const _res=await BusinessOps.editVoucher({ kind:'receipt', id, changes:upd, reason,
-  logLabel:`تعديل إيصال ${r.no} (نسخة ${Number(r.version||1)+1}) — ₪${fmt(amount)} | السبب: ${reason}` });
+  logLabel:`تصحيح إيصال ${r.no} — إبطال + سند بديل — ₪${fmt(amount)} | السبب: ${reason}` });
 if(!_res.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_res.error,'err'); return; }
 window.closeM();
 await loadAll();
-toast(window.t('messages.updated'),'ok');
+toast('✓ تم التصحيح — أُبطل السند وأُنشئ سند بديل '+(_res.no||''),'ok');
 
 };
 window.deleteRec=async function(){
@@ -698,11 +698,11 @@ window.updatePay=async function(){
   const reason=(document.getElementById('edit-pay-reason')?.value||'').trim();
   if(amount<=0){toast(window.t('errors.invalid_amount'),'warn');return;}
   if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
-  /* BO-02 · Edit Voucher (payment) — via the Business Operations layer (V8 versioning). */
+  /* BO-02 · Correct Voucher (IG-009 · FD-034) — void + replace: the approved row is never edited. */
   const _res=await BusinessOps.editVoucher({ kind:'payment', id, changes:{amount_ils:amount,notes}, reason,
-    logLabel:`تعديل سند صرف ${p.no} (نسخة ${Number(p.version||1)+1}) — ₪${fmt(amount)} | السبب: ${reason}` });
+    logLabel:`تصحيح سند صرف ${p.no} — إبطال + سند بديل — ₪${fmt(amount)} | السبب: ${reason}` });
   if(!_res.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_res.error,'err'); return; }
-  window.closeM();await loadAll();toast(window.t('messages.updated'),'ok');
+  window.closeM();await loadAll();toast('✓ تم التصحيح — أُبطل السند وأُنشئ سند بديل '+(_res.no||''),'ok');
 };
 window.deletePay=async function(){
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
