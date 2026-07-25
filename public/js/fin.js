@@ -377,6 +377,28 @@ const FIN={
      (fail-safe) instead of silently mixing currency units. */
   amountOf(r){ return Number(r.amount_ils||0); },
 
+  /* ═══ CCR-001 · IG-013 — FC-003 · FD-010 ═══
+     Probable-duplicate probe for receipt ENTRY: same fund + same payer identity
+     (member_id, or trimmed payer name for non-members) + same ILS accounting
+     amount (±0.005) + receipt date within `windowDays`. Read-only predicate —
+     duplicates remain PERMITTED (FD-010); the caller raises the strong warning.
+     `windowDays` is an operational sensitivity parameter of the warning only
+     (default 7); it affects no figure and blocks nothing. */
+  findProbableDuplicates({fund, memberId, payerName, amountILS, date, windowDays}={}){
+    const amt=Number(amountILS)||0, t=new Date(date).getTime();
+    if(!fund||!(amt>0)||!Number.isFinite(t)) return [];
+    const win=(Number(windowDays)>0?Number(windowDays):7)*86400000;
+    const name=(payerName||'').trim();
+    return DB.receipts.filter(r=>{
+      if(r.is_deleted||r.fund_type!==fund) return false;
+      if(Math.abs(FIN.amountOf(r)-amt)>=0.005) return false;
+      const rt=new Date(r.receipt_date).getTime();
+      if(!Number.isFinite(rt)||Math.abs(rt-t)>win) return false;
+      if(memberId) return r.member_id===memberId;
+      return !!name && (r.payer_name||'').trim()===name;
+    });
+  },
+
   /* Single in-kind predicate (FE-008 documentary donations). */
   isInkindDonation(r){ return r.movement_type==='donation_inkind'; },
 
