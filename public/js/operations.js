@@ -77,8 +77,8 @@
       engine: 'WriteOffEngine.computeCreditWriteOff (pure · CA-007) — resolves the outstanding credit to zero; NON-CASH; never refunded (OD-06/OD-07)',
       lifecycle: '(none) → NEW credit_write_off record ACTIVE(v1); member outstanding credit → 0 (explicit closure, not a refund, never a perpetual liability)', laws: [1, 3, 5, 6] },
     'BO-14': { id: 'BO-14', name: 'Close Fiscal Year (FD-012/FD-030 · CCR-001 IG-015)', authority: 'admin',
-      preconditions: ['System Director (administrator — FD-029)', 'year > current locked_through_year', 'today ≥ 1 February of the following year (31-January rule)', 'reason present'],
-      lifecycle: 'settings.locked_through_year → year, with a distinct fiscal_close audit event (who/when/why); lock state changes ONLY through this action or BO-15', laws: [5, 6, 11] },
+      preconditions: ['System Director (administrator — FD-029)', 'year > current locked_through_year', 'today ≥ 1 February of the following year (31-January rule)', 'reason present', 'close-time report snapshot persisted (IG-016 · FD-004) — no snapshot ⇒ no close'],
+      lifecycle: 'settings.locked_through_year → year, with a distinct fiscal_close audit event (who/when/why) AND an immutable fiscal_snapshots row; lock state changes ONLY through this action or BO-15', laws: [4, 5, 6, 11] },
     'BO-15': { id: 'BO-15', name: 'Reopen Fiscal Year (FD-012 · CCR-001 IG-015)', authority: 'admin',
       preconditions: ['System Director (administrator — FD-029)', 'year currently closed (year ≤ locked_through_year)', 'reason present'],
       lifecycle: 'settings.locked_through_year → year−1, with a distinct fiscal_reopen audit event (who/when/why); re-close is equally explicit (BO-14)', laws: [5, 6, 11] },
@@ -438,6 +438,14 @@
     if (!Number.isFinite(y) || y <= prev) return fail('E_STATE', 'السنة ' + year + ' مقفلة أصلاً أو غير صالحة (المقفل حتى ' + prev + ')');
     const earliest = new Date((y + 1) + '-02-01');       /* FD-030 — الإقفال الدائم في 31 يناير التالي */
     if (new Date(today()) < earliest) return fail('E_EARLY', '🔒 قاعدة 31 يناير (FD-030): لا يُقفَل عام ' + y + ' قبل 1/2/' + (y + 1));
+    /* IG-016 (FD-004): the close-time report snapshot is PART of the close —
+       no snapshot ⇒ no close. Build it from the engine BEFORE any write. */
+    const F = (typeof FIN !== 'undefined' && FIN && FIN.buildCloseSnapshot) ? FIN : null;
+    if (!F) return fail('E_ENGINE', 'محرّك لقطات الإقفال غير متوفّر — لا يُقفَل بدون لقطة التقارير (FD-004)');
+    let snapPayload;
+    try { snapPayload = F.buildCloseSnapshot(prev, y); }
+    catch (e) { return fail('E_SNAPSHOT', 'تعذّر بناء لقطة تقارير الإقفال: ' + e.message); }
+
     const err = await _setLock(y, prev);
     if (err) return fail('E_WRITE', err);
     try {
@@ -446,8 +454,19 @@
       await _setLock(prev, y);                           /* lock never moves without its audit record */
       return fail('E_HISTORY', 'تعذّر توثيق الإقفال — أُعيدت الحالة: ' + e.message);
     }
+    let snapErr = null;
+    try {
+      const ins = await SB.from('fiscal_snapshots').insert({
+        closed_through: y, previous_lock: prev, snapshot: snapPayload, created_by: editor() });
+      if (ins && ins.error) snapErr = ins.error.message;
+    } catch (e) { snapErr = e.message; }
+    if (snapErr) {                                       /* no snapshot ⇒ the close is reverted */
+      await _setLock(prev, y);
+      try { await logAction('fiscal_close', 'تراجع عن إقفال ' + y + ' — تعذّر حفظ لقطة تقارير الإقفال: ' + snapErr, 'settings', 'locked_through_year'); } catch (_) {}
+      return fail('E_SNAPSHOT', 'تعذّر حفظ لقطة تقارير الإقفال — أُعيدت الحالة: ' + snapErr);
+    }
     if (typeof window !== 'undefined') window.LOCKED_THROUGH_YEAR = y;
-    return { ok: true, data: { locked_through_year: y, previous: prev } };
+    return { ok: true, data: { locked_through_year: y, previous: prev, snapshot_years: Object.keys(snapPayload.years || {}) } };
   }
   async function reopenFiscalYear({ year, reason } = {}) {
     if (typeof can === 'undefined' || !can.admin()) return fail('E_AUTH', 'مدير النظام فقط (FD-029)');

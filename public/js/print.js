@@ -303,8 +303,11 @@ window.buildFundStatementHTML=function(fund){
   const from=document.getElementById(fund+'-stmt-from')?.value||'';
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
-  const lv=FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
-  const fundLabel=fund==='food'?window.t('receipts.fund_food'):window.t('receipts.fund_diwan');
+  /* IG-016 (FD-004): an EXACT closed-year range prints from the immutable
+     close-time snapshot (latest for the year); otherwise compute live. */
+  const _arch=(!type)?FIN.closedYearLedgerSnapshot(fund,from,to):null;
+  const lv=_arch||FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
+  const fundLabel=(fund==='food'?window.t('receipts.fund_food'):window.t('receipts.fund_diwan'))+(_arch?' · 🔒 لقطة الإقفال':'');
   const bal=lv.closing,totCr=lv.totalCr,totDr=lv.totalDr,openBal=lv.opening;
   const rowsHTML=lv.rows.map(r=>{
     let crCell;
