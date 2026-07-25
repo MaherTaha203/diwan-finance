@@ -668,6 +668,18 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
       <div class="fi"><label data-i18n="settings.diwan_jod">رصيد الديوان السابق JD (للعملات فقط)</label><input type="number" step="0.01" id="set-diwan-opening-jod" placeholder="0"></div>
       <div class="fi"><label data-i18n="settings.food_usd">رصيد الغداء السابق $ (للعملات فقط)</label><input type="number" step="0.01" id="set-food-opening-usd" placeholder="0"></div>
       <div class="fi"><label data-i18n="settings.food_jod">رصيد الغداء السابق JD (للعملات فقط)</label><input type="number" step="0.01" id="set-food-opening-jod" placeholder="0"></div></div><div style="margin-top:16px"><button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i><span data-i18n="settings.save">حفظ الإعدادات</span></button></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-lock-check"></i><span>الإقفال المالي السنوي</span></span></div>
+      <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span>حالة القفل تتغيّر فقط عبر إجراء إقفال/إعادة فتح صريح وموثّق (FD-012 · FD-030). الإقفال الدائم لسنةٍ ما يكون من 1 فبراير للسنة التالية.</span></div>
+      <div style="margin:8px 0;font-size:13px">المقفل حالياً حتى: <b class="mono" id="fy-locked-now">—</b></div>
+      <div class="fg" style="max-width:500px">
+        <div class="fi"><label>السنة</label><input type="number" id="fy-year" placeholder="2025" step="1"></div>
+        <div class="fi full"><label>سبب القرار (إلزامي — يُسجَّل باسم مدير النظام)</label><input type="text" id="fy-reason" placeholder="سبب الإقفال أو إعادة الفتح"></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn primary" onclick="window.closeFiscalYearUI()"><i class="ti ti-lock"></i>إقفال السنة</button>
+        <button class="btn secondary" onclick="window.reopenFiscalYearUI()"><i class="ti ti-lock-open"></i>إعادة فتح السنة</button>
+      </div>
+    </div>
     <div class="card"><div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i><span data-i18n="settings.rates_title">أسعار الصرف الاحتياطية</span></span></div><div class="fg" style="max-width:500px"><div class="fi"><label data-i18n="settings.usd_rate_short">سعر الدولار USD ₪</label><div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" placeholder="3.70" step="0.01" min="0.01"></div></div><div class="fi"><label data-i18n="settings.jod_rate_short">سعر الدينار JOD ₪</label><div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" placeholder="5.00" step="0.01" min="0.01"></div></div></div><div style="margin-top:16px"><button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i><span data-i18n="settings.save_short">حفظ</span></button></div></div>
     <div class="card" id="settings-summary" style="display:none"><div class="ch"><span class="ct"><i class="ti ti-chart-pie"></i><span data-i18n="settings.summary">ملخص الأرصدة مع الافتتاحي</span></span></div><div id="settings-bal-summary"></div></div>
   </div>
@@ -1153,7 +1165,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/refund-engine.js?v=2.0"></script>
 <script defer src="/js/writeoff-engine.js?v=2.0"></script>
 <script defer src="/js/crud.js?v=2.3"></script>
-<script defer src="/js/operations.js?v=1.6"></script>
+<script defer src="/js/operations.js?v=1.7"></script>
 <script defer src="/js/member-lifecycle.js?v=3.0"></script>
 <script defer src="/js/collection-workspace.js?v=3.0"></script>
 <script defer src="/js/payment-workspace.js?v=3.0"></script>
@@ -1162,7 +1174,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/reservations.js?v=1.0"></script>
 <script defer src="/js/print.js?v=2.2"></script>
 <script defer src="/js/reports.js?v=2.4"></script>
-<script defer src="/js/app.js?v=2.4"></script>
+<script defer src="/js/app.js?v=2.5"></script>
 <script defer src="/js/user-admin.js?v=1.1"></script>
 <script defer src="/js/sidebar.js?v=1.0"></script>
 <script defer src="/js/floating-labels.js?v=1.0"></script>
