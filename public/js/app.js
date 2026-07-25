@@ -1543,6 +1543,7 @@ const AUTH_AUDIT={
   opening_balance_change:{ar:'تغيير رصيد افتتاحي',en:'Opening balance change',c:'blue'},
   fiscal_close:{ar:'إقفال سنة مالية',en:'Fiscal year close',c:'red'},
   fiscal_reopen:{ar:'إعادة فتح سنة مالية',en:'Fiscal year reopen',c:'orange'},
+  fund_transfer:{ar:'تحويل داخلي بين الصناديق',en:'Internal fund transfer',c:'teal'},
   login_success:{ar:'تسجيل دخول ناجح',en:'Login success',c:'green'},
   login_failed:{ar:'محاولة دخول فاشلة',en:'Login failed',c:'red'},
 };
@@ -2236,8 +2237,54 @@ function renderFiscalLockNow(){
   const el=document.getElementById('fy-locked-now');
   if(el) el.textContent=Number.isFinite(window.LOCKED_THROUGH_YEAR)?String(window.LOCKED_THROUGH_YEAR):'—';
 }
+/* ═══ CCR-001 · IG-014 — FD-022…FD-025: Administrative Internal Transfers.
+   Thin adapter over BusinessOps.transferFunds (BO-16) + the register list and
+   the printable Internal Transfer Voucher. Presentation only (FD-013). */
+const TR_FUND_AR={diwan:'الديوان',food:'الغداء',historical_deficit:'العجز التاريخي'};
+window.transferFundsUI=async function(){
+  const source=document.getElementById('tr-source')?.value;
+  const destination=document.getElementById('tr-destination')?.value;
+  const amountILS=parseFloat(document.getElementById('tr-amount')?.value)||0;
+  const date=document.getElementById('tr-date')?.value||'';
+  const reason=(document.getElementById('tr-reason')?.value||'').trim();
+  const approvingDirector=(document.getElementById('tr-director')?.value||'').trim();
+  if(!confirm('تنفيذ تحويل داخلي '+TR_FUND_AR[source]+' ← '+TR_FUND_AR[destination]+' بمبلغ ₪'+fmt(amountILS)+'؟\n(يصدر سند تحويل غير قابل للتعديل)')) return;
+  const _res=await BusinessOps.transferFunds({source,destination,amountILS,date,reason,approvingDirector});
+  if(!_res.ok){ toast(_res.error,'err'); return; }
+  toast('✓ صدر سند التحويل الداخلي '+_res.no,'ok');
+  await loadAll(); renderTransferList();
+};
+function renderTransferList(){
+  const el=document.getElementById('tr-list'); if(!el) return;
+  const rows=FIN.transferRegister().slice(0,10);
+  el.innerHTML=rows.length
+    ? '<table class="as-table" style="font-size:12px"><thead><tr><th>السند</th><th>التاريخ</th><th>من</th><th>إلى</th><th class="as-num">المبلغ ₪</th><th></th></tr></thead><tbody>'
+      +rows.map(t=>'<tr><td class="mono">'+esc(t.no)+'</td><td>'+esc(t.transfer_date)+'</td><td>'+(TR_FUND_AR[t.source_treasury]||esc(t.source_treasury))+'</td><td>'+(TR_FUND_AR[t.destination_treasury]||esc(t.destination_treasury))+'</td><td class="as-num">₪ '+fmt(FIN.amountOf(t))+'</td>'
+      +'<td>'+(can.print()?'<button class="btn ghost sm" onclick="window.prtTransfer(\''+esc(t.id)+'\')"><i class="ti ti-printer"></i></button>':'')+'</td></tr>').join('')
+      +'</tbody></table>'
+    : '<div style="font-size:12px;color:var(--tx3)">لا توجد تحويلات داخلية بعد</div>';
+}
+window.prtTransfer=function(id){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const t=FIN.transferRegister().find(x=>x.id===id); if(!t) return;
+  const row=(k,v)=>'<tr><td style="font-weight:600;white-space:nowrap">'+k+'</td><td>'+v+'</td></tr>';
+  const body=reportHeader('سند تحويل داخلي · Internal Transfer Voucher',{sub:'FD-022…FD-025 — إعادة توزيع بين الصناديق، لا إيراد ولا مصروف'})
+    +'<div class="period">رقم السند: <b class="num">'+esc(t.no)+'</b> · التاريخ: '+fmtDate2(t.transfer_date)+'</div>'
+    +'<table class="dt" style="max-width:560px;margin:0 auto"><tbody>'
+    +row('من صندوق',TR_FUND_AR[t.source_treasury]||esc(t.source_treasury))
+    +row('إلى صندوق',TR_FUND_AR[t.destination_treasury]||esc(t.destination_treasury))
+    +row('المبلغ','<span class="num">₪ '+fmt(FIN.amountOf(t))+'</span> ('+esc(t.currency||'ILS')+')')
+    +row('سبب التحويل',esc(t.reason||'—'))
+    +row('المشغّل',esc(t.created_by||'—'))
+    +row('المدير المعتمد',esc(t.approving_director||'—'))
+    +'</tbody></table>'
+    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
+    +reportFooter({date:fmtDate2(new Date().toISOString())});
+  openPrintWin('@page{size:A4;margin:14mm}body{font-family:var(--fa);direction:rtl;background:#fff}',body);
+};
 function renderSettingsSummary(){
   renderFiscalLockNow();
+  renderTransferList();
   const summaryCard = document.getElementById('settings-summary');
   const summaryEl   = document.getElementById('settings-bal-summary');
   if(!summaryCard||!summaryEl) return;

@@ -680,6 +680,19 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
         <button class="btn secondary" onclick="window.reopenFiscalYearUI()"><i class="ti ti-lock-open"></i>إعادة فتح السنة</button>
       </div>
     </div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-transfer"></i><span>التحويلات الداخلية بين الصناديق</span></span></div>
+      <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span>تحويل إداري معتمد من مدير النظام بين الصناديق الثلاثة (FD-022…FD-025). يصدر سند تحويل داخلي غير قابل للتعديل، ولا يغيّر الإيرادات أو المصروفات أو ذمم الأعضاء.</span></div>
+      <div class="fg" style="max-width:500px">
+        <div class="fi"><label>من صندوق</label><select id="tr-source"><option value="diwan">الديوان</option><option value="food">الغداء</option><option value="historical_deficit">العجز التاريخي</option></select></div>
+        <div class="fi"><label>إلى صندوق</label><select id="tr-destination"><option value="food">الغداء</option><option value="diwan">الديوان</option><option value="historical_deficit">العجز التاريخي</option></select></div>
+        <div class="fi"><label>المبلغ ₪ (محاسبي)</label><div class="iw"><span class="ipx">₪</span><input type="number" id="tr-amount" placeholder="0.00" step="0.01" min="0.01"></div></div>
+        <div class="fi"><label>التاريخ</label><input type="date" id="tr-date"></div>
+        <div class="fi full"><label>سبب التحويل (إلزامي)</label><input type="text" id="tr-reason" placeholder="سبب التحويل"></div>
+        <div class="fi full"><label>المدير المعتمد (إلزامي)</label><input type="text" id="tr-director" placeholder="اسم المدير المعتمد للتحويل"></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn primary" onclick="window.transferFundsUI()"><i class="ti ti-transfer"></i>تنفيذ التحويل وإصدار السند</button></div>
+      <div id="tr-list" style="margin-top:14px"></div>
+    </div>
     <div class="card"><div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i><span data-i18n="settings.rates_title">أسعار الصرف الاحتياطية</span></span></div><div class="fg" style="max-width:500px"><div class="fi"><label data-i18n="settings.usd_rate_short">سعر الدولار USD ₪</label><div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" placeholder="3.70" step="0.01" min="0.01"></div></div><div class="fi"><label data-i18n="settings.jod_rate_short">سعر الدينار JOD ₪</label><div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" placeholder="5.00" step="0.01" min="0.01"></div></div></div><div style="margin-top:16px"><button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i><span data-i18n="settings.save_short">حفظ</span></button></div></div>
     <div class="card" id="settings-summary" style="display:none"><div class="ch"><span class="ct"><i class="ti ti-chart-pie"></i><span data-i18n="settings.summary">ملخص الأرصدة مع الافتتاحي</span></span></div><div id="settings-bal-summary"></div></div>
   </div>
@@ -1149,14 +1162,14 @@ async function updateLoginMemberCount() {
 <script defer src="/js/utils.js?v=2.1"></script>
 <script defer src="/js/i18n.js?v=2.1"></script>
 <script defer src="/js/foodDonationAllocation.js?v=2.1"></script>
-<script defer src="/js/fin.js?v=2.9"></script>
+<script defer src="/js/fin.js?v=3.0"></script>
 <script defer src="/js/model2.js?v=2.2"></script>
-<script defer src="/js/fin2.js?v=2.3"></script>
+<script defer src="/js/fin2.js?v=2.4"></script>
 <script defer src="/js/fin-contract.js?v=2.1"></script>
 <script defer src="/js/migrate2.js?v=2.1"></script>
 <script defer src="/js/ui-nav.js?v=2.1"></script>
 <script defer src="/js/ui-infra.js?v=2.1"></script>
-<script defer src="/js/data.js?v=2.2"></script>
+<script defer src="/js/data.js?v=2.3"></script>
 <script defer src="/js/auth.js?v=2.2"></script>
 <script defer src="/js/auth-password.js?v=1.2"></script>
 <script defer src="/js/forms.js?v=2.1"></script>
@@ -1165,7 +1178,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/refund-engine.js?v=2.1"></script>
 <script defer src="/js/writeoff-engine.js?v=2.0"></script>
 <script defer src="/js/crud.js?v=2.5"></script>
-<script defer src="/js/operations.js?v=1.8"></script>
+<script defer src="/js/operations.js?v=1.9"></script>
 <script defer src="/js/member-lifecycle.js?v=3.0"></script>
 <script defer src="/js/collection-workspace.js?v=3.0"></script>
 <script defer src="/js/payment-workspace.js?v=3.0"></script>
@@ -1174,7 +1187,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/reservations.js?v=1.0"></script>
 <script defer src="/js/print.js?v=2.2"></script>
 <script defer src="/js/reports.js?v=2.4"></script>
-<script defer src="/js/app.js?v=2.5"></script>
+<script defer src="/js/app.js?v=2.6"></script>
 <script defer src="/js/user-admin.js?v=1.1"></script>
 <script defer src="/js/sidebar.js?v=1.0"></script>
 <script defer src="/js/floating-labels.js?v=1.0"></script>

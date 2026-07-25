@@ -106,6 +106,16 @@
       ((typeof DB!=='undefined'&&DB.refunds)||[]).forEach(rf=>{
         if(!rf.is_deleted && rf.destination_treasury===key) bal -= amountOf(rf);
       });
+      /* IG-014 (FD-022…025) — Administrative Internal Transfers live in the dedicated
+         `internal_transfers` table: money leaves the source treasury and enters the
+         destination treasury. Non-revenue/non-expense redistribution — it never touches
+         receipts/payments, so income/expense totals and member liabilities are unchanged.
+         Empty table ⇒ no effect. */
+      ((typeof DB!=='undefined'&&DB.internal_transfers)||[]).forEach(tr=>{
+        if(tr.is_deleted) return;
+        if(tr.source_treasury===key)      bal -= amountOf(tr);
+        if(tr.destination_treasury===key) bal += amountOf(tr);
+      });
       return R2(bal);
     },
     foodTreasury(){          return FIN2.treasuryBalance('food'); },
