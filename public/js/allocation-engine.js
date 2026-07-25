@@ -23,6 +23,12 @@
        consumption, refund BO-11 and write-offs BO-12/13 are inert no-ops.
        An explicit prior assignment (settings/localStorage override) still wins. */
     if (typeof window.MODEL2_ALLOCATION_ENABLED === 'undefined') window.MODEL2_ALLOCATION_ENABLED = false;
+    /* PROPOSAL-FLAG-SEPARATION-001 (Owner-approved) — the AUDIT LOG has its own
+       switch: it gates ONLY the metadata recorders (OD-01/OD-02 → allocation_records,
+       non-authoritative by DDL). The operational capabilities (BO-11 refund,
+       BO-12/13 write-offs) remain gated SOLELY on MODEL2_ALLOCATION_ENABLED, which
+       for backward compatibility still implies the audit log when ON. */
+    if (typeof window.MODEL2_AUDIT_LOG_ENABLED === 'undefined') window.MODEL2_AUDIT_LOG_ENABLED = false;
   }
 })(this, function () {
   'use strict';
