@@ -29,6 +29,11 @@ function genVerificationToken(len){
   }
   return out.join('');
 }
+/* IG-018 (FD-019) — the single predicate deciding whether receipt capture may
+   create a contacts row: explicit manual-payer opt-in AND never for donations. */
+function shouldCreateContact(fund,payerType,saveContact,payerName){
+  return payerType==='manual' && !!saveContact && !!String(payerName||'').trim() && fund!=='donation';
+}
 window.saveRec=async function(print=false){
   if(!guardSave('saveRec')){return;}
   if(!can.write()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية','err');return;}
@@ -81,7 +86,12 @@ window.saveRec=async function(print=false){
   }
 
   let finalContactId=contactId;
-  if(payerType==='manual'&&saveContact&&payerName){
+  /* ═══ CCR-001 · IG-018 — FC-003 · FD-019 ═══
+     Non-member donations store ONLY the donation transaction: a permanent donor
+     profile (contacts row) is NEVER created from donation capture, regardless of
+     UI state. The denormalized payer_name on the voucher sustains every report.
+     Non-donation receipts keep the explicit save-contact option. */
+  if(shouldCreateContact(fund,payerType,saveContact,payerName)){
     const{data:nc}=await SB.from('contacts').insert({name:payerName}).select().single();
     if(nc) finalContactId=nc.id;
     await loadAll();
