@@ -4,8 +4,10 @@
      · OD-01 — a member payment records its ordered allocation across obligations.
      · OD-02 — at new-obligation creation (annual dues), an existing member credit is
                consumed against obligations in the same constitutional order (CA-001/002/003).
-   EVERY entry point self-guards on window.MODEL2_ALLOCATION_ENABLED. While the flag is OFF
-   (default), all recorders are no-ops and behaviour is byte-identical to today. Recording is
+   EVERY entry point self-guards on the audit-log switch (PROPOSAL-FLAG-SEPARATION-001):
+   recorders run when MODEL2_ALLOCATION_ENABLED (full activation, implies the audit log)
+   OR MODEL2_AUDIT_LOG_ENABLED (audit log alone) is ON. With both OFF (default), all
+   recorders are no-ops and behaviour is byte-identical to today. Recording is
    best-effort metadata (immutable allocation rows); it never alters balances (balances remain
    the certified net) and never blocks the core operation. Forward-only.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -26,7 +28,7 @@
     };
     /* OD-01 — record a payment's ordered allocation. */
     window.MODEL2RecordAllocation = async function (memberId, sourceRef, amount) {
-      if (!window.MODEL2_ALLOCATION_ENABLED) return null;                          /* FLAG OFF → no-op */
+      if (!(window.MODEL2_ALLOCATION_ENABLED || window.MODEL2_AUDIT_LOG_ENABLED)) return null; /* both OFF → no-op */
       if (!window.MODEL2Allocation || !(Number(amount) > 0) || !memberId) return null;
       try {
         var result = window.MODEL2Allocation.computeAllocation({
@@ -41,7 +43,7 @@
     };
     /* OD-02 — at new-obligation creation, consume an existing credit (metadata record). */
     window.MODEL2RecordCreditConsumption = async function (memberId) {
-      if (!window.MODEL2_ALLOCATION_ENABLED) return null;                          /* FLAG OFF → no-op */
+      if (!(window.MODEL2_ALLOCATION_ENABLED || window.MODEL2_AUDIT_LOG_ENABLED)) return null; /* both OFF → no-op */
       if (!window.MODEL2Allocation || !memberId) return null;
       try {
         var credit = (typeof FIN !== 'undefined' && FIN.memberStatement) ? Number(FIN.memberStatement(memberId).creditBalance || 0) : 0;

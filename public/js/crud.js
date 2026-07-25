@@ -191,10 +191,11 @@ window.saveRec=async function(print=false){
   const data=_res.data, no=_res.no;
   window.closeM();
   await loadAll();
-  /* MODEL2 V2.0 Slice 2 (OD-01) — record the payment's ordered allocation. Flag-guarded:
-     no-op while MODEL2_ALLOCATION_ENABLED is OFF (default) ⇒ behaviour unchanged. Metadata only;
+  /* MODEL2 V2.0 Slice 2 (OD-01) — record the payment's ordered allocation. Audit-log
+     switch (PROPOSAL-FLAG-SEPARATION-001): runs under full activation OR the audit log
+     alone; no-op while both are OFF (default) ⇒ behaviour unchanged. Metadata only;
      never alters balances, never blocks the receipt. */
-  if(window.MODEL2_ALLOCATION_ENABLED && window.MODEL2RecordAllocation && fund==='food' && payerType==='member' && cls.movement_type==='subscription_payment'){
+  if((window.MODEL2_ALLOCATION_ENABLED||window.MODEL2_AUDIT_LOG_ENABLED) && window.MODEL2RecordAllocation && fund==='food' && payerType==='member' && cls.movement_type==='subscription_payment'){
     await window.MODEL2RecordAllocation(memberId, no, amountILS);
   }
   toast(window.t('messages.receipt_saved')+' '+no,'ok');
