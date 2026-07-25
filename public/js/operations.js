@@ -90,8 +90,10 @@
   async function createVoucher({ kind, payload, logLabel } = {}) {
     if (typeof can === 'undefined' || !can.write()) return fail('E_AUTH', 'ليس لديك صلاحية');
     if (!payload || typeof payload !== 'object') return fail('E_INPUT', 'بيانات السند مفقودة');
-    const amt = Number(payload.amount_ils != null ? payload.amount_ils : payload.amount) || 0;
-    if (!(amt > 0)) return fail('E_AMOUNT', 'المبلغ يجب أن يكون أكبر من صفر');
+    /* FD-021 (IG-011): every transaction carries a valid ILS accounting amount —
+       amount_ils is mandatory at capture; the native amount is never a substitute. */
+    const amt = Number(payload.amount_ils) || 0;
+    if (!(amt > 0)) return fail('E_AMOUNT', 'المبلغ المحاسبي بالشيكل إلزامي ويجب أن يكون أكبر من صفر (FD-021)');
     if (isLocked(dateOf(kind, payload))) return fail('E_LOCKED', '🔒 السنة المالية مقفلة — لا يمكن إنشاء سند بتاريخ ضمن سنة مقفلة');
     if (!payload.movement_type || !eventValid(payload.movement_type)) return fail('E_CLASS', 'التصنيف غير صريح أو غير معتمد (Law 4)');
 
