@@ -54,6 +54,22 @@ ok(A.strength('Password123!xx') === 'strong', 'strength: 14 + 3+ classes → str
   ok(s.escalation_level === 0 && s.attempts_in_stage === 0, 'success → full reset (stage 0)');
 })();
 
+/* AUTH-002 F-2 — administrator exemption from the terminal admin-lock */
+(() => {
+  const now = 2_000_000;
+  // Drive an admin-exempt account to the final stage (level 3).
+  let row = { attempts_in_stage: 0, escalation_level: 3, locked_until: null, admin_locked: false };
+  for (let i = 0; i < 14; i++) { const r = A.onFailure(row, now, { adminExempt: true }); row = { ...row, ...r.next }; }
+  const r = A.onFailure(row, now, { adminExempt: true });   // 15th of the final stage
+  ok(r.verdict.scope === 'timed' && r.verdict.retryAfterMs === 60 * 60000, 'admin-exempt: final stage → recurring 1h timed lock (not terminal)');
+  ok(row.admin_locked === false && (r.next.admin_locked === false), 'admin-exempt: admin_locked never set');
+  ok(r.next.escalation_level === 3, 'admin-exempt: stays at level 3 (recurring)');
+  // Default (non-admin) still reaches the terminal admin lock.
+  let n = { attempts_in_stage: 14, escalation_level: 3, locked_until: null, admin_locked: false };
+  const rn = A.onFailure(n, now);
+  ok(rn.verdict.scope === 'admin' && rn.next.admin_locked === true, 'non-admin default: final stage → terminal admin lock (unchanged)');
+})();
+
 /* lockStatus */
 ok(A.lockStatus({ admin_locked: true }, 1000).scope === 'admin', 'lockStatus: admin lock');
 ok(A.lockStatus({ locked_until: new Date(5000).toISOString() }, 1000).scope === 'timed', 'lockStatus: timed lock active');

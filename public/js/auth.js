@@ -39,36 +39,30 @@ window.login=async function(){
   btn.disabled=true;btn.innerHTML='<div class="spin"></div>';
   err.classList.remove('show');
 
-  /* AUTH-001 — route through the server-authoritative login-gate (progressive lockout +
-     audit). Resilient: on a genuine infra error (function undeployed / 5xx / network) we
-     fall back to a direct sign-in so login keeps working; a business verdict (disabled /
-     locked / invalid) is honoured and never falls back. */
-  if(window.USE_LOGIN_GATE!==false){
-    try{
-      const r=await SB.functions.invoke('login-gate',{ body:{ identifier:rawInput, password:pass } });
-      if(!r.error && r.data && typeof r.data==='object'){
-        const d=r.data;
-        if(d.disabled){ showLoginErr(window.LANG==='en'?'Your account is disabled. Please contact the administrator.':'حسابك معطّل. الرجاء التواصل مع مسؤول النظام.'); _loginResetBtn(); return; }
-        if(d.locked){ showLoginErr(_lockMessage(d)); _loginResetBtn(); return; }
-        if(d.ok && d.access_token){
-          const{data:sd,error:se}=await SB.auth.setSession({access_token:d.access_token,refresh_token:d.refresh_token});
-          if(se||!sd?.user){ showLoginErr(_wrongCredMsg()); _loginResetBtn(); return; }
-          CU=sd.user; await afterLogin(); return;
-        }
-        showLoginErr(_wrongCredMsg()); _loginResetBtn(); return;   /* ok:false → invalid credentials */
-      }
-      /* r.error → infra problem → fall through to the direct fallback below */
-    }catch(_){ /* network/SDK error → fallback */ }
+  /* AUTH-002 D3 — the login-gate is the SOLE authentication path. There is no direct
+     sign-in fallback: the fallback used to bypass lockout + audit (finding A-2), so it is
+     removed. A business verdict (disabled / locked / invalid) is honoured; a genuine infra
+     error fails CLOSED with a service-unavailable message rather than an unmetered login. */
+  let r;
+  try{
+    r=await SB.functions.invoke('login-gate',{ body:{ identifier:rawInput, password:pass } });
+  }catch(_){ r={error:true}; }
+  if(r && r.error){
+    showLoginErr(window.LANG==='en'
+      ? 'The sign-in service is temporarily unavailable. Please try again shortly.'
+      : 'خدمة تسجيل الدخول غير متاحة مؤقتاً. يُرجى المحاولة بعد قليل.');
+    _loginResetBtn(); return;
   }
-
-  /* FALLBACK — direct sign-in (login-gate unavailable). Preserves the exact legacy path,
-     including the synthetic phone→email mapping (domain unchanged). */
-  let input=rawInput;
-  if(/^[0-9+\s\-]{7,15}$/.test(input.replace(/\s/g,''))){ input=input.replace(/[\s\-]/g,'')+'@diwan-fainance.com'; }
-  const{data,error}=await SB.auth.signInWithPassword({email:input,password:pass});
-  if(error){ showLoginErr(_wrongCredMsg()); _loginResetBtn(); return; }
-  CU=data.user;
-  await afterLogin();
+  const d=(r&&r.data&&typeof r.data==='object')?r.data:null;
+  if(!d){ showLoginErr(_wrongCredMsg()); _loginResetBtn(); return; }
+  if(d.disabled){ showLoginErr(window.LANG==='en'?'Your account is disabled. Please contact the administrator.':'حسابك معطّل. الرجاء التواصل مع مسؤول النظام.'); _loginResetBtn(); return; }
+  if(d.locked){ showLoginErr(_lockMessage(d)); _loginResetBtn(); return; }
+  if(d.ok && d.access_token){
+    const{data:sd,error:se}=await SB.auth.setSession({access_token:d.access_token,refresh_token:d.refresh_token});
+    if(se||!sd?.user){ showLoginErr(_wrongCredMsg()); _loginResetBtn(); return; }
+    CU=sd.user; await afterLogin(); return;
+  }
+  showLoginErr(_wrongCredMsg()); _loginResetBtn();   /* ok:false → invalid credentials */
 };
 function showLoginErr(msg){const el=document.getElementById('login-err');el.textContent=msg;el.classList.add('show');}
 
@@ -115,12 +109,14 @@ async function afterLogin(){
   applyTopbarStyles();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
-  /* First-login security (EB-08 — MANDATORY): a user provisioned with a
-     temporary password carries must_change_password=true in metadata. The
-     AuthDS overlay opens LOCKED (opaque, no close, focus-trapped; logout is
-     the only escape) so no page is usable before the password is changed.
-     Cleared by the change itself (auth-password.js → updateUser metadata). */
-  if(CU?.user_metadata?.must_change_password){
+  /* First-login security (AUTH-002 D2/D4 — MANDATORY): the forced-change flag is
+     authoritative in app_metadata (service-role only; the user cannot forge or clear it).
+     The AuthDS overlay opens LOCKED (opaque, no close, focus-trapped; logout is the only
+     escape); and independently, RLS refuses every financial write until the flag clears —
+     so the lock is real, not cosmetic. Cleared only by the change-password Edge Function.
+     user_metadata is read as a transitional fallback only. */
+  if(CU?.app_metadata?.must_change_password===true ||
+     (CU?.app_metadata?.must_change_password===undefined && CU?.user_metadata?.must_change_password)){
     if(typeof window.openPasswordChange==='function'){
       window.openPasswordChange({locked:true});
     }

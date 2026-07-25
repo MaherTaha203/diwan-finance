@@ -28,6 +28,26 @@ async function audit(action: string, actor: string, targetId: string | null, des
   } catch (_) { /* audit must never break the operation */ }
 }
 
+/* AUTH-002 D5 — revoke every session for a user (deterministic, server-side). */
+async function revokeSessions(uid: string) {
+  try { await admin.rpc('revoke_user_sessions', { uid }); } catch (_) { /* best-effort */ }
+}
+
+/* AUTH-002 F-1 — how many OTHER enabled admins remain (excludes uid). The DB trigger is the
+   hard backstop; this yields a clean error before we attempt the mutation. */
+async function otherEnabledAdmins(uid: string): Promise<number> {
+  const { data } = await admin.from('user_roles')
+    .select('user_id').eq('role', 'admin').eq('is_disabled', false).neq('user_id', uid);
+  return (data || []).length;
+}
+
+/* AUTH-002 D2 — merge a patch into the user's service-role-only app_metadata. */
+async function setAppMeta(uid: string, patch: Record<string, unknown>) {
+  const { data: cur } = await admin.auth.admin.getUserById(uid);
+  const meta = { ...(cur?.user?.app_metadata || {}), ...patch };
+  return admin.auth.admin.updateUserById(uid, { app_metadata: meta });
+}
+
 /* Resolve + verify the caller is an admin. Returns {id, label} or null. */
 async function requireAdmin(req: Request): Promise<{ id: string; label: string } | null> {
   const authz = req.headers.get('Authorization') || '';
@@ -82,9 +102,12 @@ Deno.serve(async (req: Request) => {
         const forceChange = body.force_change !== false;   // default TRUE
         const canonical = canonicalEmail({ email, phone });
 
+        // AUTH-002 D2: the forced-change flag is a SECURITY flag → app_metadata (service-role
+        // only, un-forgeable). user_metadata carries display data only.
         const { data: created, error: cErr } = await admin.auth.admin.createUser({
           email: canonical, password, email_confirm: true,
-          user_metadata: { full_name: full_name || canonical, must_change_password: forceChange },
+          user_metadata: { full_name: full_name || canonical },
+          app_metadata: { must_change_password: forceChange },
         });
         if (cErr || !created?.user) return json({ error: 'create_failed', detail: cErr?.message }, 400);
         const uid = created.user.id;
@@ -117,8 +140,13 @@ Deno.serve(async (req: Request) => {
           if (error) return json({ error: 'update_failed', detail: error.message }, 400);
         }
         if (email !== undefined && email) {
+          // AUTH-002 F-6: a new email is a new login credential → re-confirm + revoke sessions.
           await admin.auth.admin.updateUserById(uid, { email, email_confirm: true });
+          await revokeSessions(uid);
         }
+        // AUTH-002 D5/F-6: a role change (esp. a downgrade) takes effect immediately, not on the
+        // next token refresh — revoke sessions so the new authority applies at once.
+        if (patch.role !== undefined) await revokeSessions(uid);
         await audit('user_updated', actor.label, uid, `Updated ${Object.keys(patch).join(', ') || 'identity'}`);
         return json({ ok: true });
       }
@@ -126,9 +154,15 @@ Deno.serve(async (req: Request) => {
       case 'disable': {
         const uid = String(body.user_id || '');
         if (!uid) return json({ error: 'user_id_required' }, 400);
+        // AUTH-002 F-1: never disable the last enabled administrator.
+        const { data: tr } = await admin.from('user_roles').select('role, is_disabled').eq('user_id', uid).maybeSingle();
+        if (tr?.role === 'admin' && tr.is_disabled === false && (await otherEnabledAdmins(uid)) === 0) {
+          return json({ error: 'last_admin_protected' }, 409);
+        }
         await admin.from('user_roles').update({ is_disabled: true }).eq('user_id', uid);
         await admin.auth.admin.updateUserById(uid, { ban_duration: '876000h' });   // blocks login + refresh
-        await audit('account_disabled', actor.label, uid, 'Account disabled (sessions revoked on next refresh; SPA guard terminates active tabs)');
+        await revokeSessions(uid);                                                 // AUTH-002 D5: terminate now
+        await audit('account_disabled', actor.label, uid, 'Account disabled; all sessions revoked immediately');
         return json({ ok: true });
       }
 
@@ -159,11 +193,12 @@ Deno.serve(async (req: Request) => {
         const mode = body.mode === 'manual' ? 'manual' : 'auto';
         const password = mode === 'manual' ? String(body.password || '') : generatePassword(16);
         if (!validatePassword(password).valid) return json({ error: 'weak_password' }, 400);
-        const { data: cur } = await admin.auth.admin.getUserById(uid);
-        const meta = { ...(cur?.user?.user_metadata || {}), must_change_password: true };   // ALWAYS force change
-        const { error } = await admin.auth.admin.updateUserById(uid, { password, user_metadata: meta });
-        if (error) return json({ error: 'reset_failed', detail: error.message }, 400);
-        await audit('password_reset', actor.label, uid, 'Admin reset password (force change enforced)');
+        // AUTH-002 D2: force-change flag → app_metadata; set the new password separately.
+        const { error: pErr } = await admin.auth.admin.updateUserById(uid, { password });
+        if (pErr) return json({ error: 'reset_failed', detail: pErr.message }, 400);
+        await setAppMeta(uid, { must_change_password: true });   // ALWAYS force change
+        await revokeSessions(uid);                               // AUTH-002 D5: kill old sessions
+        await audit('password_reset', actor.label, uid, 'Admin reset password (force change enforced; sessions revoked)');
         if (mode === 'auto') await audit('password_generated', actor.label, uid, 'Temporary password generated at reset');
         return json({ ok: true, password: mode === 'auto' ? password : undefined });
       }
@@ -171,11 +206,40 @@ Deno.serve(async (req: Request) => {
       case 'force_change': {
         const uid = String(body.user_id || '');
         if (!uid) return json({ error: 'user_id_required' }, 400);
-        const { data: cur } = await admin.auth.admin.getUserById(uid);
-        const meta = { ...(cur?.user?.user_metadata || {}), must_change_password: true };
-        const { error } = await admin.auth.admin.updateUserById(uid, { user_metadata: meta });
+        const { error } = await setAppMeta(uid, { must_change_password: true });   // AUTH-002 D2
         if (error) return json({ error: 'force_change_failed', detail: error.message }, 400);
         await audit('force_password_change', actor.label, uid, 'Force password change on next login');
+        return json({ ok: true });
+      }
+
+      case 'delete': {
+        // AUTH-002 F-5: hard delete (reserved). Audit rows are denormalized and survive.
+        // F-1 last-admin protection enforced here AND by the DB trigger on the cascade.
+        const uid = String(body.user_id || '');
+        if (!uid) return json({ error: 'user_id_required' }, 400);
+        if (uid === actor.id) return json({ error: 'cannot_delete_self' }, 409);
+        const { data: tr } = await admin.from('user_roles').select('role, is_disabled, email, phone').eq('user_id', uid).maybeSingle();
+        if (tr?.role === 'admin' && tr.is_disabled === false && (await otherEnabledAdmins(uid)) === 0) {
+          return json({ error: 'last_admin_protected' }, 409);
+        }
+        await revokeSessions(uid);
+        await admin.from('user_roles').delete().eq('user_id', uid);
+        const { error } = await admin.auth.admin.deleteUser(uid);
+        if (error) return json({ error: 'delete_failed', detail: error.message }, 400);
+        await audit('user_deleted', actor.label, uid, `Deleted ${tr?.email || tr?.phone || uid}`);
+        return json({ ok: true });
+      }
+
+      case 'transfer_admin': {
+        // AUTH-002 F-4: administrator succession — promote a successor to admin. Never
+        // reduces admin count, so it is always safe; demotion of the old admin is a
+        // separate, F-1-guarded `update`.
+        const uid = String(body.user_id || '');
+        if (!uid) return json({ error: 'user_id_required' }, 400);
+        const { error } = await admin.from('user_roles').update({ role: 'admin' }).eq('user_id', uid);
+        if (error) return json({ error: 'transfer_failed', detail: error.message }, 400);
+        await revokeSessions(uid);   // new authority applies immediately
+        await audit('admin_promoted', actor.label, uid, 'Administrator succession: promoted to admin');
         return json({ ok: true });
       }
 

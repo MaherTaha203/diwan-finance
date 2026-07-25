@@ -23,19 +23,19 @@ async function audit(action, actor, targetId, description) {
   try { await admin.from('audit_log').insert({ action, user_name: actor, table_name: 'auth', record_id: targetId, description }); } catch (_) {}
 }
 
-/* Resolve typed identifier → {canonical GoTrue email, user_id, is_disabled}. */
+/* Resolve typed identifier → {canonical GoTrue email, user_id, is_disabled, is_admin}. */
 async function resolveIdentity(identifier) {
   const guess = resolveLoginEmail(identifier);
   const phone = normalizePhone(identifier);
   // Match by email OR phone in user_roles (email was backfilled = auth email).
   const { data } = await admin.from('user_roles')
-    .select('user_id, email, phone, is_disabled')
+    .select('user_id, email, phone, is_disabled, role')
     .or(`email.eq.${guess},phone.eq.${phone}`).maybeSingle();
   if (data) {
     const canonical = data.email || guess;   // phone-only rows have null email → synthetic guess
-    return { canonical, user_id: data.user_id, is_disabled: !!data.is_disabled };
+    return { canonical, user_id: data.user_id, is_disabled: !!data.is_disabled, is_admin: data.role === 'admin' };
   }
-  return { canonical: guess, user_id: null, is_disabled: false };
+  return { canonical: guess, user_id: null, is_disabled: false, is_admin: false };
 }
 
 Deno.serve(async (req) => {
@@ -80,12 +80,18 @@ Deno.serve(async (req) => {
         { identifier: id.canonical, user_id: id.user_id, ...reset, last_attempt_at: new Date().toISOString(), updated_at: new Date().toISOString() },
         { onConflict: 'identifier' });
       await audit('login_success', id.canonical, id.user_id, 'Successful login');
-      const mustChange = !!grant.data.user?.user_metadata?.must_change_password;
+      // AUTH-002 D2: the forced-change flag is authoritative in app_metadata (service-role
+      // only). user_metadata is read only as a transitional fallback and carries no authority.
+      const am = grant.data.user?.app_metadata || {};
+      const mustChange = am.must_change_password === true
+        || (am.must_change_password === undefined && !!grant.data.user?.user_metadata?.must_change_password);
       return json({ ok: true, access_token: grant.data.session.access_token, refresh_token: grant.data.session.refresh_token, must_change_password: mustChange });
     }
 
-    // 7 · Failure → increment / escalate
-    const { next, verdict } = onFailure(row, now);
+    // 7 · Failure → increment / escalate. AUTH-002 F-2: administrators are exempt from the
+    // terminal admin-lock (recurring timed locks instead) so a sole admin can never be
+    // permanently locked out of the whole system.
+    const { next, verdict } = onFailure(row, now, { adminExempt: id.is_admin });
     await admin.from('login_attempts').upsert(
       { identifier: id.canonical, user_id: id.user_id, ...next, last_attempt_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       { onConflict: 'identifier' });
