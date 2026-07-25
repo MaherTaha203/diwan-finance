@@ -151,12 +151,23 @@ const FIN={
        dues workspace, dashboard debts, member lifecycle) conforms through this
        single accessor (FD-011). */
     const alloc=FIN.memberAllocation(memberId);
+    /* Historical Subscription Truth (Owner-approved) — BUSINESS AUTHORITY for the
+       year's displayed status. Where a truth record exists (status ≠ unknown) it
+       OVERRIDES the derived settled/status; financial fields (due/paid/remaining,
+       outstanding, isDelinquent) stay purely derived — the truth layer never
+       enters any balance, treasury, ledger, or FD-002 computation. */
+    const truth=FIN.subscriptionTruth(memberId);
     const byYear={}; let unpaidCount=0;
     Object.keys(alloc.perYear).forEach(y=>{
       const p=alloc.perYear[y];
       const remaining=FIN._r2(p.remaining);
-      byYear[Number(y)]={ due:p.due, paid:FIN._r2(p.due-remaining), remaining, settled:(p.due<=0)||p.settled };
-      if(p.due>0 && !p.settled) unpaidCount++;
+      const derivedSettled=(p.due<=0)||p.settled;
+      const t=truth[Number(y)]||null;
+      const settled=t ? t==='paid' : derivedSettled;
+      byYear[Number(y)]={ due:p.due, paid:FIN._r2(p.due-remaining), remaining, settled,
+        status:t || (derivedSettled?'paid':((p.due-remaining)>0.005?'partial':'unpaid')),
+        authoritative:!!t };
+      if(p.due>0 && !settled) unpaidCount++;
     });
     const outstanding=FIN._r2(alloc.outstanding);
     return { byYear, unpaidCount, outstanding,
@@ -370,6 +381,22 @@ const FIN={
     const fd=from?new Date(from):null, td=to?new Date(to):null;
     const inRange=d=>{ if(!d||d==='—') return true; const dt=new Date(d); if(fd&&dt<fd) return false; if(td&&dt>td) return false; return true; };
     return DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='donation'&&r.member_id===memberId&&r.movement_type!=='historical_debt_collection'&&inRange(r.receipt_date));
+  },
+
+  /* ═══ Historical Subscription Truth Layer (Owner-approved, 2026-07-25) ═══
+     The completed owner review workbook is the constitutional BUSINESS source of
+     truth for historical subscription status (stored per member-year in
+     historical_subscription_truth). PRESENTATION AUTHORITY ONLY: consumed solely
+     by memberDelinquency's byYear status; never by memberStatement, treasury,
+     ledger, debt report figures, or FD-002 allocation mathematics.
+     status='unknown' means the Owner declared the year indeterminate → callers
+     fall back to the derived status (record excluded here by design). */
+  subscriptionTruth(memberId){
+    const out={};
+    ((typeof DB!=='undefined'&&DB.historical_subscription_truth)||[]).forEach(r=>{
+      if(r && r.member_id===memberId && r.status && r.status!=='unknown') out[Number(r.year)]=r.status;
+    });
+    return out;
   },
 
   /* Canonical accounting read (FD-021 · IG-011): the ILS accounting amount ONLY.
