@@ -11,17 +11,18 @@ let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) { pass++; console.log('PASS ' + m); } else { fail++; console.log('FAIL ' + m); } };
 const P = f => path.join(__dirname, '..', 'public', 'js', f);
 
-/* ── defaults: a fresh browser context boots with BOTH flags false ── */
+/* ── defaults after the Owner's activation order (2026-07-25): a fresh browser
+   context boots with the audit log ON and the operational flag still OFF ── */
 (() => {
   const sb = { window: {}, module: undefined };
   vm.createContext(sb);
   vm.runInContext(fs.readFileSync(P('allocation-engine.js'), 'utf8'), sb);
-  ok(sb.window.MODEL2_ALLOCATION_ENABLED === false && sb.window.MODEL2_AUDIT_LOG_ENABLED === false,
-    'fresh boot: MODEL2_ALLOCATION_ENABLED=false AND MODEL2_AUDIT_LOG_ENABLED=false (defaults)');
-  const sb2 = { window: { MODEL2_AUDIT_LOG_ENABLED: true }, module: undefined };
+  ok(sb.window.MODEL2_ALLOCATION_ENABLED === false && sb.window.MODEL2_AUDIT_LOG_ENABLED === true,
+    'fresh boot: MODEL2_AUDIT_LOG_ENABLED=true (activated) AND MODEL2_ALLOCATION_ENABLED=false');
+  const sb2 = { window: { MODEL2_AUDIT_LOG_ENABLED: false }, module: undefined };
   vm.createContext(sb2);
   vm.runInContext(fs.readFileSync(P('allocation-engine.js'), 'utf8'), sb2);
-  ok(sb2.window.MODEL2_AUDIT_LOG_ENABLED === true && sb2.window.MODEL2_ALLOCATION_ENABLED === false,
+  ok(sb2.window.MODEL2_AUDIT_LOG_ENABLED === false && sb2.window.MODEL2_ALLOCATION_ENABLED === false,
     'an explicit prior assignment of the audit flag survives boot (override rule)');
 })();
 

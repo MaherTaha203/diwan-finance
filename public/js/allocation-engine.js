@@ -27,8 +27,9 @@
        switch: it gates ONLY the metadata recorders (OD-01/OD-02 → allocation_records,
        non-authoritative by DDL). The operational capabilities (BO-11 refund,
        BO-12/13 write-offs) remain gated SOLELY on MODEL2_ALLOCATION_ENABLED, which
-       for backward compatibility still implies the audit log when ON. */
-    if (typeof window.MODEL2_AUDIT_LOG_ENABLED === 'undefined') window.MODEL2_AUDIT_LOG_ENABLED = false;
+       for backward compatibility still implies the audit log when ON.
+       ACTIVATED by Owner order 2026-07-25: audit log ON — operational flag stays OFF. */
+    if (typeof window.MODEL2_AUDIT_LOG_ENABLED === 'undefined') window.MODEL2_AUDIT_LOG_ENABLED = true;
   }
 })(this, function () {
   'use strict';
