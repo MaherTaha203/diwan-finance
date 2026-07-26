@@ -2,9 +2,9 @@
 
 > Implements the frozen owner decisions in `AUTH-003`. Builds directly on the
 > approved audit in `docs/security/USER_ROLES_AND_PERMISSIONS_AUDIT.md`.
-> **Status:** code complete on branch `claude/new-session-51j8hh-auth003` (PR #206).
-> The database migration and Edge Functions are **authored + validated but not yet
-> deployed to production** — see *Deployment* below. No production data was mutated.
+> **Status:** **Production Deployed — 2026-07-26** (PR #206 merged to `main`). The
+> database migrations and Edge Functions were applied after a backup and verified live
+> — see **§11 · Production Deployment Record**. No existing production data was mutated.
 
 ---
 
@@ -257,3 +257,69 @@ Scenarios enforced at the database layer are proven by the rolled-back RLS/trigg
 tests; the session-revocation and immediate-appearance scenarios are enforced by the
 Edge Function (`revokeSessions` on role change; `list` after create). A full live
 end-to-end with a real Accountant account remains a deploy-time step (§8).
+
+---
+
+## 11 · Production Deployment Record
+
+**Deployed:** 2026-07-26 (~14:08–14:16 UTC) to Supabase project
+`ralifvemgapmsgrjgazh` (diwan-erp-system), on owner authorization.
+
+**Provenance**
+- Architecture accepted as Baseline v1.0 — 2026-07-26 (owner decision).
+- Merged to `main` — 2026-07-26, **PR #206** (merge commit `a6cd6cf`).
+- Client (public/*) ships to production via Vercel from `main`.
+
+**Backup**
+- Pre-deploy snapshot captured before any change: row counts (user_roles=2,
+  receipts=64, payments=29, members=151, audit_log=1427), full `user_roles`
+  export, and the exact pre-deploy DDL of every replaced object (`is_admin`,
+  `is_provisioned_user`, receipts/payments write policies, role CHECK) recorded as
+  a rollback reference. Supabase automatic daily backups also apply. **No existing
+  data was mutated by the deployment.**
+
+**Migrations applied** (via Supabase migration tooling)
+1. `auth003_role_model_voucher_ownership` — 3-role model; `is_provisioned_user`
+   (admin|accountant) + `is_accountant` / `is_finance_writer`; `is_admin`
+   disabled-guard; receipts/payments `created_by_uid` + `ownership_state`; tiered
+   write RLS; `fn_voucher_ownership` ownership trigger; audit_log actor/role/ip/reason.
+2. `auth003_ownership_stamps` — `created_by_uid`/`created_by`/`created_at`/
+   `updated_by`/`updated_at` on all financial tables + `set_row_updated` touch trigger.
+
+**Edge Functions deployed** (config preserved)
+| Function | Version | verify_jwt |
+|---|---|---|
+| `admin-users` | v3 | true |
+| `login-gate` | v3 | **false** (unauthenticated login path) |
+| `change-password` | v2 | true |
+
+All three bundle the updated 3-role `_shared/auth-core.mjs`.
+
+**Post-deploy verification (live production)**
+- Role CHECK = `admin | accountant | reservation`; `is_provisioned_user` = admin|accountant. ✅
+- New objects present: 4 functions (`is_accountant`, `is_finance_writer`,
+  `fn_voucher_ownership`, `set_row_updated`), 4 finance policies, 13 triggers,
+  ownership + audit columns. ✅
+- `receipts.ownership_state` backfilled correctly: 26 `editable` / 38 `cancelled`
+  (= 64 total, matching soft-deleted rows). ✅
+- Users unchanged: 1 admin + 1 reservation; no `viewer`/`accountant` rows;
+  no data mutated. ✅
+- Security advisor: **no new regressions**. The new `is_accountant`/
+  `is_finance_writer` RPC-executable notices are the same accepted pattern as the
+  pre-existing `is_admin`/`is_provisioned_user` (they must be executable because the
+  RLS policies call them; they only return the caller's own status).
+
+**Verification status**
+- Automated + structural + DB-enforcement verification: **passed** (above, plus the
+  pre-deploy rolled-back RLS/ownership impersonation proofs in §10.3 and the
+  state-machine test in §8).
+- Interactive UI end-to-end (admin login → create an Accountant → confirm the
+  accountant's confined navigation and Draft-only edit): **recommended smoke test**
+  for the owner to run once against the live site; the underlying enforcement it
+  exercises is already proven at the database layer.
+
+**Baseline**
+> **AUTH-003 — Baseline Authorization & User Management Architecture v1.0 ·
+> Status: Production Deployed (2026-07-26).** Subsequent milestones (e.g. AUTH-004)
+> build on this baseline without altering its constitutional principles unless
+> explicitly approved by the system owner.

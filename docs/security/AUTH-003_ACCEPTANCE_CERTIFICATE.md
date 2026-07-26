@@ -4,10 +4,17 @@
 > & Audit Hardening). Companion to `AUTH-003_COMPLETION_REPORT.md` and the approved
 > `USER_ROLES_AND_PERMISSIONS_AUDIT.md`.
 >
-> **Branch:** `claude/new-session-51j8hh-auth003` · **PR:** #206
+> **Branch:** `claude/new-session-51j8hh-auth003` · **PR:** #206 (merged)
 > **Roles (frozen):** Administrator · Accountant · Reservations Manager
-> **Status:** code complete & verified (rolled-back DB proofs); **not yet deployed**
-> to production — deployment is owner-authorized (Completion Report §9).
+> **Status:** **Production Deployed — 2026-07-26** (after backup + verification).
+
+### Milestone timeline
+
+| Event | Date | Reference |
+|---|---|---|
+| Architecture accepted (Baseline v1.0) | 2026-07-26 | owner decision (§ Sign-off) |
+| Merged to `main` | 2026-07-26 | PR **#206** |
+| **Deployed to Production** | **2026-07-26** | migrations + Edge Functions (see Completion Report § Production Deployment Record) |
 
 ---
 
@@ -224,8 +231,8 @@ authorization behavior established here.
 |---|---|
 | Milestone | AUTH-003 — User Management, Authorization & Audit Hardening |
 | Implementation | Complete on `claude/new-session-51j8hh-auth003` (PR #206) |
-| Verification | DB-level RLS + ownership state-machine proven (rolled back); syntax + unit checks green |
-| Production deployment | Pending owner authorization (Completion Report §9) |
+| Verification | DB-level RLS + ownership state-machine proven (rolled back); syntax + unit checks green; **post-deploy live DB verification passed** |
+| Production deployment | ☑ **Deployed to Production — 2026-07-26** (after backup + documented verification steps) |
 | Owner acceptance | ☑ **Approved — 2026-07-26** |
 
 > **Owner decision (2026-07-26):** "AUTH-003 is accepted as the **Baseline Authorization
