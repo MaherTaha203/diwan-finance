@@ -320,8 +320,11 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
 .ibox.info{border-inline-start-color:var(--diwan)}.ibox.info i{color:var(--diwan)}
 .ibox i{font-size:16px;flex-shrink:0;margin-top:1px;color:var(--tx3)}
 #copyright-bar{background:var(--navy);color:rgba(255,255,255,.65);text-align:center;font-size:10px;padding:6px 16px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.04);letter-spacing:.03em}
-@media print{body>*:not(#pra){display:none !important}#pra{display:block !important;position:fixed;inset:0;background:#fff;z-index:9999}}
-#pra{display:none}
+/* PRINT-001 · PR-2 — the legacy in-page print target has been removed. All printing
+   now renders through the shared off-screen print iframe (openPrintWin, print.js).
+   The old @media-print blanket rule that hid the whole body in favour of an empty
+   print div — which made the two workspaces' native window.print() produce a BLANK
+   page (ROOT-1) — is gone, along with that div. */
 
 /* ═══ MOBILE ═══ */
 @media(max-width:768px){

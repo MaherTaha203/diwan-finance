@@ -338,8 +338,59 @@
     };
   }
 
+  /* PRINT-001 · PR-2 — the current members list honouring the active filter/search
+     (the same projection sectionMembers shows). Read-only. */
+  function printableRows(s) {
+    let rows = s.rows;
+    if (_dwFilter === 'outstanding') rows = rows.filter(r => !r.settled);
+    else if (_dwFilter === 'settled') rows = rows.filter(r => r.settled);
+    const q = _dwSearch.trim().toLowerCase();
+    if (q) rows = rows.filter(r => (r.name + ' ' + r.code + ' ' + r.phone).toLowerCase().includes(q));
+    return rows;
+  }
+
+  /* PRINT-001 · PR-2 — build the read-only PRINT body for the selected year
+     (status + members + schedule), using the shared print engine. Presentation
+     only: every figure comes from the same certified reads the view uses. */
+  function buildDuesBody() {
+    const RH = window.reportHeader, RD = window.reportDfoot, RF = window.reportFooter, FD = window.fmtDate2;
+    const s = yearState(_dwYear != null ? _dwYear : _defaultYear());   // defensive: resolve a year if printed before render
+    const rows = printableRows(s);
+    const statusTxt = s.billed ? T('مُطبَّقة', 'Billed') : T('غير مُطبَّقة', 'Not billed');
+    const cards = '<div class="cards">'
+      + '<div class="card"><div class="k">' + T('حالة السنة', 'Year status') + '</div><div class="v">' + statusTxt + '</div></div>'
+      + '<div class="card"><div class="k">' + T('قيمة الاشتراك السنوي', 'Annual obligation') + '</div><div class="v">₪ ' + M(s.perMember) + '</div></div>'
+      + '<div class="card"><div class="k">' + T('عدد الأعضاء المشمولين', 'Eligible members') + '</div><div class="v">' + s.eligible + '</div></div>'
+      + '<div class="card"><div class="k">' + T('إجمالي الالتزام', 'Total obligation') + '</div><div class="v">₪ ' + M(s.due) + '</div></div>'
+      + '<div class="card"><div class="k">' + T('المتبقّي على السنة', 'Outstanding') + '</div><div class="v ' + (s.outstanding > 0 ? 'neg' : 'pos') + '">₪ ' + M(s.outstanding) + '</div></div>'
+      + '</div>';
+    const totDue = R2(rows.reduce((t, r) => t + r.due, 0)), totPaid = R2(rows.reduce((t, r) => t + r.paid, 0)), totRem = R2(rows.reduce((t, r) => t + r.remaining, 0));
+    const memBody = '<div class="period" style="margin-top:14px">' + T('أعضاء السنة', 'Members this year') + '</div>'
+      + (rows.length
+        ? '<table class="dt"><thead><tr><th>' + T('رقم', 'No.') + '</th><th>' + T('العضو', 'Member') + '</th><th>' + T('الهاتف', 'Phone') + '</th><th>' + T('مستحق', 'Due') + '</th><th>' + T('مدفوع', 'Paid') + '</th><th>' + T('متبقٍّ', 'Remaining') + '</th><th>' + T('الحالة', 'Status') + '</th></tr></thead><tbody>'
+          + rows.map(r => '<tr><td>' + E(r.code) + '</td><td>' + E(r.name) + '</td><td>' + E(r.phone || '—') + '</td>'
+            + '<td>₪ ' + M(r.due) + '</td><td><span class="cr">₪ ' + M(r.paid) + '</span></td>'
+            + '<td>' + (r.remaining > 0.005 ? '<span class="dr">₪ ' + M(r.remaining) + '</span>' : '₪ ' + M(r.remaining)) + '</td>'
+            + '<td>' + (r.settled ? T('مسدَّد', 'settled') : T('متبقّي', 'outstanding')) + '</td></tr>').join('')
+          + '<tr class="final"><td colspan="3">' + T('الإجمالي', 'Total') + ' (' + rows.length + ')</td><td>₪ ' + M(totDue) + '</td><td>₪ ' + M(totPaid) + '</td><td>₪ ' + M(totRem) + '</td><td></td></tr></tbody></table>'
+        : '<div class="period">' + T('لا أعضاء مطابقون في هذه السنة', 'No matching members for this year') + '</div>');
+    const sch = schedule();
+    const schBody = sch.length
+      ? '<div class="period" style="margin-top:14px">' + T('تاريخ جدول الاشتراكات', 'Dues Schedule History') + '</div>'
+        + '<table class="dt"><thead><tr><th>' + T('السنة', 'Year') + '</th><th>' + T('قيمة الاشتراك', 'Amount') + '</th><th>' + T('عدد الأعضاء', 'Members') + '</th><th>' + T('إجمالي الالتزام', 'Total') + '</th><th>' + T('طُبِّقت', 'Applied') + '</th><th>' + T('بواسطة', 'By') + '</th></tr></thead><tbody>'
+        + sch.map(a => '<tr><td>' + a.year + '</td><td>₪ ' + M(a.amount) + '</td><td>' + (a.memberCount == null ? '—' : a.memberCount) + '</td><td>₪ ' + M(a.total) + '</td><td>' + E(a.appliedAt) + '</td><td>' + E(a.appliedBy) + '</td></tr>').join('')
+        + '</tbody></table>'
+      : '';
+    const filterLbl = _dwFilter === 'outstanding' ? T('متبقّي', 'Outstanding') : _dwFilter === 'settled' ? T('مسدَّد', 'Settled') : T('الكل', 'All');
+    const sub = T('سنة الاشتراك ', 'Membership year ') + s.year + ' · ' + T('الفلتر: ', 'filter: ') + filterLbl + (_dwSearch ? (' · ' + E(_dwSearch)) : '');
+    return RH(T('اشتراكات سنة ', 'Annual Subscriptions ') + s.year, { sub: sub })
+      + cards + memBody + schBody
+      + RD('https://www.diwan-finance.com', 'diwan-finance.com')
+      + RF({ date: FD(new Date().toISOString()) });
+  }
+
   const DuesWorkspace = {
-    version: 2, years, yearState, memberRows, schedule, applyLegit, nextOperation, renderWorkspace,
+    version: 2, years, yearState, memberRows, schedule, applyLegit, nextOperation, renderWorkspace, buildDuesBody,
     setYear(y) { _dwYear = Number(y); renderWorkspace(); },
     setFilter(f) { _dwFilter = (f === 'outstanding' || f === 'settled') ? f : 'all'; renderWorkspace(); },
     /* Audit C2 — debounce so the per-member read model recomputes after a typing
@@ -374,9 +425,16 @@
       if (!canA) return;
       if (typeof window !== 'undefined' && typeof window.openM === 'function') window.openM('member');
     },
-    /* read-only export: prints the current view via the browser. No accounting, no
-       mutation — a pure read affordance (platform convention, as in P5). */
-    printView() { if (typeof window !== 'undefined' && typeof window.print === 'function') window.print(); }
+    /* read-only export: prints the current year's State + History via the shared
+       print engine (PR-2). No accounting, no mutation — a pure read affordance. */
+    printView() {
+      if (typeof window === 'undefined') return;
+      if (typeof window.openPrintWin !== 'function' || typeof window.reportHeader !== 'function') {
+        if (typeof window.print === 'function') window.print(); return;   // graceful fallback (print engine unloaded)
+      }
+      const css = '@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
+      window.openPrintWin(css, buildDuesBody());
+    }
   };
   if (typeof window !== 'undefined') window.DuesWorkspace = DuesWorkspace;
   if (typeof module !== 'undefined' && module.exports) module.exports = DuesWorkspace;
