@@ -1,0 +1,301 @@
+<title>Diwan Visual Identity Lab — 10 Design Systems</title>
+<style>
+  :root{
+    --pg:#0c0e12;--pg2:#14171e;--pcard:#171b22;--ptx:#e9edf3;--ptx2:#97a1ad;--ptx3:#5f6873;--pln:#252b34;--pacc:#CBF000;
+    --usans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Arabic",Tahoma,sans-serif;
+    --umono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--pg);color:var(--ptx);font-family:var(--usans);-webkit-font-smoothing:antialiased;font-size:15px}
+  svg{flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .lab{display:grid;grid-template-columns:214px 1fr 292px;min-height:100vh}
+  @media(max-width:1120px){.lab{grid-template-columns:1fr}.rail-x,.info{display:none}}
+  .rail-x{border-inline-end:1px solid var(--pln);padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+  .rail-x h1{font-size:15px;font-weight:800;margin:0 0 2px;letter-spacing:-.01em}
+  .rail-x .sub{font-family:var(--umono);font-size:10px;color:var(--ptx3);text-transform:uppercase;letter-spacing:.14em;margin-bottom:16px}
+  .pbtn{display:flex;align-items:center;gap:11px;width:100%;text-align:start;border:1px solid transparent;background:transparent;color:var(--ptx2);padding:9px 10px;border-radius:10px;cursor:pointer;font-family:var(--usans);font-size:13px;margin-bottom:3px}
+  .pbtn:hover{background:var(--pg2);color:var(--ptx)}
+  .pbtn.on{background:var(--pcard);color:var(--ptx);border-color:var(--pln)}
+  .pbtn .sw{width:22px;height:22px;border-radius:6px;flex:none;border:1px solid rgba(255,255,255,.14)}
+  .pbtn .nn{font-family:var(--umono);font-size:10px;color:var(--ptx3);margin-inline-start:auto}
+  .center{display:flex;flex-direction:column;min-width:0}
+  .ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--pln)}
+  .clab{font-family:var(--umono);font-size:9.5px;color:var(--ptx3);text-transform:uppercase;letter-spacing:.08em;margin-inline-start:6px}
+  .seg{display:inline-flex;border:1px solid var(--pln);border-radius:8px;overflow:hidden;background:var(--pg2)}
+  .seg button{border:0;background:transparent;color:var(--ptx2);font-family:var(--usans);font-size:11.5px;font-weight:600;padding:6px 11px;cursor:pointer}
+  .seg button.on{background:var(--pacc);color:#12160a}
+  .stagewrap{flex:1;overflow:auto;padding:22px;display:flex;justify-content:center;background:radial-gradient(circle at 30% 0%,rgba(255,255,255,.02),transparent 55%)}
+  .frame{width:100%;max-width:1000px;height:640px;border-radius:14px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+  .info{border-inline-start:1px solid var(--pln);padding:20px 18px;position:sticky;top:0;height:100vh;overflow:auto}
+  .info .kn{font-family:var(--umono);font-size:10px;color:var(--pacc);letter-spacing:.1em}
+  .info h2{font-size:19px;margin:5px 0 2px;letter-spacing:-.01em}
+  .info .tag{color:var(--ptx2);font-size:12.5px;margin:0 0 12px}
+  .info h3{font-family:var(--umono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ptx3);margin:15px 0 6px;border-top:1px solid var(--pln);padding-top:12px}
+  .info p{font-size:12.5px;color:var(--ptx2);margin:0 0 5px}
+  .swatches{display:flex;gap:6px;margin:8px 0}
+  .swatches i{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.12)}
+  .kv{font-size:11.5px;color:var(--ptx2);line-height:1.9}.kv b{color:var(--ptx);font-weight:700}
+
+  /* ============================== SHARED PAGE TEMPLATE (themed by --vars) */
+  .screen{height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--tx);font-family:var(--fnt);font-size:13.5px;--r:12px;--rs:8px;--rp:999px}
+  .screen svg{stroke-width:var(--stroke,1.7)}
+  .s-search svg{width:15px;height:15px}.s-chip svg{width:14px;height:14px}.btn svg{width:14px;height:14px;vertical-align:-2px}
+  .s-hdr{display:flex;align-items:center;gap:14px;padding:0 18px;height:56px;background:var(--surf);border-bottom:1px solid var(--line);flex:none}
+  .s-brand{display:flex;align-items:center;gap:9px;font-family:var(--fdisp);font-weight:800;font-size:15px;letter-spacing:var(--brand-ls,-.01em);color:var(--tx)}
+  .s-logo{width:28px;height:28px;border-radius:var(--rs);display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:900;font-size:13px}
+  .s-search{flex:1;max-width:340px;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--rp);padding:8px 13px;color:var(--tx3);font-size:12.5px}
+  .s-hact{margin-inline-start:auto;display:flex;align-items:center;gap:9px}
+  .s-chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:var(--rs);padding:6px 10px;font-size:12px;color:var(--tx2);font-family:var(--fnum)}
+  .s-uav{width:30px;height:30px;border-radius:var(--rs);background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:12px}
+  .s-body{flex:1;display:flex;min-height:0}
+  .s-side{width:212px;background:var(--surf2,var(--surf));border-inline-end:1px solid var(--line);padding:14px 12px;flex:none;overflow:auto}
+  .s-side .sc{font-family:var(--fmeta,var(--fnt));font-size:10px;color:var(--tx3);text-transform:var(--meta-tt,uppercase);letter-spacing:var(--meta-ls,.08em);padding:10px 10px 6px}
+  .s-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:13px;margin-bottom:2px;position:relative;font-weight:var(--item-w,600)}
+  .s-item svg{width:18px;height:18px;opacity:.85}
+  .s-item:hover{background:var(--hover)}
+  .s-item.on{background:var(--accent-weak);color:var(--accent-strong,var(--accent))}
+  .s-item.on svg{opacity:1}
+  .s-item.on::before{content:'';position:absolute;inset-inline-start:0;top:7px;bottom:7px;width:var(--marker-w,3px);border-radius:0 3px 3px 0;background:var(--accent)}
+  .s-main{flex:1;overflow:auto;padding:var(--main-pad,22px);background:var(--bg)}
+  .s-pgh{display:flex;align-items:flex-end;gap:14px;margin-bottom:18px}
+  .s-pgh h2{font-family:var(--fdisp);font-size:var(--h2,23px);margin:0;letter-spacing:var(--h2-ls,-.02em);font-weight:var(--h2-w,800)}
+  .s-pgh p{margin:3px 0 0;color:var(--tx2);font-size:12.5px}
+  .btn{border:1px solid var(--line);background:var(--surf);color:var(--tx);border-radius:var(--rs);padding:9px 15px;font-family:var(--fnt);font-size:12.5px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:var(--btn-shadow,none)}
+  .btn.ghost{background:transparent}
+  .s-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap,13px);margin-bottom:18px}
+  .kpi{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .kpi .l{font-size:11px;color:var(--tx3);font-weight:600;font-family:var(--fmeta,var(--fnt));letter-spacing:var(--meta-ls,0);text-transform:var(--kpi-tt,none)}
+  .kpi .v{font-family:var(--fnum);font-size:22px;font-weight:800;margin-top:6px;letter-spacing:-.02em}
+  .kpi .sp{position:absolute;inset-inline-end:12px;bottom:12px;color:var(--accent);opacity:.7}
+  .cols{display:grid;grid-template-columns:1.6fr 1fr;gap:var(--gap,13px)}
+  @media(max-width:640px){.s-kpis{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}}
+  .card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .card .ch{padding:13px 16px;border-bottom:1px solid var(--line);font-weight:800;font-size:13px;font-family:var(--fdisp);display:flex;align-items:center;gap:8px}
+  .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .tbl th{font-family:var(--fmeta,var(--fnt));text-align:start;font-size:10.5px;color:var(--tx3);text-transform:var(--meta-tt,uppercase);letter-spacing:var(--meta-ls,.05em);padding:9px 16px;background:var(--th-bg,transparent);font-weight:700}
+  .tbl td{padding:10px 16px;border-top:1px solid var(--line);color:var(--tx)}
+  .tbl td.num{font-family:var(--fnum);font-weight:700;text-align:start}
+  .badge{font-size:10px;font-weight:700;border-radius:var(--rp);padding:2px 9px}
+  .badge.ok{background:var(--pos-bg);color:var(--pos)}
+  .badge.wr{background:var(--warn-bg);color:var(--warn)}
+  .s-form{padding:16px}
+  .field{margin-bottom:11px}
+  .field label{display:block;font-size:11px;color:var(--tx2);margin-bottom:5px;font-family:var(--fmeta,var(--fnt));letter-spacing:var(--meta-ls,0);text-transform:var(--meta-tt-lbl,none)}
+  .field input,.field select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--rs);padding:9px 11px;color:var(--tx);font-family:var(--fnt);font-size:12.5px}
+  .field input:focus{outline:none;border-color:var(--accent)}
+  .frow{display:flex;gap:9px;margin-top:4px}
+
+  /* ============================== 10 PERSONALITIES */
+  /* 1 Executive Black — Maybach luxury */
+  .P1{--bg:#0a0a0b;--surf:#141416;--surf2:#0f0f11;--line:rgba(255,255,255,.09);--tx:#f3f1ec;--tx2:#a7a29a;--tx3:#6b665e;
+    --accent:#c8a24a;--accent-ink:#141110;--accent-weak:rgba(200,162,74,.14);--accent-strong:#e2c074;--hover:rgba(255,255,255,.05);
+    --pos:#7fca9b;--pos-bg:rgba(127,202,155,.13);--warn:#d9b45a;--warn-bg:rgba(217,180,90,.14);
+    --fnt:Georgia,"Noto Naskh Arabic",serif;--fdisp:Georgia,"Noto Naskh Arabic",serif;--fnum:var(--umono);
+    --r:12px;--rs:9px;--shadow:0 18px 44px -26px rgba(0,0,0,.8);--h2:26px;--marker-w:2px;--gap:14px}
+  /* 2 Swiss Editorial — grid, rules, no shadow */
+  .P2{--bg:#ffffff;--surf:#ffffff;--surf2:#fafafa;--line:#111111;--tx:#0d0d0d;--tx2:#4a4a4a;--tx3:#8a8a8a;
+    --accent:#e2231a;--accent-ink:#fff;--accent-weak:#fdeceb;--accent-strong:#e2231a;--hover:#f4f4f4;
+    --pos:#0a7a3a;--pos-bg:transparent;--warn:#9a6a00;--warn-bg:transparent;
+    --fnt:"Helvetica Neue",Arial,"Noto Kufi Arabic",sans-serif;--fdisp:"Helvetica Neue",Arial,"Noto Kufi Arabic",sans-serif;--fnum:"Helvetica Neue",Arial,sans-serif;
+    --r:0;--rs:0;--rp:0;--shadow:none;--h2:28px;--h2-w:800;--h2-ls:-.03em;--brand-ls:-.03em;--meta-tt:uppercase;--meta-ls:.14em;--marker-w:0;--gap:0}
+  .P2 .kpi,.P2 .card{border-width:1px}.P2 .s-kpis{gap:0;border:1px solid var(--line)}.P2 .kpi{border-width:0;border-inline-start:1px solid var(--line)}.P2 .kpi:first-child{border-inline-start:0}
+  .P2 .s-item.on{background:#111;color:#fff}.P2 .badge{border:1px solid currentColor}
+  /* 3 Architect Studio — blueprint, technical */
+  .P3{--bg:#eef1f3;--surf:#ffffff;--surf2:#f4f6f8;--line:#c9d2da;--tx:#17242f;--tx2:#54626e;--tx3:#8695a1;
+    --accent:#0f7fb0;--accent-ink:#fff;--accent-weak:rgba(15,127,176,.1);--accent-strong:#0b658d;--hover:#e7edf1;
+    --pos:#1f8a5b;--pos-bg:rgba(31,138,91,.12);--warn:#b47a11;--warn-bg:rgba(180,122,17,.13);
+    --fnt:"Segoe UI",system-ui,"Noto Sans Arabic",sans-serif;--fdisp:"Segoe UI",system-ui,sans-serif;--fnum:var(--umono);
+    --r:4px;--rs:3px;--shadow:0 1px 0 rgba(20,40,60,.06);--stroke:1.5;--h2:22px;--meta-tt:uppercase;--meta-ls:.06em;--marker-w:3px}
+  .P3 .s-main{background-image:radial-gradient(#d3dbe2 1px,transparent 1px);background-size:18px 18px}
+  .P3 .card,.P3 .kpi{box-shadow:none}
+  /* 4 Financial Terminal — modern Bloomberg */
+  .P4{--bg:#0a0d11;--surf:#0f141a;--surf2:#0c1015;--line:#1c2530;--tx:#d7dee7;--tx2:#8592a0;--tx3:#5b6673;
+    --accent:#f2a900;--accent-ink:#12100a;--accent-weak:rgba(242,169,0,.14);--accent-strong:#ffbe2e;--hover:rgba(255,255,255,.04);
+    --pos:#2ec27e;--pos-bg:rgba(46,194,126,.14);--warn:#ff5c5c;--warn-bg:rgba(255,92,92,.14);
+    --fnt:var(--umono);--fdisp:var(--umono);--fnum:var(--umono);
+    --r:4px;--rs:4px;--rp:4px;--shadow:none;--h2:19px;--h2-w:700;--meta-ls:.04em;--main-pad:16px;--gap:8px;--marker-w:3px}
+  .P4 .s-item{padding:7px 11px}.P4 .tbl td{padding:7px 16px}.P4 .kpi .v{font-size:20px}
+  /* 5 Apple Pro — calm, soft */
+  .P5{--bg:#f5f5f7;--surf:#ffffff;--surf2:#fbfbfd;--line:#e5e5ea;--tx:#1d1d1f;--tx2:#6e6e73;--tx3:#a1a1a6;
+    --accent:#0071e3;--accent-ink:#fff;--accent-weak:rgba(0,113,227,.1);--accent-strong:#0071e3;--hover:#f0f0f4;
+    --pos:#28a745;--pos-bg:rgba(40,167,69,.1);--warn:#c47f17;--warn-bg:rgba(196,127,23,.1);
+    --fnt:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Arabic",sans-serif;--fdisp:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--fnum:-apple-system,"SF Pro",system-ui,sans-serif;
+    --r:16px;--rs:11px;--shadow:0 10px 30px -18px rgba(20,30,50,.22);--h2:24px;--btn-shadow:0 6px 16px -8px rgba(0,113,227,.5);--marker-w:0}
+  .P5 .s-item.on{box-shadow:0 4px 12px -8px rgba(0,113,227,.4)}
+  /* 6 Luxury Navy — Diwan, elevated */
+  .P6{--bg:#0b1428;--surf:#12213c;--surf2:#0e1a30;--line:rgba(160,180,220,.14);--tx:#eaf0f8;--tx2:#a2b3cc;--tx3:#6d7f99;
+    --accent:#d8b25a;--accent-ink:#1a1405;--accent-weak:rgba(216,178,90,.14);--accent-strong:#e7c778;--hover:rgba(255,255,255,.05);
+    --pos:#69c6a0;--pos-bg:rgba(105,198,160,.14);--warn:#e0b45a;--warn-bg:rgba(224,180,90,.14);
+    --fnt:"Segoe UI",system-ui,"Noto Sans Arabic",sans-serif;--fdisp:Georgia,"Noto Naskh Arabic",serif;--fnum:var(--umono);
+    --r:14px;--rs:10px;--shadow:0 16px 40px -24px rgba(0,0,0,.6);--h2:24px;--marker-w:3px;--gap:13px}
+  .P6 .s-item.on::before{background:linear-gradient(180deg,#d8b25a,#CBF000)}
+  /* 7 Museum — gallery, whitespace, serif */
+  .P7{--bg:#f7f5ef;--surf:#ffffff;--surf2:#f7f5ef;--line:#e4dfd2;--tx:#191714;--tx2:#6a655c;--tx3:#a49d8d;
+    --accent:#8a6d3b;--accent-ink:#fff;--accent-weak:transparent;--accent-strong:#8a6d3b;--hover:#efece3;
+    --pos:#4f7a3f;--pos-bg:transparent;--warn:#9a6a2a;--warn-bg:transparent;
+    --fnt:Georgia,"Noto Naskh Arabic",serif;--fdisp:"Iowan Old Style",Georgia,"Noto Naskh Arabic",serif;--fnum:Georgia,serif;
+    --r:2px;--rs:2px;--rp:0;--shadow:none;--h2:32px;--h2-w:500;--h2-ls:-.01em;--main-pad:34px;--gap:20px;--meta-ls:.18em;--marker-w:0}
+  .P7 .card,.P7 .kpi{border-color:var(--line)}.P7 .s-item.on{background:transparent;border-bottom:2px solid var(--accent);border-radius:0}
+  .P7 .kpi{border-width:0;border-top:2px solid var(--tx)}
+  /* 8 Japanese Minimal — ma, hairline, muted */
+  .P8{--bg:#fbfbf9;--surf:#ffffff;--surf2:#fbfbf9;--line:#ececE7;--tx:#1c1b18;--tx2:#8b8981;--tx3:#b3b1a8;
+    --accent:#b0402f;--accent-ink:#fff;--accent-weak:rgba(176,64,47,.08);--accent-strong:#b0402f;--hover:#f4f3ef;
+    --pos:#5a7a4a;--pos-bg:rgba(90,122,74,.1);--warn:#a5762f;--warn-bg:rgba(165,118,47,.1);
+    --fnt:"Hiragino Sans",-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;--fdisp:"Hiragino Mincho ProN",Georgia,serif;--fnum:var(--umono);
+    --r:2px;--rs:2px;--shadow:none;--h2:22px;--h2-w:300;--main-pad:30px;--gap:18px;--meta-ls:.1em;--marker-w:2px}
+  .P8 .kpi,.P8 .card{border-color:#f0efe9}.P8 .s-item{font-weight:400}
+  /* 9 Industrial — utilitarian, hazard */
+  .P9{--bg:#15171a;--surf:#1d2024;--surf2:#191c1f;--line:#33383d;--tx:#e7e5e0;--tx2:#9b988f;--tx3:#6c6a63;
+    --accent:#e2b400;--accent-ink:#161616;--accent-weak:rgba(226,180,0,.14);--accent-strong:#f0c522;--hover:rgba(255,255,255,.04);
+    --pos:#5faa4a;--pos-bg:rgba(95,170,74,.14);--warn:#ff7a2f;--warn-bg:rgba(255,122,47,.16);
+    --fnt:var(--umono);--fdisp:"Arial Black",Arial,sans-serif;--fnum:var(--umono);
+    --r:2px;--rs:2px;--rp:2px;--shadow:none;--h2:21px;--h2-w:900;--h2-ls:-.02em;--meta-tt:uppercase;--meta-ls:.1em;--marker-w:4px;--gap:10px}
+  .P9 .s-logo{border-radius:2px}.P9 .card .ch{text-transform:uppercase;letter-spacing:.06em}
+  .P9 .btn.primary{border:2px solid var(--accent)}
+  /* 10 Future Corporate — glass, gradient glow */
+  .P10{--bg:#0a0b14;--surf:rgba(30,34,58,.55);--surf2:rgba(18,20,36,.6);--line:rgba(150,160,255,.16);--tx:#eef0ff;--tx2:#9aa0c4;--tx3:#6b7098;
+    --accent:#7b5cff;--accent-ink:#fff;--accent-weak:rgba(123,92,255,.18);--accent-strong:#a08cff;--hover:rgba(150,160,255,.08);
+    --pos:#22d3ee;--pos-bg:rgba(34,211,238,.14);--warn:#ff8bd0;--warn-bg:rgba(255,139,208,.14);
+    --fnt:"Century Gothic","URW Gothic",system-ui,"Noto Kufi Arabic",sans-serif;--fdisp:"Century Gothic","URW Gothic",system-ui,sans-serif;--fnum:var(--umono);
+    --r:18px;--rs:12px;--shadow:0 20px 50px -24px rgba(80,60,255,.5);--h2:24px;--btn-shadow:0 10px 26px -10px rgba(123,92,255,.7);--marker-w:0;--gap:13px}
+  .P10{background:radial-gradient(1000px 500px at 10% -10%,rgba(123,92,255,.18),transparent),radial-gradient(800px 500px at 100% 0%,rgba(34,211,238,.12),transparent),#0a0b14}
+  .P10 .s-hdr,.P10 .s-side,.P10 .kpi,.P10 .card,.P10 .s-search{backdrop-filter:blur(14px)}
+  .P10 .s-logo{background:linear-gradient(135deg,#7b5cff,#22d3ee)}.P10 .s-uav{background:linear-gradient(135deg,#7b5cff,#22d3ee)}
+  .P10 .btn.primary{background:linear-gradient(135deg,#7b5cff,#22d3ee);border:0}
+  .P10 .s-item.on{background:var(--accent-weak);box-shadow:0 0 0 1px rgba(123,92,255,.3),0 8px 20px -12px rgba(123,92,255,.6)}
+</style>
+
+<div class="lab">
+  <aside class="rail-x">
+    <h1>Visual Identity Lab</h1>
+    <div class="sub">10 design systems · Diwan</div>
+    <div id="switch"></div>
+  </aside>
+  <main class="center">
+    <div class="ctrls">
+      <span class="clab">Direction</span><div class="seg" id="seg-dir"><button data-d="rtl" class="on">RTL · ع</button><button data-d="ltr">LTR · EN</button></div>
+      <span class="clab">Frame</span><div class="seg" id="seg-vp"><button data-v="full" class="on">Full</button><button data-v="tablet">Tablet</button></div>
+    </div>
+    <div class="stagewrap"><div class="frame" id="frame"><div class="screen" id="screen"></div></div></div>
+  </main>
+  <aside class="info" id="info"></aside>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var P=function(d){return '<svg viewBox="0 0 24 24">'+d+'</svg>';};
+  var I={
+    ovw:P('<rect x="3" y="3" width="7" height="8" rx="1.4"/><rect x="14" y="3" width="7" height="5" rx="1.4"/><rect x="14" y="11" width="7" height="10" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/>'),
+    food:P('<path d="M6 3v8a2 2 0 0 0 4 0V3M8 11v10"/><path d="M15 3c-1.5 0-2 2-2 4s.5 3 2 3 2-1 2-3-.5-4-2-4zM15 13v8"/>'),
+    diwan:P('<path d="M3 10l9-6 9 6"/><path d="M5 10v8M10 10v8M14 10v8M19 10v8"/><path d="M3 21h18"/>'),
+    mem:P('<circle cx="9" cy="8" r="3.1"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M22 20a6 6 0 0 0-5-5.9"/>'),
+    don:P('<path d="M12 20s-7-4.4-9.2-8.3C1.3 8.9 2.6 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.4 0 4.7 3.4 3.2 6.2C19 15.6 12 20 12 20z"/>'),
+    res:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>'),
+    sys:P('<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.5 7l2.5 1.5M17 15.5l2.5 1.5M4.5 17l2.5-1.5M17 8.5L19.5 7"/>'),
+    search:P('<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>'),
+    plus:P('<path d="M12 5v14M5 12h14"/>'),
+    dollar:P('<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.2h3a1.5 1.5 0 0 1 0 3h-2a1.5 1.5 0 0 0 0 3h3"/>')
+  };
+  var NAV=[['ovw','نظرة عامة','Overview'],['food','صندوق الغداء','Lunch Fund'],['diwan','صندوق الديوان','Diwan Fund'],['mem','الأعضاء','Members'],['don','التبرعات','Donations'],['res','الحجوزات','Reservations'],['sys','النظام','System']];
+  var spark='<svg width="58" height="20" viewBox="0 0 58 20" style="stroke:var(--accent)"><path d="M1 15 L10 11 L19 13 L28 6 L37 9 L46 3 L57 5"/></svg>';
+
+  var PS=[
+    {c:'P1',sw:['#0a0a0b','#c8a24a'],name:{ar:'الأسود التنفيذيّ',en:'Executive Black'},tag:{ar:'فخامةٌ قصوى — إحساس Maybach',en:'Ultra-luxury — Maybach feel'},
+     desc:{ar:'أسودٌ عميق، ذهبٌ محصور، طباعةٌ Serif، مساحاتٌ سخيّة وظلالٌ ناعمة. الهيبة قبل الزخرفة.',en:'Deep black, restrained gold, serif type, generous space, soft shadows.'},
+     type:'Serif display · mono numerals',ico:'Outline, thin',rad:'9–12px',sh:'Deep soft',bd:'Hairline gold',
+     fit:{ar:'لوحاتُ الإدارة العليا والتقارير التنفيذيّة',en:'Executive dashboards & board reports'}},
+    {c:'P2',sw:['#ffffff','#e2231a'],name:{ar:'التحريريّ السويسريّ',en:'Swiss Editorial'},tag:{ar:'شبكةٌ صارمة، خطوطٌ رفيعة، بلا ظلال',en:'Strict grid, hairline rules, no shadow'},
+     desc:{ar:'أبيضٌ نقيّ، خطوط سوداء رفيعة، Grotesk، أحرفٌ كبيرة متباعدة، أحمرٌ واحد. النظام هو الجمال.',en:'Pure white, hairline black rules, grotesk, spaced caps, one red.'},
+     type:'Grotesk sans · spaced caps',ico:'Minimal line',rad:'0 (sharp)',sh:'None',bd:'1px black rules',
+     fit:{ar:'تقاريرُ وبياناتٌ كثيفة تحتاج وضوحًا',en:'Dense reports needing clarity'}},
+    {c:'P3',sw:['#eef1f3','#0f7fb0'],name:{ar:'استوديو المعماريّ',en:'Architect Studio'},tag:{ar:'مخطّطٌ هندسيّ — دقّةٌ تقنيّة',en:'Blueprint — technical precision'},
+     desc:{ar:'شبكةٌ منقّطة، أزرقٌ هندسيّ، حدودٌ رفيعة دقيقة، أرقامٌ Mono. كل بكسل مقصود.',en:'Dotted grid, blueprint blue, precise thin borders, mono figures.'},
+     type:'Neutral sans · mono captions',ico:'Technical, 1.5 stroke',rad:'3–4px',sh:'Flat (1px)',bd:'Thin technical',
+     fit:{ar:'أنظمةٌ تشغيليّة دقيقة وبيئات عمل',en:'Precise operational systems'}},
+    {c:'P4',sw:['#0a0d11','#f2a900'],name:{ar:'الطرفيّة الماليّة',en:'Financial Terminal'},tag:{ar:'Bloomberg حديث — كثافةٌ ومونو',en:'Modern Bloomberg — dense, mono'},
+     desc:{ar:'داكنٌ كثيف، Monospace، صفوفٌ ضيّقة، أخضر/أحمر بيانيّ، كهرمانٌ حادّ. البيانات ملك.',en:'Dark, dense, monospace, tight rows, data green/red, amber.'},
+     type:'Monospace throughout',ico:'Minimal, sharp',rad:'4px',sh:'None',bd:'Low-contrast grid',
+     fit:{ar:'الطرفيّات والتداول ومراقبة الأرقام',en:'Terminals & number monitoring'}},
+    {c:'P5',sw:['#f5f5f7','#0071e3'],name:{ar:'أبل برو',en:'Apple Pro'},tag:{ar:'هدوءٌ تامّ — نعومةٌ راقية',en:'Utterly calm — soft refinement'},
+     desc:{ar:'رماديٌّ فاتح، أبيضٌ نقيّ، حوافٌّ كبيرة، ظلالٌ ناعمة، أزرقٌ واحد. المحتوى يتنفّس.',en:'Light gray, white, large radii, soft shadows, one blue.'},
+     type:'Humanist system · SF-like',ico:'Rounded, soft',rad:'11–16px',sh:'Soft ambient',bd:'Faint',
+     fit:{ar:'المنتجات الاستهلاكيّة الراقية والعامّة',en:'Premium consumer-grade products'}},
+    {c:'P6',sw:['#0b1428','#d8b25a'],name:{ar:'النيليّ الفاخر',en:'Luxury Navy'},tag:{ar:'ألوان ديوان — بإحساسٍ فاخر',en:'Diwan colors — elevated'},
+     desc:{ar:'نيليٌّ عميق، ذهبٌ ولمسةُ ليمونيّ محصورة، عناوين Serif. هوية ديوان في أرقى صورها.',en:'Deep navy, gold + a restrained lime, serif headings. Diwan at its finest.'},
+     type:'Sans body · serif display',ico:'Outline',rad:'10–14px',sh:'Navy soft',bd:'Cool hairline',
+     fit:{ar:'الخيار الأقرب لهوية ديوان الحاليّة',en:'Closest to Diwan’s current identity'}},
+    {c:'P7',sw:['#f7f5ef','#8a6d3b'],name:{ar:'المتحف',en:'Museum'},tag:{ar:'مساحاتٌ واسعة — طباعةٌ رفيعة',en:'Vast space — exquisite type'},
+     desc:{ar:'أوف‑وايت غاليريّ، Serif كبير خفيف الوزن، خطوطٌ رفيعة، هوامشُ ضخمة. كل عنصرٍ معروض.',en:'Gallery off-white, large light serif, thin rules, huge margins.'},
+     type:'Large light serif',ico:'Sparse',rad:'0–2px',sh:'None',bd:'Thin gallery rules',
+     fit:{ar:'التقارير الرسميّة وصفحات العرض',en:'Formal reports & showcase pages'}},
+    {c:'P8',sw:['#fbfbf9','#b0402f'],name:{ar:'البساطة اليابانيّة',en:'Japanese Minimal'},tag:{ar:'«ما» — فراغٌ متعمّد وهدوء',en:'“Ma” — deliberate emptiness'},
+     desc:{ar:'فضاءٌ أبيض هادئ، خطوطٌ شعريّة رفيعة، أوزانٌ خفيفة، فيرميليون خافت. الفراغ عنصرٌ.',en:'Quiet white, hairlines, light weights, muted vermilion. Emptiness as element.'},
+     type:'Light sans · Mincho display',ico:'Very fine',rad:'2px',sh:'None',bd:'Faint hairline',
+     fit:{ar:'أوضاع التركيز والقراءة الطويلة',en:'Focus & long-reading modes'}},
+    {c:'P9',sw:['#15171a','#e2b400'],name:{ar:'الصناعيّ',en:'Industrial'},tag:{ar:'نفعيّ — تباينٌ وتحذيرات',en:'Utilitarian — contrast & warnings'},
+     desc:{ar:'رماديٌّ داكن، Mono، أصفرُ تحذيريّ وبرتقاليّ، حوافٌّ حادّة، فواصلُ سميكة. الوظيفة أولًا.',en:'Dark gray, mono, hazard yellow/orange, sharp edges, thick dividers.'},
+     type:'Monospace · black display',ico:'Bold technical',rad:'2px',sh:'None',bd:'Thick dividers',
+     fit:{ar:'لوحاتُ التحكّم والعمليّات الحسّاسة',en:'Control panels & critical ops'}},
+    {c:'P10',sw:['#0a0b14','#7b5cff'],name:{ar:'المؤسّسيّ المستقبليّ',en:'Future Corporate'},tag:{ar:'زجاجٌ وتوهّجٌ متدرّج',en:'Glass & gradient glow'},
+     desc:{ar:'أزرقٌ فضائيّ، زجاجٌ ضبابيّ، تدرّجٌ بنفسجيّ→سماويّ، توهّجٌ ناعم، حوافٌّ كبيرة. حداثةٌ لافتة.',en:'Space blue, frosted glass, violet→cyan gradient, soft glow, large radii.'},
+     type:'Geometric sans',ico:'Geometric',rad:'12–18px',sh:'Colored glow',bd:'Luminous hairline',
+     fit:{ar:'منصّاتٌ حديثة تريد حضورًا تقنيًّا',en:'Modern platforms wanting a tech presence'}}
+  ];
+
+  var S={p:0,dir:'rtl',vp:'full',mod:'food'};
+  function T(ar,en){return S.dir==='ltr'?en:ar;}
+  function navLabel(x){return S.dir==='ltr'?x[2]:x[1];}
+
+  var screen=document.getElementById('screen'), frame=document.getElementById('frame');
+  function page(){
+    var rows=S.dir==='ltr'
+      ? [['12 Jul','Receipt #4120','2,450','ok','Posted'],['11 Jul','Receipt #4119','1,200','ok','Posted'],['10 Jul','Voucher #308','850','wr','Pending'],['09 Jul','Receipt #4118','3,100','ok','Posted'],['08 Jul','Voucher #306','640','ok','Posted']]
+      : [['١٢ يوليو','إيصال #٤١٢٠','٢٬٤٥٠','ok','مؤكَّد'],['١١ يوليو','إيصال #٤١١٩','١٬٢٠٠','ok','مؤكَّد'],['١٠ يوليو','سند #٣٠٨','٨٥٠','wr','معلّق'],['٠٩ يوليو','إيصال #٤١١٨','٣٬١٠٠','ok','مؤكَّد'],['٠٨ يوليو','سند #٣٠٦','٦٤٠','ok','مؤكَّد']];
+    var kpis=[[T('الرصيد الحالي','Balance'),T('٤٨٬٢٥٠','48,250')],[T('واردات الشهر','Income'),T('١٢٬٩٠٠','12,900')],[T('المصروفات','Expenses'),T('٧٬٦٤٠','7,640')],[T('الحركات','Records'),T('٣٤٧','347')]];
+    var h='<div class="s-hdr"><div class="s-brand"><span class="s-logo">'+T('د','D')+'</span>'+T('ديوان آل طه','Diwan')+'</div>'
+      +'<div class="s-search">'+I.search+'<span>'+T('بحث في النظام…','Search…')+'</span></div>'
+      +'<div class="s-hact"><span class="s-chip">'+I.dollar+' '+T('٣.٦٧','3.67')+'</span><button class="btn primary">'+I.plus+' '+T('سند جديد','New voucher')+'</button><span class="s-uav">'+T('م','M')+'</span></div></div>';
+    h+='<div class="s-body"><nav class="s-side"><div class="sc">'+T('الوحدات','Modules')+'</div>';
+    NAV.forEach(function(x){ h+='<div class="s-item'+(S.mod===x[0]?' on':'')+'" data-m="'+x[0]+'">'+I[x[0]]+'<span>'+navLabel(x)+'</span></div>'; });
+    h+='</nav><div class="s-main"><div class="s-pgh"><div><h2>'+T('صندوق الغداء','Lunch Fund')+'</h2><p>'+T('نظرةٌ ماليّة على الصندوق وحركاته','Financial overview & activity')+'</p></div><button class="btn ghost" style="margin-inline-start:auto">'+T('تصدير','Export')+'</button><button class="btn primary">'+T('إضافة إيصال','Add receipt')+'</button></div>';
+    h+='<div class="s-kpis">'+kpis.map(function(k){return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><span class="sp">'+spark+'</span></div>';}).join('')+'</div>';
+    h+='<div class="cols"><div class="card"><div class="ch">'+T('أحدث الحركات','Recent activity')+'</div><table class="tbl"><thead><tr><th>'+T('التاريخ','Date')+'</th><th>'+T('البيان','Description')+'</th><th>'+T('المبلغ','Amount')+'</th><th>'+T('الحالة','Status')+'</th></tr></thead><tbody>';
+    rows.forEach(function(r){ h+='<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td class="num">'+r[2]+'</td><td><span class="badge '+r[3]+'">'+r[4]+'</span></td></tr>'; });
+    h+='</tbody></table></div>';
+    h+='<div class="card"><div class="ch">'+T('إيصالٌ سريع','Quick receipt')+'</div><div class="s-form">'
+      +'<div class="field"><label>'+T('العضو','Member')+'</label><select><option>'+T('أحمد آل طه','Ahmad')+'</option></select></div>'
+      +'<div class="field"><label>'+T('المبلغ','Amount')+'</label><input value="'+T('١٬٠٠٠','1,000')+'"></div>'
+      +'<div class="field"><label>'+T('الملاحظات','Notes')+'</label><input placeholder="'+T('اختياري','Optional')+'"></div>'
+      +'<div class="frow"><button class="btn primary" style="flex:1">'+T('حفظ','Save')+'</button><button class="btn ghost">'+T('إلغاء','Cancel')+'</button></div></div></div>';
+    h+='</div></div>';
+    return h;
+  }
+  function render(){
+    var p=PS[S.p];
+    screen.className='screen '+p.c;
+    screen.setAttribute('dir',S.dir);
+    frame.style.maxWidth=(S.vp==='tablet')?'760px':'1000px';
+    screen.innerHTML=page();
+    screen.querySelectorAll('[data-m]').forEach(function(el){ el.onclick=function(){ S.mod=el.getAttribute('data-m'); render(); }; });
+    renderInfo();
+  }
+  function renderInfo(){
+    var p=PS[S.p]; var i=document.getElementById('info');
+    i.innerHTML='<div class="kn">IDENTITY '+('0'+(S.p+1)).slice(-2)+' / 10</div><h2>'+T(p.name.ar,p.name.en)+'</h2><p class="tag">'+T(p.tag.ar,p.tag.en)+'</p>'
+      +'<div class="swatches">'+p.sw.map(function(c){return '<i style="background:'+c+'"></i>';}).join('')+'</div>'
+      +'<h3>الفلسفة</h3><p>'+T(p.desc.ar,p.desc.en)+'</p>'
+      +'<h3>النظام</h3><div class="kv"><b>الطباعة:</b> '+p.type+'<br><b>الأيقونات:</b> '+p.ico+'<br><b>الاستدارة:</b> '+p.rad+'<br><b>الظلّ:</b> '+p.sh+'<br><b>الحدود:</b> '+p.bd+'</div>'
+      +'<h3>الأنسب لـ</h3><p>'+T(p.fit.ar,p.fit.en)+'</p>'
+      +'<h3>المكوّنات المعروضة</h3><p>'+T('رأس · شريط · بطاقات KPI · جدول · نموذج · أزرار · شارات','Header · sidebar · KPI cards · table · form · buttons · badges')+'</p>';
+  }
+  function buildSwitch(){ var s=document.getElementById('switch'); s.innerHTML=PS.map(function(p,i){return '<button class="pbtn'+(i===0?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+p.sw[0]+';box-shadow:inset 0 0 0 2px '+p.sw[1]+'"></span><span>'+T(p.name.ar,p.name.en)+'</span><span class="nn">'+('0'+(i+1)).slice(-2)+'</span></button>';}).join('');
+    s.querySelectorAll('[data-i]').forEach(function(el){ el.onclick=function(){ S.p=+el.getAttribute('data-i'); Array.prototype.forEach.call(s.children,function(x){x.classList.toggle('on',x===el);}); render(); }; }); }
+  function seg(id,fn){ document.getElementById(id).addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});fn(b);}); }
+  seg('seg-dir',function(b){S.dir=b.getAttribute('data-d');buildSwitch();render();});
+  seg('seg-vp',function(b){S.vp=b.getAttribute('data-v');render();});
+
+  buildSwitch(); render();
+})();
+</script>

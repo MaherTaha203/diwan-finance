@@ -1,0 +1,199 @@
+<title>Diwan Sidebar — Minimal (Production)</title>
+<style>
+  :root{
+    --pg:#0b0b0c;--pln:#1e1e21;--ptx:#e9e9ea;--ptx2:#8a8a8f;--pacc:#CBF000;
+    --usans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Arabic",Tahoma,sans-serif;
+    --umono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--pg);color:var(--ptx);font-family:var(--usans);-webkit-font-smoothing:antialiased;font-size:15px}
+  svg{flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px 80px}
+  header.mast{padding:46px 0 16px;border-bottom:1px solid var(--pln)}
+  .eyebrow{font-family:var(--umono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ptx2);font-weight:700;margin:0 0 12px}
+  h1{font-size:clamp(24px,3.6vw,34px);line-height:1.08;letter-spacing:-.02em;margin:0;font-weight:800}
+  .lede{max-width:62ch;color:var(--ptx2);font-size:16.5px;margin:13px 0 0}
+  .ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:20px 0 12px}
+  .clab{font-family:var(--umono);font-size:9.5px;color:var(--ptx2);text-transform:uppercase;letter-spacing:.08em;margin-inline-start:6px}
+  .seg{display:inline-flex;border:1px solid var(--pln);border-radius:8px;overflow:hidden;background:#141416}
+  .seg button{border:0;background:transparent;color:var(--ptx2);font-family:var(--usans);font-size:11.5px;font-weight:600;padding:6px 12px;cursor:pointer}
+  .seg button.on{background:var(--pacc);color:#12160a}
+  .stage{display:flex;justify-content:center;padding:24px;border:1px solid var(--pln);border-radius:14px;background:#050506}
+  .device{width:100%;max-width:940px;height:640px;border-radius:12px;overflow:hidden;display:flex;border:1px solid #16171a;background:#f6f7f9}
+
+  /* faint workspace (the sidebar should disappear into the app) */
+  .canvas{flex:1;min-width:0;background:#f6f7f9;color:#1a2230;display:flex;flex-direction:column;opacity:.96}
+  .cv-top{height:54px;border-bottom:1px solid #e6e9ee;display:flex;align-items:center;padding:0 22px;color:#5b6b7a;font-size:13.5px;font-weight:600}
+  .cv-b{flex:1;padding:24px}
+  .cv-h{font-size:20px;font-weight:800;color:#1a2230;margin:0 0 16px;letter-spacing:-.02em}
+  .cv-k{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+  .cv-k .k{height:82px;border:1px solid #e6e9ee;border-radius:12px;background:#fff}
+  .cv-r{height:46px;border:1px solid #e6e9ee;border-radius:10px;background:#fff;margin-bottom:9px}
+
+  /* ============================== THE SIDEBAR (matte black · restrained) */
+  .sb{width:248px;flex:none;background:#0a0a0b;color:#e9e9ea;display:flex;flex-direction:column;
+      border-inline-end:1px solid #161616;transition:width .26s cubic-bezier(.4,0,.2,1)}
+  .sb.collapsed{width:66px}
+  .sb-top{display:flex;align-items:center;gap:11px;height:60px;padding:0 18px;flex:none}
+  .sb-mark{width:26px;height:26px;border-radius:7px;border:1.5px solid #2a2a2c;display:grid;place-items:center;font-weight:800;font-size:13px;color:#e9e9ea;flex:none}
+  .sb-name{font-size:14.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden}
+  .sb.collapsed .sb-name{display:none}.sb.collapsed .sb-top{justify-content:center;padding:0}
+  .nav{flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:thin;scrollbar-color:#26262a transparent}
+  .sb.collapsed .nav{padding:8px 0}
+  .grp{padding:0}
+  .grp + .grp{margin-top:14px}                       /* groups recognized by spacing alone — no titles */
+  .it{display:flex;align-items:center;gap:13px;height:42px;padding:0 12px;border-radius:9px;color:#c7c7cb;cursor:pointer;
+      position:relative;font-size:14px;font-weight:500;white-space:nowrap;transition:background .15s ease,color .15s ease}
+  .it svg{width:20px;height:20px;color:#8a8a8f;transition:color .15s ease}
+  .it .lb{overflow:hidden;text-overflow:ellipsis}
+  .it:hover{background:#141416;color:var(--pacc)}
+  .it:hover svg{color:var(--pacc)}
+  .it.on{background:#161719;color:var(--pacc)}
+  .it.on svg{color:var(--pacc)}
+  .it.on::before{content:'';position:absolute;inset-inline-start:0;top:9px;bottom:9px;width:2px;border-radius:0 2px 2px 0;background:var(--pacc)}
+  .sb.collapsed .it{justify-content:center;padding:0;height:44px;margin:2px 11px;border-radius:10px}
+  .sb.collapsed .it .lb{display:none}
+  .sb.collapsed .it.on::before{display:none}
+  .sb.collapsed .grp + .grp{margin-top:10px;position:relative}
+  .sb.collapsed .grp + .grp::before{content:'';position:absolute;top:-5px;inset-inline:16px;height:1px;background:#161616}
+  .sb-foot{flex:none;border-top:1px solid #161616;padding:10px 12px}
+  .sb-foot .it{color:#8a8a8f}
+  .sb.collapsed .sb-foot{padding:10px 0}
+
+  /* tooltip (collapsed hover) */
+  .tip{position:fixed;z-index:50;background:#161719;color:#e9e9ea;border:1px solid #26262a;border-radius:8px;
+       padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.5);
+       opacity:0;pointer-events:none;transform:translateY(3px);transition:opacity .14s,transform .14s}
+  .tip.show{opacity:1;transform:none}
+  .tip::before{content:'';position:absolute;inset-inline-end:-4px;top:50%;margin-top:-4px;width:8px;height:8px;background:#161719;border-inline-start:1px solid #26262a;border-block-start:1px solid #26262a;transform:rotate(45deg)}
+  .tip.ltr::before{inset-inline-end:auto;inset-inline-start:-4px}
+
+  .note{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:720px){.note{grid-template-columns:1fr}}
+  .nc{border:1px solid var(--pln);border-radius:11px;background:#111113;padding:13px 15px}
+  .nc b{font-size:13px}.nc p{margin:4px 0 0;font-size:12.5px;color:var(--ptx2)}
+  .nc .g{font-family:var(--umono);font-size:10px;color:var(--pacc);font-weight:700}
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--pln);font-family:var(--umono);font-size:11.5px;color:var(--ptx2)}
+</style>
+
+<div class="wrap" dir="rtl">
+  <header class="mast">
+    <p class="eyebrow">Sidebar · بسيط · جاهزٌ للإنتاج</p>
+    <h1>شريطٌ واحد — أسودُ مطفأ، مُقيّد، يختفي في التطبيق</h1>
+    <p class="lede">لا لوحات، لا زجاج، لا ودجت. أيقونةٌ واسمُ صفحة فقط؛ الليمونيّ يظهر عند التحويم والتنشيط لا غير. والترتيب <b>حسب التكرار</b>: العمليّات اليوميّة أعلى، والإدارة أسفل، بفواصلَ صغيرة بلا عناوين — فلا تمرير.</p>
+  </header>
+
+  <div class="ctrls">
+    <span class="clab">الحالة</span><div class="seg" id="seg-st"><button data-s="exp" class="on">موسّع</button><button data-s="col">مطويّ</button></div>
+    <span class="clab">اللغة</span><div class="seg" id="seg-dir"><button data-x="rtl" class="on">ع</button><button data-x="ltr">EN</button></div>
+    <span class="clab" style="margin-inline-start:auto">مرّر على عنصرٍ لرؤية التحويم · على المطويّ لرؤية التلميح</span>
+  </div>
+
+  <div class="stage"><div class="device" id="device"></div></div>
+
+  <div class="note">
+    <div class="nc"><span class="g">الترتيب</span><br><b>حسب التكرار، لا حسب البنية</b><p>العمليّات اليوميّة (لوحة التحكم، الإيصالات، الاشتراكات) في الأعلى؛ التقارير بعد العمل؛ الإدارة والإعدادات في الأسفل — لذاكرةٍ عضليّة بلا تمرير.</p></div>
+    <div class="nc"><span class="g">التقييد</span><br><b>أناقةٌ بالكفّ لا بالزخرفة</b><p>خلفيّةٌ سوداء مطفأة، نصٌّ أبيض، ثانويٌّ رماديّ، ولمسةُ ليمونٍ واحدة عند التفاعل. مجموعاتٌ تُعرَف بالفراغ وحده.</p></div>
+  </div>
+
+  <footer>One production-ready sidebar · matte black · icon + name only · lime on hover/active · frequency-ordered · gap-grouped · expanded/collapsed + tooltip · RTL/LTR</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var P=function(d){return '<svg viewBox="0 0 24 24">'+d+'</svg>';};
+  var I={
+    dash:P('<rect x="3" y="3" width="7" height="8" rx="1.4"/><rect x="14" y="3" width="7" height="5" rx="1.4"/><rect x="14" y="11" width="7" height="10" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/>'),
+    receipt:P('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'),
+    cash:P('<circle cx="9" cy="12" r="6"/><path d="M15 7a6 6 0 0 1 0 10"/>'),
+    invoice:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h3"/>'),
+    banknote:P('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/>'),
+    calendar:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>'),
+    users:P('<circle cx="9" cy="8" r="3.1"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M22 20a6 6 0 0 0-5-5.9"/>'),
+    coins:P('<circle cx="9" cy="9" r="6"/><path d="M15 4.5a6 6 0 0 1 0 15M9 7v4M7.5 8h2a1.2 1.2 0 0 1 0 2.4h-1.6"/>'),
+    heart:P('<path d="M12 20s-7-4.4-9.2-8.3C1.3 8.9 2.6 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.4 0 4.7 3.4 3.2 6.2C19 15.6 12 20 12 20z"/>'),
+    calEvent:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>'),
+    report:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v6M10.5 13.2h2a1.3 1.3 0 0 1 0 2.4h-1.5a1.3 1.3 0 0 0 0 2.4h2"/>'),
+    userAlert:P('<circle cx="10" cy="8" r="3.3"/><path d="M4 20a6 6 0 0 1 10-4.5"/><path d="M19 12v4M19 19v.01"/>'),
+    filetext:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h6"/>'),
+    shield:P('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>'),
+    settings:P('<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.5 7l2.5 1.5M17 15.5l2.5 1.5M4.5 17l2.5-1.5M17 8.5L19.5 7"/>'),
+    database:P('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>')
+  };
+  /* frequency-ordered, grouped by gaps only (no titles) */
+  var GROUPS=[
+    [ /* daily operations — top */
+      ['dash','dash','لوحة التحكم','Dashboard'],
+      ['food-rec','receipt','إيصالات الغداء','Lunch Receipts'],
+      ['food-pay','cash','مصاريف الغداء','Lunch Expenses'],
+      ['diwan-rec','invoice','إيصالات الديوان','Diwan Receipts'],
+      ['diwan-pay','banknote','مصاريف الديوان','Diwan Expenses'],
+      ['annual','calendar','الاشتراكات السنوية','Annual Dues']
+    ],
+    [ /* frequent modules */
+      ['members','users','أعضاء العائلة','Members'],
+      ['collection','coins','التحصيل','Collection'],
+      ['don','heart','التبرعات','Donations'],
+      ['res','calEvent','الحجوزات','Reservations']
+    ],
+    [ /* reports — after operational work */
+      ['debt','report','تقرير المديونية','Debt Report'],
+      ['delinq','userAlert','الأعضاء المتأخرون','Delinquent'],
+      ['statements','filetext','كشوف الحساب','Statements']
+    ]
+  ];
+  var ADMIN=[ /* configuration & administration — bottom */
+    ['users','shield','المستخدمون','Users'],
+    ['settings','settings','الإعدادات','Settings'],
+    ['backup','database','النسخ الاحتياطي','Backup']
+  ];
+
+  var S={st:'exp',dir:'rtl',active:'food-rec'};
+  function L(x){return S.dir==='ltr'?x[3]:x[2];}
+  var device=document.getElementById('device'), tip=null, tipT=null;
+
+  function row(x,foot){
+    return '<div class="it'+(S.active===x[0]?' on':'')+'" data-i="'+x[0]+'" data-l="'+L(x)+'">'+I[x[1]]+'<span class="lb">'+L(x)+'</span></div>';
+  }
+  function sb(){
+    var h='<aside class="sb'+(S.st==='col'?' collapsed':'')+'" dir="'+S.dir+'">';
+    h+='<div class="sb-top"><span class="sb-mark">'+(S.dir==='ltr'?'D':'د')+'</span><span class="sb-name">'+(S.dir==='ltr'?'Diwan Al Taha':'ديوان آل طه')+'</span></div>';
+    h+='<div class="nav">';
+    GROUPS.forEach(function(g){ h+='<div class="grp">'+g.map(function(x){return row(x);}).join('')+'</div>'; });
+    h+='</div>';
+    h+='<div class="sb-foot">'+ADMIN.map(function(x){return row(x,1);}).join('')+'</div>';
+    h+='</aside>';
+    return h;
+  }
+  function canvas(){
+    return '<div class="canvas"><div class="cv-top">'+(S.dir==='ltr'?'Lunch Receipts':'إيصالات الغداء')+'</div>'
+      +'<div class="cv-b"><h3 class="cv-h">'+(S.dir==='ltr'?'Lunch Receipts':'إيصالات الغداء')+'</h3>'
+      +'<div class="cv-k"><div class="k"></div><div class="k"></div><div class="k"></div></div>'
+      +'<div class="cv-r"></div><div class="cv-r"></div><div class="cv-r"></div><div class="cv-r"></div><div class="cv-r"></div></div></div>';
+  }
+  function render(){
+    device.setAttribute('dir',S.dir);
+    device.innerHTML=sb()+canvas();
+    device.querySelectorAll('[data-i]').forEach(function(el){
+      el.onclick=function(){ S.active=el.getAttribute('data-i'); render(); };
+      el.onmouseenter=function(){ if(S.st==='col') showTip(el); };
+      el.onmouseleave=function(){ hideTip(); };
+    });
+  }
+  function ensureTip(){ if(tip) return tip; tip=document.createElement('div'); tip.className='tip'; document.body.appendChild(tip); return tip; }
+  function showTip(el){
+    var t=ensureTip(); clearTimeout(tipT); t.textContent=el.getAttribute('data-l');
+    t.className='tip'+(S.dir==='ltr'?' ltr':''); var r=el.getBoundingClientRect(); var rtl=S.dir!=='ltr';
+    t.style.top=(r.top+r.height/2)+'px'; t.style.transform='translateY(-50%)';
+    // measure then place beside the icon (toward the workspace)
+    t.classList.add('show'); var tw=t.offsetWidth;
+    t.style.left=(rtl?(r.left-tw-12):(r.right+12))+'px';
+  }
+  function hideTip(){ if(!tip)return; clearTimeout(tipT); tipT=setTimeout(function(){tip.classList.remove('show');},100); }
+  function seg(id,attr,fn){ document.getElementById(id).addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});fn(b.getAttribute('data-'+attr));}); }
+  seg('seg-st','s',function(v){S.st=v==='col'?'col':'exp';hideTip();render();});
+  seg('seg-dir','x',function(v){S.dir=v;hideTip();render();});
+  render();
+})();
+</script>
