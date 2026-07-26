@@ -333,11 +333,15 @@ async function _amendOwnVoucher(kind,id,upd,reason){
   const tbl=kind==='payment'?'payments':'receipts';
   const pre=(kind==='payment'?DB.payments:DB.receipts).find(x=>x.id===id);
   if(!pre) return {ok:false,error:'not_found'};
-  const newVer=Number(pre.version||1)+1;
-  const patch=Object.assign({},upd,{version:newVer});
-  const{data:updated,error}=await SB.from(tbl).update(patch).eq('id',id).select().maybeSingle();
+  const oldVer=Number(pre.version||1);
+  const patch=Object.assign({},upd,{version:oldVer+1});
+  /* Optimistic concurrency: only write if the row is still at the version we loaded.
+     If another device/user amended it first, 0 rows match → surface a conflict rather
+     than silently overwriting their change. */
+  const{data:updated,error}=await SB.from(tbl).update(patch).eq('id',id).eq('version',oldVer).select().maybeSingle();
   if(error) return {ok:false,error:error.message};
-  const post=updated||Object.assign({},pre,patch);
+  if(!updated) return {ok:false,error:'conflict'};
+  const post=updated;
   try{ await recordVoucherVersion(kind,pre,post,reason,newVer); }catch(_){}
   try{ await logAction(kind==='payment'?'payment_edited':'receipt_edited',
     `تعديل ${kind==='payment'?'سند صرف':'إيصال'} ${pre.no} (مسودّة) | ${reason}`,tbl,id,
@@ -774,7 +778,7 @@ if(r.fund_type==='donation' && r.donation_display_fund==='food'){
    this call, so a non-admin here necessarily owns an editable/returned voucher. */
 if(!can.admin()){
   const _am=await _amendOwnVoucher('receipt',id,upd,reason);
-  if(!_am.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_am.error,'err'); return; }
+  if(!_am.ok){ toast(_am.error==='conflict'?(window.LANG==='en'?'This voucher was changed by someone else — reload and try again.':'تم تعديل هذا السند من مستخدم آخر — أعد التحميل وحاول مجددًا.'):((window.t?window.t('errors.generic_error'):'خطأ')+': '+_am.error),'err'); return; }
   window.closeM(); await loadAll();
   toast(window.LANG==='en'?'✓ Draft voucher updated':'✓ تم تحديث السند (مسودّة)','ok'); return;
 }
@@ -821,7 +825,7 @@ window.updatePay=async function(){
   /* AUTH-003 — accountant amends own Draft in place; admin corrects via void+replace. */
   if(!can.admin()){
     const _am=await _amendOwnVoucher('payment',id,{amount_ils:amount,notes},reason);
-    if(!_am.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_am.error,'err'); return; }
+    if(!_am.ok){ toast(_am.error==='conflict'?(window.LANG==='en'?'This voucher was changed by someone else — reload and try again.':'تم تعديل هذا السند من مستخدم آخر — أعد التحميل وحاول مجددًا.'):((window.t?window.t('errors.generic_error'):'خطأ')+': '+_am.error),'err'); return; }
     window.closeM(); await loadAll();
     toast(window.LANG==='en'?'✓ Draft voucher updated':'✓ تم تحديث السند (مسودّة)','ok'); return;
   }

@@ -148,6 +148,29 @@ Per-user activity is viewable from each user card (**View Activity**).
 - ✅ **Every financial document is owner-stamped** — `created_by_uid` + `created_by` +
   `created_at` + `updated_by` + `updated_at` on all financial tables; `set_row_updated`
   trigger stamps updates.
+- ✅ **Optimistic concurrency (no silent overwrite)** — the accountant Draft amend
+  writes only if the row is still at the loaded `version` (`update … eq(id).eq(version)`);
+  a losing concurrent save is **rejected with a "reload and retry" message**, never
+  overwritten. Admin corrections use **void+replace** (a new row; the original is never
+  edited in place), so there is no in-place overwrite there either.
+
+### Audit integrity — server-enforced, not bypassable (owner point #3)
+
+Critical state/authority transitions are written **server-side / in the database**, so
+they cannot be skipped by tampering with the UI or calling REST directly:
+
+| Critical operation | Audited by | Bypass-proof? |
+|---|---|---|
+| Voucher → Administrator Review | **DB trigger** `fn_voucher_ownership` | ✅ fires on any UPDATE, incl. REST |
+| Return to Accountant | **DB trigger** `fn_voucher_ownership` | ✅ |
+| Ownership change attempt (non-admin) | **DB trigger** (raises + blocks) | ✅ |
+| Role change (old→new) | **Edge Function** `admin-users` | ✅ service-role, admin-JWT gated |
+| Session revocation / disable / reset | **Edge Function** `admin-users` | ✅ |
+| Login / failed login / lockout | **Edge Function** `login-gate` | ✅ |
+| Password change | **Edge Function** `change-password` | ✅ |
+
+The client `logAction()` adds convenience/context entries **on top of** these, but is
+**not the sole source** for any of the above.
 
 *Verification evidence: rolled-back RLS/trigger impersonation tests (Completion Report
 §10.3), migration validation against the live schema, `node --check` on all scripts,
@@ -174,6 +197,24 @@ These are deliberate scope boundaries, **not defects**:
   policy; mutations to settings **are** audited.
 - **Accountant edit is in-place on Draft only** — by owner decision; it is not a
   correction workflow. All corrections after review/posting remain Void & Replace.
+
+### Planned near-term enhancement — AUTH-004: forensic audit fields (owner point #1)
+
+Owner-recommended, **not required for this release** (deferred to avoid schema churn on
+the approved baseline). The current audit already records actor id + role + IP +
+old/new + reason, and `table_name`≈**Entity Type** and `record_id`≈**Entity ID**.
+AUTH-004 will add, as first-class columns populated end-to-end (client + all Edge
+Functions + DB triggers):
+
+- **entity_type** (explicit) and **entity_id** as the human voucher/entity code
+  (e.g. `REC-2026-001245`) in addition to the uuid,
+- **session_id** (from the GoTrue session claim),
+- **correlation_id** (a per-request id to stitch multi-step operations), and
+- **client_version** (app build) — so an incident months later can be traced to an
+  exact release.
+
+This is a purely additive migration + audit-writer update; it does not change any
+authorization behavior established here.
 
 ---
 
