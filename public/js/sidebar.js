@@ -58,15 +58,47 @@
   function items(){ return $$('.nb',sb); }
   /* Hide a whole group when all its items are hidden (role visibility) — avoids
      an empty gap. Runs after auth's applyDataProtection and on navigation. */
+  function itemShown(n,g){                 // visible unless it or a wrapper up to g is display:none
+    for(var el=n; el && el!==g; el=el.parentElement){ if(el.style && el.style.display==='none') return false; }
+    return true;
+  }
   function syncGroupVisibility(){
     groups().forEach(function(g){
-      var visible=$$('.nb',g).some(function(n){ return n.style.display!=='none'; });
+      var visible=$$('.nb',g).some(function(n){ return itemShown(n,g); });
       g.style.display=visible?'':'none';
     });
   }
 
+  /* ═══ COLLAPSIBLE GROUPS (accordions: Workspaces / Administration) ═══ */
+  function accGroups(){ return $$('.nbg-acc',sb); }
+  /* Open/close one accordion. JS drives max-height from scrollHeight so the slide
+     matches the real content height; CSS handles the transition + caret. */
+  function setAccOpen(g,open){
+    if(!g) return;
+    g.classList.toggle('open',open);
+    var h=g.querySelector('.nbg-h'), body=g.querySelector('.nbg-body');
+    if(h) h.setAttribute('aria-expanded',open?'true':'false');
+    if(body) body.style.maxHeight = open ? (body.scrollHeight+'px') : '0px';
+  }
+  function toggleAcc(g){ setAccOpen(g,!g.classList.contains('open')); }
+  /* Recompute heights of any open accordions (after language/role/layout changes). */
+  function refreshAcc(){ accGroups().forEach(function(g){ if(g.classList.contains('open')){ var b=g.querySelector('.nbg-body'); if(b) b.style.maxHeight=b.scrollHeight+'px'; } }); }
+  /* Translate the accordion header labels (i18n only handles .nb items). */
+  function retitleAcc(){
+    var ar=(window.LANG!=='en');
+    $$('.nbg-acc .nbg-t',sb).forEach(function(t){
+      var v=ar?t.getAttribute('data-ar'):t.getAttribute('data-en');
+      if(v) t.textContent=v;
+    });
+  }
+
   /* ═══ ACTIVE STATE + navigation mirror ═══ */
-  function markActive(p){ items().forEach(function(n){ n.classList.toggle('on', n.getAttribute('data-p')===p); }); }
+  function markActive(p){
+    items().forEach(function(n){ n.classList.toggle('on', n.getAttribute('data-p')===p); });
+    /* if the active page lives inside a collapsed accordion, open it so it shows */
+    var act=$('.nb.on[data-p]',sb);
+    if(act){ var g=act.closest('.nbg-acc'); if(g && !g.classList.contains('open')) setAccOpen(g,true); }
+  }
   function onNav(p){
     markActive(p);
     try{ syncGroupVisibility(); }catch(_){}
@@ -104,6 +136,12 @@
     if(pinBtn) pinBtn.addEventListener('click',function(){ if(!isNarrow()) toggleMin(); });
     if(scrim) scrim.addEventListener('click',function(){ closeOverlay(true); });
 
+    /* collapsible group headers (only interactive when the rail is expanded) */
+    accGroups().forEach(function(g){
+      var h=g.querySelector('.nbg-h'); if(!h) return;
+      h.addEventListener('click',function(){ if(!document.body.classList.contains('sb-min')) toggleAcc(g); });
+    });
+
     /* tooltip on collapsed rail */
     items().forEach(function(nb){
       nb.addEventListener('mouseenter',function(){ showTip(nb); });
@@ -114,7 +152,7 @@
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ hideTip(); if(overlayOpen()) closeOverlay(true); } });
 
     /* respond to breakpoint changes (tablet⇄desktop) */
-    var onMq=function(){ closeOverlay(false); hideTip(); applyMin(); syncGroupVisibility(); };
+    var onMq=function(){ closeOverlay(false); hideTip(); applyMin(); syncGroupVisibility(); refreshAcc(); };
     if(mqNarrow.addEventListener) mqNarrow.addEventListener('change',onMq); else mqNarrow.addListener(onMq);
 
     /* wrap window.nav (routing untouched — mirror UI state after it runs) */
@@ -131,9 +169,10 @@
     }
 
     /* language hook (called from i18n after it re-translates) */
-    window.sidebarOnLang=function(){ hideTip(); };
+    window.sidebarOnLang=function(){ hideTip(); retitleAcc(); refreshAcc(); };
 
     /* initial state */
+    retitleAcc();
     applyMin();
     syncGroupVisibility();
     var on=$('.nb.on[data-p]',sb); if(on) markActive(on.getAttribute('data-p'));

@@ -2660,8 +2660,8 @@ body.nav-b .nbg-h:focus-visible{ outline:2px solid var(--dx-lime); outline-offse
    ═══════════════════════════════════════════════════════════════════════════ */
 :root{ --min-w:250px; --min-col:66px; }
 
-/* ── geometry: flush, full-height, matte-black (keeps the absolute model) ── */
-body.nav-min .sb{ top:0; bottom:0; inset-inline-start:0; width:var(--min-w); --sbw:var(--min-w);
+/* ── geometry: matte-black rail; a small top gap detaches it from the logo bar ── */
+body.nav-min .sb{ top:14px; bottom:0; inset-inline-start:0; width:var(--min-w); --sbw:var(--min-w);
   background:#0a0a0b; color:#e9e9ea; border:0; border-inline-end:1px solid #161616;
   border-radius:0; box-shadow:none; z-index:40; }
 body.nav-min .layout{ padding-inline-start:var(--min-w); }
@@ -2684,6 +2684,25 @@ body.nav-min .nbg-h{ display:none; }
 body.nav-min .nbg-body{ max-height:none; overflow:visible; display:block; }
 body.nav-min #sbsec-reservations{ display:block; }
 
+/* ── collapsible groups (Workspaces / Administration): one header, slide body ── */
+body.nav-min .nbg-acc .nbg-h{ display:flex; align-items:center; gap:13px; width:100%;
+  height:37px; padding:0 12px; margin:0 0 1px; border:0; border-radius:9px; background:transparent;
+  color:#c7c7cb; font-family:var(--fn); font-weight:500; font-size:14px; text-align:start;
+  cursor:pointer; transition:background .15s ease, color .15s ease; }
+body.nav-min .nbg-acc .nbg-h .nbg-ico{ font-size:19px; width:20px; text-align:center; flex:none; color:#8a8a8f; transition:color .15s ease; }
+body.nav-min .nbg-acc .nbg-h .nbg-t{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body.nav-min .nbg-acc .nbg-h .nbg-caret{ font-size:16px; flex:none; color:#6a6a6f; transition:transform .22s ease, color .15s ease; }
+body.nav-min .nbg-acc .nbg-h:hover{ background:#141416; color:#CBF000; }
+body.nav-min .nbg-acc .nbg-h:hover .nbg-ico,
+body.nav-min .nbg-acc .nbg-h:hover .nbg-caret{ color:#CBF000; }
+body.nav-min .nbg-acc .nbg-h:focus-visible{ outline:none; box-shadow:inset 0 0 0 2px rgba(203,240,0,.5); }
+body.nav-min .nbg-acc.open .nbg-h{ color:#e9e9ea; }
+body.nav-min .nbg-acc.open .nbg-h .nbg-caret{ transform:rotate(180deg); color:#CBF000; }
+/* body slides open; JS drives max-height (scrollHeight) for a smooth height */
+body.nav-min .nbg-acc .nbg-body{ overflow:hidden; max-height:0; opacity:.001;
+  transition:max-height .26s ease, opacity .2s ease; }
+body.nav-min .nbg-acc.open .nbg-body{ opacity:1; }
+
 /* ── item: icon + page name only (scoped with .sb to beat layered rules) ── */
 body.nav-min .sb .nb{ display:flex; align-items:center; gap:13px; height:37px; min-height:0;
   padding:0 12px; margin:0 0 1px; border-radius:9px; grid-template-columns:none;
@@ -2700,10 +2719,12 @@ body.nav-min .sb .nb.on::before{ display:block; content:''; position:absolute; i
   top:8px; bottom:8px; width:2px; border-radius:0 2px 2px 0; background:#CBF000; }
 body.nav-min .sb .nb:focus-visible{ outline:none; box-shadow:inset 0 0 0 2px rgba(203,240,0,.5); }
 
-/* ── collapsed: icons only ── */
+/* ── collapsed: icons only (accordions flatten — header hidden, all icons shown) ── */
 body.nav-min.sb-min .sb .nb{ justify-content:center; padding:0; height:40px; margin:2px 12px; }
 body.nav-min.sb-min .sb .nb .nb-t{ display:none; }
 body.nav-min.sb-min .nbg + .nbg{ margin-top:8px; }
+body.nav-min.sb-min .nbg-acc .nbg-h{ display:none; }
+body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !important; overflow:visible; }
 
 /* ── floating tooltip on collapsed hover (built in sidebar.js) ── */
 .sb-tip{ position:fixed; z-index:1300; background:#161719; color:#e9e9ea; border:1px solid #26262a;
@@ -2712,10 +2733,11 @@ body.nav-min.sb-min .nbg + .nbg{ margin-top:8px; }
 
 /* ── mobile: labelled off-canvas drawer, comfortable targets ── */
 @media(max-width:768px){
-  body.nav-min .sb{ width:min(292px,86vw); }
+  body.nav-min .sb{ width:min(292px,86vw); top:0; }   /* full-height drawer on phones */
   body.nav-min .layout{ padding-inline-start:0; }
   body.nav-min .sb-pin{ display:none; }
   body.nav-min .sb .nb{ height:auto; min-height:46px; font-size:15px; }
   body.nav-min .nbg + .nbg{ margin-top:8px; }
+  body.nav-min .nbg-acc .nbg-h{ height:auto; min-height:46px; font-size:15px; }
 }
 @media(prefers-reduced-motion:reduce){ body.nav-min .sb .nb{ transition:none; } }
