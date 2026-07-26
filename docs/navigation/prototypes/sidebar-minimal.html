@@ -19,7 +19,7 @@
   .seg button{border:0;background:transparent;color:var(--ptx2);font-family:var(--usans);font-size:11.5px;font-weight:600;padding:6px 12px;cursor:pointer}
   .seg button.on{background:var(--pacc);color:#12160a}
   .stage{display:flex;justify-content:center;padding:24px;border:1px solid var(--pln);border-radius:14px;background:#050506}
-  .device{width:100%;max-width:940px;height:640px;border-radius:12px;overflow:hidden;display:flex;border:1px solid #16171a;background:#f6f7f9}
+  .device{width:100%;max-width:940px;height:772px;border-radius:12px;overflow:hidden;display:flex;border:1px solid #16171a;background:#f6f7f9}
 
   /* faint workspace (the sidebar should disappear into the app) */
   .canvas{flex:1;min-width:0;background:#f6f7f9;color:#1a2230;display:flex;flex-direction:column;opacity:.96}
@@ -34,15 +34,15 @@
   .sb{width:248px;flex:none;background:#0a0a0b;color:#e9e9ea;display:flex;flex-direction:column;
       border-inline-end:1px solid #161616;transition:width .26s cubic-bezier(.4,0,.2,1)}
   .sb.collapsed{width:66px}
-  .sb-top{display:flex;align-items:center;gap:11px;height:60px;padding:0 18px;flex:none}
+  .sb-top{display:flex;align-items:center;gap:11px;height:52px;padding:0 18px;flex:none}
   .sb-mark{width:26px;height:26px;border-radius:7px;border:1.5px solid #2a2a2c;display:grid;place-items:center;font-weight:800;font-size:13px;color:#e9e9ea;flex:none}
   .sb-name{font-size:14.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden}
   .sb.collapsed .sb-name{display:none}.sb.collapsed .sb-top{justify-content:center;padding:0}
-  .nav{flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:thin;scrollbar-color:#26262a transparent}
-  .sb.collapsed .nav{padding:8px 0}
+  .nav{flex:1;overflow-y:auto;padding:6px 10px 10px;scrollbar-width:thin;scrollbar-color:#26262a transparent}
+  .sb.collapsed .nav{padding:6px 0 10px}
   .grp{padding:0}
-  .grp + .grp{margin-top:14px}                       /* groups recognized by spacing alone — no titles */
-  .it{display:flex;align-items:center;gap:13px;height:42px;padding:0 12px;border-radius:9px;color:#c7c7cb;cursor:pointer;
+  .grp + .grp{margin-top:10px}                        /* groups recognized by spacing alone — no titles; room to grow */
+  .it{display:flex;align-items:center;gap:13px;height:37px;padding:0 12px;border-radius:9px;color:#c7c7cb;cursor:pointer;
       position:relative;font-size:14px;font-weight:500;white-space:nowrap;transition:background .15s ease,color .15s ease}
   .it svg{width:20px;height:20px;color:#8a8a8f;transition:color .15s ease}
   .it .lb{overflow:hidden;text-overflow:ellipsis}
@@ -51,7 +51,7 @@
   .it.on{background:#161719;color:var(--pacc)}
   .it.on svg{color:var(--pacc)}
   .it.on::before{content:'';position:absolute;inset-inline-start:0;top:9px;bottom:9px;width:2px;border-radius:0 2px 2px 0;background:var(--pacc)}
-  .sb.collapsed .it{justify-content:center;padding:0;height:44px;margin:2px 11px;border-radius:10px}
+  .sb.collapsed .it{justify-content:center;padding:0;height:40px;margin:2px 11px;border-radius:10px}
   .sb.collapsed .it .lb{display:none}
   .sb.collapsed .it.on::before{display:none}
   .sb.collapsed .grp + .grp{margin-top:10px;position:relative}
@@ -80,7 +80,7 @@
   <header class="mast">
     <p class="eyebrow">Sidebar · بسيط · جاهزٌ للإنتاج</p>
     <h1>شريطٌ واحد — أسودُ مطفأ، مُقيّد، يختفي في التطبيق</h1>
-    <p class="lede">لا لوحات، لا زجاج، لا ودجت. أيقونةٌ واسمُ صفحة فقط؛ الليمونيّ يظهر عند التحويم والتنشيط لا غير. والترتيب <b>حسب التكرار</b>: العمليّات اليوميّة أعلى، والإدارة أسفل، بفواصلَ صغيرة بلا عناوين — فلا تمرير.</p>
+    <p class="lede">لا لوحات، لا زجاج، لا ودجت. أيقونةٌ واسمُ صفحة فقط؛ الليمونيّ يظهر عند التحويم والتنشيط لا غير. والترتيب <b>حسب مسار العمل</b>: من الأعلى إلى الأسفل بترتيب يومك — لوحة التحكم ← الأعضاء ← الاشتراكات والتحصيل ← الإيصالات والمصاريف ← الخزينة ← التقارير ← الإدارة. مجموعاتٌ بفواصلَ صغيرة، فيها متّسعٌ لصفحاتٍ قادمة، وتخطيطٌ مضغوط يتّسع في شاشةٍ واحدة.</p>
   </header>
 
   <div class="ctrls">
@@ -92,8 +92,8 @@
   <div class="stage"><div class="device" id="device"></div></div>
 
   <div class="note">
-    <div class="nc"><span class="g">الترتيب</span><br><b>حسب التكرار، لا حسب البنية</b><p>العمليّات اليوميّة (لوحة التحكم، الإيصالات، الاشتراكات) في الأعلى؛ التقارير بعد العمل؛ الإدارة والإعدادات في الأسفل — لذاكرةٍ عضليّة بلا تمرير.</p></div>
-    <div class="nc"><span class="g">التقييد</span><br><b>أناقةٌ بالكفّ لا بالزخرفة</b><p>خلفيّةٌ سوداء مطفأة، نصٌّ أبيض، ثانويٌّ رماديّ، ولمسةُ ليمونٍ واحدة عند التفاعل. مجموعاتٌ تُعرَف بالفراغ وحده.</p></div>
+    <div class="nc"><span class="g">الترتيب</span><br><b>حسب مسار العمل، لا الأبجديّة ولا التكرار وحده</b><p>تتحرّك من الأعلى للأسفل بنفس تسلسل يومك: تبدأ باللوحة والأعضاء، ثم تُسجّل الاشتراكات وتُحصّل، ثم الإيصالات والمصاريف، ثم تُراجع الخزينة، ثم التقارير، والإدارة أخيرًا.</p></div>
+    <div class="nc"><span class="g">مضغوطٌ وقابلٌ للتوسّع</span><br><b>شاشةٌ واحدة، وفيها متّسعٌ للمستقبل</b><p>حشوٌ رأسيّ أقلّ وأهدافُ نقرٍ مريحة؛ الملاحة الأساسيّة تظهر بلا تمرير. كل مجموعةٍ لها مساحةُ نموّ منطقيّة فلا يزدحم الشريط عند إضافة وحداتٍ جديدة.</p></div>
   </div>
 
   <footer>One production-ready sidebar · matte black · icon + name only · lime on hover/active · frequency-ordered · gap-grouped · expanded/collapsed + tooltip · RTL/LTR</footer>
@@ -119,34 +119,41 @@
     filetext:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h6"/>'),
     shield:P('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>'),
     settings:P('<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.5 7l2.5 1.5M17 15.5l2.5 1.5M4.5 17l2.5-1.5M17 8.5L19.5 7"/>'),
-    database:P('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>')
+    database:P('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'),
+    bank:P('<path d="M3 10l9-6 9 6"/><path d="M5 10v8M10 10v8M14 10v8M19 10v8"/><path d="M3 21h18"/>')
   };
-  /* frequency-ordered, grouped by gaps only (no titles) */
+  /* WORKFLOW-FIRST order — top→bottom follows the treasurer's day.
+     Grouped by gaps only (no titles); each group has room to grow. */
   var GROUPS=[
-    [ /* daily operations — top */
+    [ /* 1 · start & people */
       ['dash','dash','لوحة التحكم','Dashboard'],
-      ['food-rec','receipt','إيصالات الغداء','Lunch Receipts'],
-      ['food-pay','cash','مصاريف الغداء','Lunch Expenses'],
-      ['diwan-rec','invoice','إيصالات الديوان','Diwan Receipts'],
-      ['diwan-pay','banknote','مصاريف الديوان','Diwan Expenses'],
-      ['annual','calendar','الاشتراكات السنوية','Annual Dues']
+      ['members','users','أعضاء العائلة','Members']
     ],
-    [ /* frequent modules */
-      ['members','users','أعضاء العائلة','Members'],
-      ['collection','coins','التحصيل','Collection'],
+    [ /* 2 · register & collect dues */
+      ['annual','calendar','الاشتراكات السنوية','Registrations'],
+      ['collection','coins','التحصيل','Collection']
+    ],
+    [ /* 3 · money in / out (receipts & payments) */
+      ['food-rec','receipt','إيصالات الغداء','Lunch Receipts'],
+      ['food-pay','cash','مصاريف الغداء','Lunch Payments'],
+      ['diwan-rec','invoice','إيصالات الديوان','Diwan Receipts'],
+      ['diwan-pay','banknote','مصاريف الديوان','Diwan Payments']
+    ],
+    [ /* 4 · position & other activity */
+      ['treasury','bank','الخزينة والمركز المالي','Treasury'],
       ['don','heart','التبرعات','Donations'],
       ['res','calEvent','الحجوزات','Reservations']
     ],
-    [ /* reports — after operational work */
+    [ /* 5 · reports (after the work) */
       ['debt','report','تقرير المديونية','Debt Report'],
       ['delinq','userAlert','الأعضاء المتأخرون','Delinquent'],
       ['statements','filetext','كشوف الحساب','Statements']
+    ],
+    [ /* 6 · administration & settings (bottom, rare) */
+      ['users','shield','المستخدمون','Users'],
+      ['settings','settings','الإعدادات','Settings'],
+      ['backup','database','النسخ الاحتياطي','Backup']
     ]
-  ];
-  var ADMIN=[ /* configuration & administration — bottom */
-    ['users','shield','المستخدمون','Users'],
-    ['settings','settings','الإعدادات','Settings'],
-    ['backup','database','النسخ الاحتياطي','Backup']
   ];
 
   var S={st:'exp',dir:'rtl',active:'food-rec'};
@@ -162,7 +169,6 @@
     h+='<div class="nav">';
     GROUPS.forEach(function(g){ h+='<div class="grp">'+g.map(function(x){return row(x);}).join('')+'</div>'; });
     h+='</div>';
-    h+='<div class="sb-foot">'+ADMIN.map(function(x){return row(x,1);}).join('')+'</div>';
     h+='</aside>';
     return h;
   }
