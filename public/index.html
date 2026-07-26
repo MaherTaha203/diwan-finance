@@ -412,14 +412,14 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   </div>
   <div class="sb-scrollarea" id="sb-scrollarea">
   <div class="nbg" data-g="home">
-    <button class="nbg-h" type="button" aria-expanded="true"><span class="nbg-t" data-i18n="nav.home">الرئيسية</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
+    <button class="nbg-h" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الرئيسية" title="الرئيسية"><i class="nbg-ico ti ti-layout-dashboard" aria-hidden="true"></i><span class="nbg-t" data-i18n="nav.home">الرئيسية</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
     <div class="nbg-body" id="nbgb-home" role="group">
       <div class="nb on" role="button" tabindex="0" data-p="dash"><i class="ti ti-layout-dashboard"></i><span class="nb-t">لوحة التحكم</span></div>
       <div class="nb" role="button" tabindex="0" data-p="treasury-workspace"><i class="ti ti-building-bank"></i><span class="nb-t">الخزينة والمركز المالي</span></div>
     </div>
   </div>
   <div class="nbg" data-g="food">
-    <button class="nbg-h" type="button" aria-expanded="false"><span class="nbg-t" data-i18n="nav.food_fund">صندوق الغداء</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
+    <button class="nbg-h" type="button" aria-haspopup="true" aria-expanded="false" aria-label="صندوق الغداء" title="صندوق الغداء"><i class="nbg-ico ti ti-tools-kitchen-2" aria-hidden="true"></i><span class="nbg-t" data-i18n="nav.food_fund">صندوق الغداء</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
     <div class="nbg-body" id="nbgb-food" role="group">
       <div class="nb" role="button" tabindex="0" data-p="food-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الغداء</span></div>
       <div class="nb" role="button" tabindex="0" data-p="food-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الغداء</span></div>
@@ -427,7 +427,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     </div>
   </div>
   <div class="nbg" data-g="diwan">
-    <button class="nbg-h" type="button" aria-expanded="false"><span class="nbg-t" data-i18n="nav.diwan_fund">صندوق الديوان</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
+    <button class="nbg-h" type="button" aria-haspopup="true" aria-expanded="false" aria-label="صندوق الديوان" title="صندوق الديوان"><i class="nbg-ico ti ti-building-bank" aria-hidden="true"></i><span class="nbg-t" data-i18n="nav.diwan_fund">صندوق الديوان</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
     <div class="nbg-body" id="nbgb-diwan" role="group">
       <div class="nb" role="button" tabindex="0" data-p="diwan-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الديوان</span></div>
       <div class="nb" role="button" tabindex="0" data-p="diwan-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الديوان</span></div>
@@ -435,19 +435,19 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     </div>
   </div>
   <div class="nbg" id="sbsec-reservations" data-g="res">
-    <button class="nbg-h" type="button" aria-expanded="false"><span class="nbg-t" data-i18n="nav.reservations_sec">الديوان — الحجوزات</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
+    <button class="nbg-h" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحجوزات" title="الحجوزات"><i class="nbg-ico ti ti-calendar-event" aria-hidden="true"></i><span class="nbg-t" data-i18n="nav.reservations_sec">الديوان — الحجوزات</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
     <div class="nbg-body" id="nbgb-res" role="group">
       <div class="nb" role="button" tabindex="0" data-p="reservations" id="nb-reservations"><i class="ti ti-calendar-event"></i><span class="nb-t">تقويم الحجوزات</span></div>
     </div>
   </div>
   <div class="nbg" data-g="don">
-    <button class="nbg-h" type="button" aria-expanded="false"><span class="nbg-t" data-i18n="nav.donations_sec">التبرعات</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
+    <button class="nbg-h" type="button" aria-haspopup="true" aria-expanded="false" aria-label="التبرعات" title="التبرعات"><i class="nbg-ico ti ti-heart-handshake" aria-hidden="true"></i><span class="nbg-t" data-i18n="nav.donations_sec">التبرعات</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
     <div class="nbg-body" id="nbgb-don" role="group">
       <div class="nb" role="button" tabindex="0" data-p="don"><i class="ti ti-heart"></i><span class="nb-t">سجل التبرعات</span></div>
     </div>
   </div>
   <div class="nbg" data-g="members">
-    <button class="nbg-h" type="button" aria-expanded="false"><span class="nbg-t" data-i18n="nav.members_sec">الأعضاء</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
+    <button class="nbg-h" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الأعضاء" title="الأعضاء"><i class="nbg-ico ti ti-users" aria-hidden="true"></i><span class="nbg-t" data-i18n="nav.members_sec">الأعضاء</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
     <div class="nbg-body" id="nbgb-members" role="group">
       <div class="nb" role="button" tabindex="0" data-p="members"><i class="ti ti-users"></i><span class="nb-t">أعضاء العائلة</span></div>
       <div class="nb" role="button" tabindex="0" data-p="member-workspace"><i class="ti ti-user-dollar"></i><span class="nb-t">وحدة العضو المالية</span></div>
@@ -461,7 +461,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     </div>
   </div>
   <div class="nbg" data-g="system">
-    <button class="nbg-h" type="button" aria-expanded="false"><span class="nbg-t" data-i18n="nav.system_sec">النظام</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
+    <button class="nbg-h" type="button" aria-haspopup="true" aria-expanded="false" aria-label="النظام" title="النظام"><i class="nbg-ico ti ti-settings" aria-hidden="true"></i><span class="nbg-t" data-i18n="nav.system_sec">النظام</span><i class="nbg-caret ti ti-chevron-down" aria-hidden="true"></i></button>
     <div class="nbg-body" id="nbgb-system" role="group">
       <div class="nb" role="button" tabindex="0" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i><span class="nb-t">المستخدمون</span></div>
       <div class="nb" role="button" tabindex="0" data-p="audit"><i class="ti ti-list-check"></i><span class="nb-t">سجل العمليات</span></div>

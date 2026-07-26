@@ -2580,3 +2580,70 @@ button.mw-op.mw-op-module>.ti{color:var(--warn,#b9761d)}
   .dw-cols{grid-template-columns:1fr}.dw-card.dw-span{grid-column:auto}
   .dw-hero{flex-direction:column;align-items:stretch}.dw-hero-state{align-items:flex-start}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NAVIGATION v3 · Concept B — persistent icon rail + contextual fly-out.
+   The main rail is permanently short: ONE icon per domain (the 7 section
+   headers). Pages live in a fly-out that opens on hover (mouse) or click/Enter
+   (keyboard·touch, pinned) — the workspace width never reflows. Authoritative:
+   this block is last in the cascade and supersedes the v2 accordion / sb-mini
+   rules for the rail. Narrow screens fall back to a full labelled drawer.
+   Diwan identity preserved: navy chrome, lime reserved for the active marker.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{ --rail-b:72px; }
+
+/* ── desktop rail (≥769px): icons only ── */
+body.nav-b .sb{ width:var(--rail-b); }
+body.nav-b .layout{ padding-inline-start:calc(var(--rail-b) + 38px); }
+body.nav-b .sb-tools{ display:none; }
+body.nav-b .sb-toggle{ display:none; }
+body.nav-b .sb-scrollarea{ padding-top:12px; overflow:visible; }
+body.nav-b .nbg{ position:relative; padding:0; margin:0; border-top:0; }
+body.nav-b .nbg + .nbg{ margin-top:2px; }
+body.nav-b .nbg-body{ display:none; }              /* pages open in the fly-out */
+body.nav-b .nbg-caret{ display:none; }
+/* header → centred domain-icon tile */
+body.nav-b .nbg-h{
+  display:flex; align-items:center; justify-content:center;
+  width:48px; height:46px; margin:4px auto; padding:0;
+  border-radius:13px; background:transparent; cursor:pointer;
+  transition:background .14s ease; }
+body.nav-b .nbg-h .nbg-t{ display:none; }
+body.nav-b .nbg-ico{ display:block; font-size:23px; line-height:1;
+  color:rgba(255,255,255,.70); transition:color .14s ease; }
+body.nav-b .nbg-h:hover{ background:rgba(255,255,255,.08); }
+body.nav-b .nbg-h:hover .nbg-ico{ color:#fff; }
+body.nav-b .nbg-h[aria-expanded="true"]{ background:rgba(255,255,255,.12); }
+body.nav-b .nbg-h[aria-expanded="true"] .nbg-ico{ color:#fff; }
+body.nav-b .nbg.nbg-single .nbg-h{ cursor:pointer; }
+/* active domain (holds the current page): calm white tile + reserved lime bar */
+body.nav-b .nbg.on-domain > .nbg-h{ background:rgba(255,255,255,.14); }
+body.nav-b .nbg.on-domain > .nbg-h .nbg-ico{ color:#fff; }
+body.nav-b .nbg.on-domain::before{
+  content:''; position:absolute; inset-inline-start:0; top:8px; bottom:8px;
+  width:3.5px; border-radius:0 4px 4px 0; background:var(--dx-lime); }
+body.nav-b .nbg-h:focus-visible{ outline:2px solid var(--dx-lime); outline-offset:-2px; }
+
+/* fly-out: header carries the domain name + a domain-tone icon */
+.sb-flyout .fly-h{ display:flex; align-items:center; gap:8px; font-size:13px;
+  font-weight:750; color:#fff; padding:6px 10px 9px; border-bottom:1px solid var(--chrome-line); margin-bottom:5px; }
+.sb-flyout .fly-h i{ font-size:17px; color:rgba(255,255,255,.62); }
+.sb-flyout .nb i{ font-size:19px; }
+
+/* ── narrow (≤768px): full labelled drawer, not the rail ── */
+@media(max-width:768px){
+  body.nav-b .sb{ width:min(292px,86vw); }
+  body.nav-b .layout{ padding-inline-start:0; }
+  body.nav-b .sb-toggle{ display:flex; }
+  body.nav-b .sb-scrollarea{ overflow-y:auto; padding-top:6px; }
+  body.nav-b .nbg{ padding:1px 10px; }
+  body.nav-b .nbg + .nbg{ margin-top:2px; }
+  body.nav-b .nbg-h{ display:grid; grid-template-columns:auto 1fr; justify-content:start;
+    gap:9px; width:auto; height:auto; margin:0; padding:12px 10px 7px; border-radius:9px; }
+  body.nav-b .nbg-h .nbg-t{ display:block; font-size:12px; font-weight:700;
+    color:rgba(255,255,255,.60); }
+  body.nav-b .nbg-ico{ font-size:18px; color:rgba(255,255,255,.55); }
+  body.nav-b .nbg-body{ display:block; max-height:none; }
+  body.nav-b .nbg.on-domain::before{ display:none; }
+  body.nav-b .nbg.on-domain > .nbg-h{ background:transparent; }
+}
