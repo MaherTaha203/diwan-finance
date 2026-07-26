@@ -1,0 +1,324 @@
+<title>Navigation Reference Studies — Recreation ⇄ Diwan</title>
+<style>
+  :root{
+    --bg:#eceff3;--card:#fff;--tx:#131a24;--tx2:#54626f;--tx3:#8492a0;--line:#dbe1e8;--accent:#12507a;
+    --lime:#CBF000;--limeink:#1a2205;
+    --rail:#0c1626;--panel:#14223c;--chromeln:rgba(255,255,255,.09);
+    --ink:#e7edf6;--ink2:rgba(231,237,246,.84);--ink3:rgba(231,237,246,.44);
+    --gold:#d8b25a;--blue:#8db0e0;--slate:#9fb0c3;--purple:#a99ad9;--pink:#d491b4;--teal:#5fcdb0;--grey:#9aa7b4;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Arabic",Tahoma,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  @media (prefers-color-scheme:dark){:root{--bg:#0a0f16;--card:#121a24;--tx:#e7edf3;--tx2:#95a3b1;--tx3:#66747f;--line:#212b36;--accent:#4ab0e0;}}
+  :root[data-theme="light"]{--bg:#eceff3;--card:#fff;--tx:#131a24;--tx2:#54626f;--tx3:#8492a0;--line:#dbe1e8;--accent:#12507a;}
+  :root[data-theme="dark"]{--bg:#0a0f16;--card:#121a24;--tx:#e7edf3;--tx2:#95a3b1;--tx3:#66747f;--line:#212b36;--accent:#4ab0e0;}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.55}
+  svg{flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px 110px}
+  header.mast{padding:52px 0 22px;border-bottom:2px solid var(--tx)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:0 0 14px}
+  h1{font-size:clamp(26px,4.4vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:800;text-wrap:balance}
+  .lede{max-width:66ch;color:var(--tx2);font-size:18px;margin:16px 0 0}
+
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 0;margin:8px 0 6px;border-bottom:1px solid var(--line)}
+  .plabel{font-family:var(--mono);font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+  .seg button{border:0;background:transparent;color:var(--tx2);font-family:var(--sans);font-size:12.5px;font-weight:650;padding:8px 14px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#fff}
+  .seg.big button{font-size:13.5px;padding:9px 18px}
+  .seg.big button.on{background:var(--lime);color:var(--limeink)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .study{border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
+  .study-h{padding:15px 17px 13px;border-bottom:1px solid var(--line)}
+  .study-h .rn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.05em}
+  .study-h h3{margin:3px 0 4px;font-size:16.5px;font-weight:750}
+  .study-h p{margin:0;font-size:12.5px;color:var(--tx2)}
+  .study-h .pill{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--lime2,#7a8a00);background:color-mix(in srgb,var(--lime) 18%,transparent);border-radius:100px;padding:2px 10px}
+  .stage{padding:20px;display:flex;justify-content:center;gap:12px;min-height:360px;align-items:flex-start;background:var(--stagebg,var(--bg));transition:background .2s}
+
+  /* ===== rendered sidebar panel ===== */
+  .np{width:238px;flex:none;border-radius:var(--pr,18px);overflow:hidden;font-size:13px;display:flex;flex-direction:column;box-shadow:0 14px 34px -18px rgba(10,16,28,.5)}
+  .np-brand{display:flex;align-items:center;gap:9px;padding:14px 15px 11px;font-weight:800;font-size:13.5px;color:var(--pi)}
+  .np-brand .lg{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+  .np-scroll{padding:6px 9px 10px}
+  .np-sec{font-size:10.5px;font-weight:700;color:var(--pm);letter-spacing:.04em;padding:11px 9px 5px;display:flex;align-items:center;gap:6px}
+  .np-sec .ct{margin-inline-start:auto;opacity:.8}
+  .ni{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 10px;margin:2px 0;border-radius:var(--ir,10px);color:var(--pi2);cursor:default;position:relative;font-weight:600}
+  .ni svg{width:18px;height:18px;color:var(--pico)}
+  .ni .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ni .bd{margin-inline-start:auto;font-size:10px;font-weight:800;border-radius:100px;min-width:17px;height:17px;display:grid;place-items:center;padding:0 5px}
+  .ni.ind{margin-inline-start:16px}
+  .ni .cv{margin-inline-start:auto;opacity:.6}
+  /* active styles */
+  .ni.pill{color:#fff}.ni.pill svg{color:#fff}
+  .ni.tint{}
+  .ni.weight{color:var(--pi);font-weight:800}.ni.weight svg{color:var(--pact)}
+  .ni.soft{background:color-mix(in srgb,var(--pi) 7%,transparent);color:var(--pi)}
+  .ni.diwan{background:rgba(255,255,255,.11);color:#fff;font-weight:750}.ni.diwan svg{color:#fff}
+  .ni.diwan::before{content:'';position:absolute;inset-inline-start:-9px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--lime)}
+  .np-floor{margin:8px 9px 11px;border-radius:12px;padding:12px;font-size:11.5px}
+  .np-cta{margin:10px 9px 4px;border:1.5px solid var(--pln);border-radius:10px;padding:9px;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:700;color:var(--pi2)}
+  .np-cta svg{width:16px;height:16px}
+  /* mini rail */
+  .nr{width:52px;flex:none;border-radius:16px;padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:5px;box-shadow:0 14px 34px -18px rgba(10,16,28,.5)}
+  .nr .rt{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:var(--pi2);position:relative}
+  .nr .rt svg{width:20px;height:20px}
+  .nr .rt.on{color:#fff}
+  .flt{align-self:flex-start;margin-top:64px;border-radius:9px;padding:7px 11px;font-size:11.5px;font-weight:700;color:#fff;position:relative;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+  .flt::before{content:'';position:absolute;inset-inline-end:-5px;top:11px;width:9px;height:9px;transform:rotate(45deg)}
+
+  .foot-note{font-family:var(--mono);font-size:11px;color:var(--tx3);padding:11px 17px;border-top:1px solid var(--line)}
+  footer{margin-top:48px;padding-top:20px;border-top:2px solid var(--tx);font-family:var(--mono);font-size:12px;color:var(--tx3)}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12.5px;color:var(--tx2)}
+  .legend b{color:var(--tx)}
+</style>
+
+<div class="wrap" dir="rtl">
+  <header class="mast">
+    <p class="eyebrow">Navigation Reference Studies · دراسة مرجعية</p>
+    <h1>خمس مراجع — استنساخٌ تعليميّ ثم ترجمةٌ إلى لغة ديوان</h1>
+    <p class="lede">كل مرجع مُعاد بناؤه بأمانة كـ«دراسة معزولة» (بهويّته وألوانه، بلا علامة ديوان)، ثم مُترجَم إلى لغة ديوان (كروم نيليّ صلب، ليمونيّ محصور، عربيّ RTL، وحدات ديوان الحقيقية). بدّل الوضع لترى الفرق. <b>الاستنساخ للدراسة فقط ولن يُشحَن.</b></p>
+    <div class="legend">
+      <span><b>المبدأ المستعار</b> يظهر على كل بطاقة</span>
+      <span><b>الاستنساخ</b> = لغة المرجع الأصلية</span>
+      <span><b>ديوان</b> = الترجمة النهائية للهوية</span>
+    </div>
+  </header>
+
+  <div class="bar">
+    <span class="plabel">الوضع</span>
+    <div class="seg big" id="seg-mode"><button data-m="ref" class="on">الاستنساخ</button><button data-m="diw">ترجمة ديوان</button></div>
+    <span class="plabel">اللغة</span><div class="seg" id="seg-lang"><button data-l="ar" class="on">ع</button><button data-l="en">EN</button></div>
+    <span class="plabel">ثيم الصفحة</span><div class="seg" id="seg-theme"><button data-t="light" class="on">فاتح</button><button data-t="dark">داكن</button></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>Navigation Reference Studies · recreations (educational, never shipped) ⇄ Diwan translation · principles only, never implementation · Diwan identity: navy chrome · reserved lime · RTL</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var P=function(d){return '<svg viewBox="0 0 24 24">'+d+'</svg>';};
+  var I={
+    dash:P('<rect x="3" y="3" width="7" height="8" rx="1.4"/><rect x="14" y="3" width="7" height="5" rx="1.4"/><rect x="14" y="11" width="7" height="10" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/>'),
+    swap:P('<path d="M4 8h13l-3-3M20 16H7l3 3"/>'),
+    coin:P('<circle cx="12" cy="12" r="8"/><path d="M12 8v8M10 10h3a1.4 1.4 0 0 1 0 2.8h-2a1.4 1.4 0 0 0 0 2.8h3"/>'),
+    layers:P('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),
+    clock:P('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'),
+    wallet:P('<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M16 12h2"/>'),
+    cloud:P('<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6 1.4A3.5 3.5 0 0 1 17 18z"/>'),
+    stats:P('<path d="M5 20V10M12 20V4M19 20v-7"/>'),
+    home:P('<path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/>'),
+    drive:P('<rect x="3" y="7" width="18" height="10" rx="2.4"/><path d="M7 12h.01"/>'),
+    folder:P('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+    file:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>'),
+    monitor:P('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'),
+    check:P('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-5"/>'),
+    trash:P('<path d="M5 7h14M9 7V5h6v2M6 7l1 13h10l1-13"/>'),
+    star:P('<path d="M12 4l2.5 5 5.5.8-4 3.9 1 5.4-5-2.6-5 2.6 1-5.4-4-3.9 5.5-.8z"/>'),
+    image:P('<rect x="3" y="4" width="18" height="16" rx="2.4"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-4 4 3 3-2 4 3"/>'),
+    brief:P('<rect x="3" y="7" width="18" height="13" rx="2.2"/><path d="M9 7V5h6v2"/>'),
+    clip:P('<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9z"/>'),
+    tag:P('<path d="M4 4h7l9 9-7 7-9-9z"/><circle cx="8.5" cy="8.5" r="1.3"/>'),
+    cap:P('<path d="M3 9l9-4 9 4-9 4z"/><path d="M7 11v4c0 1.5 10 1.5 10 0v-4"/>'),
+    lock:P('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+    bolt:P('<path d="M13 3l-8 10h6l-1 8 8-10h-6z"/>'),
+    calendar:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>'),
+    calStats:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/><path d="M8 17v-2M12 17v-4M16 17v-3"/>'),
+    mail:P('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>'),
+    bell:P('<path d="M6 10a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+    settings:P('<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.5 7l2.5 1.5M17 15.5l2.5 1.5M4.5 17l2.5-1.5M17 8.5L19.5 7"/>'),
+    users:P('<circle cx="9" cy="8" r="3.1"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M22 20a6 6 0 0 0-5-5.9"/>'),
+    user:P('<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>'),
+    userAlert:P('<circle cx="10" cy="8" r="3.3"/><path d="M4 20a6 6 0 0 1 10-4.5"/><path d="M19 12v4M19 19v.01"/>'),
+    userDollar:P('<circle cx="10" cy="8" r="3.3"/><path d="M4 20a6 6 0 0 1 9-5.2"/><path d="M18 12v7M16.6 13.4h2.1a1.1 1.1 0 0 1 0 2.2h-1.3a1.1 1.1 0 0 0 0 2.2H19"/>'),
+    bank:P('<path d="M3 10l9-6 9 6"/><path d="M5 10v8M10 10v8M14 10v8M19 10v8"/><path d="M3 21h18"/>'),
+    kitchen:P('<path d="M6 3v8a2 2 0 0 0 4 0V3M8 11v10"/><path d="M15 3c-1.5 0-2 2-2 4s.5 3 2 3 2-1 2-3-.5-4-2-4zM15 13v8"/>'),
+    receipt:P('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'),
+    cash:P('<circle cx="9" cy="12" r="6"/><path d="M15 7a6 6 0 0 1 0 10"/>'),
+    heart:P('<path d="M12 20s-7-4.4-9.2-8.3C1.3 8.9 2.6 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.4 0 4.7 3.4 3.2 6.2C19 15.6 12 20 12 20z"/>'),
+    reportMoney:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v6M10.5 13.2h2a1.3 1.3 0 0 1 0 2.4h-1.5a1.3 1.3 0 0 0 0 2.4h2"/>'),
+    shield:P('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>'),
+    list:P('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'),
+    database:P('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'),
+    plus:P('<path d="M12 5v14M5 12h14"/>'),
+    filter:P('<path d="M4 5h16l-6 8v6l-4-2v-4z"/>')
+  };
+
+  /* ---- five studies: meta + recreation palette/spec + diwan spec ---- */
+  var STUDIES=[
+  {
+    rn:'R1 · Budget', name:{ar:'تطبيق ماليّ فاتح',en:'Light finance'}, prin:{ar:'وجهاتٌ هادئة + مرساةٌ عند القاع + لونٌ واحد محجوز',en:'Calm destinations + floor anchor + one reserved color'},
+    ref:{bg:'#ffffff',ink:'#12151d',ink2:'#3a4552',mut:'#9aa4b0',ico:'#8b96a3',act:'#5b7cfa',ln:'#e6e9ef',pr:'20px',ir:'12px',stage:'#e9ecf1',
+      brand:{t:'Budget',lg:'linear-gradient(135deg,#5b7cfa,#8a6cf0)',lgi:'#fff',ic:'bolt'},
+      secs:[{l:'Menu',items:[{ic:'dash',t:'Dashboard',a:'soft'},{ic:'swap',t:'Transactions'},{ic:'stats',t:'Analytics'},{ic:'coin',t:'Goals'},{ic:'wallet',t:'Budget'}]},
+            {l:'Account',items:[{ic:'settings',t:'Settings'},{ic:'bell',t:'Help & Support'}]}],
+      floor:{bg:'linear-gradient(135deg,#5b7cfa,#8a6cf0)',fg:'#fff',k:'Current plan',v:'Free trial',cta:'Upgrade 50 $'}},
+    diw:{domain:'ovw',title:{ar:'نظرة عامة',en:'Overview'},tone:'--teal',
+      secs:[{l:{ar:'التشغيل',en:'Operations'},items:[{ic:'dash',t:{ar:'لوحة التحكم',en:'Dashboard'},a:1},{ic:'bank',t:{ar:'الخزينة والمركز المالي',en:'Treasury & Position'}}]},
+            {l:{ar:'الحساب',en:'Account'},items:[{ic:'settings',t:{ar:'الإعدادات',en:'Settings'}},{ic:'database',t:{ar:'النسخ الاحتياطي',en:'Backup'}}]}],
+      floor:{k:{ar:'رصيد الخزينة',en:'Treasury balance'},v:'٤٨٬٢٥٠',cur:{ar:'شيكل',en:'ILS'}}}
+  },
+  {
+    rn:'R2 · Thor', name:{ar:'كونسول داكن',en:'Dark console'}, prin:{ar:'شريطٌ يتكلّم بالمرور + حالةٌ تُشفّر النوع',en:'Speaking rail on hover + active encodes type'},
+    rail:true,
+    ref:{bg:'#0e1a30',ink:'#eaf1fb',ink2:'#aeb9cc',mut:'#66748c',ico:'#7f8ca3',act:'#39d98a',ln:'rgba(255,255,255,.1)',pr:'18px',ir:'999px',stage:'#22304a',
+      brand:{t:'Thor',lg:'rgba(255,255,255,.06)',lgi:'#39d98a',ic:'bolt'},
+      secs:[{l:'Operations',items:[{ic:'swap',t:'Swap'},{ic:'coin',t:'Add Liquidity',a:'pill',ac:'#39d98a'},{ic:'layers',t:'Manage Liquidity'},{ic:'bolt',t:'Thor Stake'},{ic:'clock',t:'Pending'}]},
+            {l:'Utilities',items:[{ic:'clock',t:'Vesting'},{ic:'wallet',t:'Your Wallet',a:'pill',ac:'#29c5e6'},{ic:'cloud',t:'Thornode'},{ic:'stats',t:'Stats'}]}],
+      railon:1, flt:{t:'Add Liquidity',bg:'#16233c'}},
+    diw:{domain:'diwan',title:{ar:'صندوق الديوان',en:'Diwan Fund'},tone:'--blue',railon:2,
+      secs:[{l:{ar:'الحركات',en:'Movements'},items:[{ic:'receipt',t:{ar:'إيصالات الديوان',en:'Diwan Receipts'},a:1},{ic:'cash',t:{ar:'مصاريف الديوان',en:'Diwan Expenses'}},{ic:'file',t:{ar:'كشف الديوان',en:'Diwan Statement'}}]}],
+      flt:{ar:'إيصالات الديوان',en:'Diwan Receipts'}}
+  },
+  {
+    rn:'R3 · ReSync', name:{ar:'مدير ملفات',en:'File manager'}, prin:{ar:'حالةٌ نشطة بمستويين + إجراءٌ أساسيّ دائم',en:'Two-tier active + persistent primary action'},
+    ref:{bg:'#ffffff',ink:'#1a2330',ink2:'#3d4855',mut:'#93a0ad',ico:'#8894a1',act:'#34c98a',ln:'#e4e8ee',pr:'20px',ir:'999px',stage:'#e7ece9',
+      brand:{t:'ReSync',lg:'rgba(52,201,138,.14)',lgi:'#34c98a',ic:'swap'},
+      cta:'Add New',
+      secs:[{items:[{ic:'home',t:'Home'},{ic:'drive',t:'My Drive',a:'pill',ac:'#34c98a',cv:1},{ic:'folder',t:'Ex / Dependency',ind:1,cv:1},{ic:'folder',t:'Babel',ind:1},{ic:'image',t:'Rules.png',ind:1,a:'tint',ac:'#34c98a'},{ic:'file',t:'webpack.config.js',ind:1},{ic:'folder',t:'Database',ind:1,cv:1},{ic:'monitor',t:'Computer'},{ic:'check',t:'Recent'},{ic:'trash',t:'Trash'}]},
+            {l:'Channel / QuaCreative',items:[{ic:'star',t:'Starred'},{ic:'clock',t:'Timeline'}]}]},
+    diw:{domain:'mem',title:{ar:'الأعضاء والاشتراكات',en:'Members & Dues'},tone:'--slate',cta:{ar:'سند جديد',en:'New voucher'},
+      secs:[{l:{ar:'الأعضاء',en:'Members'},items:[{ic:'users',t:{ar:'أعضاء العائلة',en:'Family Members'},a:1},{ic:'user',t:{ar:'كشف حساب عضو',en:'Member Statement'}},{ic:'userDollar',t:{ar:'وحدة العضو المالية',en:'Member Finance'}}]},
+            {l:{ar:'الاشتراكات والتحصيل',en:'Dues & Collection'},items:[{ic:'calendar',t:{ar:'الاشتراكات السنوية',en:'Annual Dues'}},{ic:'calStats',t:{ar:'بيئة الاشتراكات',en:'Dues Workspace'}},{ic:'coin',t:{ar:'بيئة التحصيل',en:'Collection'}}]},
+            {l:{ar:'التقارير',en:'Reports'},items:[{ic:'reportMoney',t:{ar:'تقرير المديونية',en:'Debt Report'}},{ic:'userAlert',t:{ar:'الأعضاء المتأخرون',en:'Delinquent'}}]}]}
+  },
+  {
+    rn:'R4 · Good Day', name:{ar:'واجهة كوكبِت',en:'Cockpit workspace'}, prin:{ar:'عدّاداتٌ وشاراتٌ لحالةٍ حيّة + تجميعٌ مُسيَّج',en:'Counters + live badges + fenced grouping'},
+    ref:{bg:'rgba(255,255,255,.62)',ink:'#16324a',ink2:'#40566a',mut:'#7b8da0',ico:'#5f7a95',act:'#2f6bff',ln:'rgba(255,255,255,.6)',pr:'18px',ir:'12px',stage:'linear-gradient(135deg,#8fb3e6,#5f8fd6)',
+      brand:{t:'Good Day 👋',lg:'#2f6bff',lgi:'#fff',ic:'user'},
+      secs:[{l:'Menu',ct:'6',items:[{ic:'dash',t:'Dashboard',tr:'filter'},{ic:'clip',t:'My project task',a:'pill',ac:'#2f6bff'},{ic:'calendar',t:'Calendar',tr:'plus'},{ic:'mail',t:'Mail',bd:'4',bt:'#ff4d4f'},{ic:'bell',t:'Notification'},{ic:'brief',t:'Sales'}]},
+            {l:'Service',ct:'3',items:[{ic:'layers',t:'Jira software'},{ic:'bolt',t:'Slack'},{ic:'stats',t:'Intercom'},{ic:'plus',t:'Add new plugin'}]}]},
+    diw:{domain:'mem',title:{ar:'الأعضاء والاشتراكات',en:'Members & Dues'},tone:'--slate',
+      secs:[{l:{ar:'المتابعة',en:'Follow-up'},ct:'٦',items:[{ic:'users',t:{ar:'أعضاء العائلة',en:'Family Members'},a:1},{ic:'reportMoney',t:{ar:'تقرير المديونية',en:'Debt Report'}},{ic:'userAlert',t:{ar:'الأعضاء المتأخرون',en:'Delinquent'},bd:'٤',bt:'#e08b5a'},{ic:'cash',t:{ar:'بيئة التحصيل',en:'Collection'},bd:'٢',bt:'#5fcdb0'}]},
+            {l:{ar:'الاشتراكات',en:'Dues'},ct:'٣',items:[{ic:'calendar',t:{ar:'الاشتراكات السنوية',en:'Annual Dues'}},{ic:'calStats',t:{ar:'بيئة الاشتراكات',en:'Dues Workspace'}},{ic:'file',t:{ar:'كشوف الاشتراكات',en:'Dues Statements'}}]}]}
+  },
+  {
+    rn:'R5 · Aceagency', name:{ar:'تطبيق وكالة',en:'Agency app'}, prin:{ar:'حالةٌ نشطة بالوزن والمؤشّر لا بالتعبئة + صمّامُ توسّع',en:'Active by weight + marker, not fill · scale valve'},
+    rail:true,
+    ref:{bg:'rgba(244,248,253,.66)',ink:'#12151d',ink2:'#3d4855',mut:'#98a2ae',ico:'#96a0ac',act:'#2f6bff',ln:'rgba(255,255,255,.7)',pr:'18px',ir:'12px',stage:'linear-gradient(135deg,#7aa5e6,#3f78d6)',
+      brand:{t:'Aceagency',lg:'#12151d',lgi:'#fff',ic:'bolt'},
+      secs:[{l:'MENU',items:[{ic:'brief',t:'My Offers'},{ic:'clip',t:"User's Task"},{ic:'tag',t:'Product Discounts'},{ic:'cap',t:'Case Study',a:'weight',ac:'#2f6bff',bd:'2',bt:'#2f6bff'},{ic:'lock',t:'Security'},{ic:'bolt',t:'Your Ability'}]}],
+      railon:4, flt:{t:'Case Study',bg:'#2f6bff'}},
+    diw:{domain:'sys',title:{ar:'النظام',en:'System'},tone:'--grey',railon:6,more:1,
+      secs:[{l:{ar:'الإدارة',en:'Administration'},items:[{ic:'shield',t:{ar:'المستخدمون',en:'Users'}},{ic:'list',t:{ar:'سجل العمليات',en:'Audit Log'},a:1,bd:'٢',bt:'#8db0e0'},{ic:'settings',t:{ar:'الإعدادات',en:'Settings'}},{ic:'database',t:{ar:'النسخ الاحتياطي',en:'Backup'}}]}],
+      flt:{ar:'سجل العمليات',en:'Audit Log'}}
+  }];
+
+  var TONE={ovw:'--teal',food:'--gold',diwan:'--blue',mem:'--slate',don:'--purple',res:'--pink',sys:'--grey'};
+  var DOMICON={ovw:'dash',food:'kitchen',diwan:'bank',mem:'users',don:'heart',res:'calendar',sys:'settings'};
+  var DOMORDER=['ovw','food','diwan','mem','don','res','sys'];
+
+  var S={mode:'ref',lang:'ar',theme:'light'};
+  var root=document.documentElement;
+  function TT(o){return typeof o==='string'?o:(S.lang==='en'?(o.en||o.ar):o.ar);}
+
+  function railHTML(activeIdx){
+    var h='<div class="nr" style="background:var(--rail)">';
+    DOMORDER.forEach(function(d,i){ h+='<div class="rt'+(i===activeIdx?' on':'')+'" style="'+(i===activeIdx?'background:rgba(255,255,255,.14)':'')+'">'+I[DOMICON[d]]+(i===activeIdx?'<span style="content:\'\';position:absolute;inset-inline-start:-6px;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--lime)"></span>':'')+'</div>'; });
+    return h+'</div>';
+  }
+  function refRailHTML(sp){
+    var h='<div class="nr" style="background:'+sp.bg+';box-shadow:0 14px 34px -18px rgba(10,16,28,.5)">';
+    var icons=[]; sp.secs.forEach(function(s){s.items.forEach(function(it){icons.push(it);});});
+    icons.slice(0,7).forEach(function(it,i){ var on=it.a==='pill'||it.a==='weight'||it.a==='tint'; h+='<div class="rt" style="color:'+(on?'#fff':sp.ico)+';'+(on?'background:'+(it.ac||sp.act)+';border-radius:11px':'')+'">'+I[it.ic]+'</div>'; });
+    return h+'</div>';
+  }
+
+  function itemHTML(it,sp,diw){
+    var t=TT(it.t);
+    var cls='ni', style='', extra='';
+    if(diw){ if(it.a) cls+=' diwan'; if(it.ind) cls+=' ind'; }
+    else {
+      if(it.a) cls+=' '+it.a;
+      if(it.ind) cls+=' ind';
+      if(it.a==='pill') style='background:'+(it.ac||sp.act)+';border-radius:'+sp.ir;
+      else if(it.a==='tint') style='background:color-mix(in srgb,'+(it.ac||sp.act)+' 20%,transparent);color:'+(it.ac||sp.act);
+      else if(it.a==='soft') { /* handled by class */ }
+    }
+    var lead=I[it.ic];
+    var trail='';
+    if(it.bd) trail='<span class="bd" style="background:'+(it.bt||'#888')+';color:#fff">'+it.bd+'</span>';
+    else if(it.cv) trail='<span class="cv">'+P('<path d="M6 9l6 6 6-6"/>')+'</span>';
+    else if(it.tr==='filter') trail='<span class="cv">'+I.filter+'</span>';
+    else if(it.tr==='plus') trail='<span class="cv">'+I.plus+'</span>';
+    return '<div class="'+cls+'" style="'+style+'">'+lead+'<span class="t">'+t+'</span>'+trail+'</div>';
+  }
+
+  function panelHTML(st){
+    var diw=S.mode==='diw';
+    var sp=diw?st.diw:st.ref;
+    var vars, brand, secs=sp.secs;
+    if(diw){
+      vars='--pi:#fff;--pi2:var(--ink2);--pm:var(--ink3);--pico:var(--ink3);--pact:var('+sp.tone+');--pln:var(--chromeln);--pr:16px;--ir:11px';
+      var di=DOMICON[st.diw.domain];
+      brand='<div class="np-brand" style="color:#fff"><span class="lg" style="background:rgba(255,255,255,.07);color:var('+sp.tone+')">'+I[di]+'</span>'+TT(st.diw.title)+'</div>';
+      var bg='var(--panel)';
+      var html='<div class="np" style="'+vars+';background:'+bg+';border:1px solid var(--chromeln)">'+brand+'<div style="height:1px;background:var(--chromeln);margin:0 14px 4px"></div><div class="np-scroll">';
+      if(sp.cta) html+='<div class="np-cta" style="border-color:var(--chromeln);color:var(--ink2)">'+I.plus+TT(sp.cta)+'</div>';
+      secs.forEach(function(s){ if(s.l) html+='<div class="np-sec">'+TT(s.l)+(s.ct?'<span class="ct">'+s.ct+'</span>':'')+'</div>'; s.items.forEach(function(it){ html+=itemHTML(it,sp,true); }); });
+      if(sp.more) html+='<div class="np-cta" style="border-style:dashed;border-color:var(--chromeln);color:var(--ink3);margin-top:8px">'+TT({ar:'عرض المزيد',en:'Show more'})+'</div>';
+      html+='</div>';
+      if(st.diw.floor){ var f=st.diw.floor; html+='<div class="np-floor" style="background:rgba(255,255,255,.05);color:var(--ink2)"><div style="font-size:10.5px;color:var(--ink3)">'+TT(f.k)+'</div><div style="font-size:17px;font-weight:800;color:#fff;margin-top:3px">'+f.v+' <span style="font-size:11px;color:var(--lime);font-weight:700">'+TT(f.cur)+'</span></div></div>'; }
+      html+='</div>';
+      return html;
+    } else {
+      vars='--pi:'+sp.ink+';--pi2:'+sp.ink2+';--pm:'+sp.mut+';--pico:'+sp.ico+';--pact:'+sp.act+';--pln:'+sp.ln+';--pr:'+sp.pr+';--ir:'+sp.ir;
+      var b=sp.brand;
+      brand='<div class="np-brand"><span class="lg" style="background:'+b.lg+';color:'+b.lgi+'">'+I[b.ic]+'</span>'+b.t+'</div>';
+      var html='<div class="np" style="'+vars+';background:'+sp.bg+'">'+brand+'<div class="np-scroll">';
+      if(sp.cta) html+='<div class="np-cta">'+I.plus+sp.cta+'</div>';
+      secs.forEach(function(s){ if(s.l) html+='<div class="np-sec">'+s.l+(s.ct?'<span class="ct">'+s.ct+'</span>':'')+'</div>'; s.items.forEach(function(it){ html+=itemHTML(it,sp,false); }); });
+      html+='</div>';
+      if(sp.floor){ var f=sp.floor; html+='<div class="np-floor" style="background:'+f.bg+';color:'+f.fg+'"><div style="opacity:.85;font-size:10.5px">'+f.k+'</div><div style="font-size:15px;font-weight:800;margin:2px 0 9px">'+f.v+'</div><div style="background:#fff;color:#333;border-radius:100px;text-align:center;padding:7px;font-weight:700;font-size:11.5px">'+f.cta+'</div></div>'; }
+      html+='</div>';
+      return html;
+    }
+  }
+
+  function fltHTML(st){
+    var diw=S.mode==='diw'; var sp=diw?st.diw:st.ref;
+    if(!sp.flt) return '';
+    var label=diw?TT(sp.flt):sp.flt.t;
+    var bg=diw?'var(--panel)':sp.flt.bg;
+    return '<div class="flt" style="background:'+bg+';'+(diw?'border:1px solid var(--chromeln)':'')+'">'+label+'<span style="position:absolute;inset-inline-end:-5px;top:11px;width:9px;height:9px;transform:rotate(45deg);background:'+bg+'"></span></div>';
+  }
+
+  function stageHTML(st){
+    var diw=S.mode==='diw'; var sp=diw?st.diw:st.ref;
+    var railpart='';
+    if(st.rail){
+      var ridx = diw ? sp.railon : sp.railon;
+      railpart = diw ? railHTML(sp.railon) : refRailHTML(sp);
+      railpart += fltHTML(st);
+    }
+    return railpart + panelHTML(st);
+  }
+
+  function render(){
+    var g=document.getElementById('grid'); g.innerHTML='';
+    STUDIES.forEach(function(st){
+      var diw=S.mode==='diw'; var sp=diw?st.diw:st.ref;
+      var stagebg = diw ? (S.theme==='dark'?'#0a0f16':'#0c1626') : sp.stage;
+      var card=document.createElement('div'); card.className='study';
+      card.innerHTML='<div class="study-h"><div class="rn">'+st.rn+'</div><h3>'+TT(st.name)+(diw?' → '+TT({ar:'ترجمة ديوان',en:'Diwan'}):' — '+TT({ar:'استنساخ',en:'Recreation'}))+'</h3>'
+        +'<p>'+TT(st.prin)+'</p><span class="pill">'+TT({ar:'المبدأ المستعار',en:'borrowed principle'})+'</span></div>'
+        +'<div class="stage" dir="'+(diw&&S.lang==='ar'?'rtl':(diw?'ltr':'ltr'))+'" style="--stagebg:'+stagebg+'">'+stageHTML(st)+'</div>'
+        +'<div class="foot-note">'+ (diw?TT({ar:'نيليّ صلب · ليمونيّ محصور · وحدات ديوان · RTL',en:'solid navy · reserved lime · Diwan modules · RTL'}):TT({ar:'لغة المرجع الأصلية · دراسة معزولة لن تُشحَن',en:'reference’s own language · isolated study, never shipped'})) +'</div>';
+      g.appendChild(card);
+    });
+  }
+
+  function mark(seg,b){Array.prototype.forEach.call(seg.children,function(x){x.classList.toggle('on',x===b);});}
+  document.getElementById('seg-mode').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.mode=b.getAttribute('data-m');mark(this,b);render();});
+  document.getElementById('seg-lang').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.lang=b.getAttribute('data-l');mark(this,b);render();});
+  document.getElementById('seg-theme').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.theme=b.getAttribute('data-t');mark(this,b);root.setAttribute('data-theme',S.theme);render();});
+
+  render();
+})();
+</script>
