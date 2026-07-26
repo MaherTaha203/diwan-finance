@@ -51,14 +51,14 @@ function updateRateDisplay(){
    caller (post-save refresh flows) — no behavior change outside login. */
 async function loadAllData(){
     const[r1,r2,r3,r4,r5,r6,r7,,r8,r9,r10,r11,r12]=await Promise.all([
-      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support,movement_type,destination_treasury,source_treasury,movement_reason,register_category').order('receipt_date',{ascending:false}),
-      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version,movement_type,destination_treasury,source_treasury,movement_reason').order('payment_date',{ascending:false}),
+      SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support,movement_type,destination_treasury,source_treasury,movement_reason,register_category,created_by_uid,ownership_state').order('receipt_date',{ascending:false}),
+      SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version,movement_type,destination_treasury,source_treasury,movement_reason,created_by_uid,ownership_state').order('payment_date',{ascending:false}),
       SB.from('members').select(
 'id,name,phone,member_code,notes,opening_balance,prepaid_subscription_ils,is_active,created_at,active_from_year,historical_balance_ils,historical_payments_ils,credit_balance_ils,is_migration_exception'
 ).order('name'),
       SB.from('contacts').select('*').order('name'),
       SB.from('annual_dues').select('*').order('year',{ascending:false}),
-      SB.from('audit_log').select('id,action,description,user_name,created_at').order('created_at',{ascending:false}).limit(50),
+      SB.from('audit_log').select('id,action,description,user_name,actor_user_id,actor_role,ip,reason,table_name,record_id,old_data,new_data,created_at').order('created_at',{ascending:false}).limit(50),
       /* P0/V3 · Law 3 — annual subscription paid has ONE authoritative origin
          (paid_amount_ils). balance_ils is DB-derived and the override_* columns
          are constitutionally disabled (see ms_balance_is_derived /

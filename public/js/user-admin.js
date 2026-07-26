@@ -97,7 +97,7 @@
     if (!can.admin()) { toast(window.t ? window.t('errors.no_permission') : 'المدير فقط', 'err'); return; }
     if (typeof window.openM === 'function') window.openM('invite');
     ['cu-name', 'cu-phone', 'cu-email', 'cu-pass'].forEach(function (id) { var el = $(id); if (el) el.value = ''; });
-    var role = $('cu-role'); if (role) role.value = 'viewer';
+    var role = $('cu-role'); if (role) role.value = 'accountant';
     var auto = document.querySelector('input[name="cu-mode"][value="auto"]'); if (auto) auto.checked = true;
     var force = $('cu-force'); if (force) force.checked = true;
     if ($('cu-note')) { $('cu-note').textContent = ''; $('cu-note').className = 'pw-note'; }
@@ -124,7 +124,7 @@
   window.createUser = async function () {
     if (!can.admin()) { toast(window.t ? window.t('errors.no_permission') : 'المدير فقط', 'err'); return; }
     var name = ($('cu-name') || {}).value ? $('cu-name').value.trim() : '';
-    var role = ($('cu-role') || {}).value || 'viewer';
+    var role = ($('cu-role') || {}).value || 'accountant';
     var phone = ($('cu-phone') || {}).value ? $('cu-phone').value.trim() : '';
     var email = ($('cu-email') || {}).value ? $('cu-email').value.trim().toLowerCase() : '';
     var mode = (document.querySelector('input[name="cu-mode"]:checked') || {}).value === 'manual' ? 'manual' : 'auto';

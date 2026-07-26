@@ -632,16 +632,25 @@ window.editRec=function(id){
 
   window.openM('edit-rec');
 };
-window.updateRec = async function () {
+/* AUTH-003 — ownership-scoped edit gate (mirrors RLS + the DB ownership trigger):
+   admin edits any voucher; an accountant edits only their OWN voucher while it is in
+   an owner-editable state (editable/returned). admin_review/locked/cancelled are
+   read-only for the accountant; historical (owner-less) vouchers are admin-only. */
+window.canEditVoucher=function(row){
+  if(!row) return false;
+  if(can.admin()) return true;
+  if(CUR&&CUR.role==='accountant'){
+    return row.created_by_uid===CU?.id && ['editable','returned'].includes(row.ownership_state||'editable');
+  }
+  return false;
+};
 
-if (!can.admin()) {
-  toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
-  return;
-}
+window.updateRec = async function () {
 
 const id = document.getElementById('edit-rec-id').value;
 const r = DB.receipts.find(x=>x.id===id);
 if(!r){ toast('السند غير موجود','err'); return; }
+if(!window.canEditVoucher(r)){ toast(window.t?window.t('errors.no_permission'):'لا تملك صلاحية تعديل هذا السند','err'); return; }
 /* Phase 10 — Year-End Lock (no override). */
 if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 const amount = parseFloat(document.getElementById('edit-rec-amount').value) || 0;
@@ -716,10 +725,10 @@ window.editPay=function(id){
   window.openM('edit-pay');
 };
 window.updatePay=async function(){
-  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
   const p=DB.payments.find(x=>x.id===id);
   if(!p){toast('السند غير موجود','err');return;}
+  if(!window.canEditVoucher(p)){toast(window.t?window.t('errors.no_permission'):'لا تملك صلاحية تعديل هذا السند','err');return;}
   if(voucherLocked(p.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
   const amount=parseFloat(document.getElementById('edit-pay-amount').value)||0;
   const notes=document.getElementById('edit-pay-notes').value;

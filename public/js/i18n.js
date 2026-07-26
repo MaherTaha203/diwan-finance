@@ -236,9 +236,9 @@ const translations = {
       full_name:'الاسم الكامل', email:'البريد الإلكتروني',
       temp_pass:'كلمة المرور المؤقتة', role:'الدور',
       admin:'مدير — كامل الصلاحيات',
-      accountant:'محاسب — إضافة سندات',
-      viewer:'عارض — عرض فقط',
-      role_admin:'مدير', role_accountant:'محاسب', role_viewer:'عارض',
+      accountant:'محاسب — عمليات مالية',
+      reservation:'مدير الحجوزات — التقويم فقط',
+      role_admin:'مدير', role_accountant:'محاسب', role_reservation:'مدير الحجوزات',
       you:'(أنت)', create:'إنشاء الحساب',
     },
     audit: {
@@ -584,9 +584,9 @@ const translations = {
       full_name:'Full Name', email:'Email Address',
       temp_pass:'Temporary Password', role:'Role',
       admin:'Admin — Full access',
-      accountant:'Accountant — Add vouchers',
-      viewer:'Viewer — Read only',
-      role_admin:'Admin', role_accountant:'Accountant', role_viewer:'Viewer',
+      accountant:'Accountant — Financial operations',
+      reservation:'Reservations Manager — Calendar only',
+      role_admin:'Admin', role_accountant:'Accountant', role_reservation:'Reservations Manager',
       you:'(You)', create:'Create Account',
     },
     audit: {
@@ -1165,9 +1165,9 @@ window.applyLang = function() {
   qTxt('label[for="cu-role"]',  window.t('users.role'));
   const invRoleSel = document.getElementById('cu-role');
   if (invRoleSel) {
-    const opts = invRoleSel.options;
-    if (opts[0]) opts[0].text = window.t('users.viewer');
-    if (opts[1]) opts[1].text = window.t('users.accountant');
+    const opts = invRoleSel.options;   // DOM order: accountant · reservation · admin
+    if (opts[0]) opts[0].text = window.t('users.accountant');
+    if (opts[1]) opts[1].text = window.t('users.reservation');
     if (opts[2]) opts[2].text = window.t('users.admin');
   }
 

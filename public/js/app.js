@@ -9,8 +9,8 @@ window.FOOD_OPENING_USD=0;window.FOOD_OPENING_JOD=0;
 window.DIWAN_OPENING_USD=0;window.DIWAN_OPENING_JOD=0;
 const PSZ=20,PS={};
 
-/* ── ROLE MODEL: admin | viewer ONLY ── */
-const ROLES={admin:'مدير',viewer:'عارض',reservation:'مدير الحجوزات'};
+/* ── ROLE MODEL (AUTH-003): admin | accountant | reservation ── */
+const ROLES={admin:'مدير',accountant:'محاسب',reservation:'مدير الحجوزات'};
 
 const EXPENSE_TYPES={food_expense:'مصاريف إطعام',electricity:'كهرباء',water:'ماء',cleaning:'تنظيف',maintenance:'صيانة',other:'أخرى'};
 const METHOD_LABELS={cash:'نقد',check:'شيك',transfer:'تحويل بنكي',online:'أونلاين'};
@@ -154,11 +154,20 @@ const L = {
       : ar[m];
   }
 };
-/* ═══ PERMISSIONS — admin | viewer ONLY ═══ */
+/* ═══ PERMISSIONS (AUTH-003) — admin | accountant | reservation ═══
+   write  = create finance vouchers (admin OR accountant); BO-01 gate.
+   admin  = full authority (correct/cancel/reclassify/users/settings/period/etc).
+   print  = admin OR accountant (accountant may print own + reports).
+   export = admin only (CSV/PDF/backup stay administrative).
+   accountant = convenience predicate for the operational accounting role.
+   Ownership-scoped voucher edit (accountant edits only OWN, editable/returned) is
+   enforced in crud.js updateRec/updatePay AND authoritatively by RLS + the DB
+   ownership trigger. */
 const can={
-  write:()=>CUR?.role==='admin',
+  write:()=>CUR?.role==='admin'||CUR?.role==='accountant',
   admin:()=>CUR?.role==='admin',
-  print:()=>CUR?.role==='admin',
+  accountant:()=>CUR?.role==='accountant',
+  print:()=>CUR?.role==='admin'||CUR?.role==='accountant',
   export:()=>CUR?.role==='admin'
 };
 
@@ -1420,9 +1429,14 @@ function ensureAttachModals(){
 }
 /* ═══ END ATTACHMENTS SYSTEM ═══ */
 
-/* ═══ AUDIT LOG ═══ */
-async function logAction(action,desc,tableN,recordId){
-  await SB.from('audit_log').insert({user_name:CUR?.full_name||CU?.email,action,description:desc,table_name:tableN,record_id:recordId});
+/* ═══ AUDIT LOG (AUTH-003: stamp actor id + role; accept old/new/reason) ═══ */
+async function logAction(action,desc,tableN,recordId,extra){
+  extra=extra||{};
+  await SB.from('audit_log').insert({
+    user_name:CUR?.full_name||CU?.email, action, description:desc, table_name:tableN, record_id:recordId,
+    actor_user_id:CU?.id||null, actor_role:CUR?.role||null,
+    old_data:extra.old_data??null, new_data:extra.new_data??null, reason:extra.reason??null
+  });
 }
 
 /* ═══ SAVE RECEIPT · SAVE PAYMENT · SAVE MEMBER · EDIT RECORDS · VOUCHER VERSIONING · YEAR-END LOCK ═══
@@ -1491,7 +1505,7 @@ async function loadUsers(){
   const list=document.getElementById('users-list');if(!list)return;
   if(!data?.length){list.innerHTML='<div class="empty"><div class="empty-t">لا يوجد مستخدمون</div></div>';return;}
   /* muted DDL role colours — same solids as the top-bar avatar (.uav) and role tags */
-  const BG={admin:'#5E5578',viewer:'#3E5A78',reservation:'#3E6659'};
+  const BG={admin:'#5E5578',accountant:'#3E5A78',reservation:'#3E6659'};
   const _uEn=window.LANG==='en';
   const _ident=u=>esc(u.email||u.phone||u.user_id);
   const _ab=(fn,icon,label,cls)=>`<button class="btn ghost sm" title="${label}" aria-label="${label}" onclick="${fn}"><i class="ti ${icon}"></i></button>`;
@@ -1504,7 +1518,7 @@ async function loadUsers(){
       </div>
       <span class="role-tag ${u.role}">${ROLES[u.role]||u.role}</span>
       ${u.user_id!==CU?.id?`<select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)">
-        <option value="viewer" ${u.role==='viewer'?'selected':''}>عارض</option>
+        <option value="accountant" ${u.role==='accountant'?'selected':''}>محاسب</option>
         <option value="reservation" ${u.role==='reservation'?'selected':''}>مدير الحجوزات</option>
         <option value="admin" ${u.role==='admin'?'selected':''}>مدير</option>
       </select>
@@ -1518,14 +1532,15 @@ async function loadUsers(){
       </div>`:'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
     </div>`).join('');
 }
+/* AUTH-003: role changes MUST go through the admin-users Edge Function — it validates
+   the role, writes the old→new audit record, and revokes the target's sessions so the
+   new authority applies immediately. No direct user_roles write from the UI. */
 window.changeRole=async(uid,role)=>{
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
-  /* Enforce valid roles only */
-  const safeRole=(role==='admin')?'admin':(role==='reservation')?'reservation':'viewer';
-  const{data:prevRole}=await SB.from('user_roles').select('role,full_name').eq('user_id',uid).maybeSingle();
-  const{error:updErr}=await SB.from('user_roles').update({role:safeRole}).eq('user_id',uid);
-  if(updErr){toast('فشل تغيير الدور: '+updErr.message,'err');loadUsers();return;}
-  await logAction('edit',`تغيير دور ${prevRole?.full_name||uid}: من ${ROLES[prevRole?.role]||prevRole?.role||'—'} إلى ${ROLES[safeRole]}`,'user_roles',uid);
+  const safeRole=(role==='admin')?'admin':(role==='reservation')?'reservation':(role==='accountant')?'accountant':null;
+  if(!safeRole){toast(window.t?window.t('errors.no_permission'):'دور غير صالح','err');loadUsers();return;}
+  const r=await window.adminUsersCall({action:'update',user_id:uid,role:safeRole});
+  if(!r.ok){toast('فشل تغيير الدور: '+r.error,'err');loadUsers();return;}
   toast(window.t('messages.role_changed')+': '+ROLES[safeRole],'ok');loadUsers();
 };
 /* Legacy client-side create (isolated signUp + role upsert) was retired in AUTH-001

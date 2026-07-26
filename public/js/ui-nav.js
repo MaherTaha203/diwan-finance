@@ -38,9 +38,18 @@ window.nav=function(p){
     toast(window.t('messages.access_denied'),'warn');
     p='reservations';
   }
-  /* Block viewer from accessing restricted pages — even via DevTools console */
-  const ADMIN_PAGES=['audit','bk','users','settings','annual'];
+  /* AUTH-003 — block non-admins from restricted pages (even via DevTools console).
+     Admin-only = user management, settings, audit, backup, annual dues, and every
+     operational workspace. The accountant is confined to Dashboard / Members /
+     Receipts / Payments / Financial reports + search. */
+  const ADMIN_PAGES=['audit','bk','users','settings','annual',
+    'treasury-workspace','dues-workspace','collection-workspace','payment-workspace','member-workspace'];
   if(ADMIN_PAGES.includes(p)&&!can.admin()){
+    toast(window.t('messages.access_denied'),'err');
+    return;
+  }
+  /* Reservations calendar: admin or the reservations manager only. */
+  if(p==='reservations'&&!(can.admin()||CUR?.role==='reservation')){
     toast(window.t('messages.access_denied'),'err');
     return;
   }
