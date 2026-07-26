@@ -46,11 +46,13 @@ window.nav=function(p){
     'treasury-workspace','dues-workspace','collection-workspace','payment-workspace','member-workspace'];
   if(ADMIN_PAGES.includes(p)&&!can.admin()){
     toast(window.t('messages.access_denied'),'err');
+    try{ logAction('permission_violation','محاولة وصول غير مصرّح إلى صفحة: '+p,'nav',null,{reason:'unauthorized_page'}); }catch(_){}
     return;
   }
   /* Reservations calendar: admin or the reservations manager only. */
   if(p==='reservations'&&!(can.admin()||CUR?.role==='reservation')){
     toast(window.t('messages.access_denied'),'err');
+    try{ logAction('permission_violation','محاولة وصول غير مصرّح إلى صفحة: reservations','nav',null,{reason:'unauthorized_page'}); }catch(_){}
     return;
   }
   document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));

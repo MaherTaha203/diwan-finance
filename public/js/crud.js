@@ -580,14 +580,52 @@ window.onEditManualInput=function(){
     box.textContent='المجموع: ₪'+fmt(sum)+' / ₪'+fmt(amount)+(ok?'  ✓':'  ✗ يجب أن يتساوى');
     box.className='ibox'+(ok?'':' warn'); }
 };
-window.editRec=function(id){
-  if(!can.admin()){
-    toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
-    return;
-  }
+/* AUTH-003 — voucher lifecycle state helpers (label + badge style + admin "Return"). */
+window.voucherStateLabel=function(s){
+  const en=window.LANG==='en';
+  return ({editable:en?'Editable':'قابل للتعديل',admin_review:en?'Administrator Review':'مراجعة المدير',
+    returned:en?'Returned to Accountant':'أُرجع للمحاسب',locked:en?'Locked':'مقفل',
+    cancelled:en?'Cancelled':'ملغى'})[s||'editable']||s;
+};
+function _voucherStateStyle(s){
+  return ({editable:'background:#2f6d4f;color:#fff',admin_review:'background:#8a6d1f;color:#fff',
+    returned:'background:#3E5A78;color:#fff',locked:'background:#6b6b6b;color:#fff',
+    cancelled:'background:#8a3b3b;color:#fff'})[s||'editable']||'background:#5C5F65;color:#fff';
+}
+/* Inject a state badge (+ admin Return-to-Accountant when in review) into an edit modal. */
+window._voucherOwnBanner=function(prefix,row,kind){
+  const reason=document.getElementById('edit-'+prefix+'-reason'); if(!reason) return;
+  const host=reason.closest('.fi')||reason.parentElement; if(!host||!host.parentElement) return;
+  const id='edit-'+prefix+'-ownbanner';
+  const old=document.getElementById(id); if(old) old.remove();
+  const st=row.ownership_state||'editable', en=window.LANG==='en';
+  const b=document.createElement('div'); b.id=id; b.style.cssText='margin:0 0 10px;font-size:12px';
+  const badge='<span style="padding:2px 9px;border-radius:6px;font-weight:600;'+_voucherStateStyle(st)+'">'+window.voucherStateLabel(st)+'</span>';
+  const ret=(can.admin()&&st==='admin_review')
+    ?' <button type="button" class="btn ghost sm" onclick="window.returnToAccountant(\''+kind+'\',\''+row.id+'\')"><i class="ti ti-arrow-back-up"></i> '+(en?'Return to Accountant':'إرجاع للمحاسب')+'</button>':'';
+  b.innerHTML='<span style="color:var(--tx3)">'+(en?'Status':'الحالة')+':</span> '+badge+ret;
+  host.parentElement.insertBefore(b,host);
+};
+/* Admin "Return to Accountant": re-open an in-review voucher for its owner. The DB
+   ownership trigger records the return in the audit log. */
+window.returnToAccountant=async function(kind,id){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  const tbl=kind==='payment'?'payments':'receipts';
+  const{error}=await SB.from(tbl).update({ownership_state:'returned'}).eq('id',id);
+  if(error){toast((window.LANG==='en'?'Return failed: ':'فشل الإرجاع: ')+error.message,'err');return;}
+  toast(window.LANG==='en'?'Returned to accountant':'أُرجع السند للمحاسب','ok');
+  if(window.closeM) window.closeM();
+  if(typeof loadAll==='function'){ try{ await loadAll(); }catch(_){} }
+};
 
+window.editRec=function(id){
   const r = DB.receipts.find(x=>x.id===id);
   if(!r) return;
+  if(!window.canEditVoucher(r)){
+    toast(window.t ? window.t('errors.no_permission') : 'لا تملك صلاحية تعديل هذا السند','err');
+    try{ logAction('permission_violation','محاولة تعديل سند قبض غير مملوك/مقفل','receipts',id,{reason:'voucher_not_editable'}); }catch(_){}
+    return;
+  }
   /* Phase 10 — Year-End Lock (no override): closed-year vouchers are read-only. */
   if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 
@@ -630,6 +668,7 @@ window.editRec=function(id){
     }
   }
 
+  window._voucherOwnBanner('rec',r,'receipt');
   window.openM('edit-rec');
 };
 /* AUTH-003 — ownership-scoped edit gate (mirrors RLS + the DB ownership trigger):

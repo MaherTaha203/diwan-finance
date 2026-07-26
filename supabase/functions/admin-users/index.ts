@@ -97,6 +97,21 @@ Deno.serve(async (req: Request) => {
 
   try {
     switch (action) {
+      case 'list': {
+        // AUTH-003: authoritative user list via service_role. Direct client reads are
+        // RLS-limited to the caller's own row (select_own), which is why newly created
+        // users did not appear — the admin UI must read through here. Includes the real
+        // last-sign-in time from GoTrue.
+        const { data: roles } = await admin.from('user_roles').select('*').order('created_at');
+        const lastMap: Record<string, string | null> = {};
+        try {
+          const { data: au } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+          for (const u of (au?.users || [])) lastMap[u.id] = (u as any).last_sign_in_at || null;
+        } catch (_) { /* best-effort */ }
+        const users = (roles || []).map((r: any) => ({ ...r, last_sign_in_at: lastMap[r.user_id] ?? null }));
+        return json({ ok: true, users });
+      }
+
       case 'create': {
         const full_name = String(body.full_name || '').trim();
         const role = safeRole(body.role);
@@ -228,6 +243,15 @@ Deno.serve(async (req: Request) => {
         await audit('password_reset', actor.label, uid, 'Admin reset password (force change enforced; sessions revoked)');
         if (mode === 'auto') await audit('password_generated', actor.label, uid, 'Temporary password generated at reset');
         return json({ ok: true, password: mode === 'auto' ? password : undefined });
+      }
+
+      case 'sign_out': {
+        // AUTH-003: terminate all of a user's sessions on demand (incident response).
+        const uid = String(body.user_id || '');
+        if (!uid) return json({ error: 'user_id_required' }, 400);
+        await revokeSessions(uid);
+        await audit('session_revocation', actor.label, uid, 'All sessions signed out by administrator');
+        return json({ ok: true });
       }
 
       case 'force_change': {
