@@ -28,6 +28,8 @@ function resetSessionTimer() {
   }, SESSION_TIMEOUT - SESSION_WARNING);
 
   sessionTimer = setTimeout(() => {
+    /* AUTH-003: session expiry is auditable and distinct from a manual logout. */
+    try{ if(typeof logAction==='function') logAction('session_expired','انتهاء الجلسة بعدم النشاط','auth',null,{reason:'idle_timeout'}); }catch(_){}
     window.logout();
   }, SESSION_TIMEOUT);
 }

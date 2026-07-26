@@ -182,3 +182,78 @@ Nothing here has been applied to production. To ship:
 
 Roll-back is clean: the migration is additive (drop the new policies/columns/triggers
 to revert); Edge/client revert by re-deploying `main`.
+
+---
+
+## 10 · Owner review round (hardening + verification)
+
+### 10.1 Every financial document is linked to its owner (#1)
+Added migration `20260726130000_auth003_ownership_stamps.sql`: **all** financial
+tables (`receipts, payments, members, annual_dues, member_subscriptions,
+member_write_offs, refunds, allocation_records, internal_transfers, contacts,
+fiscal_snapshots`) now carry `created_by_uid`, `created_by`, `created_at`,
+`updated_by`, `updated_at`. A generic `set_row_updated()` BEFORE-UPDATE trigger
+stamps `updated_at = now()` and `updated_by = auth.uid()` on every update.
+`reservations` already had all four; `voucher_versions` is an append-only snapshot
+log (its own `edited_by`/`edited_at`) and is excluded. *Verified (rolled back):
+0 target tables missing a column; the trigger stamps updated_by + updated_at.*
+
+### 10.2 Audit really records everything (#2)
+Coverage table in §6. Confirmed audited: login/logout, **session expiry**
+(`session_expired`, added), failed login, lockout/unlock, password reset/change/
+forced change, **role change** (old→new), **reset password**, disable/enable user,
+delete user, **session revocation**, **voucher → admin_review** and **return to
+accountant** (DB ownership trigger), **every voucher edit** (create/Draft amend/
+void+replace), and **every unauthorized access** (`permission_violation`: blocked
+page navigation + non-editable voucher edit attempts). Opening the Settings page is
+treated as optional per system policy and is not logged.
+
+### 10.3 Protection is in the database, not just the UI (#3) — **proven**
+Verified by impersonating an accountant at the DB level (role `authenticated` +
+JWT, RLS enforced) in a rolled-back transaction:
+
+| Attempt (as accountant, via REST/DevTools) | Result |
+|---|---|
+| Edit **own** Draft voucher | allowed |
+| Edit an **admin's** voucher | **denied** (0 rows) |
+| Edit **another accountant's** voucher | **denied** (0 rows) |
+| Change `ownership_state` | **error** (trigger) |
+| Change `created_by` (ownership) | **error** (trigger) |
+| Insert a voucher spoofing another owner | **error** (RLS) |
+| Read reservations data | **denied** (0 rows) |
+| (admin) edit any voucher | allowed + auto-locks to `admin_review` |
+
+Unauthorized **pages** are blocked in `nav()` (not just hidden) and the underlying
+finance tables are RLS-blocked for the reservation role and for accountants outside
+their allow-list.
+
+### 10.4 Administrator leaves without saving during review (#4)
+There is **no orphaned lock**. Opening a voucher (`editRec`/`editPay`) performs **no
+DB write** — it only populates the modal — so closing the page or losing connectivity
+changes nothing. Locking is an **explicit** action: *Mark reviewed (lock)* →
+`admin_review`, or an actual admin correction (void+replace). Recovery from a
+deliberate lock is always the explicit **Return to Accountant** (`returned` → Draft),
+so a locked voucher can never become permanently stuck.
+
+### 10.5 Users page (#5)
+Added a toolbar with **search** (name/email/phone), **role filter**, and **status
+filter** (active/disabled), a live shown/total count, and **clear ordering** (by role
+rank admin→accountant→reservation, then name). Cards already show avatar, name,
+email/phone, role, **status**, **created**, **last login**, and the **permission
+summary**, with the full action set.
+
+### 10.6 Acceptance scenarios (#6)
+| Scenario | Outcome | Evidence |
+|---|---|---|
+| Accountant A creates + edits own voucher | ✅ allowed (Draft amend) | RLS test 10.3 + `_amendOwnVoucher` |
+| Accountant B edits A's voucher | ✅ rejected | RLS test 10.3 (0 rows) |
+| Admin edits the voucher → locks for accountant | ✅ auto `admin_review` | RLS + trigger test |
+| Admin returns to accountant → editable again | ✅ `returned` (Draft) | trigger test §8 |
+| After posting/review, direct edit rejected; only void+replace | ✅ | RLS state qual (`editable/returned` only) + BO-02 admin |
+| Role change while user is logged in → sessions end, new perms immediately | ✅ | admin-users `update` revokes sessions; `is_admin()` reads live role |
+| New user appears immediately without page refresh | ✅ | `create` → `loadUsers()` reads service_role `list` |
+
+Scenarios enforced at the database layer are proven by the rolled-back RLS/trigger
+tests; the session-revocation and immediate-appearance scenarios are enforced by the
+Edge Function (`revokeSessions` on role change; `list` after create). A full live
+end-to-end with a real Accountant account remains a deploy-time step (§8).

@@ -1512,17 +1512,49 @@ function rolePermSummary(role){
     cannot:[en?'Finance':'المالية',en?'Users':'المستخدمون',en?'Settings':'الإعدادات',en?'Reports':'التقارير',en?'Audit log':'سجل العمليات']};
   return {can:[],cannot:[]};
 }
+/* Fetch through the Edge Function (service_role): direct client reads are RLS-limited
+   to the caller's own row, so newly created users would not appear. Yields real
+   last-sign-in and keeps the list in sync after every mutation. Cached for filtering. */
+window.__usersAll=[];
 async function loadUsers(){
   if(!can.admin())return;
   const list=document.getElementById('users-list');if(!list)return;
   const en=window.LANG==='en';
   list.innerHTML='<div class="empty"><div class="empty-t">'+(en?'Loading…':'جارٍ التحميل…')+'</div></div>';
-  /* Read through the Edge Function (service_role): direct client reads are RLS-limited
-     to the caller's own row, so newly created users would not appear. This also yields
-     the real last-sign-in time and keeps the list in sync after every mutation. */
   const res=await window.adminUsersCall({action:'list'});
-  const data=(res.ok&&res.data&&res.data.users)?res.data.users:[];
-  if(!data.length){list.innerHTML='<div class="empty"><div class="empty-t">'+(en?'No users':'لا يوجد مستخدمون')+'</div></div>';return;}
+  window.__usersAll=(res.ok&&res.data&&res.data.users)?res.data.users:[];
+  _ensureUsersToolbar();
+  window._applyUserFilters();
+}
+/* Search + role filter + status filter toolbar (injected once above the list). */
+function _ensureUsersToolbar(){
+  const list=document.getElementById('users-list');if(!list||document.getElementById('users-toolbar'))return;
+  const en=window.LANG==='en';
+  const bar=document.createElement('div');bar.id='users-toolbar';
+  bar.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px';
+  bar.innerHTML=
+    '<input id="usr-q" oninput="window._applyUserFilters()" placeholder="'+(en?'Search name / email / phone':'بحث بالاسم أو البريد أو الهاتف')+'" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-family:var(--fn);font-size:12.5px">'
+    +'<select id="usr-frole" onchange="window._applyUserFilters()" style="padding:7px 10px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-family:var(--fn);font-size:12.5px"><option value="">'+(en?'All roles':'كل الأدوار')+'</option><option value="admin">'+(en?'Admin':'مدير')+'</option><option value="accountant">'+(en?'Accountant':'محاسب')+'</option><option value="reservation">'+(en?'Reservations':'مدير الحجوزات')+'</option></select>'
+    +'<select id="usr-fstatus" onchange="window._applyUserFilters()" style="padding:7px 10px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-family:var(--fn);font-size:12.5px"><option value="">'+(en?'All statuses':'كل الحالات')+'</option><option value="active">'+(en?'Active':'مفعّل')+'</option><option value="disabled">'+(en?'Disabled':'معطّل')+'</option></select>'
+    +'<span id="usr-count" style="font-size:11px;color:var(--tx3)"></span>';
+  list.parentNode.insertBefore(bar,list);
+}
+window._applyUserFilters=function(){
+  const list=document.getElementById('users-list');if(!list)return;
+  const en=window.LANG==='en';
+  const qv=(document.getElementById('usr-q')?.value||'').trim().toLowerCase();
+  const fr=document.getElementById('usr-frole')?.value||'';
+  const fs=document.getElementById('usr-fstatus')?.value||'';
+  const rank={admin:0,accountant:1,reservation:2};
+  let data=window.__usersAll.filter(u=>{
+    if(fr&&u.role!==fr) return false;
+    if(fs==='active'&&u.is_disabled) return false;
+    if(fs==='disabled'&&!u.is_disabled) return false;
+    if(qv){ const hay=((u.full_name||'')+' '+(u.email||'')+' '+(u.phone||'')).toLowerCase(); if(hay.indexOf(qv)<0) return false; }
+    return true;
+  }).sort((a,b)=>(rank[a.role]??9)-(rank[b.role]??9)||String(a.full_name||'').localeCompare(String(b.full_name||'')));
+  const cnt=document.getElementById('usr-count'); if(cnt) cnt.textContent=(en?'Showing ':'عرض ')+data.length+(en?' of ':' من ')+window.__usersAll.length;
+  if(!data.length){list.innerHTML='<div class="empty"><div class="empty-t">'+(en?'No matching users':'لا مستخدمون مطابقون')+'</div></div>';return;}
   const BG={admin:'#5E5578',accountant:'#3E5A78',reservation:'#3E6659'};
   const q=s=>String(s==null?'':s).replace(/'/g,"\\'");
   const fmtD=d=>d?new Date(d).toLocaleDateString(en?'en-GB':'ar'):'—';
