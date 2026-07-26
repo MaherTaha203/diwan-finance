@@ -109,45 +109,41 @@ body {
 .urole { font-size:9px; color:rgba(255,255,255,.72); display:block; }
 #clock { font-size:11px; color:rgba(255,255,255,.6); min-width:38px; font-family:var(--fmono); font-variant-numeric:tabular-nums; }
 .layout { display:flex; flex:1; overflow:hidden; position:relative; }
-/* ═══ SIDEBAR — pinned · mini · overlay (see sidebar.js) ═══ */
-.sb { --sbw:210px; --sb-mini-w:56px; width:var(--sbw); background:var(--chrome); border-left:1px solid var(--chrome-line); flex-shrink:0; display:flex; flex-direction:column; overflow:hidden; transition:width .18s ease; position:relative; z-index:40; }
-/* toolbar: search + collapse */
-.sb-tools { display:flex; align-items:center; gap:6px; padding:8px 8px 6px; }
-.sb-search-wrap { position:relative; flex:1; display:flex; align-items:center; min-width:0; }
-.sb-search-wrap > i { position:absolute; inset-inline-start:9px; font-size:14px; color:rgba(255,255,255,.5); pointer-events:none; }
-.sb-search { width:100%; height:30px; border-radius:8px; border:1px solid var(--chrome-line); background:rgba(255,255,255,.06); color:#fff; font-family:var(--fn); font-size:11.5px; padding:0 28px; outline:none; transition:border-color .15s,background .15s; }
-.sb-search::placeholder { color:rgba(255,255,255,.5); }
-.sb-search:focus { border-color:rgba(255,255,255,.35); background:rgba(255,255,255,.10); }
-.sb-search-x { position:absolute; inset-inline-end:5px; width:20px; height:20px; border:0; background:transparent; color:rgba(255,255,255,.6); cursor:pointer; border-radius:5px; display:flex; align-items:center; justify-content:center; }
-.sb-search-x:hover { background:rgba(255,255,255,.12); color:#fff; }
-.sb-pin { width:30px; height:30px; flex:none; border:1px solid var(--chrome-line); background:rgba(255,255,255,.06); color:rgba(255,255,255,.75); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; }
-.sb-pin:hover { background:rgba(255,255,255,.14); color:#fff; }
-.sb-pin i { font-size:16px; }
-.sb-scrollarea { flex:1; overflow-y:auto; overflow-x:hidden; padding:2px 0 18px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.2) transparent; }
-/* collapsible group */
-.nbg-h { display:flex; align-items:center; gap:6px; width:100%; padding:9px 14px 4px; background:none; border:0; cursor:pointer; text-align:start; font-family:var(--fn); }
-.nbg-t { flex:1; font-size:9px; font-weight:700; color:rgba(255,255,255,.6); letter-spacing:.1em; text-transform:uppercase; display:flex; align-items:center; gap:6px; }
-.nbg-caret { font-size:14px; color:rgba(255,255,255,.42); transition:transform .18s ease; flex:none; }
+/* ═══ SIDEBAR v2 — accordion · icons-only collapse (fly-out) · premium type ═══
+   Nav-v2 (frozen): readability over compactness. Larger SemiBold labels, a fixed
+   icon·text·badge grid, calm 200ms ease-out accordion, official Diwan navy chrome. */
+.sb { --sbw:256px; --sb-mini-w:66px; --sb-ease:cubic-bezier(.22,.61,.36,1); width:var(--sbw); background:var(--chrome); border-inline-start:1px solid var(--chrome-line); flex-shrink:0; display:flex; flex-direction:column; overflow:hidden; transition:width .2s var(--sb-ease); position:relative; z-index:40; }
+/* toolbar: collapse control only (search removed in nav-v2) */
+.sb-tools { display:flex; align-items:center; justify-content:flex-end; gap:6px; padding:11px 12px 7px; }
+.sb-pin { width:34px; height:34px; flex:none; border:1px solid var(--chrome-line); background:rgba(255,255,255,.07); color:rgba(255,255,255,.85); border-radius:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; }
+.sb-pin:hover { background:rgba(255,255,255,.16); color:#fff; }
+.sb-pin i { font-size:18px; }
+.sb-scrollarea { flex:1; overflow-y:auto; overflow-x:hidden; padding:4px 0 20px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.22) transparent; }
+/* ── section header (accordion trigger) ── */
+.nbg { padding:1px 10px; }
+.nbg-h { display:grid; grid-template-columns:1fr auto; align-items:center; gap:8px; width:100%; padding:11px 10px 7px; background:none; border:0; cursor:pointer; text-align:start; font-family:var(--fn); border-radius:9px; }
+.nbg-h:hover { background:rgba(255,255,255,.05); }
+.nbg-t { font-size:11.5px; font-weight:700; color:rgba(255,255,255,.74); letter-spacing:.01em; display:flex; align-items:center; gap:7px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nbg-caret { font-size:18px; color:rgba(255,255,255,.5); transition:transform .2s var(--sb-ease); flex:none; }
 .nbg.open > .nbg-h .nbg-caret { transform:rotate(180deg); }
-.nbg-favico { font-size:11px; color:#C6A46A; }
-.nbg-body { max-height:0; overflow:hidden; transition:max-height .2s ease; }
-.nbg.open > .nbg-body { max-height:360px; }
-.sb-favs > .nbg-body { max-height:640px; }
-/* nav item (compact) */
-.nb { display:flex; align-items:center; gap:9px; height:30px; padding:0 12px; margin:1px 8px; border-radius:8px; font-size:12px; font-weight:500; color:rgba(255,255,255,.66); cursor:pointer; border:1px solid transparent; transition:background .13s,color .13s; position:relative; }
-.nb:hover { background:rgba(255,255,255,.07); color:#fff; }
-.nb.on { background:rgba(255,255,255,.12); color:#fff; font-weight:600; border-color:transparent; }
-.nb.on::before { content:''; position:absolute; inset-inline-start:-8px; top:7px; bottom:7px; width:3px; border-radius:3px; background:var(--accent); }
-.nb-t { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.nb .k { font-size:9.5px; color:rgba(255,255,255,.68); font-family:var(--fmono); font-variant-numeric:tabular-nums; margin-inline-start:4px; }
-.nb i { font-size:15px; width:17px; text-align:center; flex-shrink:0; }
-/* favorite star (reveals on hover / when active) */
-.nb-star { position:absolute; inset-inline-end:6px; top:50%; transform:translateY(-50%); width:20px; height:20px; border:0; background:transparent; color:rgba(255,255,255,.5); border-radius:5px; cursor:pointer; display:none; align-items:center; justify-content:center; }
-.nb:hover .nb-star, .nb.is-fav .nb-star { display:flex; }
-.nb-star:hover { background:rgba(255,255,255,.14); color:#fff; }
-.nb.is-fav .nb-star, .nb-star.is-on { color:#C6A46A; }
-.nb-star i { font-size:13px; }
-.nb:hover .k, .nb.is-fav .k { margin-inline-end:18px; }
+.nbg.nbg-single > .nbg-h { cursor:default; }
+.nbg.nbg-single .nbg-caret { display:none; }
+.nbg-body { max-height:0; overflow:hidden; transition:max-height .2s var(--sb-ease); }
+.nbg.open > .nbg-body, .nbg.nbg-single > .nbg-body { max-height:640px; }
+/* ── nav item — fixed grid: icon · text · badge ── */
+.nb { display:grid; grid-template-columns:24px 1fr auto; align-items:center; gap:11px; min-height:42px; padding:0 12px; margin:2px 6px; border-radius:10px; font-size:14.5px; font-weight:600; color:rgba(255,255,255,.87); cursor:pointer; position:relative; transition:background .14s ease, color .14s ease; }
+.nb:hover { background:rgba(255,255,255,.08); color:#fff; }
+.nb.on { background:rgba(255,255,255,.15); color:#fff; }
+.nb.on::before { content:''; position:absolute; inset-inline-start:-6px; top:8px; bottom:8px; width:3.5px; border-radius:0 4px 4px 0; background:var(--accent); }
+.nb i { font-size:20px; width:24px; text-align:center; flex-shrink:0; color:rgba(255,255,255,.72); transition:color .14s ease; }
+.nb:hover i, .nb.on i { color:#fff; }
+.nb-t { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.4; }
+.nb .k { font-size:11px; color:rgba(255,255,255,.7); font-family:var(--fmono); font-variant-numeric:tabular-nums; }
+/* ── fly-out submenu (collapsed rail hover) — appended to body, escapes overflow ── */
+.sb-flyout { position:fixed; z-index:1300; min-width:214px; max-width:264px; background:var(--chrome); border:1px solid var(--chrome-line); border-radius:12px; box-shadow:0 14px 38px rgba(0,0,0,.42); padding:7px; animation:flyIn .16s ease-out; }
+.sb-flyout .fly-h { font-size:11.5px; font-weight:700; color:rgba(255,255,255,.72); padding:5px 10px 8px; }
+.sb-flyout .nb { margin:1px 0; min-height:40px; }
+@keyframes flyIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
 /* top-bar menu toggle */
 .sb-toggle { width:32px; height:32px; border:1px solid var(--chrome-line); background:rgba(255,255,255,.06); color:#fff; border-radius:var(--r); cursor:pointer; display:flex; align-items:center; justify-content:center; margin-inline-end:2px; transition:background .15s; flex:none; }
 .sb-toggle:hover { background:rgba(255,255,255,.14); }
@@ -156,32 +152,24 @@ body {
 .sb-scrim { position:fixed; inset:0; background:rgba(10,14,22,.5); z-index:1150; border:0; animation:sbScrimIn .18s ease; }
 .sb-scrim[hidden] { display:none; }
 @keyframes sbScrimIn { from{opacity:0} to{opacity:1} }
-/* ── MINI mode (desktop icons-only rail, hover to peek) ── */
+/* ── COLLAPSED (icons-only rail) — NO full-width hover-expand; workspace width is
+   preserved (padding-inline-start fixed to the rail). Hovering a section opens a
+   compact fly-out (built in sidebar.js) instead of reflowing the layout. ── */
 body.sb-mini .sb { width:var(--sb-mini-w); position:absolute; inset-block:0; inset-inline-start:0; z-index:45; }
 body.sb-mini .layout { padding-inline-start:var(--sb-mini-w); }
-body.sb-mini .sb-search-wrap { display:none; }
-body.sb-mini .sb-pin { margin:0 auto; }
-body.sb-mini .nbg-h, body.sb-mini .nbg-caret { display:none; }
+body.sb-mini .sb-tools { justify-content:center; }
+body.sb-mini .nbg-h { display:none; }
+body.sb-mini .nbg { padding:2px 8px; border-top:1px solid var(--chrome-line); margin-top:3px; padding-top:5px; }
+body.sb-mini .nbg:first-child { border-top:0; margin-top:0; padding-top:2px; }
 body.sb-mini .nbg-body { max-height:none !important; }
-body.sb-mini .nb-t, body.sb-mini .nb .k, body.sb-mini .nb-star { display:none !important; }
-body.sb-mini .nb { justify-content:center; padding:0; margin:2px 8px; gap:0; }
-body.sb-mini .nbg + .nbg { border-top:1px solid var(--chrome-line); margin-top:3px; padding-top:3px; }
-body.sb-mini .sb:hover { width:var(--sbw); box-shadow:-6px 0 22px rgba(0,0,0,.28); }
-body.sb-mini .sb:hover .sb-search-wrap { display:flex; }
-body.sb-mini .sb:hover .nbg-h { display:flex; }
-body.sb-mini .sb:hover .nb-t, body.sb-mini .sb:hover .nb .k { display:block; }
-body.sb-mini .sb:hover .nb { justify-content:flex-start; padding:0 12px; gap:9px; }
-body.sb-mini .sb:hover .nbg + .nbg { border-top:0; margin-top:0; padding-top:0; }
-/* accessible focus */
-.sb-search:focus-visible, .sb-toggle:focus-visible, .sb-pin:focus-visible, .sb-search-x:focus-visible,
-.nbg-h:focus-visible, .nb:focus-visible, .nb-star:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
-/* search filtering */
-body.sb-searching .sb-favs { display:none; }
-body.sb-searching .nbg.sb-empty { display:none; }
-body.sb-searching .nbg-body .nb { display:none; }
-body.sb-searching .nbg-body .nb.sb-hit { display:flex; }
+body.sb-mini .nb-t, body.sb-mini .nb .k { display:none !important; }
+body.sb-mini .nb { grid-template-columns:1fr; justify-items:center; padding:0; margin:3px 8px; min-height:42px; }
+body.sb-mini .nb.on::before { inset-inline-start:-8px; }
+/* accessible focus — highly visible on the navy chrome */
+.sb-toggle:focus-visible, .sb-pin:focus-visible,
+.nbg-h:focus-visible, .nb:focus-visible { outline:2px solid #fff; outline-offset:-2px; border-radius:10px; }
 @media(prefers-reduced-motion:reduce){
-  .sb, .nbg-body, .nbg-caret, .sb-scrim, .nb, .nb-star, .sb-search { transition:none !important; animation:none !important; }
+  .sb, .nbg-body, .nbg-caret, .sb-scrim, .nb, .sb-flyout { transition:none !important; animation:none !important; }
 }
 
 .main { flex:1; overflow-y:auto; background:var(--bg); scrollbar-width:thin; scrollbar-color:var(--bd) transparent; scroll-behavior:smooth; }
@@ -341,11 +329,18 @@ select.fs{padding:7px 11px;border-radius:var(--r);border:1px solid var(--bd2);ba
   .uchip{padding:0 7px 0 4px} .uname{font-size:11px} .urole{display:none}
   .layout{flex-direction:column;padding-inline-start:0 !important} .main{padding-bottom:80px;-webkit-overflow-scrolling:touch} .pg{padding:12px 10px}
   /* Overlay drawer: hidden off-canvas, slides in over the content (RTL: from the inline-start edge). */
-  .sb{position:fixed !important;inset-block:0;inset-inline-start:0;width:min(280px,82vw);z-index:1200;transform:translateX(100%);transition:transform .2s ease;box-shadow:none}
+  .sb{position:fixed !important;inset-block:0;inset-inline-start:0;width:min(292px,86vw);z-index:1200;transform:translateX(100%);transition:transform .2s var(--sb-ease);box-shadow:none}
   body.sb-overlay-open .sb{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.5)}
-  body.sb-mini .sb{width:min(280px,82vw)} .sb-pin{display:none}
-  body.sb-mini .nb{justify-content:flex-start;padding:0 12px;gap:9px;margin:1px 8px}
-  body.sb-mini .nb-t,body.sb-mini .nbg-h{display:flex !important}
+  /* Mobile = full accordion drawer (never the icons-only rail): show labels + headers,
+     restore the grid, and give comfortable touch targets. */
+  .sb-pin{display:none}
+  body.sb-mini .sb{width:min(292px,86vw);position:fixed}
+  body.sb-mini .sb-tools{justify-content:flex-end}
+  body.sb-mini .nbg{border-top:0;margin-top:0;padding:1px 10px}
+  body.sb-mini .nbg-h{display:grid !important}
+  body.sb-mini .nb{grid-template-columns:24px 1fr auto;justify-items:stretch}
+  body.sb-mini .nb-t{display:block !important}
+  .sb .nb{min-height:50px;font-size:15.5px} .sb .nbg-h{padding:13px 10px 8px} .sb .nbg-t{font-size:12px}
   #mobile-nav{position:fixed;bottom:0;left:0;right:0;height:62px;background:var(--chrome);border-top:1px solid var(--chrome-line);box-shadow:0 -1px 4px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-around;z-index:200;padding:0 4px}
   .mnb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border-radius:10px;color:rgba(255,255,255,.45);cursor:pointer;transition:all .15s;flex:1;max-width:70px}
   .mnb.on{color:#fff;background:rgba(255,255,255,.14)} .mnb i{font-size:20px} .mnb span{font-size:9px;font-weight:500;white-space:nowrap}
@@ -1720,13 +1715,10 @@ body:not(.light) .pill.on,body:not(.light) .pb.on{background:var(--dx-lime);bord
       (the previous warm-charcoal palette clashed with Theme-01).
    4) On-screen statement + legacy chips aligned to #0F1B33.
    ═══════════════════════════════════════════════════════════════════════════ */
-/* 1 — flat sidebar */
-.nbg-body{max-height:none !important;overflow:visible}
-.nbg-caret{display:none !important}
-.nbg-h{pointer-events:none;cursor:default;padding:13px 14px 3px}
-.nbg-t{color:rgba(255,255,255,.44);font-size:9px;letter-spacing:.14em}
+/* 1 — sidebar: SUPERSEDED by Navigation v2 (accordion + premium typography).
+   The Theme-01 "flat / all-open" overrides are intentionally removed so the frozen
+   v2 rules (see "SIDEBAR v2" block above) govern collapse, carets and header type. */
 .nbg + .nbg{margin-top:2px}
-body.sb-mini .sb:hover .nbg-h{display:flex}
 /* 2 — mobile chrome */
 :root{--navy2:#16273D}
 @media(max-width:768px){
