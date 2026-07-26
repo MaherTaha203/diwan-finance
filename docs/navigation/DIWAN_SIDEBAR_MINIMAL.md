@@ -30,54 +30,73 @@
   backgrounds, no colored containers.
 - **Typography** — simple, readable, balanced; Arabic and English both excellent; no
   oversized fonts (14 px labels).
-- **Spacing** — generous but efficient (42 px rows, 12–14 px group gaps); comfortable
-  click targets; no wasted space.
+- **Spacing** — compact but comfortable (≈37 px rows, ~10 px group gaps); real click
+  targets; no wasted vertical space, so the whole list fits one screen.
 
 **Philosophy:** *"I don't notice it when I don't need it, but it is always exactly
 where I expect it."* Elegant because restrained, not because decorated.
 
-## Navigation order — frequency-based (minimize scrolling)
+## Navigation order — workflow-first (not alphabetical, not history, not frequency alone)
 
-The order does **not** preserve the old structure; it follows the **working day**, so
-common pages sit under the cursor and become muscle memory. Groups are separated by
-gaps only — no titles.
+The order follows the **treasurer's natural workflow**: top→bottom is the sequence
+they actually move through during the day. Groups are separated by **gaps only** — no
+titles — and each group has **room to grow** so new modules don't crowd the layout.
+Reference model (generic): *Dashboard → Members → Registrations → Receipts/Payments →
+Treasury → [Teachers] → Reports → Settings*. Diwan has no "Teachers"; its operational
+modules are the two funds, donations, and reservations, mapped below.
 
-**Group 1 — daily operations (top, opened dozens of times/day)**
+**1 · Start & people**
 1. لوحة التحكم · Dashboard
-2. إيصالات الغداء · Lunch Receipts
-3. مصاريف الغداء · Lunch Expenses
-4. إيصالات الديوان · Diwan Receipts
-5. مصاريف الديوان · Diwan Expenses
-6. الاشتراكات السنوية · Annual Dues
+2. أعضاء العائلة · Members
 
-**Group 2 — frequent modules**
-7. أعضاء العائلة · Members
-8. التحصيل · Collection
-9. التبرعات · Donations
-10. الحجوزات · Reservations
+**2 · Register & collect dues**
+3. الاشتراكات السنوية · Registrations / Dues
+4. التحصيل · Collection
 
-**Group 3 — reports (after operational work)**
-11. تقرير المديونية · Debt Report
-12. الأعضاء المتأخرون · Delinquent
-13. كشوف الحساب · Statements
+**3 · Money in / out (receipts & payments)**
+5. إيصالات الغداء · Lunch Receipts
+6. مصاريف الغداء · Lunch Payments
+7. إيصالات الديوان · Diwan Receipts
+8. مصاريف الديوان · Diwan Payments
 
-**Group 4 — administration & configuration (bottom, rarely used)**
-14. المستخدمون · Users
-15. الإعدادات · Settings
-16. النسخ الاحتياطي · Backup
+**4 · Position & other activity**
+9. الخزينة والمركز المالي · Treasury
+10. التبرعات · Donations
+11. الحجوزات · Reservations
+
+**5 · Reports (after the work)**
+12. تقرير المديونية · Debt Report
+13. الأعضاء المتأخرون · Delinquent
+14. كشوف الحساب · Statements
+
+**6 · Administration & settings (bottom, rare)**
+15. المستخدمون · Users
+16. الإعدادات · Settings
+17. النسخ الاحتياطي · Backup
 
 ### Why this order
-- **Daily operational pages first** — receipts and dues are entered constantly; they
-  never move from the top so the hand learns them.
-- **Reports after operations** — consulted, not operated; they sit below the daily work.
-- **Configuration & administration last** — touched occasionally; they migrate to the
-  bottom and out of the way.
-- **Fits a standard monitor** — 16 rows at 42 px + small gaps + brand/footer stay
-  within a normal desktop height, so the important pages need **no scrolling**; the
-  collapsed rail exposes the **same order** as icons.
-- **Muscle memory** — after a few days the user should stop thinking *"where is this
-  page?"*; navigation becomes automatic through consistent ordering and minimal
-  movement.
+- **Follows the day, not the file system** — the user opens the dashboard, works with
+  members, records subscriptions and collects, issues receipts and pays expenses,
+  then checks the treasury. The sidebar mirrors that path top-to-bottom.
+- **Operational pages stay above the fold** — the primary daily work (steps 1–4) sits
+  at the top and is always visible without scrolling on a standard desktop.
+- **Reports after operations, admin last** — consulted after the work; configuration
+  is touched rarely and migrates to the bottom, out of the way.
+- **Muscle memory** — because the order matches the workflow and never changes, after
+  a few days the hand learns it; the user stops asking *"where is this page?"* and the
+  sidebar disappears mentally.
+
+## Future-proof & compact
+
+- **Room to grow** — each group is a logical bucket with expansion space: a new fund
+  page slots into *Money in/out*, a new report into *Reports*, a new admin page into
+  *Administration* — the top-to-bottom workflow logic and the above-the-fold
+  operational block stay intact as the system grows.
+- **Compact, one screen** — reduced vertical padding (≈37 px rows, ~10 px group gaps),
+  comfortable click targets, no wasted space; all 17 primary pages fit within a
+  standard desktop sidebar height **without scrolling** (verified: content height =
+  visible height). The collapsed rail exposes the **same order** as icons with
+  tooltips.
 
 ## Production notes
 
