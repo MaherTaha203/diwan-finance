@@ -108,20 +108,70 @@ const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#
 +'@page{size:A4 portrait;margin:0}'
 +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tfoot{display:table-footer-group}tr{page-break-inside:avoid}.dfoot,.cards,.amount,table.dt tr.final{page-break-inside:avoid}.dh,.rule,.title,.period{page-break-after:avoid}}';
 
+/* PRINT-001 · PR-1 — Unified print renderer.
+   Renders into an OFF-SCREEN, same-origin <iframe> (never a popup window) and
+   drives printing from inside that document once its fonts + QR have actually
+   loaded. This replaces the old window.open + fixed setTimeout(…,900) approach:
+     · iframes are not subject to popup blockers → printing works on iOS Safari
+       and anywhere a popup would have been suppressed (ROOT-10).
+     · print() fires on document.fonts.ready (with a safety cap), not a blind
+       900ms timer, so the web font is applied before print → no FOUT reflow and
+       no blank QR (ROOT-9). A `printed` guard prevents a double dialog if both
+       fonts.ready and the safety timer resolve.
+   The document body, PRINT_TOKENS and the per-call css are byte-for-byte the
+   same as before — this is a delivery-mechanism change only, no layout change. */
 function openPrintWin(css,body){
-  const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
-    +'<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">'
-    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>'
-    +'<style>'+PRINT_TOKENS+css+'</style></head><body>'+body
-    +'<script>window.onload=function(){'
-    +'document.querySelectorAll("[data-qr-url]").forEach(function(el){'
+  /* Early inline bootstrap — the FIRST thing in <head>, after only the inline
+     <style> (inline styles never block script execution; an external stylesheet
+     <link> would, which is why the fonts are injected from here instead of a
+     parser-blocking <link>). It:
+       · injects the web-font stylesheet and the QR library ASYNCHRONOUSLY, so a
+         slow/unreachable CDN can never stall parsing or printing;
+       · draws QR codes once the lib is available (with retries);
+       · fires print() gated on document.fonts.ready, but ALWAYS within an absolute
+         safety cap (print never depends on any network resource);
+       · a single `printed` guard prevents a double dialog;
+       · notifies the parent on afterprint so the iframe can be reclaimed. */
+  const bootstrap='<script>(function(){'
+    +'var FONTS="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";'
+    +'var QRLIB="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";'
+    +'try{var fl=document.createElement("link");fl.rel="stylesheet";fl.href=FONTS;document.head.appendChild(fl);}catch(e){}'
+    +'var printed=false;'
+    +'var go=function(){if(printed)return;printed=true;try{window.focus();}catch(e){}try{window.print();}catch(e){}};'
+    +'var drawQR=function(){try{if(window.QRCode){document.querySelectorAll("[data-qr-url]").forEach(function(el){'
+    +'if(el.__qrDone)return;el.__qrDone=1;'
     +'new QRCode(el,{text:el.getAttribute("data-qr-url"),width:52,height:52,colorDark:"#17202E",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});'
-    +'});'
-    +'setTimeout(function(){window.print();},900);'
-    +'};<\/script></body></html>';
-  const win=window.open('','_blank','width=850,height=950');
-  if(win){win.document.write(html);win.document.close();}
-  else toast(window.t?window.t('errors.no_print'):'يرجى السماح بالنوافذ المنبثقة','warn');
+    +'});}}catch(e){}};'
+    +'try{var qs=document.createElement("script");qs.src=QRLIB;qs.onload=drawQR;document.head.appendChild(qs);}catch(e){}'
+    +'window.addEventListener("afterprint",function(){try{if(window.parent&&window.parent.__diwanPrintDone)window.parent.__diwanPrintDone();}catch(e){}});'
+    +'document.addEventListener("DOMContentLoaded",function(){drawQR();setTimeout(drawQR,200);});'
+    +'var fire=function(){drawQR();go();};'
+    +'if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){setTimeout(fire,80);}).catch(fire);}'
+    +'setTimeout(fire,1200);'  /* absolute cap: print even if fonts/QR never resolve */
+    +'})();<\/script>';
+  const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
+    +'<style>'+PRINT_TOKENS+css+'</style>'+bootstrap+'</head><body>'+body+'</body></html>';
+  try{
+    const prev=document.getElementById('diwan-print-frame');
+    if(prev) prev.remove();
+    const frame=document.createElement('iframe');
+    frame.id='diwan-print-frame';
+    frame.setAttribute('aria-hidden','true');
+    /* off-screen but present in the render tree (never display:none / visibility:hidden,
+       which would suppress the printed content) */
+    frame.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+    const cleanup=function(){try{frame.remove();}catch(e){}};
+    window.__diwanPrintDone=cleanup;
+    /* srcdoc (not document.write): parses as a normal same-origin document so the
+       inline bootstrap runs and its async-injected font/QR resources load cleanly.
+       document.write would stall its parser on the first blocking external node. */
+    frame.srcdoc=html;
+    document.body.appendChild(frame);
+    /* safety net: reclaim the frame even if afterprint never fires (dialog cancelled) */
+    setTimeout(cleanup,60000);
+  }catch(e){
+    try{toast('تعذّرت تهيئة الطباعة','warn');}catch(_){}
+  }
 }
 
 /* Real PDF file DOWNLOAD — shares the exact same body + PRINT_TOKENS as the
