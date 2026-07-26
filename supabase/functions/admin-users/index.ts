@@ -20,10 +20,21 @@ const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const admin = createClient(URL_, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-async function audit(action: string, actor: string, targetId: string | null, description: string) {
+// AUTH-003: request-scoped actor context so every audit row carries actor id + IP.
+let CTX: { actorId: string | null; ip: string | null } = { actorId: null, ip: null };
+function clientIp(req: Request): string | null {
+  const xf = req.headers.get('x-forwarded-for');
+  return xf ? xf.split(',')[0].trim() : (req.headers.get('x-real-ip') || null);
+}
+async function audit(
+  action: string, actor: string, targetId: string | null, description: string,
+  extra: { old_data?: unknown; new_data?: unknown; reason?: string } = {},
+) {
   try {
     await admin.from('audit_log').insert({
       action, user_name: actor, table_name: 'auth', record_id: targetId, description,
+      actor_user_id: CTX.actorId, actor_role: 'admin', ip: CTX.ip,
+      old_data: extra.old_data ?? null, new_data: extra.new_data ?? null, reason: extra.reason ?? null,
     });
   } catch (_) { /* audit must never break the operation */ }
 }
@@ -78,6 +89,7 @@ Deno.serve(async (req: Request) => {
 
   const actor = await requireAdmin(req);
   if (!actor) return json({ error: 'not_admin' }, 401);
+  CTX = { actorId: actor.id, ip: clientIp(req) };   // AUTH-003: audit actor context
 
   let body: any;
   try { body = await req.json(); } catch { return json({ error: 'bad_json' }, 400); }
@@ -128,7 +140,14 @@ Deno.serve(async (req: Request) => {
         if (!uid) return json({ error: 'user_id_required' }, 400);
         const patch: any = {};
         if (body.full_name != null) patch.full_name = String(body.full_name).trim();
-        if (body.role != null) { if (VALID_ROLES.indexOf(body.role) < 0) return json({ error: 'invalid_role' }, 400); patch.role = safeRole(body.role); }
+        // AUTH-003: capture the prior role so a role change is audited old→new.
+        let prevRole: string | null = null;
+        if (body.role != null) {
+          if (VALID_ROLES.indexOf(body.role) < 0) return json({ error: 'invalid_role' }, 400);
+          patch.role = safeRole(body.role);
+          const { data: pr } = await admin.from('user_roles').select('role').eq('user_id', uid).maybeSingle();
+          prevRole = pr?.role ?? null;
+        }
         const email = body.email != null ? (String(body.email).trim().toLowerCase() || null) : undefined;
         const phone = body.phone != null ? (normalizePhone(body.phone) || null) : undefined;
         if (email !== undefined) patch.email = email;
@@ -146,7 +165,15 @@ Deno.serve(async (req: Request) => {
         }
         // AUTH-002 D5/F-6: a role change (esp. a downgrade) takes effect immediately, not on the
         // next token refresh — revoke sessions so the new authority applies at once.
-        if (patch.role !== undefined) await revokeSessions(uid);
+        if (patch.role !== undefined) {
+          await revokeSessions(uid);
+          // AUTH-003: an explicit, old→new role-change audit record (validate + audit +
+          // revoke + apply-immediately are all satisfied here — the only role-change path).
+          if (patch.role !== prevRole) {
+            await audit('role_change', actor.label, uid, `Role ${prevRole || '—'} → ${patch.role}`,
+              { old_data: { role: prevRole }, new_data: { role: patch.role } });
+          }
+        }
         await audit('user_updated', actor.label, uid, `Updated ${Object.keys(patch).join(', ') || 'identity'}`);
         return json({ ok: true });
       }

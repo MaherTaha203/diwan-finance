@@ -21,8 +21,9 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
 const admin = createClient(URL_, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
+let REQ_IP: string | null = null;   // AUTH-003: request IP for audit (set per request)
 async function audit(action: string, actor: string, targetId: string | null, description: string) {
-  try { await admin.from('audit_log').insert({ action, user_name: actor, table_name: 'auth', record_id: targetId, description }); } catch (_) {}
+  try { await admin.from('audit_log').insert({ action, user_name: actor, table_name: 'auth', record_id: targetId, description, actor_user_id: targetId, ip: REQ_IP }); } catch (_) {}
 }
 
 /* Salted reuse fingerprint — SHA-256(userId::password). Mirrors the retired client logic. */
@@ -35,6 +36,8 @@ async function fingerprint(pw: string, salt: string): Promise<string> {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const _xf = req.headers.get('x-forwarded-for');   // AUTH-003: audit IP
+  REQ_IP = _xf ? _xf.split(',')[0].trim() : (req.headers.get('x-real-ip') || null);
 
   // 1 · Authenticate the caller from their Bearer token.
   const authz = req.headers.get('Authorization') || '';
