@@ -1,0 +1,314 @@
+<title>Four Lessons Applied — Full Diwan System</title>
+<style>
+  :root{
+    --bg:#eef1f5;--card:#fff;--tx:#131a24;--tx2:#54626f;--tx3:#8492a0;--line:#dce2e9;--accent:#12507a;
+    --rail:#0c1626;--panel:#14223c;--chromeln:rgba(255,255,255,.09);
+    --ink:#e7edf6;--ink2:rgba(231,237,246,.82);--ink3:rgba(231,237,246,.44);
+    --lime:#CBF000;--limeink:#1a2205;
+    --gold:#d8b25a;--blue:#8db0e0;--slate:#9fb0c3;--purple:#a99ad9;--pink:#d491b4;--teal:#5fcdb0;--grey:#9aa7b4;
+    --pos:#5fcdb0;--warn:#d9b44a;--neg:#e08b5a;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Arabic",Tahoma,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  @media (prefers-color-scheme:dark){:root{--bg:#0a0f16;--card:#131b25;--tx:#e7edf3;--tx2:#94a3b1;--tx3:#66747f;--line:#212b36;--accent:#4ab0e0;}}
+  :root[data-theme="light"]{--bg:#eef1f5;--card:#fff;--tx:#131a24;--tx2:#54626f;--tx3:#8492a0;--line:#dce2e9;--accent:#12507a;}
+  :root[data-theme="dark"]{--bg:#0a0f16;--card:#131b25;--tx:#e7edf3;--tx2:#94a3b1;--tx3:#66747f;--line:#212b36;--accent:#4ab0e0;}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.55}
+  svg{flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 22px 100px}
+  header.mast{padding:50px 0 20px;border-bottom:2px solid var(--tx)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:0 0 13px}
+  h1{font-size:clamp(25px,4.2vw,42px);line-height:1.06;letter-spacing:-.02em;margin:0;font-weight:800;text-wrap:balance}
+  .lede{max-width:66ch;color:var(--tx2);font-size:17.5px;margin:15px 0 0}
+
+  .proto-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:22px 0 12px}
+  .plabel{font-family:var(--mono);font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card)}
+  .seg button{border:0;background:transparent;color:var(--tx2);font-family:var(--sans);font-size:12.5px;font-weight:600;padding:7px 12px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#fff}
+  .seg.big button.on{background:var(--lime);color:var(--limeink)}
+
+  .lessonbar{border:1px solid var(--line);border-radius:13px;background:var(--card);padding:14px 16px;margin:6px 0 14px}
+  .lessonbar .h{font-weight:750;font-size:15px;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .lessonbar .h .n{font-family:var(--mono);font-size:10.5px;background:color-mix(in srgb,var(--lime) 18%,transparent);color:#7a8a00;border-radius:100px;padding:2px 9px;font-weight:700}
+  .lessonbar p{margin:0;font-size:13px;color:var(--tx2)}
+  .lessonbar p b{color:var(--tx)}
+
+  .device{height:640px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--bg);box-shadow:0 24px 64px rgba(8,14,24,.2);display:flex;flex-direction:column}
+  .dtop{height:54px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;padding:0 16px;flex:none}
+  .dtop .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:14px}
+  .dtop .logo{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,var(--lime),#9fbe00);display:grid;place-items:center;color:var(--limeink);font-weight:900;font-size:13px}
+  .dtop .crumb{color:var(--tx3);font-size:12.5px;margin-inline-start:8px}.dtop .crumb b{color:var(--tx);font-weight:700}
+  .dtop .uav{margin-inline-start:auto;width:27px;height:27px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}
+  .dbody{flex:1;display:flex;min-height:0;padding:11px;gap:11px}
+
+  /* rail */
+  .rail{width:62px;flex:none;background:var(--rail);border-radius:15px;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:3px;box-shadow:0 12px 30px -14px rgba(0,0,0,.6)}
+  .rail .rlogo{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.06);display:grid;place-items:center;color:var(--ink);margin-bottom:6px}
+  .rail .rlogo svg{width:19px;height:19px}
+  .rail .rdiv{width:22px;height:1px;background:var(--chromeln);margin:0 0 4px}
+  .rtile{position:relative;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--ink2);cursor:pointer;transition:background .13s var(--ease),color .13s,transform .13s}
+  .rtile svg{width:21px;height:21px}
+  .rtile:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+  .rtile.on{background:rgba(255,255,255,.14);transform:scale(1.03)}
+  .rtile.on svg{color:var(--tone)}
+  .rtile.on::before{content:'';position:absolute;inset-inline-start:-10px;top:9px;bottom:9px;width:3.5px;border-radius:0 4px 4px 0;background:var(--lime)}
+  .rtile .rbadge{position:absolute;top:4px;inset-inline-end:4px;width:7px;height:7px;border-radius:50%;background:var(--neg);border:1.5px solid var(--rail)}
+
+  /* persistent context panel */
+  .ctx{width:264px;flex:none;background:var(--panel);border-radius:15px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 34px -16px rgba(0,0,0,.55);border:1px solid var(--chromeln)}
+  .ctx-h{display:flex;align-items:center;gap:10px;padding:16px 17px 12px}
+  .ctx-h .mi{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);display:grid;place-items:center;color:var(--tone)}
+  .ctx-h .mi svg{width:19px;height:19px}
+  .ctx-h b{font-size:15.5px;font-weight:800;color:#fff;display:block;line-height:1.2}
+  .ctx-h s{font-size:11px;color:var(--ink3);font-family:var(--mono);text-decoration:none}
+  .ctx-sep{height:1px;background:var(--chromeln);margin:0 15px}
+  .ctx-scroll{flex:1;overflow-y:auto;padding:9px 11px 12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+  .cta{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--chromeln);border-radius:10px;padding:9px;margin:2px 2px 8px;color:var(--ink2);font-weight:700;font-size:13px;cursor:pointer}
+  .cta svg{width:16px;height:16px;color:var(--tone)}
+  .cta:hover{background:rgba(255,255,255,.04);color:#fff}
+  .grp{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.03em;padding:13px 10px 5px;display:flex;align-items:center;gap:6px}
+  .grp .ct{margin-inline-start:auto;font-family:var(--mono);background:rgba(255,255,255,.07);border-radius:100px;padding:1px 7px;font-size:10px}
+  .pi{display:flex;align-items:center;gap:11px;min-height:42px;padding:0 11px;margin:2px 0;border-radius:10px;color:var(--ink2);cursor:pointer;font-size:14.5px;font-weight:600;position:relative}
+  .pi svg{width:19px;height:19px;color:var(--ink3)}
+  .pi .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pi:hover{background:rgba(255,255,255,.06);color:#fff}
+  .pi:hover svg{color:var(--ink2)}
+  .pi.on{color:#fff;font-weight:700}
+  .pi.on svg{color:#fff}
+  .pi.on::before{content:'';position:absolute;inset-inline-start:-9px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--lime)}
+  .pi.fill.on{background:rgba(255,255,255,.10)}                 /* default active fill */
+  .pi.weight.on{background:transparent}                        /* R5: weight-only */
+  .pi .bd{margin-inline-start:auto;font-family:var(--mono);font-size:10px;font-weight:800;border-radius:100px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 5px;color:#0e1116}
+  .pi .ws{margin-inline-start:auto;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--ink3);border:1px solid var(--chromeln);border-radius:5px;padding:1px 5px}
+  .pi .ws + .bd{margin-inline-start:6px}
+  .more{margin:4px 2px 2px;border:0;background:transparent;color:var(--ink3);font-family:var(--sans);font-size:12.5px;font-weight:700;cursor:pointer;padding:8px;width:calc(100% - 4px);text-align:start;border-radius:9px}
+  .more:hover{background:rgba(255,255,255,.05);color:#fff}
+  .floor{margin:8px 11px 12px;border-radius:12px;padding:13px 14px;background:rgba(255,255,255,.05);border:1px solid var(--chromeln)}
+  .floor .fk{font-size:10.5px;color:var(--ink3)}
+  .floor .fv{font-size:19px;font-weight:800;color:#fff;margin-top:3px;font-variant-numeric:tabular-nums}
+  .floor .fv .cu{font-size:11px;color:var(--lime);font-weight:700}
+  .floor .fr{display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--ink2)}
+  .floor .fr b{color:#fff;font-variant-numeric:tabular-nums}
+
+  /* workspace */
+  .work{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:15px;overflow:auto;padding:20px 22px}
+  .whead{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+  .wic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:#0e1116;background:var(--tone)}
+  .wic svg{width:24px;height:24px}
+  .whead h3{margin:0;font-size:19px;letter-spacing:-.01em}
+  .wtag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#0e1116;background:var(--tone);border-radius:100px;padding:3px 10px;margin-top:5px}
+  .wtag .dot{width:6px;height:6px;border-radius:50%;background:#0e1116;opacity:.55}
+  .kband{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin:16px 0}
+  @media(max-width:640px){.kband{grid-template-columns:1fr 1fr}}
+  .kp{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg);position:relative;overflow:hidden}
+  .kp::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:3px;background:var(--tone);opacity:.85}
+  .kp .k{font-size:10.5px;color:var(--tx3);font-weight:600}
+  .kp .v{font-size:18px;font-weight:800;margin-top:5px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .wtbl{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .wtbl .th,.wtbl .tr{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;padding:10px 14px;font-size:12.5px;align-items:center}
+  .wtbl .th{background:var(--bg);color:var(--tx3);font-weight:700;font-size:11px}
+  .wtbl .tr{border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .badge{font-size:10px;font-weight:700;border-radius:100px;padding:2px 8px}
+
+  .hintline{font-family:var(--mono);font-size:11.5px;color:var(--tx3);margin:9px 0 0;text-align:center}
+  footer{margin-top:46px;padding-top:20px;border-top:2px solid var(--tx);font-family:var(--mono);font-size:12px;color:var(--tx3)}
+</style>
+
+<div class="wrap" dir="rtl">
+  <header class="mast">
+    <p class="eyebrow">R1 · R3 · R4 · R5 — الدروس مطبَّقة على كامل نظام ديوان</p>
+    <h1>أربعةُ دروسٍ — لا أربعةُ أشكال</h1>
+    <p class="lede">لكل مرجعٍ درسٌ واحد استخلصناه وتجاهلنا تنفيذه. بدّل الدرس لترى كيف «يصبح النظام» حين نطبّق ذلك المبدأ وحده على نظام ديوان الكامل — مرحلتان (شريط + لوحة سياق دائمة + مساحة عمل)، بهوية ديوان النيليّة والليمونيّ المحصور. تُعرض الدروس <b>واحدًا واحدًا</b> — لا مزيجًا.</p>
+  </header>
+
+  <div class="proto-head">
+    <span class="plabel">الدرس</span>
+    <div class="seg big" id="seg-lesson"><button data-k="R1" class="on">R1 · المرساة</button><button data-k="R3">R3 · مستويان + إجراء</button><button data-k="R4">R4 · عدّادات وشارات</button><button data-k="R5">R5 · وزنٌ + توسّع</button></div>
+    <span class="plabel">اللغة</span><div class="seg" id="seg-lang"><button data-l="ar" class="on">ع</button><button data-l="en">EN</button></div>
+    <span class="plabel">الثيم</span><div class="seg" id="seg-theme"><button data-t="light" class="on">فاتح</button><button data-t="dark">داكن</button></div>
+  </div>
+
+  <div class="lessonbar" id="lessonbar"></div>
+
+  <div class="device" id="device" dir="rtl">
+    <div class="dtop">
+      <div class="brand"><span class="logo">د</span><span id="brandtxt">ديوان آل طه</span></div>
+      <span class="crumb" id="crumb"></span>
+      <span class="uav">م</span>
+    </div>
+    <div class="dbody">
+      <nav class="rail" id="rail" aria-label="التنقّل الأساسي"></nav>
+      <aside class="ctx" id="ctx" aria-label="تنقّل الوحدة"></aside>
+      <section class="work" id="work"></section>
+    </div>
+  </div>
+  <p class="hintline" id="hint"></p>
+
+  <footer>Four lessons applied · one at a time, never a collage · full Diwan two-stage system · principle not implementation · navy chrome · reserved lime · RTL</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var P=function(d){return '<svg viewBox="0 0 24 24">'+d+'</svg>';};
+  var I={
+    dash:P('<rect x="3" y="3" width="7" height="8" rx="1.4"/><rect x="14" y="3" width="7" height="5" rx="1.4"/><rect x="14" y="11" width="7" height="10" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/>'),
+    bank:P('<path d="M3 10l9-6 9 6"/><path d="M5 10v8M10 10v8M14 10v8M19 10v8"/><path d="M3 21h18"/>'),
+    kitchen:P('<path d="M6 3v8a2 2 0 0 0 4 0V3M8 11v10"/><path d="M15 3c-1.5 0-2 2-2 4s.5 3 2 3 2-1 2-3-.5-4-2-4zM15 13v8"/>'),
+    receipt:P('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'),
+    cash:P('<circle cx="9" cy="12" r="6"/><path d="M15 7a6 6 0 0 1 0 10"/>'),
+    file:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>'),
+    banknote:P('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>'),
+    calendar:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>'),
+    calStats:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/><path d="M8 17v-2M12 17v-4M16 17v-3"/>'),
+    calEvent:P('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>'),
+    users:P('<circle cx="9" cy="8" r="3.1"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M22 20a6 6 0 0 0-5-5.9"/>'),
+    user:P('<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>'),
+    userDollar:P('<circle cx="10" cy="8" r="3.3"/><path d="M4 20a6 6 0 0 1 9-5.2"/><path d="M18 12v7M16.6 13.4h2.1a1.1 1.1 0 0 1 0 2.2h-1.3a1.1 1.1 0 0 0 0 2.2H19"/>'),
+    userAlert:P('<circle cx="10" cy="8" r="3.3"/><path d="M4 20a6 6 0 0 1 10-4.5"/><path d="M19 12v4M19 19v.01"/>'),
+    coin:P('<circle cx="12" cy="12" r="8"/><path d="M12 8v8M10 10h3a1.4 1.4 0 0 1 0 2.8h-2a1.4 1.4 0 0 0 0 2.8h3"/>'),
+    reportMoney:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v6M10.5 13.2h2a1.3 1.3 0 0 1 0 2.4h-1.5a1.3 1.3 0 0 0 0 2.4h2"/>'),
+    heart:P('<path d="M12 20s-7-4.4-9.2-8.3C1.3 8.9 2.6 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.4 0 4.7 3.4 3.2 6.2C19 15.6 12 20 12 20z"/>'),
+    shield:P('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>'),
+    list:P('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'),
+    settings:P('<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.5 7l2.5 1.5M17 15.5l2.5 1.5M4.5 17l2.5-1.5M17 8.5L19.5 7"/>'),
+    database:P('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'),
+    plus:P('<path d="M12 5v14M5 12h14"/>')
+  };
+  var DOMAINS=[
+    {id:'ovw',icon:'dash',tone:'--teal',ar:'نظرة عامة',en:'Overview',pages:[
+      {id:'dash',icon:'dash',ar:'لوحة التحكم',en:'Dashboard'},{id:'treasury',icon:'bank',ar:'الخزينة والمركز المالي',en:'Treasury & Position',ws:1}]},
+    {id:'food',icon:'kitchen',tone:'--gold',ar:'صندوق الغداء',en:'Lunch Fund',pages:[
+      {id:'food-rec',icon:'receipt',ar:'إيصالات الغداء',en:'Lunch Receipts'},{id:'food-pay',icon:'cash',ar:'مصاريف الغداء',en:'Lunch Expenses'},{id:'food-stmt',icon:'file',ar:'كشف الغداء',en:'Lunch Statement'}]},
+    {id:'diwan',icon:'bank',tone:'--blue',ar:'صندوق الديوان',en:'Diwan Fund',pages:[
+      {id:'diwan-rec',icon:'receipt',ar:'إيصالات الديوان',en:'Diwan Receipts'},{id:'diwan-pay',icon:'banknote',ar:'مصاريف الديوان',en:'Diwan Expenses'},{id:'diwan-stmt',icon:'file',ar:'كشف الديوان',en:'Diwan Statement'}]},
+    {id:'mem',icon:'users',tone:'--slate',ar:'الأعضاء والاشتراكات',en:'Members & Dues',
+      pages:[
+        {id:'members',icon:'users',ar:'أعضاء العائلة',en:'Family Members'},{id:'member-stmt',icon:'user',ar:'كشف حساب عضو',en:'Member Statement'},{id:'member-ws',icon:'userDollar',ar:'وحدة العضو المالية',en:'Member Finance',ws:1},
+        {id:'annual',icon:'calendar',ar:'الاشتراكات السنوية',en:'Annual Dues'},{id:'dues-ws',icon:'calStats',ar:'بيئة الاشتراكات',en:'Dues Workspace',ws:1},{id:'collection',icon:'coin',ar:'بيئة التحصيل',en:'Collection',badge:'٢',btone:'--teal'},
+        {id:'debt',icon:'reportMoney',ar:'تقرير المديونية',en:'Debt Report'},{id:'delinq',icon:'userAlert',ar:'الأعضاء المتأخرون',en:'Delinquent',badge:'٤',btone:'--neg'}],
+      groups:[
+        {ar:'الأعضاء',en:'Members',n:'٣',ids:['members','member-stmt','member-ws']},
+        {ar:'الاشتراكات والتحصيل',en:'Dues & Collection',n:'٣',ids:['annual','dues-ws','collection']},
+        {ar:'التقارير',en:'Reports',n:'٢',ids:['debt','delinq']}]},
+    {id:'don',icon:'heart',tone:'--purple',ar:'التبرعات',en:'Donations',pages:[{id:'don',icon:'heart',ar:'سجل التبرعات',en:'Donations Log'}]},
+    {id:'res',icon:'calEvent',tone:'--pink',ar:'الحجوزات',en:'Reservations',pages:[{id:'res',icon:'calEvent',ar:'تقويم الحجوزات',en:'Reservations'}]},
+    {id:'sys',icon:'settings',tone:'--grey',ar:'النظام',en:'System',pages:[
+      {id:'users',icon:'shield',ar:'المستخدمون',en:'Users'},{id:'audit',icon:'list',ar:'سجل العمليات',en:'Audit Log'},{id:'settings',icon:'settings',ar:'الإعدادات',en:'Settings'},{id:'backup',icon:'database',ar:'النسخ الاحتياطي',en:'Backup'}]}
+  ];
+  // lesson definitions: default domain + panel flags + copy
+  var LESSONS={
+    R1:{dom:'ovw',page:'dash',flags:{floor:1},
+      n:'R1 · المرساة',t:{ar:'مرساةٌ ماليّة عند القاع',en:'Financial floor anchor'},
+      why:{ar:'قاعُ اللوحة يحمل «المركز المالي» دائمًا — رصيد الخزينة + حركة الشهر. <b>لماذا:</b> توجّهٌ ماليّ مستمرّ للمحاسب دون فتح صفحة، ويُطوى إلى مربّعٍ واحد. الليموني محجوزٌ للرقم المفتاح فقط.',en:'The panel floor always carries financial position. <b>Why:</b> constant orientation without opening a page; lime reserved for the key figure only.'}},
+    R3:{dom:'diwan',page:'diwan-rec',flags:{cta:'voucher',twoTier:1},
+      n:'R3 · مستويان + إجراء',t:{ar:'حالةٌ بمستويين + إجراءٌ أساسيّ حسب النطاق',en:'Two-tier active + scoped primary action'},
+      why:{ar:'الشريط يُعلّم <b>النطاق</b> النشط، واللوحة تُعلّم <b>الصفحة</b> النشطة — تعرف «أين» و«ماذا» معًا. وإجراءٌ أساسيّ يتبدّل بالنطاق («سند جديد»). <b>لماذا:</b> سرعةٌ في الإجراء الأكثر تكرارًا، ووضوحُ موقعٍ مزدوج.',en:'Rail marks the active module, panel marks the active page — you know "where" and "what" at once. A scoped primary action changes per domain. <b>Why:</b> speed on the most frequent action + dual location clarity.'}},
+    R4:{dom:'mem',page:'members',flags:{groups:1,counters:1,badges:1,railBadge:1},
+      n:'R4 · عدّادات وشارات',t:{ar:'عدّاداتٌ وشاراتٌ لحالةٍ حيّة',en:'Counters + live badges'},
+      why:{ar:'عناوين المجموعات تحمل عدّادًا، والصفوف تحمل شاراتٍ دلاليّة: <b>المتأخرون · ٤</b> (تحذير) و<b>التحصيل · ٢</b>. <b>لماذا:</b> يرى الإداريّ «ما يحتاج انتباهًا» من التنقّل قبل فتح الصفحة. الشارات بألوانٍ دلاليّة منفصلةٍ عن الليموني.',en:'Group headers carry counts; rows carry semantic badges (Delinquent · 4, Collection · 2). <b>Why:</b> admins see what needs attention from the nav itself. Semantic colors, separate from lime.'}},
+    R5:{dom:'mem',page:'members',flags:{weightOnly:1,showMore:4},
+      n:'R5 · وزنٌ + توسّع',t:{ar:'نشِطٌ بالوزن لا بالتعبئة + صمّام توسّع',en:'Active by weight, not fill + scale valve'},
+      why:{ar:'الصفحة النشطة بلا خلفية — <b>وزنٌ أثقل + مؤشّرٌ ليمونيّ</b> فقط (أهدأ حالةٍ ممكنة). والقوائم الطويلة تُختصَر بصمّام «عرض المزيد». <b>لماذا:</b> راحةُ الجلسات الطويلة، وقابليةُ التوسّع إلى ١٥٠+ صفحة دون أكورديون.',en:'Active page has no fill — heavier weight + lime marker only (calmest possible). Long lists cap with a show-more valve. <b>Why:</b> long-session comfort + scale to 150+ pages without accordion.'}}
+  };
+
+  var S={lesson:'R1',lang:'ar',theme:'light',domain:'ovw',page:'dash',expanded:false};
+  var root=document.documentElement;
+  function L(o){return S.lang==='en'?(o.en||o.ar):o.ar;}
+  function T(ar,en){return S.lang==='en'?en:ar;}
+  function domById(id){return DOMAINS.find(function(d){return d.id===id;});}
+  function pageById(dom,id){return dom.pages.find(function(p){return p.id===id;});}
+  function findPage(id){for(var i=0;i<DOMAINS.length;i++){var d=DOMAINS[i],p=pageById(d,id);if(p)return{p:p,d:d};}return null;}
+
+  var rail=document.getElementById('rail'), ctx=document.getElementById('ctx'), work=document.getElementById('work');
+
+  function renderRail(){
+    var lf=LESSONS[S.lesson].flags;
+    rail.innerHTML='<div class="rlogo">'+I.bank+'</div><div class="rdiv"></div>';
+    DOMAINS.forEach(function(d){
+      var t=document.createElement('button');
+      t.className='rtile'+(S.domain===d.id?' on':''); t.style.setProperty('--tone','var('+d.tone+')');
+      t.setAttribute('data-d',d.id); t.setAttribute('aria-label',L(d));
+      var rb=(lf.railBadge && d.id==='mem')?'<span class="rbadge"></span>':'';
+      t.innerHTML=I[d.icon]+rb;
+      t.onclick=function(){ selectDomain(d.id); };
+      rail.appendChild(t);
+    });
+  }
+  function pageRow(p,flags){
+    var acls=flags.weightOnly?'weight':'fill';
+    var trail='';
+    if(flags.badges && p.badge) trail='<span class="bd" style="background:var('+p.btone+')">'+p.badge+'</span>';
+    else if(p.ws) trail='<span class="ws">'+T('بيئة','WS')+'</span>';
+    return '<div class="pi '+acls+(S.page===p.id?' on':'')+'" data-p="'+p.id+'">'+I[p.icon]+'<span class="t">'+L(p)+'</span>'+trail+'</div>';
+  }
+  function renderCtx(){
+    var d=domById(S.domain), lf=LESSONS[S.lesson].flags;
+    var html='<div class="ctx-h"><div class="mi" style="--tone:var('+d.tone+')">'+I[d.icon]+'</div><div><b>'+L(d)+'</b><s>'+d.pages.length+' '+T('صفحات','pages')+'</s></div></div><div class="ctx-sep"></div><div class="ctx-scroll">';
+    if(lf.cta){ var ct=(S.domain==='mem')?T('عضو جديد','New member'):T('سند جديد','New voucher'); html+='<div class="cta" style="--tone:var('+d.tone+')">'+I.plus+ct+'</div>'; }
+    if(lf.groups && d.groups){
+      d.groups.forEach(function(g){
+        html+='<div class="grp">'+L(g)+(lf.counters?'<span class="ct">'+g.n+'</span>':'')+'</div>';
+        g.ids.forEach(function(id){ html+=pageRow(pageById(d,id),lf); });
+      });
+    } else {
+      var pages=d.pages;
+      if(lf.showMore && !S.expanded && pages.length>lf.showMore){
+        pages.slice(0,lf.showMore).forEach(function(p){ html+=pageRow(p,lf); });
+        html+='<button class="more" id="moreBtn">'+T('عرض المزيد','Show more')+' ('+(d.pages.length-lf.showMore)+') ▾</button>';
+      } else {
+        pages.forEach(function(p){ html+=pageRow(p,lf); });
+        if(lf.showMore && S.expanded && d.pages.length>lf.showMore) html+='<button class="more" id="moreBtn">'+T('عرض أقل','Show less')+' ▴</button>';
+      }
+    }
+    html+='</div>';
+    if(lf.floor){
+      html+='<div class="floor"><div class="fk">'+T('المركز المالي','Financial position')+'</div><div class="fv">٤٨٬٢٥٠ <span class="cu">'+T('شيكل','ILS')+'</span></div>'
+        +'<div class="fr"><span>'+T('واردات الشهر','Month in')+' <b>١٢٬٩٠٠</b></span><span>'+T('مصروفات','out')+' <b>٧٬٦٤٠</b></span></div></div>';
+    }
+    ctx.innerHTML=html;
+    ctx.querySelectorAll('[data-p]').forEach(function(el){ el.onclick=function(){ selectPage(el.getAttribute('data-p')); }; });
+    var mb=document.getElementById('moreBtn'); if(mb) mb.onclick=function(){ S.expanded=!S.expanded; renderCtx(); };
+    var cta=ctx.querySelector('.cta'); if(cta) cta.onclick=function(){};
+  }
+  function renderWork(){
+    var r=findPage(S.page)||{p:domById(S.domain).pages[0],d:domById(S.domain)};
+    document.getElementById('crumb').innerHTML=L(r.d)+' <span style="opacity:.5">›</span> <b>'+L(r.p)+'</b>';
+    work.style.setProperty('--tone','var('+r.d.tone+')');
+    var badges=[['مؤكَّد','ok'],['مؤكَّد','ok'],['معلّق','wr'],['مؤكَّد','ok']];
+    var enb=[['Posted','ok'],['Posted','ok'],['Pending','wr'],['Posted','ok']];
+    var desc=S.lang==='en'?['Receipt #4120','Receipt #4119','Voucher #308','Receipt #4118']:['إيصال #٤١٢٠','إيصال #٤١١٩','سند صرف #٣٠٨','إيصال #٤١١٨'];
+    var dates=['١٢/٠٧','١١/٠٧','١٠/٠٧','٠٩/٠٧'], amts=['٢٬٤٥٠','١٬٢٠٠','٨٥٠','٣٬١٠٠'];
+    if(S.lang==='en'){dates=['12/07','11/07','10/07','09/07'];amts=['2,450','1,200','850','3,100'];}
+    var bs=(S.lang==='en'?enb:badges);
+    var tbl='<div class="wtbl"><div class="th"><span>'+T('التاريخ','Date')+'</span><span>'+T('البيان','Description')+'</span><span>'+T('المبلغ','Amount')+'</span><span>'+T('الحالة','Status')+'</span></div>';
+    for(var i=0;i<4;i++){ tbl+='<div class="tr"><span>'+dates[i]+'</span><span>'+desc[i]+'</span><span style="font-weight:700">'+amts[i]+'</span><span class="badge" style="background:'+(bs[i][1]==='ok'?'rgba(95,205,176,.16);color:#2f9e7f':'rgba(217,180,74,.18);color:#9a7d1a')+'">'+bs[i][0]+'</span></div>'; }
+    tbl+='</div>';
+    work.innerHTML='<div class="whead"><div class="wic">'+I[r.p.icon]+'</div><div><h3>'+L(r.p)+'</h3><span class="wtag"><span class="dot"></span>'+L(r.d)+'</span></div></div>'
+      +'<div class="kband"><div class="kp"><div class="k">'+T('الرصيد الحالي','Balance')+'</div><div class="v">٤٨٬٢٥٠</div></div>'
+      +'<div class="kp"><div class="k">'+T('واردات الشهر','Month in')+'</div><div class="v">١٢٬٩٠٠</div></div>'
+      +'<div class="kp"><div class="k">'+T('مصروفات الشهر','Month out')+'</div><div class="v">٧٬٦٤٠</div></div>'
+      +'<div class="kp"><div class="k">'+T('عدد الحركات','Records')+'</div><div class="v">٣٤٧</div></div></div>'+tbl;
+  }
+  function selectDomain(id){ if(S.domain===id)return; S.domain=id; S.page=domById(id).pages[0].id; S.expanded=false; renderRail(); renderCtx(); renderWork(); }
+  function selectPage(id){ S.page=id; var r=findPage(id); if(r)S.domain=r.d.id; renderRail(); renderCtx(); renderWork(); }
+
+  function applyLesson(){
+    var Ls=LESSONS[S.lesson]; S.domain=Ls.dom; S.page=Ls.page; S.expanded=false;
+    var lb=document.getElementById('lessonbar');
+    lb.innerHTML='<div class="h"><span class="n">'+Ls.n+'</span>'+L(Ls.t)+'</div><p>'+L(Ls.why)+'</p>';
+    document.getElementById('hint').textContent=T('بدّل الدرس أعلاه · تنقّل في الشريط واللوحة · لاحظ العنصر الذي يجسّد درس هذا المرجع.','Switch the lesson above · navigate the rail and panel · notice the element that embodies this reference’s lesson.');
+    renderRail(); renderCtx(); renderWork();
+  }
+
+  function mark(seg,b){Array.prototype.forEach.call(seg.children,function(x){x.classList.toggle('on',x===b);});}
+  document.getElementById('seg-lesson').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.lesson=b.getAttribute('data-k');mark(this,b);applyLesson();});
+  document.getElementById('seg-lang').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.lang=b.getAttribute('data-l');mark(this,b);applyLangDir();applyLesson();});
+  document.getElementById('seg-theme').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.theme=b.getAttribute('data-t');mark(this,b);root.setAttribute('data-theme',S.theme);});
+  function applyLangDir(){ document.getElementById('device').setAttribute('dir',S.lang==='ar'?'rtl':'ltr'); document.getElementById('brandtxt').textContent=T('ديوان آل طه','Diwan Al Taha'); }
+
+  applyLangDir(); applyLesson();
+})();
+</script>
