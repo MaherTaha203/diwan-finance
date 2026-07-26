@@ -125,7 +125,8 @@ body {
 .nbg-h:hover { background:rgba(255,255,255,.05); }
 .nbg-t { font-size:11.5px; font-weight:700; color:rgba(255,255,255,.74); letter-spacing:.01em; display:flex; align-items:center; gap:7px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .nbg-caret { font-size:18px; color:rgba(255,255,255,.5); transition:transform .2s var(--sb-ease); flex:none; }
-.nbg.open > .nbg-h .nbg-caret { transform:rotate(180deg); }
+.nbg.open > .nbg-h .nbg-caret { transform:rotate(180deg); color:rgba(255,255,255,.68); }
+.nbg.open > .nbg-h .nbg-t { color:rgba(255,255,255,.94); }   /* expanded section reads clearly */
 .nbg.nbg-single > .nbg-h { cursor:default; }
 .nbg.nbg-single .nbg-caret { display:none; }
 .nbg-body { max-height:0; overflow:hidden; transition:max-height .2s var(--sb-ease); }
@@ -1810,13 +1811,17 @@ body:not(.light) .main,body:not(.light) .sb-scrollarea,body:not(.light) .modal,b
    language in the mini rail, and ONE traveling ink layer (.sb-ink, sidebar.js)
    that moves with the user between pages instead of a new rectangle appearing.
    ═══════════════════════════════════════════════════════════════════════════ */
-.nb{color:rgba(255,255,255,.62);border:0;position:relative;z-index:1;
+/* nav-v2 refinement: resting labels lifted for all-day readability; the active
+   ICON is calmed to white (lime is reserved for the thin active marker only, so
+   the icon never overpowers the label); active weight raised for typographic
+   hierarchy; the reserved lime bar is restored as the one important highlight. */
+.nb{color:rgba(255,255,255,.86);border:0;position:relative;z-index:1;
   transition:color .14s ease,background-color .14s ease}
 .nb i{transition:color .14s ease}
-.nb:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.93)}
-.nb.on{color:#fff;font-weight:600}
-.nb.on::before{display:none}
-.nb.on i{color:var(--dx-lime)}
+.nb:hover{background:rgba(255,255,255,.06);color:#fff}
+.nb.on{color:#fff;font-weight:700}
+.nb.on::before{display:block}
+.nb.on i{color:#fff}
 /* fallback layered fill (only if the traveling ink layer is unavailable) */
 .sb:not(.sb-has-ink) .nb.on{background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
