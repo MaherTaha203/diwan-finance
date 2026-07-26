@@ -2660,10 +2660,13 @@ body.nav-b .nbg-h:focus-visible{ outline:2px solid var(--dx-lime); outline-offse
    ═══════════════════════════════════════════════════════════════════════════ */
 :root{ --min-w:250px; --min-col:66px; }
 
-/* ── geometry: matte-black rail; a small top gap detaches it from the logo bar ── */
-body.nav-min .sb{ top:14px; bottom:0; inset-inline-start:0; width:var(--min-w); --sbw:var(--min-w);
+/* ── geometry: matte-black rail. The logo/actions chips float at top:14px and are
+   46px tall (ending ~y60), so the rail starts at 76px to sit clearly BELOW the logo
+   with a real gap between them (matches the previous detached spacing). ── */
+body.nav-min .sb{ top:76px; bottom:0; inset-inline-start:0; width:var(--min-w); --sbw:var(--min-w);
   background:#0a0a0b; color:#e9e9ea; border:0; border-inline-end:1px solid #161616;
-  border-radius:0; box-shadow:none; z-index:40; }
+  border-start-start-radius:16px; border-start-end-radius:16px;
+  border-end-start-radius:0; border-end-end-radius:0; box-shadow:none; z-index:40; }
 body.nav-min .layout{ padding-inline-start:var(--min-w); }
 body.nav-min.sb-min .sb{ width:var(--min-col); }
 body.nav-min.sb-min .layout{ padding-inline-start:var(--min-col); }
