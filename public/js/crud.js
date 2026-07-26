@@ -325,6 +325,41 @@ async function recordVoucherVersion(kind,preRow,postRow,reason,newVer){
     snapshot:postRow,edit_reason:reason,edited_by:editor,edited_at:nowIso});
   if(nErr) throw new Error(nErr.message);
 }
+/* AUTH-003 — accountant DRAFT amend: an in-place edit of the accountant's OWN voucher
+   while it is still editable/returned (Draft). Same voucher id/number is preserved; a
+   voucher_versions snapshot + audit are written. This is NOT a correction — corrections
+   after Administrator review/posting go through BO-02 void+replace (admin only). */
+async function _amendOwnVoucher(kind,id,upd,reason){
+  const tbl=kind==='payment'?'payments':'receipts';
+  const pre=(kind==='payment'?DB.payments:DB.receipts).find(x=>x.id===id);
+  if(!pre) return {ok:false,error:'not_found'};
+  const oldVer=Number(pre.version||1);
+  const patch=Object.assign({},upd,{version:oldVer+1});
+  /* Optimistic concurrency: only write if the row is still at the version we loaded.
+     If another device/user amended it first, 0 rows match → surface a conflict rather
+     than silently overwriting their change. */
+  const{data:updated,error}=await SB.from(tbl).update(patch).eq('id',id).eq('version',oldVer).select().maybeSingle();
+  if(error) return {ok:false,error:error.message};
+  if(!updated) return {ok:false,error:'conflict'};
+  const post=updated;
+  try{ await recordVoucherVersion(kind,pre,post,reason,newVer); }catch(_){}
+  try{ await logAction(kind==='payment'?'payment_edited':'receipt_edited',
+    `تعديل ${kind==='payment'?'سند صرف':'إيصال'} ${pre.no} (مسودّة) | ${reason}`,tbl,id,
+    {old_data:{amount_ils:pre.amount_ils,notes:pre.notes},new_data:{amount_ils:patch.amount_ils,notes:patch.notes},reason}); }catch(_){}
+  return {ok:true};
+}
+/* Admin "Mark as Reviewed": lock an accountant's Draft voucher (→ admin_review). The DB
+   ownership trigger records the transition in the audit log. */
+window.markVoucherReviewed=async function(kind,id){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  const tbl=kind==='payment'?'payments':'receipts';
+  const{error}=await SB.from(tbl).update({ownership_state:'admin_review'}).eq('id',id);
+  if(error){toast((window.LANG==='en'?'Failed: ':'فشل: ')+error.message,'err');return;}
+  toast(window.LANG==='en'?'Voucher locked for review':'تم قفل السند للمراجعة','ok');
+  if(window.closeM) window.closeM();
+  if(typeof loadAll==='function'){ try{ await loadAll(); }catch(_){} }
+};
+
 /* ═══ P2-C — CLASSIFICATION LOCK ═══════════════════════════════════════════
    After the migration, a voucher's financial classification (movement_type /
    destination_treasury / source_treasury / movement_reason / register_category)
@@ -580,14 +615,57 @@ window.onEditManualInput=function(){
     box.textContent='المجموع: ₪'+fmt(sum)+' / ₪'+fmt(amount)+(ok?'  ✓':'  ✗ يجب أن يتساوى');
     box.className='ibox'+(ok?'':' warn'); }
 };
-window.editRec=function(id){
-  if(!can.admin()){
-    toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
-    return;
+/* AUTH-003 — voucher lifecycle state helpers (label + badge style + admin "Return"). */
+window.voucherStateLabel=function(s){
+  const en=window.LANG==='en';
+  return ({editable:en?'Editable':'قابل للتعديل',admin_review:en?'Administrator Review':'مراجعة المدير',
+    returned:en?'Returned to Accountant':'أُرجع للمحاسب',locked:en?'Locked':'مقفل',
+    cancelled:en?'Cancelled':'ملغى'})[s||'editable']||s;
+};
+function _voucherStateStyle(s){
+  return ({editable:'background:#2f6d4f;color:#fff',admin_review:'background:#8a6d1f;color:#fff',
+    returned:'background:#3E5A78;color:#fff',locked:'background:#6b6b6b;color:#fff',
+    cancelled:'background:#8a3b3b;color:#fff'})[s||'editable']||'background:#5C5F65;color:#fff';
+}
+/* Inject a state badge (+ admin Return-to-Accountant when in review) into an edit modal. */
+window._voucherOwnBanner=function(prefix,row,kind){
+  const reason=document.getElementById('edit-'+prefix+'-reason'); if(!reason) return;
+  const host=reason.closest('.fi')||reason.parentElement; if(!host||!host.parentElement) return;
+  const id='edit-'+prefix+'-ownbanner';
+  const old=document.getElementById(id); if(old) old.remove();
+  const st=row.ownership_state||'editable', en=window.LANG==='en';
+  const b=document.createElement('div'); b.id=id; b.style.cssText='margin:0 0 10px;font-size:12px';
+  const badge='<span style="padding:2px 9px;border-radius:6px;font-weight:600;'+_voucherStateStyle(st)+'">'+window.voucherStateLabel(st)+'</span>';
+  let adminBtns='';
+  if(can.admin()){
+    if(st==='admin_review')
+      adminBtns=' <button type="button" class="btn ghost sm" onclick="window.returnToAccountant(\''+kind+'\',\''+row.id+'\')"><i class="ti ti-arrow-back-up"></i> '+(en?'Return to Accountant':'إرجاع للمحاسب')+'</button>';
+    else if(st==='editable'||st==='returned')
+      adminBtns=' <button type="button" class="btn ghost sm" onclick="window.markVoucherReviewed(\''+kind+'\',\''+row.id+'\')"><i class="ti ti-lock-check"></i> '+(en?'Mark reviewed (lock)':'مراجعة وقفل')+'</button>';
   }
+  b.innerHTML='<span style="color:var(--tx3)">'+(en?'Status':'الحالة')+':</span> '+badge+adminBtns;
+  host.parentElement.insertBefore(b,host);
+};
+/* Admin "Return to Accountant": re-open an in-review voucher for its owner. The DB
+   ownership trigger records the return in the audit log. */
+window.returnToAccountant=async function(kind,id){
+  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
+  const tbl=kind==='payment'?'payments':'receipts';
+  const{error}=await SB.from(tbl).update({ownership_state:'returned'}).eq('id',id);
+  if(error){toast((window.LANG==='en'?'Return failed: ':'فشل الإرجاع: ')+error.message,'err');return;}
+  toast(window.LANG==='en'?'Returned to accountant':'أُرجع السند للمحاسب','ok');
+  if(window.closeM) window.closeM();
+  if(typeof loadAll==='function'){ try{ await loadAll(); }catch(_){} }
+};
 
+window.editRec=function(id){
   const r = DB.receipts.find(x=>x.id===id);
   if(!r) return;
+  if(!window.canEditVoucher(r)){
+    toast(window.t ? window.t('errors.no_permission') : 'لا تملك صلاحية تعديل هذا السند','err');
+    try{ logAction('permission_violation','محاولة تعديل سند قبض غير مملوك/مقفل','receipts',id,{reason:'voucher_not_editable'}); }catch(_){}
+    return;
+  }
   /* Phase 10 — Year-End Lock (no override): closed-year vouchers are read-only. */
   if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 
@@ -630,18 +708,28 @@ window.editRec=function(id){
     }
   }
 
+  window._voucherOwnBanner('rec',r,'receipt');
   window.openM('edit-rec');
 };
-window.updateRec = async function () {
+/* AUTH-003 — ownership-scoped edit gate (mirrors RLS + the DB ownership trigger):
+   admin edits any voucher; an accountant edits only their OWN voucher while it is in
+   an owner-editable state (editable/returned). admin_review/locked/cancelled are
+   read-only for the accountant; historical (owner-less) vouchers are admin-only. */
+window.canEditVoucher=function(row){
+  if(!row) return false;
+  if(can.admin()) return true;
+  if(CUR&&CUR.role==='accountant'){
+    return row.created_by_uid===CU?.id && ['editable','returned'].includes(row.ownership_state||'editable');
+  }
+  return false;
+};
 
-if (!can.admin()) {
-  toast(window.t ? window.t('errors.no_permission') : 'المدير فقط','err');
-  return;
-}
+window.updateRec = async function () {
 
 const id = document.getElementById('edit-rec-id').value;
 const r = DB.receipts.find(x=>x.id===id);
 if(!r){ toast('السند غير موجود','err'); return; }
+if(!window.canEditVoucher(r)){ toast(window.t?window.t('errors.no_permission'):'لا تملك صلاحية تعديل هذا السند','err'); return; }
 /* Phase 10 — Year-End Lock (no override). */
 if(voucherLocked(r.receipt_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
 const amount = parseFloat(document.getElementById('edit-rec-amount').value) || 0;
@@ -684,8 +772,16 @@ if(r.fund_type==='donation' && r.donation_display_fund==='food'){
     upd.manual_allocation=false; upd.manual_debt_settlement=null; upd.manual_historical_donation=null; upd.manual_current_support=null;
   }
 }
-/* BO-02 · Correct Voucher (IG-009 · FD-034) — void + replace through the
-   Business Operations layer: the approved row is never edited. */
+/* AUTH-003 — path split: an accountant amends their OWN Draft (editable/returned)
+   voucher in place; an administrator corrects via BO-02 void+replace (IG-009/FD-034,
+   the only correction mechanism after review/posting). canEditVoucher already gated
+   this call, so a non-admin here necessarily owns an editable/returned voucher. */
+if(!can.admin()){
+  const _am=await _amendOwnVoucher('receipt',id,upd,reason);
+  if(!_am.ok){ toast(_am.error==='conflict'?(window.LANG==='en'?'This voucher was changed by someone else — reload and try again.':'تم تعديل هذا السند من مستخدم آخر — أعد التحميل وحاول مجددًا.'):((window.t?window.t('errors.generic_error'):'خطأ')+': '+_am.error),'err'); return; }
+  window.closeM(); await loadAll();
+  toast(window.LANG==='en'?'✓ Draft voucher updated':'✓ تم تحديث السند (مسودّة)','ok'); return;
+}
 const _res=await BusinessOps.editVoucher({ kind:'receipt', id, changes:upd, reason,
   logLabel:`تصحيح إيصال ${r.no} — إبطال + سند بديل — ₪${fmt(amount)} | السبب: ${reason}` });
 if(!_res.ok){ toast((window.t?window.t('errors.generic_error'):'خطأ')+': '+_res.error,'err'); return; }
@@ -716,16 +812,23 @@ window.editPay=function(id){
   window.openM('edit-pay');
 };
 window.updatePay=async function(){
-  if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
   const id=document.getElementById('edit-pay-id').value;
   const p=DB.payments.find(x=>x.id===id);
   if(!p){toast('السند غير موجود','err');return;}
+  if(!window.canEditVoucher(p)){toast(window.t?window.t('errors.no_permission'):'لا تملك صلاحية تعديل هذا السند','err');return;}
   if(voucherLocked(p.payment_date)){ toast('🔒 السنة المالية مقفلة — لا يمكن تعديل هذا السند','err'); return; }
   const amount=parseFloat(document.getElementById('edit-pay-amount').value)||0;
   const notes=document.getElementById('edit-pay-notes').value;
   const reason=(document.getElementById('edit-pay-reason')?.value||'').trim();
   if(amount<=0){toast(window.t('errors.invalid_amount'),'warn');return;}
   if(!reason){ toast('✋ سبب التعديل إلزامي','warn'); return; }
+  /* AUTH-003 — accountant amends own Draft in place; admin corrects via void+replace. */
+  if(!can.admin()){
+    const _am=await _amendOwnVoucher('payment',id,{amount_ils:amount,notes},reason);
+    if(!_am.ok){ toast(_am.error==='conflict'?(window.LANG==='en'?'This voucher was changed by someone else — reload and try again.':'تم تعديل هذا السند من مستخدم آخر — أعد التحميل وحاول مجددًا.'):((window.t?window.t('errors.generic_error'):'خطأ')+': '+_am.error),'err'); return; }
+    window.closeM(); await loadAll();
+    toast(window.LANG==='en'?'✓ Draft voucher updated':'✓ تم تحديث السند (مسودّة)','ok'); return;
+  }
   /* BO-02 · Correct Voucher (IG-009 · FD-034) — void + replace: the approved row is never edited. */
   const _res=await BusinessOps.editVoucher({ kind:'payment', id, changes:{amount_ils:amount,notes}, reason,
     logLabel:`تصحيح سند صرف ${p.no} — إبطال + سند بديل — ₪${fmt(amount)} | السبب: ${reason}` });

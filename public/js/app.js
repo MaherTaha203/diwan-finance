@@ -9,8 +9,8 @@ window.FOOD_OPENING_USD=0;window.FOOD_OPENING_JOD=0;
 window.DIWAN_OPENING_USD=0;window.DIWAN_OPENING_JOD=0;
 const PSZ=20,PS={};
 
-/* ── ROLE MODEL: admin | viewer ONLY ── */
-const ROLES={admin:'مدير',viewer:'عارض',reservation:'مدير الحجوزات'};
+/* ── ROLE MODEL (AUTH-003): admin | accountant | reservation ── */
+const ROLES={admin:'مدير',accountant:'محاسب',reservation:'مدير الحجوزات'};
 
 const EXPENSE_TYPES={food_expense:'مصاريف إطعام',electricity:'كهرباء',water:'ماء',cleaning:'تنظيف',maintenance:'صيانة',other:'أخرى'};
 const METHOD_LABELS={cash:'نقد',check:'شيك',transfer:'تحويل بنكي',online:'أونلاين'};
@@ -154,11 +154,20 @@ const L = {
       : ar[m];
   }
 };
-/* ═══ PERMISSIONS — admin | viewer ONLY ═══ */
+/* ═══ PERMISSIONS (AUTH-003) — admin | accountant | reservation ═══
+   write  = create finance vouchers (admin OR accountant); BO-01 gate.
+   admin  = full authority (correct/cancel/reclassify/users/settings/period/etc).
+   print  = admin OR accountant (accountant may print own + reports).
+   export = admin only (CSV/PDF/backup stay administrative).
+   accountant = convenience predicate for the operational accounting role.
+   Ownership-scoped voucher edit (accountant edits only OWN, editable/returned) is
+   enforced in crud.js updateRec/updatePay AND authoritatively by RLS + the DB
+   ownership trigger. */
 const can={
-  write:()=>CUR?.role==='admin',
+  write:()=>CUR?.role==='admin'||CUR?.role==='accountant',
   admin:()=>CUR?.role==='admin',
-  print:()=>CUR?.role==='admin',
+  accountant:()=>CUR?.role==='accountant',
+  print:()=>CUR?.role==='admin'||CUR?.role==='accountant',
   export:()=>CUR?.role==='admin'
 };
 
@@ -1420,9 +1429,14 @@ function ensureAttachModals(){
 }
 /* ═══ END ATTACHMENTS SYSTEM ═══ */
 
-/* ═══ AUDIT LOG ═══ */
-async function logAction(action,desc,tableN,recordId){
-  await SB.from('audit_log').insert({user_name:CUR?.full_name||CU?.email,action,description:desc,table_name:tableN,record_id:recordId});
+/* ═══ AUDIT LOG (AUTH-003: stamp actor id + role; accept old/new/reason) ═══ */
+async function logAction(action,desc,tableN,recordId,extra){
+  extra=extra||{};
+  await SB.from('audit_log').insert({
+    user_name:CUR?.full_name||CU?.email, action, description:desc, table_name:tableN, record_id:recordId,
+    actor_user_id:CU?.id||null, actor_role:CUR?.role||null,
+    old_data:extra.old_data??null, new_data:extra.new_data??null, reason:extra.reason??null
+  });
 }
 
 /* ═══ SAVE RECEIPT · SAVE PAYMENT · SAVE MEMBER · EDIT RECORDS · VOUCHER VERSIONING · YEAR-END LOCK ═══
@@ -1484,48 +1498,115 @@ function renderAnnual(){
     </div>`).join('');
 }
 
-/* ═══ USERS (admin only) ═══ */
+/* ═══ USERS · AUTH-003 modernized management (admin only) ═══
+   A readable permission summary per role so an admin understands each account's
+   capabilities without documentation. */
+function rolePermSummary(role){
+  const en=window.LANG==='en';
+  if(role==='admin') return {can:[en?'Full access — every page & operation':'كل الصفحات وكل العمليات'],cannot:[]};
+  if(role==='accountant') return {
+    can:[en?'Create receipt voucher':'إنشاء سند قبض',en?'Create payment voucher':'إنشاء سند صرف',en?'Edit own vouchers':'تعديل سنداته فقط',en?'Print':'الطباعة',en?'View reports':'عرض التقارير'],
+    cannot:[en?'Delete / cancel':'الحذف / الإلغاء',en?'Manage users':'إدارة المستخدمين',en?'Settings':'الإعدادات',en?'Reservations':'الحجوزات',en?'Open / close periods':'فتح/إغلاق الفترات']};
+  if(role==='reservation') return {
+    can:[en?'Full access to Reservations':'كامل الصلاحية في الحجوزات'],
+    cannot:[en?'Finance':'المالية',en?'Users':'المستخدمون',en?'Settings':'الإعدادات',en?'Reports':'التقارير',en?'Audit log':'سجل العمليات']};
+  return {can:[],cannot:[]};
+}
+/* Fetch through the Edge Function (service_role): direct client reads are RLS-limited
+   to the caller's own row, so newly created users would not appear. Yields real
+   last-sign-in and keeps the list in sync after every mutation. Cached for filtering. */
+window.__usersAll=[];
 async function loadUsers(){
   if(!can.admin())return;
-  const{data}=await SB.from('user_roles').select('*').order('created_at');
   const list=document.getElementById('users-list');if(!list)return;
-  if(!data?.length){list.innerHTML='<div class="empty"><div class="empty-t">لا يوجد مستخدمون</div></div>';return;}
-  /* muted DDL role colours — same solids as the top-bar avatar (.uav) and role tags */
-  const BG={admin:'#5E5578',viewer:'#3E5A78',reservation:'#3E6659'};
-  const _uEn=window.LANG==='en';
-  const _ident=u=>esc(u.email||u.phone||u.user_id);
-  const _ab=(fn,icon,label,cls)=>`<button class="btn ghost sm" title="${label}" aria-label="${label}" onclick="${fn}"><i class="ti ${icon}"></i></button>`;
-  list.innerHTML=data.map(u=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;background:var(--bg2);flex-wrap:wrap">
-      <div style="width:36px;height:36px;border-radius:50%;background:${BG[u.role]||'#5C5F65'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${(u.full_name||'م').charAt(0).toUpperCase()}</div>
-      <div style="flex:1;min-width:150px">
-        <div style="font-weight:500;font-size:13px">${esc(u.full_name||'—')}${u.is_disabled?` <span class="role-tag" style="background:#8a3b3b;color:#fff;font-size:9px;padding:1px 6px">${_uEn?'Disabled':'معطّل'}</span>`:''}</div>
-        <div style="font-size:10.5px;color:var(--tx3)" dir="ltr">${_ident(u)}</div>
-      </div>
-      <span class="role-tag ${u.role}">${ROLES[u.role]||u.role}</span>
-      ${u.user_id!==CU?.id?`<select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)">
-        <option value="viewer" ${u.role==='viewer'?'selected':''}>عارض</option>
-        <option value="reservation" ${u.role==='reservation'?'selected':''}>مدير الحجوزات</option>
-        <option value="admin" ${u.role==='admin'?'selected':''}>مدير</option>
-      </select>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${_ab(`window.adminUserReset('${u.user_id}','${(u.email||u.phone||'').replace(/'/g,"\\'")}')`,'ti-key',_uEn?'Reset password':'إعادة تعيين كلمة المرور')}
-        ${_ab(`window.adminUserForce('${u.user_id}')`,'ti-lock-exclamation',_uEn?'Force password change':'فرض تغيير كلمة المرور')}
-        ${_ab(`window.adminUserUnlock('${u.user_id}')`,'ti-lock-open',_uEn?'Unlock account':'فكّ قفل الحساب')}
-        ${u.is_disabled
-          ?_ab(`window.adminUserDisable('${u.user_id}',false)`,'ti-user-check',_uEn?'Enable user':'تفعيل المستخدم')
-          :_ab(`window.adminUserDisable('${u.user_id}',true)`,'ti-user-off',_uEn?'Disable user':'تعطيل المستخدم')}
-      </div>`:'<span style="font-size:11px;color:var(--tx3)">(أنت)</span>'}
-    </div>`).join('');
+  const en=window.LANG==='en';
+  list.innerHTML='<div class="empty"><div class="empty-t">'+(en?'Loading…':'جارٍ التحميل…')+'</div></div>';
+  const res=await window.adminUsersCall({action:'list'});
+  window.__usersAll=(res.ok&&res.data&&res.data.users)?res.data.users:[];
+  _ensureUsersToolbar();
+  window._applyUserFilters();
 }
+/* Search + role filter + status filter toolbar (injected once above the list). */
+function _ensureUsersToolbar(){
+  const list=document.getElementById('users-list');if(!list||document.getElementById('users-toolbar'))return;
+  const en=window.LANG==='en';
+  const bar=document.createElement('div');bar.id='users-toolbar';
+  bar.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px';
+  bar.innerHTML=
+    '<input id="usr-q" oninput="window._applyUserFilters()" placeholder="'+(en?'Search name / email / phone':'بحث بالاسم أو البريد أو الهاتف')+'" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-family:var(--fn);font-size:12.5px">'
+    +'<select id="usr-frole" onchange="window._applyUserFilters()" style="padding:7px 10px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-family:var(--fn);font-size:12.5px"><option value="">'+(en?'All roles':'كل الأدوار')+'</option><option value="admin">'+(en?'Admin':'مدير')+'</option><option value="accountant">'+(en?'Accountant':'محاسب')+'</option><option value="reservation">'+(en?'Reservations':'مدير الحجوزات')+'</option></select>'
+    +'<select id="usr-fstatus" onchange="window._applyUserFilters()" style="padding:7px 10px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-family:var(--fn);font-size:12.5px"><option value="">'+(en?'All statuses':'كل الحالات')+'</option><option value="active">'+(en?'Active':'مفعّل')+'</option><option value="disabled">'+(en?'Disabled':'معطّل')+'</option></select>'
+    +'<span id="usr-count" style="font-size:11px;color:var(--tx3)"></span>';
+  list.parentNode.insertBefore(bar,list);
+}
+window._applyUserFilters=function(){
+  const list=document.getElementById('users-list');if(!list)return;
+  const en=window.LANG==='en';
+  const qv=(document.getElementById('usr-q')?.value||'').trim().toLowerCase();
+  const fr=document.getElementById('usr-frole')?.value||'';
+  const fs=document.getElementById('usr-fstatus')?.value||'';
+  const rank={admin:0,accountant:1,reservation:2};
+  let data=window.__usersAll.filter(u=>{
+    if(fr&&u.role!==fr) return false;
+    if(fs==='active'&&u.is_disabled) return false;
+    if(fs==='disabled'&&!u.is_disabled) return false;
+    if(qv){ const hay=((u.full_name||'')+' '+(u.email||'')+' '+(u.phone||'')).toLowerCase(); if(hay.indexOf(qv)<0) return false; }
+    return true;
+  }).sort((a,b)=>(rank[a.role]??9)-(rank[b.role]??9)||String(a.full_name||'').localeCompare(String(b.full_name||'')));
+  const cnt=document.getElementById('usr-count'); if(cnt) cnt.textContent=(en?'Showing ':'عرض ')+data.length+(en?' of ':' من ')+window.__usersAll.length;
+  if(!data.length){list.innerHTML='<div class="empty"><div class="empty-t">'+(en?'No matching users':'لا مستخدمون مطابقون')+'</div></div>';return;}
+  const BG={admin:'#5E5578',accountant:'#3E5A78',reservation:'#3E6659'};
+  const q=s=>String(s==null?'':s).replace(/'/g,"\\'");
+  const fmtD=d=>d?new Date(d).toLocaleDateString(en?'en-GB':'ar'):'—';
+  const ab=(fn,icon,label)=>`<button class="btn ghost sm" title="${label}" aria-label="${label}" onclick="${fn}"><i class="ti ${icon}"></i></button>`;
+  list.innerHTML=data.map(u=>{
+    const self=u.user_id===CU?.id;
+    const perm=rolePermSummary(u.role);
+    const permHtml=`<div style="font-size:10.5px;line-height:1.7;margin-top:7px">
+      ${perm.can.map(c=>`<span style="color:#2f7d55;white-space:nowrap">✔ ${esc(c)}</span>`).join(' &nbsp; ')}
+      ${perm.cannot.length?'<br>'+perm.cannot.map(c=>`<span style="color:#a24747;white-space:nowrap">✖ ${esc(c)}</span>`).join(' &nbsp; '):''}</div>`;
+    return `<div style="padding:13px;border:1px solid var(--bd);border-radius:var(--r);margin-bottom:10px;background:var(--bg2)">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="width:40px;height:40px;border-radius:50%;background:${BG[u.role]||'#5C5F65'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff">${esc((u.full_name||'م').charAt(0).toUpperCase())}</div>
+        <div style="flex:1;min-width:180px">
+          <div style="font-weight:600;font-size:13.5px">${esc(u.full_name||'—')}
+            ${u.is_disabled?`<span class="role-tag" style="background:#8a3b3b;color:#fff;font-size:9px;padding:1px 6px">${en?'Disabled':'معطّل'}</span>`:`<span class="role-tag" style="background:#2f6d4f;color:#fff;font-size:9px;padding:1px 6px">${en?'Active':'مفعّل'}</span>`}</div>
+          <div style="font-size:10.5px;color:var(--tx3)" dir="ltr">${esc(u.email||u.phone||u.user_id)}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${en?'Created':'أُنشئ'}: ${fmtD(u.created_at)} · ${en?'Last login':'آخر دخول'}: ${fmtD(u.last_sign_in_at)}</div>
+        </div>
+        <span class="role-tag ${u.role}">${ROLES[u.role]||u.role}</span>
+      </div>
+      ${permHtml}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;align-items:center">
+        ${self?`<span style="font-size:11px;color:var(--tx3)">${en?'(You)':'(أنت)'}</span>
+        ${ab(`window.viewUserActivity('${u.user_id}','${q(u.full_name)}')`,'ti-history',en?'View activity':'عرض النشاط')}`:`
+        <select onchange="window.changeRole('${u.user_id}',this.value)" style="padding:4px 8px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:11.5px;font-family:var(--fn)">
+          <option value="accountant" ${u.role==='accountant'?'selected':''}>${en?'Accountant':'محاسب'}</option>
+          <option value="reservation" ${u.role==='reservation'?'selected':''}>${en?'Reservations':'مدير الحجوزات'}</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>${en?'Admin':'مدير'}</option>
+        </select>
+        ${ab(`window.editUserOpen('${u.user_id}','${q(u.full_name)}','${q(u.email)}','${q(u.phone)}')`,'ti-user-edit',en?'Edit user':'تعديل المستخدم')}
+        ${ab(`window.adminUserReset('${u.user_id}','${q(u.email||u.phone||'')}')`,'ti-key',en?'Reset password':'إعادة تعيين كلمة المرور')}
+        ${ab(`window.adminUserForce('${u.user_id}')`,'ti-lock-exclamation',en?'Force password change':'فرض تغيير كلمة المرور')}
+        ${ab(`window.adminUserUnlock('${u.user_id}')`,'ti-lock-open',en?'Unlock':'فكّ القفل')}
+        ${ab(`window.adminUserSignOut('${u.user_id}')`,'ti-logout-2',en?'Sign out all sessions':'إنهاء كل الجلسات')}
+        ${ab(`window.viewUserActivity('${u.user_id}','${q(u.full_name)}')`,'ti-history',en?'View activity':'عرض النشاط')}
+        ${u.is_disabled
+          ?ab(`window.adminUserDisable('${u.user_id}',false)`,'ti-user-check',en?'Enable':'تفعيل')
+          :ab(`window.adminUserDisable('${u.user_id}',true)`,'ti-user-off',en?'Disable':'تعطيل')}
+        ${ab(`window.adminUserDelete('${u.user_id}')`,'ti-trash',en?'Delete user':'حذف المستخدم')}`}
+      </div>
+    </div>`;}).join('');
+}
+/* AUTH-003: role changes MUST go through the admin-users Edge Function — it validates
+   the role, writes the old→new audit record, and revokes the target's sessions so the
+   new authority applies immediately. No direct user_roles write from the UI. */
 window.changeRole=async(uid,role)=>{
   if(!can.admin()){toast(window.t?window.t('errors.no_permission'):'المدير فقط','err');return;}
-  /* Enforce valid roles only */
-  const safeRole=(role==='admin')?'admin':(role==='reservation')?'reservation':'viewer';
-  const{data:prevRole}=await SB.from('user_roles').select('role,full_name').eq('user_id',uid).maybeSingle();
-  const{error:updErr}=await SB.from('user_roles').update({role:safeRole}).eq('user_id',uid);
-  if(updErr){toast('فشل تغيير الدور: '+updErr.message,'err');loadUsers();return;}
-  await logAction('edit',`تغيير دور ${prevRole?.full_name||uid}: من ${ROLES[prevRole?.role]||prevRole?.role||'—'} إلى ${ROLES[safeRole]}`,'user_roles',uid);
+  const safeRole=(role==='admin')?'admin':(role==='reservation')?'reservation':(role==='accountant')?'accountant':null;
+  if(!safeRole){toast(window.t?window.t('errors.no_permission'):'دور غير صالح','err');loadUsers();return;}
+  const r=await window.adminUsersCall({action:'update',user_id:uid,role:safeRole});
+  if(!r.ok){toast('فشل تغيير الدور: '+r.error,'err');loadUsers();return;}
   toast(window.t('messages.role_changed')+': '+ROLES[safeRole],'ok');loadUsers();
 };
 /* Legacy client-side create (isolated signUp + role upsert) was retired in AUTH-001

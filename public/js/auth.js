@@ -81,7 +81,7 @@ async function afterLogin(){
   /* Fail-closed: only users provisioned with a valid role row may enter.
      No default-viewer fallback — an unknown/self-registered account is denied. */
   const rawRole=role?.role;
-  if(!role||(rawRole!=='admin'&&rawRole!=='viewer'&&rawRole!=='reservation')){
+  if(!role||(rawRole!=='admin'&&rawRole!=='accountant'&&rawRole!=='reservation')){
     await SB.auth.signOut();CU=null;CUR=null;
     showLoginErr('لا تملك صلاحية الوصول إلى النظام. الرجاء التواصل مع مسؤول النظام.');
     const lb=document.getElementById('login-btn');
@@ -97,7 +97,7 @@ async function afterLogin(){
     if(lb){lb.disabled=false;lb.innerHTML='<i class="ti ti-login"></i>تسجيل الدخول';}
     return;
   }
-  const safeRole=(rawRole==='admin')?'admin':(rawRole==='reservation'?'reservation':'viewer');
+  const safeRole=(rawRole==='admin')?'admin':(rawRole==='reservation'?'reservation':'accountant');
   CUR={...role,role:safeRole,full_name:role.full_name||CU.email};
 
   const ini=(CUR.full_name||CU.email).charAt(0).toUpperCase();
@@ -243,6 +243,10 @@ function applyPerms(){
   });
   /* Also hide by data-p selectors for any nav buttons using those pages */
   ['audit','bk'].forEach(p=>{
+    document.querySelectorAll(`.nb[data-p="${p}"],.mnb[data-p="${p}"]`).forEach(el=>el.style.display=a?'':'none');
+  });
+  /* AUTH-003 — operational workspaces are admin-only; hide them for the accountant. */
+  ['treasury-workspace','dues-workspace','collection-workspace','payment-workspace','member-workspace'].forEach(p=>{
     document.querySelectorAll(`.nb[data-p="${p}"],.mnb[data-p="${p}"]`).forEach(el=>el.style.display=a?'':'none');
   });
 

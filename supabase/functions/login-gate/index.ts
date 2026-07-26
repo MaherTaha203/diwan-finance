@@ -19,8 +19,9 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const ANON = Deno.env.get('SUPABASE_ANON_KEY');
 const admin = createClient(URL_, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-async function audit(action, actor, targetId, description) {
-  try { await admin.from('audit_log').insert({ action, user_name: actor, table_name: 'auth', record_id: targetId, description }); } catch (_) {}
+let REQ_IP = null;   // AUTH-003: request IP for audit (set per request)
+async function audit(action, actor, targetId, description, role) {
+  try { await admin.from('audit_log').insert({ action, user_name: actor, table_name: 'auth', record_id: targetId, description, actor_user_id: targetId, actor_role: role ?? null, ip: REQ_IP }); } catch (_) {}
 }
 
 /* Resolve typed identifier → {canonical GoTrue email, user_id, is_disabled, is_admin}. */
@@ -42,6 +43,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
+  const _xf = req.headers.get('x-forwarded-for');
+  REQ_IP = _xf ? _xf.split(',')[0].trim() : (req.headers.get('x-real-ip') || null);
   let body;
   try { body = await req.json(); } catch { return json({ ok: false, error: 'bad_json' }, 200); }
   const identifier = String(body?.identifier || '').trim();
