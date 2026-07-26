@@ -411,54 +411,66 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <button class="sb-pin" id="sb-pin" aria-label="طيّ الشريط الجانبي" aria-pressed="false" title="طيّ/تثبيت"><i class="ti ti-layout-sidebar-right-collapse"></i></button>
   </div>
   <div class="sb-scrollarea" id="sb-scrollarea">
-  <!-- Navigation v3 · minimal · WORKFLOW-FIRST order (top→bottom = the working day).
-       Groups are recognized by spacing alone (no visible titles); each keeps a
-       .nbg-body wrapper + role/aria label so i18n and role-visibility hooks stay
-       intact. All routes (data-p) and ids preserved — nothing added or removed. -->
-  <div class="nbg" data-g="w1">
-    <div class="nbg-body" role="group" aria-label="الرئيسية والأعضاء">
+  <!-- Navigation v3 · minimal · re-sequenced by domain: Dashboard → Diwan fund →
+       Lunch fund → Members → Workspaces → Reservations → Administration. Two groups
+       (Workspaces, Administration) are collapsible accordions (.nbg-acc) to keep the
+       rail short. Every route (data-p) and id is preserved — nothing added/removed;
+       .nbg-body wrappers + role ids (#sbsec-reservations, #nb-users, #nb-settings)
+       kept so i18n and role-visibility hooks stay intact. -->
+  <div class="nbg" data-g="home">
+    <div class="nbg-body" role="group" aria-label="الرئيسية">
       <div class="nb on" role="button" tabindex="0" data-p="dash"><i class="ti ti-layout-dashboard"></i><span class="nb-t">لوحة التحكم</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="members"><i class="ti ti-users"></i><span class="nb-t">أعضاء العائلة</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="member-stmt"><i class="ti ti-user"></i><span class="nb-t">كشف حساب عضو</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="member-workspace"><i class="ti ti-user-dollar"></i><span class="nb-t">وحدة العضو المالية</span></div>
     </div>
   </div>
-  <div class="nbg" data-g="w2">
-    <div class="nbg-body" role="group" aria-label="الاشتراكات والتحصيل">
-      <div class="nb" role="button" tabindex="0" data-p="annual"><i class="ti ti-calendar"></i><span class="nb-t">الاشتراكات السنوية</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="dues-workspace"><i class="ti ti-calendar-stats"></i><span class="nb-t">بيئة الاشتراكات</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="collection-workspace"><i class="ti ti-cash"></i><span class="nb-t">بيئة التحصيل</span></div>
-    </div>
-  </div>
-  <div class="nbg" data-g="w3">
-    <div class="nbg-body" role="group" aria-label="الإيصالات والمصاريف">
-      <div class="nb" role="button" tabindex="0" data-p="food-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الغداء</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="food-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الغداء</span></div>
+  <div class="nbg" data-g="diwan">
+    <div class="nbg-body" role="group" aria-label="صندوق الديوان">
       <div class="nb" role="button" tabindex="0" data-p="diwan-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الديوان</span></div>
       <div class="nb" role="button" tabindex="0" data-p="diwan-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الديوان</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="payment-workspace"><i class="ti ti-cash-banknote"></i><span class="nb-t">بيئة الصرف</span></div>
-    </div>
-  </div>
-  <div class="nbg" data-g="w4">
-    <div class="nbg-body" role="group" aria-label="المركز والنشاط">
-      <div class="nb" role="button" tabindex="0" data-p="treasury-workspace"><i class="ti ti-building-bank"></i><span class="nb-t">الخزينة والمركز المالي</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="don"><i class="ti ti-heart"></i><span class="nb-t">سجل التبرعات</span></div>
-      <div id="sbsec-reservations"><div class="nb" role="button" tabindex="0" data-p="reservations" id="nb-reservations"><i class="ti ti-calendar-event"></i><span class="nb-t">تقويم الحجوزات</span></div></div>
-    </div>
-  </div>
-  <div class="nbg" data-g="w5">
-    <div class="nbg-body" role="group" aria-label="التقارير والكشوف">
-      <div class="nb" role="button" tabindex="0" data-p="food-stmt"><i class="ti ti-file-description"></i><span class="nb-t">كشف الغداء</span></div>
       <div class="nb" role="button" tabindex="0" data-p="diwan-stmt"><i class="ti ti-file-description"></i><span class="nb-t">كشف الديوان</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="don"><i class="ti ti-heart"></i><span class="nb-t">سجل التبرعات</span></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="food">
+    <div class="nbg-body" role="group" aria-label="صندوق الغداء">
+      <div class="nb" role="button" tabindex="0" data-p="food-rec"><i class="ti ti-receipt"></i><span class="nb-t">إيصالات الغداء</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="food-pay"><i class="ti ti-cash"></i><span class="nb-t">مصاريف الغداء</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="food-stmt"><i class="ti ti-file-description"></i><span class="nb-t">كشف الغداء</span></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="members">
+    <div class="nbg-body" role="group" aria-label="الأعضاء">
+      <div class="nb" role="button" tabindex="0" data-p="members"><i class="ti ti-users"></i><span class="nb-t">أعضاء العائلة</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="member-stmt"><i class="ti ti-user"></i><span class="nb-t">كشف حساب عضو</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="annual"><i class="ti ti-calendar"></i><span class="nb-t">الاشتراكات السنوية</span></div>
       <div class="nb" role="button" tabindex="0" data-p="annual-debt"><i class="ti ti-report-money"></i><span class="nb-t">تقرير المديونية</span></div>
       <div class="nb" role="button" tabindex="0" data-p="delinquent"><i class="ti ti-user-exclamation"></i><span class="nb-t">الأعضاء المتأخرون</span></div>
     </div>
   </div>
-  <div class="nbg" data-g="w6">
-    <div class="nbg-body" role="group" aria-label="النظام">
+  <div class="nbg nbg-acc" data-g="env">
+    <button type="button" class="nbg-h" aria-expanded="false" aria-controls="nbg-env-body">
+      <i class="ti ti-stack-2 nbg-ico"></i><span class="nbg-t" data-ar="البيئات" data-en="Workspaces">البيئات</span><i class="ti ti-chevron-down nbg-caret"></i>
+    </button>
+    <div class="nbg-body" id="nbg-env-body" role="group" aria-label="البيئات">
+      <div class="nb" role="button" tabindex="0" data-p="collection-workspace"><i class="ti ti-cash"></i><span class="nb-t">بيئة التحصيل</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="dues-workspace"><i class="ti ti-calendar-stats"></i><span class="nb-t">بيئة الاشتراكات</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="member-workspace"><i class="ti ti-user-dollar"></i><span class="nb-t">وحدة العضو المالية</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="payment-workspace"><i class="ti ti-cash-banknote"></i><span class="nb-t">بيئة الصرف</span></div>
+      <div class="nb" role="button" tabindex="0" data-p="treasury-workspace"><i class="ti ti-building-bank"></i><span class="nb-t">الخزينة والمركز المالي</span></div>
+    </div>
+  </div>
+  <div class="nbg" data-g="reservations">
+    <div class="nbg-body" role="group" aria-label="الحجوزات">
+      <div id="sbsec-reservations"><div class="nb" role="button" tabindex="0" data-p="reservations" id="nb-reservations"><i class="ti ti-calendar-event"></i><span class="nb-t">تقويم الحجوزات</span></div></div>
+    </div>
+  </div>
+  <div class="nbg nbg-acc" data-g="admin">
+    <button type="button" class="nbg-h" aria-expanded="false" aria-controls="nbg-admin-body">
+      <i class="ti ti-settings-2 nbg-ico"></i><span class="nbg-t" data-ar="الإعدادات والإدارة" data-en="Settings & Admin">الإعدادات والإدارة</span><i class="ti ti-chevron-down nbg-caret"></i>
+    </button>
+    <div class="nbg-body" id="nbg-admin-body" role="group" aria-label="الإعدادات والإدارة">
+      <div class="nb" role="button" tabindex="0" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i><span class="nb-t">الإعدادات</span></div>
       <div class="nb" role="button" tabindex="0" data-p="users" id="nb-users"><i class="ti ti-shield-lock"></i><span class="nb-t">المستخدمون</span></div>
       <div class="nb" role="button" tabindex="0" data-p="audit"><i class="ti ti-list-check"></i><span class="nb-t">سجل العمليات</span></div>
-      <div class="nb" role="button" tabindex="0" data-p="settings" id="nb-settings"><i class="ti ti-settings"></i><span class="nb-t">الإعدادات</span></div>
       <div class="nb" role="button" tabindex="0" data-p="bk"><i class="ti ti-database"></i><span class="nb-t">النسخ الاحتياطي</span></div>
     </div>
   </div>
