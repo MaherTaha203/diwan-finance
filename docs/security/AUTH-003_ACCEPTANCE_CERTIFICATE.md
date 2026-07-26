@@ -226,4 +226,15 @@ authorization behavior established here.
 | Implementation | Complete on `claude/new-session-51j8hh-auth003` (PR #206) |
 | Verification | DB-level RLS + ownership state-machine proven (rolled back); syntax + unit checks green |
 | Production deployment | Pending owner authorization (Completion Report §9) |
-| Owner acceptance | ☐ Approved  ☐ Approved with notes  ☐ Changes requested |
+| Owner acceptance | ☑ **Approved — 2026-07-26** |
+
+> **Owner decision (2026-07-26):** "AUTH-003 is accepted as the **Baseline Authorization
+> & User Management Architecture v1.0** for Diwan Finance. The implementation,
+> authorization model, audit model, voucher ownership workflow, and verification
+> evidence have been reviewed and accepted. Future enhancements (including AUTH-004)
+> shall build upon this baseline **without altering its constitutional principles unless
+> explicitly approved by the system owner**."
+
+**This document is now the official reference (Baseline v1.0)** for users, roles,
+authorization, voucher ownership, and audit in Diwan Finance. Any change to these
+principles requires explicit owner approval.
