@@ -131,5 +131,8 @@ export function onAdminUnlock() {
   return { attempts_in_stage: 0, escalation_level: 0, locked_until: null, admin_locked: false };
 }
 
-export const VALID_ROLES = ['admin', 'viewer', 'reservation'];
-export function safeRole(r) { return VALID_ROLES.indexOf(r) >= 0 ? r : 'viewer'; }
+// AUTH-003 (frozen owner decision): exactly three roles. The legacy "viewer" role is
+// removed. `safeRole` no longer silently coerces unknown input to a real role — it
+// returns null so callers must validate explicitly and fail closed (no accidental grant).
+export const VALID_ROLES = ['admin', 'accountant', 'reservation'];
+export function safeRole(r) { return VALID_ROLES.indexOf(r) >= 0 ? r : null; }
