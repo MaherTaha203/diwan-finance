@@ -518,5 +518,51 @@ whitespace, split rows, header/pagination, wasted width, timing race, iOS; S3: c
 
 ---
 
-*End of forensic audit. No source files were modified; no commit was created. This
-document (`docs/printing/PRINT_FORENSIC_AUDIT.md`) is the sole deliverable.*
+*End of forensic audit (as originally delivered). No source files were modified during
+the audit itself; the remediation that followed is logged below.*
+
+---
+
+## Remediation Log & Retirement Notice (PRINT-001 · PR-1 … PR-6)
+
+The audit above was remediated in six focused, presentation-only PRs. **This section
+is the authoritative record that the legacy print/PDF paths are officially retired.**
+
+| PR | Title | Root causes closed |
+|----|-------|--------------------|
+| PR-1 | Off-screen iframe renderer, load-gated printing | ROOT-9, ROOT-10 |
+| PR-2 | Real printable Treasury & Dues views; remove blank-print target | **ROOT-1** |
+| PR-3 | Retire html2canvas/jsPDF raster path → native Save-as-PDF | ROOT-3, ROOT-4, ROOT-6 |
+| PR-4 | Page-model corrections (double margin, false page number) | ROOT-7 (page numbers), ROOT-8 |
+| PR-5 | Layout polish (wrap KPI card row, avoid-induced whitespace) | ROOT-5, ROOT-11 |
+| PR-6 | Print-engine cleanup & dead-code removal | ROOT-13 |
+
+### Officially retired (do NOT reintroduce)
+- **The html2canvas / jsPDF raster PDF pipeline.** All PDF output is now the browser's
+  native print → "Save as PDF" through the single `openPrintWin` iframe renderer. No
+  `html2pdf` / `html2canvas` / `jsPDF` reference remains in `public/js`.
+- **The `#pra` in-page print target** and the `@media print` blanket body-hide rule.
+  Removed; native `window.print()` of the main document is no longer a print path (only
+  a guarded fallback in the two workspaces).
+- **The Cairo/Reem-Kufi member-statement `htmlDoc` builder** in `exportMemberStmt`
+  (dead — computed then discarded). Removed.
+- **Dead amount-in-words helpers** `amountToWords()` and `amountToWordsAr()`, and the
+  unused `firstName()` helper. Removed. Vouchers use `amountToWordsEn()`.
+
+### Still open by explicit decision (not defects)
+- **Brand header repeating on every page (ROOT-7):** column `<thead>` already repeats
+  on the native path; repeating the *brand* block needs `position:fixed` running headers
+  — deferred pending owner sign-off (would change every document's layout).
+- **ROOT-12 (base `@page` cascade):** deterministic in practice; left untouched to avoid
+  voucher-margin regressions.
+- **ROOT-2 (screen ⇄ print design convergence):** intentionally out of scope for
+  stabilization — it belongs to the next-generation effort **REPORT-001 (Unified
+  Financial Reporting Engine)**, not to further incremental patching of this engine.
+
+### Guard tests (pure-node, no browser)
+`tests/print-renderer.test.cjs` · `print-native-views.test.cjs` · `print-pdf-native.test.cjs`
+· `print-page-model.test.cjs` · `print-layout-polish.test.cjs` · `print-cleanup.test.cjs`
+lock in each fix so it cannot silently regress.
+
+> **PRINT Stabilization is complete after PR-6.** No further incremental fixes to the
+> legacy engine are planned; the next phase is a clean-slate **REPORT-001**.

@@ -4,8 +4,8 @@
    (QR + fonts + auto-print shell), A0.5 Identity-v3 branding
    (BRAND_* + reportHeader/reportFooter), the VIS-2 single-voucher
    builders buildRecVoucher/buildPayVoucher with prtRec/prtPay
-   (can.print()-gated), Arabic/English amount-in-words, print date
-   helpers (fmtDate2/firstName/fundLabelAr), and the fund/member
+   (can.print()-gated), English amount-in-words, print date
+   helpers (fmtDate2/fundLabelAr), and the fund/member
    statement printers buildFundStatementHTML/prtStmt/
    downloadFundStatementPDF/prtMemberStmt. Verbatim move — no
    template, query or FIN call changed; report printers
@@ -18,16 +18,8 @@
 
 /* ═══ PRINT ENGINE ═══ */
 function fmtDate2(d){if(!d)return'—';try{const dt=new Date(d);const dd=String(dt.getDate()).padStart(2,'0');const mm=String(dt.getMonth()+1).padStart(2,'0');const yy=dt.getFullYear();return dd+'/'+mm+'/'+yy;}catch{return d;}}
-function firstName(n){if(!n)return'—';return n.trim().split(' ')[0];}
-function amountToWords(n){
-  const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-  const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  if(!n||n===0)return'Zero New Israeli Shekels Only';
-  n=Math.round(Number(n));
-  function h(x){if(x===0)return'';if(x<20)return ones[x]+' ';if(x<100)return tens[Math.floor(x/10)]+' '+(x%10?ones[x%10]+' ':'');return ones[Math.floor(x/100)]+' Hundred '+(x%100?h(x%100):'');}
-  let s='';if(n>=1000){s+=h(Math.floor(n/1000))+'Thousand ';n=n%1000;}if(n>0)s+=h(n);
-  return s.trim()+' New Israeli Shekels Only';
-}
+/* PR-6 — removed dead helpers firstName() and amountToWords() (legacy "New Israeli
+   Shekels" words): no call site anywhere. Vouchers use amountToWordsEn() below. */
 
 /* ═══ VIS-1: UNIFIED PRINT DESIGN TOKENS (single source of truth) ═══ */
 /* ════════════════════════════════════════════════════════════════════════
@@ -349,35 +341,8 @@ window.prtPay=function(id){
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
   openPrintWin('',buildPayVoucher(p));
 };
-function amountToWordsAr(n){
-  n=Math.round(Number(n||0));
-  if(n===0) return 'صفر شيكل فقط لا غير';
-  const ones=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة',
-    'أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
-  const tens=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
-  const hundreds=['','مائة','مئتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
-  let parts=[];
-  if(n>=1000){
-    const t=Math.floor(n/1000);
-    if(t===1) parts.push('ألف');
-    else if(t===2) parts.push('ألفان');
-    else if(t<=10) parts.push(ones[t]+' آلاف');
-    else parts.push(t+' ألف');
-    n=n%1000;
-  }
-  if(n>=100){
-    parts.push(hundreds[Math.floor(n/100)]);
-    n=n%100;
-  }
-  if(n>=20){
-    const u=n%10;
-    if(u>0) parts.push(ones[u]+' و'+tens[Math.floor(n/10)]);
-    else parts.push(tens[Math.floor(n/10)]);
-  } else if(n>0){
-    parts.push(ones[n]);
-  }
-  return parts.join(' و')+' شيكل فقط لا غير';
-}
+/* PR-6 — removed dead helper amountToWordsAr() (Arabic amount-in-words): no call
+   site anywhere. The vouchers render English words via amountToWordsEn(). */
 /* ═══ PRINT STATEMENTS ═══ */
 window.buildFundStatementHTML=function(fund){
   const from=document.getElementById(fund+'-stmt-from')?.value||'';
