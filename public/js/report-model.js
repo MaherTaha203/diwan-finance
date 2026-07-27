@@ -433,6 +433,83 @@
       summary: { count: (D.rows || []).length, cashTot: D.cashTot, inkindTot: D.inkindTot, foodDebt: D.foodDebt, foodDeficit: D.foodDeficit, foodSupport: D.foodSupport, toDiwan: D.toDiwan } });
   }
 
+  /* ═══ R7d — Lists (Members · Annual log · Users) ══════════════════════════ */
+  function buildMembersListModel(source) {
+    source = source || {};
+    var rows = source.rows || [];
+    var columns = [
+      { key: 'idx', header: T('#', '#'), align: 'center', format: 'int' },
+      { key: 'name', header: T('الاسم', 'Name'), align: 'start', format: 'text' },
+      { key: 'phone', header: T('الهاتف', 'Phone'), align: 'center', format: 'text' },
+      { key: 'balance', header: T('الرصيد', 'Balance'), align: 'end', format: 'balance' },
+      { key: 'status', header: T('الحالة', 'Status'), align: 'center', format: 'text' }
+    ];
+    return {
+      meta: { reportId: 'MEMBERS_LIST', title: T('قائمة أعضاء العائلة', 'Family Members List'), orientation: 'portrait', printDate: source.printDate || null,
+        filters: [source.filterLabel || T('العدد: ' + rows.length, 'Count: ' + rows.length)] },
+      summary: [], sections: [{ type: 'table', id: 'members', columns: columns, rows: rows }]
+    };
+  }
+  function buildAnnualLogModel(source) {
+    source = source || {};
+    var columns = [
+      { key: 'year', header: T('السنة', 'Year'), align: 'center', format: 'int' },
+      { key: 'amount', header: T('المبلغ', 'Amount'), align: 'end', format: 'money' },
+      { key: 'memberCount', header: T('عدد الأعضاء', 'Members'), align: 'center', format: 'int' },
+      { key: 'appliedAt', header: T('تاريخ التطبيق', 'Applied on'), align: 'center', format: 'date' },
+      { key: 'appliedBy', header: T('بواسطة', 'Applied by'), align: 'start', format: 'text' }
+    ];
+    return {
+      meta: { reportId: 'ANNUAL_LOG', title: T('سجل الاشتراكات السنوية', 'Annual Subscriptions Log'), orientation: 'portrait', printDate: source.printDate || null,
+        filters: [T('السنوات المطبقة: ' + (source.rows || []).length, 'Applied years: ' + (source.rows || []).length)] },
+      summary: [], sections: [{ type: 'table', id: 'annual', columns: columns, rows: source.rows || [] }]
+    };
+  }
+  function buildUsersListModel(source) {
+    source = source || {};
+    var columns = [
+      { key: 'email', header: T('البريد', 'Email'), align: 'start', format: 'text' },
+      { key: 'role', header: T('الدور', 'Role'), align: 'center', format: 'text' }
+    ];
+    return {
+      meta: { reportId: 'USERS_LIST', title: T('المستخدمون', 'Users'), orientation: 'portrait', printDate: source.printDate || null,
+        filters: [T('العدد: ' + (source.rows || []).length, 'Count: ' + (source.rows || []).length)] },
+      summary: [], sections: [{ type: 'table', id: 'users', columns: columns, rows: source.rows || [] }]
+    };
+  }
+
+  /* Runtime gatherers (read DB/FIN + the live filter inputs, so exports match the
+     on-screen list). */
+  function membersListRuntime() {
+    if (typeof root.DB === 'undefined' || typeof root.FIN === 'undefined') return null;
+    var DB = root.DB, FIN = root.FIN, doc = (typeof document !== 'undefined') ? document : null;
+    var q = ((doc && doc.getElementById('q-members') || {}).value || '').toLowerCase();
+    var st = (doc && doc.getElementById('f-member-status') || {}).value || '';
+    var d = (DB.members || []).filter(function (m) { return m.is_active; });
+    if (q) d = d.filter(function (m) { return (m.name || '').toLowerCase().indexOf(q) >= 0 || (m.phone || '').indexOf(q) >= 0; });
+    d = d.map(function (m) { return { m: m, bal: FIN.memberBalance ? FIN.memberBalance(m.id) : 0 }; });
+    if (st === 'paid') d = d.filter(function (x) { return x.bal === 0; });
+    else if (st === 'due') d = d.filter(function (x) { return x.bal > 0; });
+    else if (st === 'credit') d = d.filter(function (x) { return x.bal < 0; });
+    var rows = d.map(function (x, i) { return { idx: i + 1, name: x.m.name, phone: x.m.phone || null, balance: Number(x.bal || 0),
+      status: FIN.balanceLabel ? FIN.balanceLabel(x.bal, false) : null }; });
+    var fl = T('الفلتر: ' + (st || 'الكل') + (q ? (' · ' + q) : '') + ' · العدد: ' + rows.length, 'Filter: ' + (st || 'All') + (q ? (' · ' + q) : '') + ' · Count: ' + rows.length);
+    return buildMembersListModel({ rows: rows, filterLabel: fl, printDate: new Date().toISOString() });
+  }
+  function annualLogRuntime() {
+    if (typeof root.DB === 'undefined') return null;
+    var rows = (root.DB.annual || []).map(function (a) { return { year: a.year, amount: Number(a.amount || 0), memberCount: Number(a.member_count || 0),
+      appliedAt: a.applied_at ? String(a.applied_at).slice(0, 10) : null, appliedBy: a.applied_by || null }; });
+    return buildAnnualLogModel({ rows: rows, printDate: new Date().toISOString() });
+  }
+  function usersListRuntime() {
+    if (typeof root.DB === 'undefined') return null;
+    var en = root.LANG === 'en';
+    var rows = (root.DB.users || []).map(function (u) { return { email: u.email,
+      role: u.role === 'admin' ? (en ? 'Admin' : 'مدير') : (en ? 'Viewer' : 'مشاهد') }; });
+    return buildUsersListModel({ rows: rows, printDate: new Date().toISOString() });
+  }
+
   /* ── Runtime gatherer (reads FIN/DB globals) — NOT wired to production in R1.
         Provided so R6 can cut the live surface over by calling one function. ── */
   function memberStatementRuntime(memberId, from, to) {
@@ -453,7 +530,8 @@
 
   var ReportModel = { validate: validate };
   var ReportModels = { memberStatement: memberStatementRuntime, fundStatement: fundStatementRuntime,
-    annualDebt: annualDebtRuntime, delinquent: delinquentRuntime, donationReport: donationReportRuntime };
+    annualDebt: annualDebtRuntime, delinquent: delinquentRuntime, donationReport: donationReportRuntime,
+    membersList: membersListRuntime, annualLog: annualLogRuntime, usersList: usersListRuntime };
 
   if (typeof root !== 'undefined') {
     root.ReportModel = ReportModel;
@@ -463,8 +541,11 @@
     root.buildAnnualDebtModel = buildAnnualDebtModel;
     root.buildDelinquentModel = buildDelinquentModel;
     root.buildDonationReportModel = buildDonationReportModel;
+    root.buildMembersListModel = buildMembersListModel;
+    root.buildAnnualLogModel = buildAnnualLogModel;
+    root.buildUsersListModel = buildUsersListModel;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, validate: validate, refFromNotes: refFromNotes };
+    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, buildMembersListModel: buildMembersListModel, buildAnnualLogModel: buildAnnualLogModel, buildUsersListModel: buildUsersListModel, validate: validate, refFromNotes: refFromNotes };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

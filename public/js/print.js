@@ -540,6 +540,10 @@ window.prtMemberStmt=function(mode){
    DB.annual rows for annual dues). No new computation, openPrintWin +
    the shared template, can.print() gated (and swept for viewers). */
 window.prtMembersList=function(){
+  /* REPORT-001 · R7d — route print through the engine when the flag is ON. */
+  if(window.REPORT_ENGINE_MEMBERS_LIST && window.ReportCutoverLists && window.ReportCutoverLists.membersReady()){
+    return window.ReportCutoverLists.members('print');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const q=(document.getElementById('q-members')?.value||'').toLowerCase();
   const st=document.getElementById('f-member-status')?.value||'';
@@ -561,6 +565,10 @@ window.prtMembersList=function(){
   openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
 };
 window.prtAnnual=function(){
+  /* REPORT-001 · R7d — route print through the engine when the flag is ON. */
+  if(window.REPORT_ENGINE_ANNUAL_LOG && window.ReportCutoverLists && window.ReportCutoverLists.annualReady()){
+    return window.ReportCutoverLists.annual('print');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const _en=window.LANG==='en';
   const rows=DB.annual.map(a=>'<tr><td class="mono">'+esc(String(a.year))+'</td><td class="mono">₪ '+fmt(a.amount)+'</td><td class="mono">'+esc(String(a.member_count))+'</td>'
