@@ -72,6 +72,12 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   };
   const { FIN, TreasuryWorkspace, window } = load(DB, docEls, extras);
   window.print = () => { printed++; };
+  /* REPORT-001 · R8-b — printPosition routes SOLELY through the unified engine (the
+     legacy openPrintWin builder was removed). Stub a minimal engine so the read-only
+     print path is exercised; render() is the print here. */
+  window.REPORT_ENGINE_TREASURY_POSITION = true;
+  window.buildTreasuryPositionModel = () => ({ meta: {}, summary: [], sections: [] });
+  window.Report = { get: () => ({}), render: () => { printed++; } };
   const navCalls = [];
   window.nav = p => navCalls.push(p);
 
@@ -142,7 +148,7 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
     /window.nav&&window.nav\('food-stmt'\)/.test(html) && /window.nav&&window.nav\('payment-workspace'\)/.test(html) && /window.nav&&window.nav\('collection-workspace'\)/.test(html));
   A('read-only export affordance calls printPosition (no accounting export engine)', /window.TreasuryWorkspace.printPosition\(\)/.test(html));
   TreasuryWorkspace.printPosition();
-  A('printPosition is a pure browser print (read-only), mutates nothing', printed === 1 && DB.receipts.length === recBefore, 'printed=' + printed);
+  A('printPosition routes through the engine (read-only), mutates nothing', printed === 1 && DB.receipts.length === recBefore, 'printed=' + printed);
 
   // ── explicit boundary note: observability only, Rule 4 N/A ────────────────
   A('layer states it is observability-only (executes nothing; Rule 4 N/A)', /القاعدة 4 لا تنطبق/.test(html) && /لا تنفّذ أي عملية/.test(html));

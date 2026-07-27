@@ -1,9 +1,11 @@
-/* PRINT-001 · PR-2 — static regression guard for the S1 blank-native-print fix.
-   Pure-node source assertions (no browser). Locks in that the Treasury and Dues
-   workspaces print real documents through the shared print engine (not native
-   window.print into the old #pra target, which produced a BLANK page — ROOT-1),
-   and that the dead #pra blanket-hide + empty div are gone. Live rendering is
-   verified separately with Playwright. Usage:
+/* PRINT-001 · PR-2 → REPORT-001 · R8-b — static regression guard.
+   Pure-node source assertions (no browser). Originally locked in that the Treasury
+   and Dues workspaces print real documents (not native window.print into the old
+   #pra target, which produced a BLANK page — ROOT-1). R8-b removed the legacy
+   buildPositionBody/buildDuesBody string-builders: the workspaces now print SOLELY
+   through the unified report engine (Report.render), flag-gated as a kill-switch.
+   This suite now asserts that R8-b end state. The dead #pra blanket-hide + empty
+   div stay gone. Live rendering is verified separately with Playwright. Usage:
      node tests/print-native-views.test.cjs */
 const fs = require('fs');
 const path = require('path');
@@ -16,18 +18,20 @@ const dw = read('public/js/dues-workspace.js');
 const css = read('public/css/app.css');
 const html = read('public/index.html');
 
-/* Each workspace builds a real print body and routes printing through openPrintWin. */
-ok(/function buildPositionBody\(/.test(tw), 'treasury: buildPositionBody() exists');
-ok(/window\.openPrintWin\(css, buildPositionBody\(\)\)/.test(tw), 'treasury: printPosition routes through openPrintWin');
-ok(/function buildDuesBody\(/.test(dw), 'dues: buildDuesBody() exists');
-ok(/window\.openPrintWin\(css, buildDuesBody\(\)\)/.test(dw), 'dues: printView routes through openPrintWin');
+/* R8-b — the legacy string-builders are GONE (no buildPositionBody/buildDuesBody,
+   no openPrintWin call from these workspaces). */
+ok(!/function buildPositionBody\(/.test(tw), 'treasury: legacy buildPositionBody() removed (R8-b)');
+ok(!/openPrintWin\(/.test(tw), 'treasury: no legacy openPrintWin path remains');
+ok(!/function buildDuesBody\(/.test(dw), 'dues: legacy buildDuesBody() removed (R8-b)');
+ok(!/openPrintWin\(/.test(dw), 'dues: no legacy openPrintWin path remains');
 
-/* The bodies use the shared print vocabulary (reportHeader + unified .dt/.cards). */
-ok(/reportHeader/.test(tw) && /class="dt"/.test(tw) && /class="cards"/.test(tw), 'treasury body uses reportHeader + .dt + .cards');
-ok(/reportHeader/.test(dw) && /class="dt"/.test(dw) && /class="cards"/.test(dw), 'dues body uses reportHeader + .dt + .cards');
+/* Printing now routes SOLELY through the unified engine (build*Model → Report.render). */
+ok(/buildTreasuryPositionModel/.test(tw) && /Report\.render\(model, ?'print'\)/.test(tw), 'treasury: printPosition routes through the unified engine');
+ok(/buildDuesSnapshotModel/.test(dw) && /Report\.render\(model, ?'print'\)/.test(dw), 'dues: printView routes through the unified engine');
 
-/* native window.print() survives ONLY as a guarded fallback, never the primary path. */
-ok(/graceful fallback/.test(tw) && /graceful fallback/.test(dw), 'native print kept only as a guarded fallback');
+/* The engine path is flag-gated as a kill-switch (a surface can be flipped off). */
+ok(/REPORT_ENGINE_TREASURY_POSITION/.test(tw), 'treasury: engine path is flag-gated (kill-switch)');
+ok(/REPORT_ENGINE_DUES_SNAPSHOT/.test(dw), 'dues: engine path is flag-gated (kill-switch)');
 
 /* ROOT-1 — the blanket hide + empty #pra target are removed. */
 ok(!/body>\*:not\(#pra\)/.test(css), 'app.css no longer hides the body for print (#pra blanket-hide gone)');

@@ -229,54 +229,8 @@
     };
   }
 
-  /* PRINT-001 · PR-2 — build the read-only PRINT body for the current position +
-     movement view, using the shared print engine (reportHeader/Dfoot/Footer +
-     the unified .cards/.dt classes from PRINT_TOKENS). Presentation only: every
-     figure comes from the same certified reads the on-screen view uses. */
-  function buildPositionBody() {
-    const RH = window.reportHeader, RD = window.reportDfoot, RF = window.reportFooter, FD = window.fmtDate2;
-    const p = position();
-    const s = movementState(_twPeriod);
-    const periodLbl = _twPeriod === 'ytd' ? T('هذه السنة', 'This year') : _twPeriod === 'd90' ? T('آخر ٩٠ يومًا', 'Last 90 days') : T('كل الفترات', 'All time');
-    const kcard = (k, v, cls) => '<div class="card"><div class="k">' + k + '</div><div class="v' + (cls ? ' ' + cls : '') + '">₪ ' + M(v) + '</div></div>';
-    const posCards = '<div class="cards">'
-      + kcard(T('صندوق الغداء', 'Food fund'), p.food)
-      + kcard(T('صندوق الديوان', 'Diwan fund'), p.diwan)
-      + kcard(T('إجمالي التبرعات', 'Total donations'), p.don)
-      + kcard(T('المركز المجمّع', 'Combined position'), p.combined, p.combined >= 0 ? 'pos' : 'neg')
-      + '</div>';
-    const hrow = (k, v, cls) => '<tr><td>' + k + '</td><td class="' + (cls || '') + '">₪ ' + M(v) + '</td></tr>';
-    const health = '<div class="period" style="margin-top:14px">' + T('سلامة المركز', 'Position Health') + '</div>'
-      + '<table class="dt"><thead><tr><th>' + T('المؤشر', 'Metric') + '</th><th>' + T('القيمة', 'Value') + '</th></tr></thead><tbody>'
-      + hrow(T('صافي المركز المجمّع', 'Net combined position'), p.netCombined, p.netCombined >= 0 ? 'cr' : 'dr')
-      + hrow(T('صافي مركز صندوق الغداء', 'Net Food-fund position'), p.netFood, p.netFood >= 0 ? 'cr' : 'dr')
-      + hrow(T('العجز التاريخي المتبقي', 'Remaining historical deficit'), p.deficit, p.deficit < 0 ? 'dr' : '')
-      + hrow(T('احتياطي التسوية', 'Settlement reserve'), p.reserve)
-      + hrow(T('إجمالي الدعم الحالي', 'Current support total'), p.support)
-      + hrow(T('إجمالي تسوية الذمم', 'Debt-settlement total'), p.debtSettled)
-      + '</tbody></table>';
-    const mrows = s.rows.map(r => '<tr>'
-      + '<td>' + (r.date === '—' || !r.date ? '—' : FD(r.date)) + '</td>'
-      + '<td>' + E(r.no || '—') + '</td>'
-      + '<td>' + fundLabel(r.fund) + '</td>'
-      + '<td>' + E(r.name || '—') + '</td>'
-      + '<td>' + E(r.desc || '') + '</td>'
-      + '<td>' + (r.in ? '<span class="cr">₪ ' + M(r.in) + '</span>' : '—') + '</td>'
-      + '<td>' + (r.out ? '<span class="dr">₪ ' + M(r.out) + '</span>' : '—') + '</td></tr>').join('');
-    const movement = '<div class="period" style="margin-top:14px">' + T('حركة الأموال عبر الصناديق', 'Cross-Fund Movement') + '</div>'
-      + (s.rows.length
-        ? '<table class="dt"><thead><tr><th>' + T('التاريخ', 'Date') + '</th><th>' + T('السند', 'Voucher') + '</th><th>' + T('الصندوق', 'Fund') + '</th><th>' + T('الطرف', 'Party') + '</th><th>' + T('البيان', 'Description') + '</th><th>' + T('وارد', 'In') + '</th><th>' + T('صادر', 'Out') + '</th></tr></thead><tbody>' + mrows
-          + '<tr class="final"><td colspan="5">' + T('إجمالي الحركة للفترة', 'Movement total for the period') + '</td><td class="cr">₪ ' + M(s.totalIn) + '</td><td class="dr">₪ ' + M(s.totalOut) + '</td></tr></tbody></table>'
-        : '<div class="period">' + T('لا حركة في هذه الفترة', 'No movement in this period') + '</div>');
-    const sub = T('طبقة رصد — قراءة فقط · الفترة: ', 'Observability — read-only · period: ') + periodLbl;
-    return RH(T('الخزينة والمركز المالي', 'Treasury & Financial Position'), { sub: sub })
-      + posCards + health + movement
-      + RD('https://www.diwan-finance.com', 'diwan-finance.com')
-      + RF({ date: FD(new Date().toISOString()) });
-  }
-
   const TreasuryWorkspace = {
-    version: 1, position, movementRows, movementState, periodRange, renderWorkspace, buildPositionBody,
+    version: 1, position, movementRows, movementState, periodRange, renderWorkspace,
     setPeriod(pr) { _twPeriod = (pr === 'ytd' || pr === 'd90') ? pr : 'all'; renderWorkspace(); },
     /* read-only export: prints the current position + movement view via the shared
        print engine (PR-2). No accounting, no mutation — a pure read affordance.
@@ -284,8 +238,10 @@
        fund statements. */
     printPosition() {
       if (typeof window === 'undefined') return;
-      /* REPORT-001 · R7f — route through the unified engine when the flag is ON
-         (this workspace holds the current view state, so it builds the model). */
+      /* REPORT-001 — the unified engine is the sole print path (R8-b removed the
+         legacy openPrintWin builder). The R7f flag remains as a kill-switch: with
+         REPORT_ENGINE_TREASURY_POSITION off, this surface no-ops rather than
+         falling back — a surface can be disabled but there is no legacy path. */
       if (window.REPORT_ENGINE_TREASURY_POSITION && window.Report && window.Report.get && window.Report.get('TREASURY_POSITION') && typeof window.buildTreasuryPositionModel === 'function') {
         const p = position(); const s = movementState(_twPeriod);
         const periodLbl = _twPeriod === 'ytd' ? T('هذه السنة', 'This year') : _twPeriod === 'd90' ? T('آخر ٩٠ يومًا', 'Last 90 days') : T('كل الفترات', 'All time');
@@ -293,11 +249,7 @@
         const model = window.buildTreasuryPositionModel({ position: p, movement: { totalIn: s.totalIn, totalOut: s.totalOut }, rows, periodLabel: periodLbl, printDate: new Date().toISOString() });
         return window.Report.render(model, 'print');
       }
-      if (typeof window.openPrintWin !== 'function' || typeof window.reportHeader !== 'function') {
-        if (typeof window.print === 'function') window.print(); return;   // graceful fallback (print engine unloaded)
-      }
-      const css = '@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
-      window.openPrintWin(css, buildPositionBody());
+      if (typeof window.toast === 'function') window.toast(T('طباعة المركز غير متاحة حاليًا', 'Position print is currently unavailable'));
     }
   };
   if (typeof window !== 'undefined') window.TreasuryWorkspace = TreasuryWorkspace;

@@ -113,31 +113,13 @@ function renderAnnualDebt(){
     +'</div>';
 }
 window.prtAnnualDebt=function(mode){
-  /* REPORT-001 · R7b — route print/PDF through the engine when the flag is ON. */
+  /* REPORT-001 — the unified engine is the sole print/PDF path (R8-b removed the
+     legacy string-builder). The R7b flag stays a kill-switch: with the flag off
+     this surface no-ops rather than falling back — no legacy path remains. */
   if(window.REPORT_ENGINE_ANNUAL_DEBT && window.ReportCutoverDebt && window.ReportCutoverDebt.annualDebtReady()){
     return window.ReportCutoverDebt.annualDebt(mode==='pdf'?'pdf':'print');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const en=window.LANG==='en';
-  /* IG-006 (FD-006): SAME engine model + SAME view state as the screen —
-     the printed figures are byte-identical to the rendered ones. */
-  const model=annualDebtModel();
-  const rows=model.rows, t=model.totals, total=model.totalMembers;
-  const head=_adHead().map(h=>'<th>'+h+'</th>').join('');
-  const body=rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
-    +'<td>₪ '+fmt(r.hist)+'</td><td><span class="cr">₪ '+fmt(r.histPaid)+'</span></td>'
-    +'<td>₪ '+fmt(r.selSub)+'</td><td><span class="cr">₪ '+fmt(r.selPaid)+'</span></td>'
-    +'<td>'+(r.resolutions?'<span class="cr">₪ '+fmt(r.resolutions)+'</span>':'₪ 0')+'</td>'
-    +'<td class="bal">'+_adCurCell(r.current)+'</td></tr>').join('');
-  const foot='<tr class="final"><td colspan="3">'+(en?'Total':'الإجمالي')+' ('+rows.length+')</td>'
-    +'<td>₪ '+fmt(t.hist)+'</td><td>₪ '+fmt(t.histPaid)+'</td><td>₪ '+fmt(t.selSub)+'</td><td>₪ '+fmt(t.selPaid)+'</td><td>₪ '+fmt(t.resolutions)+'</td><td></td></tr>';
-  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
-  const b=reportHeader(en?'Annual Debt Report':'تقرير المديونية السنوية',{sub:window.t('stmt.currency_note')})
-    +'<div class="period">'+(en?'Filter: ':'التصنيف: ')+_adFilterLabel()+' · '+(en?'Shown: ':'المعروض: ')+rows.length+' / '+total+'</div>'
-    +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+foot+'</tbody></table>'
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
-  if(mode==='pdf') savePrintPDF(css,b,'annual-debt-'+today(),'landscape'); else openPrintWin(css,b);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 
 /* ═══ A3 — Delinquent Members Report (read-only · dynamic subscription years) ═══ */
@@ -224,23 +206,13 @@ function renderDelinquent(){
     +'</div>';
 }
 window.prtDelinquent=function(mode){
-  /* REPORT-001 · R7b — route print/PDF through the engine when the flag is ON. */
+  /* REPORT-001 — the unified engine is the sole print/PDF path (R8-b removed the
+     legacy string-builder). The R7b flag stays a kill-switch: with the flag off
+     this surface no-ops rather than falling back — no legacy path remains. */
   if(window.REPORT_ENGINE_DELINQUENT && window.ReportCutoverDebt && window.ReportCutoverDebt.delinquentReady()){
     return window.ReportCutoverDebt.delinquent(mode==='pdf'?'pdf':'print');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const en=window.LANG==='en';
-  const {years, rows}=delinquentRows();
-  const total=DB.members.filter(m=>m.is_active!==false).length;
-  const head=_delHead(years).map(h=>'<th>'+h+'</th>').join('');
-  const body=rows.map(r=>'<tr>'+_delRowCells(r,years)+'</tr>').join('');
-  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
-  const b=reportHeader(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين',{sub:window.t('stmt.currency_note')})
-    +'<div class="period">'+_delHeaderLabel()+' · '+(en?'Shown: ':'المعروض: ')+rows.length+' / '+total+'</div>'
-    +'<table class="dt"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
-  if(mode==='pdf') savePrintPDF(css,b,'delinquent-'+today(),'landscape'); else openPrintWin(css,b);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 window.exportDelinquentExcel=function(){
   if(!can.export()){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
@@ -279,52 +251,13 @@ window.donationDirectionLabel=function(r, perReceipt, en){
   return window.t('receipts.fund_food')+(parts.length?' · '+parts.join(' · '):'');
 };
 window.prtDonStmt=function(mode){
-  /* REPORT-001 · R7c — route print/PDF through the engine when the flag is ON. */
+  /* REPORT-001 — the unified engine is the sole print/PDF path (R8-b removed the
+     legacy string-builder). The R7c flag stays a kill-switch: with the flag off
+     this surface no-ops rather than falling back — no legacy path remains. */
   if(window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()){
     return window.ReportCutoverDonation.deliver(mode==='pdf'?'pdf':'print');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const _en=window.LANG==='en';
-  /* POST-REVIEW FIX 4 — deficit-directed movements belong to the Food Fund
-     (historical deficit is an accounting destination inside Food), never the
-     donations statement. They appear in the fund/member statements instead. */
-  /* Domain 3 (§4.2 enforcement) — the printed CASH total must never conflate the
-     in-kind documentary value; the in-kind value is shown SEPARATELY (FE-008).
-     IG-007 (FD-013/FD-011): the whole register model (rows, cash/in-kind split,
-     fund directions, recognized allocation figures) comes from the engine. */
-  const D=FIN.donationRegister();
-  const rows=D.rows;
-  const _isInkind=r=>FIN.isInkindDonation(r);
-  const cashTot=D.cashTot, inkindTot=D.inkindTot, toDiwan=D.toDiwan;
-  const foodDeficit=D.foodDeficit;   // Historical Deficit Donation -> Reserve
-  const foodSupport=D.foodSupport;   // Current Support Donation
-  const foodDebt=D.foodDebt;         // Debt Settlement (NOT a donation)
-  const donDir=r=>window.donationDirectionLabel(r, D.perReceipt, _en);
-  const rowsHTML=rows.map(r=>'<tr>'
-    +'<td>'+fmtDate2(r.receipt_date)+'</td>'
-    +'<td>'+esc(r.no)+'</td>'
-    +'<td>'+esc(r.payer_name||gmn(r.member_id)||'—')+'</td>'
-    +'<td><span class="cr">₪ '+fmt(FIN.amountOf(r))+'</span></td>'
-    +'<td>'+(r.currency!=='ILS'?esc(r.currency):'ILS')+'</td>'
-    +'<td>'+donDir(r)+'</td>'
-    +'<td>'+esc(r.notes||'—')+'</td></tr>').join('');
-  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
-  const body=reportHeader(window.t('stmt.donation_report'),{sub:window.t('stmt.currency_note')})
-    +'<div class="period">'+window.t('stmt.count_label')+' '+rows.length+'</div>'
-    +'<div class="cards">'
-    +'<div class="card"><div class="k">'+window.t('stmt.donation_count')+'</div><div class="v">'+rows.length+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'Cash Donations (Total)':'التبرعات النقدية (الإجمالي)')+'</div><div class="v pos">₪ '+fmt(cashTot)+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'In-kind/Service · documentary value (not cash)':'عيني/خدمي · قيمة توثيقية (ليست نقداً)')+'</div><div class="v">₪ '+fmt(inkindTot)+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'Debt Settlement':'تسوية ذمم')+'</div><div class="v">₪ '+fmt(foodDebt)+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'Food — Deficit Settlement':'الغداء — تسوية العجز')+'</div><div class="v">₪ '+fmt(foodDeficit)+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'Food — Current Support':'الغداء — دعم حالي')+'</div><div class="v">₪ '+fmt(foodSupport)+'</div></div>'
-    +'<div class="card"><div class="k">'+window.t('stmt.to_diwan')+'</div><div class="v">₪ '+fmt(toDiwan)+'</div></div></div>'
-    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+window.t('donations.donor')+'</th><th>'+window.t('common.amount')+'</th><th>'+window.t('common.currency')+'</th><th>'+window.t('stmt.direction')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
-    +'<tbody>'+rowsHTML
-    +'<tr class="final"><td colspan="3">'+(_en?'Cash Total (in-kind excluded — §4.2)':'الإجمالي النقدي (العيني مستبعَد — §4.2)')+'</td><td class="pos">₪ '+fmt(cashTot)+'</td><td colspan="3">'+(_en?'in-kind documentary: ₪':'قيمة عينية توثيقية: ₪')+' '+fmt(inkindTot)+'</td></tr></tbody></table>'
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
-  if(mode==='pdf') savePrintPDF(css,body,'donations-'+today(),'landscape'); else openPrintWin(css,body);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 
 /* ═══ Domain 4 — Balance Reconciliation (read-only consistency tool) ═══
@@ -343,32 +276,14 @@ window.reconcileRows=function(){
   return v.checks.map(c=>({k:c.k,legacy:c.a,neo:c.b,match:c.match}));
 };
 window.reconcileReport=function(){
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const F=(typeof FIN!=='undefined'&&FIN)||null;
   const v=F&&F.verifyConsistency?F.verifyConsistency():{checks:[],memberCount:0,failedMembers:[],allMatch:false};
-  /* REPORT-001 · R7g — route the consistency report through the engine when ON. */
+  /* REPORT-001 — the unified engine is the sole print path (R8-b removed the
+     legacy string-builder). The R7g flag stays a kill-switch: with the flag off
+     this surface no-ops rather than falling back — no legacy path remains. */
   if(window.REPORT_ENGINE_CONSISTENCY && window.Report && window.Report.get && window.Report.get('CONSISTENCY') && typeof window.buildConsistencyModel==='function'){
     return window.Report.render(window.buildConsistencyModel({verify:v,printDate:new Date().toISOString()}),'print');
   }
-  const failHTML=v.failedMembers.length
-    ? '<div class="period" style="margin-top:10px">أعضاء غير متطابقين</div>'
-      +'<table class="dt"><thead><tr><th>العضو</th><th>الفحوص المخالفة</th></tr></thead><tbody>'
-      +v.failedMembers.slice(0,25).map(f=>'<tr><td>'+esc(f.name)+'</td><td class="dr">'+esc(f.fails)+'</td></tr>').join('')
-      +'</tbody></table>'
-    : '';
-  const body=reportHeader('تقرير المطابقة الدستورية · Constitutional Consistency',{sub:'المالية ‹ الحسابات ‹ المطابقة (FD-006)'})
-    +'<div class="period">'+(v.allMatch
-      ?'✓ جميع الكشوف متطابقة — لا اختلاف بين أي سطحين (فُحص '+v.memberCount+' عضوًا × ٥ مطابقات + هويات الخزائن وقانون الحفظ)'
-      :'⚠ يوجد اختلاف حقيقي — أي فرق بين سطحين خللٌ دستوري (FD-006)، راجع الصفوف المميّزة')
-    +' · '+fmtDate2(new Date().toISOString())+'</div>'
-    +'<table class="dt"><thead><tr><th>الفحص</th><th>القيمة أ</th><th>القيمة ب</th><th>الحالة</th></tr></thead><tbody>'
-    +v.checks.map(c=>'<tr><td>'+esc(c.k)+'</td>'
-        +'<td class="num">'+fmt(c.a)+'</td><td class="num">'+fmt(c.b)+'</td>'
-        +'<td>'+(c.match?'<span class="cr">✓ متطابق</span>':'<span class="dr">⚠ اختلاف</span>')+'</td></tr>').join('')
-    +'</tbody></table>'
-    +failHTML
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({date:fmtDate2(new Date().toISOString())});
-  openPrintWin('@page{size:A4;margin:12mm}body{font-family:var(--fa);direction:rtl;background:#fff}',body);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 

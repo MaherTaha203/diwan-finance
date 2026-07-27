@@ -6,11 +6,12 @@
    builders buildRecVoucher/buildPayVoucher with prtRec/prtPay
    (can.print()-gated), English amount-in-words, print date
    helpers (fmtDate2/fundLabelAr), and the fund/member
-   statement printers buildFundStatementHTML/prtStmt/
-   downloadFundStatementPDF/prtMemberStmt. Verbatim move — no
-   template, query or FIN call changed; report printers
-   prtAnnualDebt/prtDelinquent/prtDonStmt stay with their report
-   sections in app.js (Module 8). Loaded via <script defer> BEFORE
+   statement print entrypoints prtStmt/downloadFundStatementPDF/
+   prtMemberStmt. REPORT-001 · R8-b: the legacy statement/list
+   string-builders were removed — those entrypoints now route
+   solely through the unified engine (flag-gated kill-switch); the
+   vouchers stay a hybrid (engine reuses buildRecVoucher/buildPayVoucher).
+   Loaded via <script defer> BEFORE
    app.js so sealRestrictedFunctions still wraps prtRec/prtPay/
    prtStmt/prtMemberStmt after definition. No load-time side effects.
    Runtime deps (DB, FIN, can, toast, esc, fmt, fmtD, gm, gmn, L,
@@ -356,194 +357,31 @@ window.prtPay=function(id){
 /* PR-6 — removed dead helper amountToWordsAr() (Arabic amount-in-words): no call
    site anywhere. The vouchers render English words via amountToWordsEn(). */
 /* ═══ PRINT STATEMENTS ═══ */
-window.buildFundStatementHTML=function(fund){
-  const from=document.getElementById(fund+'-stmt-from')?.value||'';
-  const to=document.getElementById(fund+'-stmt-to')?.value||'';
-  const type=document.getElementById(fund+'-stmt-type')?.value||'';
-  /* IG-016 (FD-004): an EXACT closed-year range prints from the immutable
-     close-time snapshot (latest for the year); otherwise compute live. */
-  const _arch=(!type)?FIN.closedYearLedgerSnapshot(fund,from,to):null;
-  const lv=_arch||FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
-  const fundLabel=(fund==='food'?window.t('receipts.fund_food'):window.t('receipts.fund_diwan'))+(_arch?' · 🔒 لقطة الإقفال':'');
-  const bal=lv.closing,totCr=lv.totalCr,totDr=lv.totalDr,openBal=lv.opening;
-  const rowsHTML=lv.rows.map(r=>{
-    let crCell;
-    if(r.cr>0){ crCell='<span class="cr">₪ '+fmt(r.cr)+'</span>'; }
-    else if(r.type==='don'){
-      /* P9 — informational food-donation row: classify Historical vs Current Support and
-         show the amount. cr stays 0 so the current balance is NOT affected (display only).
-         IG-007: classification + amount come from the engine's single predicates. */
-      const _dr=DB.receipts.find(x=>x.id===r.id);
-      const _amt=_dr?FIN.amountOf(_dr):0;
-      const _hist=_dr?FIN.foodDonationClass(_dr)==='historical':false;
-      const _lbl=fund==='food'?(_hist?(window.LANG==='en'?'Historical Donation':'تبرع تاريخي'):(window.LANG==='en'?'Current Support':'دعم حالي')):window.t('receipts.fund_don');
-      crCell='<span class="cr">+₪ '+fmt(_amt)+' · '+_lbl+'</span>';
-    } else { crCell='—'; }
-    const drCell=r.dr>0?'<span class="dr">₪ '+fmt(r.dr)+'</span>':'—';
-    return '<tr><td>'+fmtDate2(r.date)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.desc)+'</td><td>'+crCell+'</td><td>'+drCell+'</td><td class="bal">₪ '+fmt(r.run)+'</td><td>'+esc(r.note||'')+'</td></tr>';
-  }).join('');
-  const period=(from&&to?fmtDate2(from)+' — '+fmtDate2(to):from?window.t('stmt.date_from')+' '+fmtDate2(from):to?window.t('stmt.date_to')+' '+fmtDate2(to):window.t('stmt.all_periods'));
-  const balCls=bal>=0?'pos':'neg';
-  const isFood=fund==='food';
-  const _en=window.LANG==='en';
-  const curBal=isFood?FinContract.foodBalance():bal;
-  const curCls=curBal>=0?'pos':'neg';
-  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}';
-  const body=reportHeader(window.t('stmt.print_title')+' '+fundLabel,{sub:window.t('stmt.currency_note')})
-    +'<div class="period">'+window.t('stmt.period_label')+' '+period+'</div>'
-    +'<div class="cards">'
-    +'<div class="card"><div class="k">'+window.t('stmt.opening_bal')+'</div><div class="v">₪ '+fmt(openBal)+'</div></div>'
-    +'<div class="card"><div class="k">'+window.t('stmt.total_in')+'</div><div class="v pos">₪ '+fmt(totCr)+'</div></div>'
-    +'<div class="card"><div class="k">'+window.t('stmt.total_out')+'</div><div class="v neg">₪ '+fmt(totDr)+'</div></div>'
-    +'<div class="card"><div class="k">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal'))+'</div><div class="v '+curCls+'">₪ '+fmt(curBal)+'</div></div></div>'
-    +(isFood?('<div class="cards">'
-      +'<div class="card"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v '+(FinContract.foodDeficitRemaining()<0?'neg':'pos')+'">₪ '+fmt(FinContract.foodDeficitRemaining())+'</div></div>'
-      +'<div class="card"><div class="k">'+mcLabel('reserve')+'</div><div class="v">₪ '+fmt(FIN.foodSettlementReserve())+'</div></div>'
-      +'<div class="card"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v '+(FinContract.foodNetPosition()>=0?'pos':'neg')+'">₪ '+fmt(FinContract.foodNetPosition())+'</div></div></div>'
-      +'<div style="font-size:10px;color:var(--muted);margin:2px 0 6px">'+(_en?'Current Food Fund Balance = Operational ':'رصيد صندوق الغداء الحالي = تشغيلي ')+'₪'+fmt(bal)+' + '+mcLabel('current')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+mcLabel('debt')+(_en?' → Deficit (Q5) ':' ← العجز (ق5) ')+'₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>'):'')
-    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.donor_name')+'</th><th>'+window.t('stmt.desc')+'</th><th>'+window.t('stmt.col_in')+'</th><th>'+window.t('stmt.col_out')+'</th><th>'+window.t('stmt.balance')+'</th><th>'+window.t('stmt.note')+'</th></tr></thead>'
-    +'<tbody>'+rowsHTML
-    +'<tr class="final"><td colspan="5">'+(isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):'الرصيد الجاري · Current Balance')+'</td><td class="'+curCls+'">₪ '+fmt(curBal)+'</td><td></td></tr></tbody></table>'
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:fmtDate2(new Date().toISOString()),page:window.t('stmt.page_info')});
-  const title=(fund==='food'?window.t('receipts.don_disp_food'):window.t('receipts.don_disp_diwan'));
-  return {css:css, body:body, title:title};
-};
+/* REPORT-001 · R8-b — the legacy buildFundStatementHTML string-builder was removed;
+   the unified engine (ReportCutoverFund) is the sole print/PDF path. The R7a flag
+   stays a kill-switch: with it off, these surfaces no-op rather than falling back. */
 window.prtStmt=function(fund){
-  /* REPORT-001 · R7a — pilot fund cut-over: route print through the engine when ON. */
   if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
     return window.ReportCutoverFund.deliver(fund,'print');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const r=window.buildFundStatementHTML(fund);
-  openPrintWin(r.css,r.body);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 window.downloadFundStatementPDF=function(fund){
-  /* REPORT-001 · R7a — pilot fund cut-over: route PDF through the engine when ON. */
   if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
     return window.ReportCutoverFund.deliver(fund,'pdf');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const r=window.buildFundStatementHTML(fund);
-  savePrintPDF(r.css, r.body, (fund==='food'?'Food-Statement':'Diwan-Statement')+'-'+today(), 'landscape');
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 window.prtMemberStmt=function(mode){
-  /* mode: 'print' (default) · 'pdf' (download) · 'pdf-print' — ALL use the same
-     official A4 statement template below; only the guidance toast differs. */
+  /* mode: 'print' (default) · 'pdf' (download) · 'pdf-print'. */
   mode=mode||'print';
-  /* REPORT-001 · R6 — pilot cut-over: route print/pdf through the unified engine
-     when the flag is ON (default OFF → legacy template below). */
+  /* REPORT-001 — the unified engine is the sole print/pdf path (R8-b removed the
+     legacy A4 template builder). The R6 flag stays a kill-switch: with it off this
+     surface no-ops rather than falling back — no legacy path remains. */
   if(window.REPORT_ENGINE_MEMBER_STATEMENT && window.ReportCutover && window.ReportCutover.ready()){
     return window.ReportCutover.deliverMember((mode==='pdf'||mode==='pdf-print')?'pdf':'print');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const mid=document.getElementById('ms-member')?.value;
-  if(!mid){toast(window.t('errors.select_member'),'warn');return;}
-  const member=gm(mid);if(!member)return;
-  const from=document.getElementById('ms-from')?.value||'';
-  const to=document.getElementById('ms-to')?.value||'';
-
-  /* PHASE 11.5 — single source of truth (engine includes capped prepaid credit row).
-     IG-007 (FD-013): one engine view supplies statement + carried + period totals. */
-  const _msv=FIN.memberStatementView(mid,from,to);
-  const st=_msv.statement;
-  const openBal=st.openingBalance, totalDues=st.totalDues, totalPaid=st.totalPaid;
-  const finalBal=st.finalBalance;
-  const _en=window.LANG==='en';
-  const dons=FIN.memberDonations(mid,from,to); /* IG-007 · ق4 excluded by the engine */
-  const _alloc=FIN.allocateFoodDonations();
-  /* IG-019 (FD-018) — each donation is one independent-event row labelled with
-     its STORED destination fund; settlement suffix only when debt was settled. */
-  const donsHTML=dons.length?('<div class="period" style="margin-top:10px">'+(_en?'Donation movements':'حركات التبرعات')+'</div>'
-    +'<div style="font-size:10px;color:var(--muted);margin:4px 0">'+(_en?'A donation is an independent event and does not affect the member balance unless explicitly designated to settle debt; only then a Debt Settlement is shown.':'التبرع حدث مستقل لا يؤثّر على رصيد العضو إلا إذا خُصِّص صراحةً لتسوية الذمة؛ عندها فقط تظهر تسوية ذمة.')+'</div>'
-    +'<table class="dt"><thead><tr><th>'+window.t('common.date')+'</th><th>'+window.t('stmt.ref')+'</th><th>'+(_en?'Description':'البيان')+'</th><th>'+window.t('common.amount')+'</th></tr></thead><tbody>'
-    +dons.map(d=>'<tr><td>'+fmtDate2(d.receipt_date)+'</td><td>'+esc(d.no)+'</td><td>'+donationStmtLabel(d,(_alloc.perReceipt[d.id]||{}).debtSettled,_en)+'</td><td><span class="cr">₪ '+fmt(FIN.amountOf(d))+'</span></td></tr>').join('')
-    +'</tbody></table>'):'';
-  const printDate=new Date().toLocaleDateString('en-GB');
-  const periodLabel=from&&to?`${fmtDate2(from)} — ${fmtDate2(to)}`:from?`${window.t('stmt.date_from')} ${fmtDate2(from)}`:to?`${window.t('stmt.date_to')} ${fmtDate2(to)}`:window.t('stmt.all_periods');
-
-  /* Print mirrors the on-screen ledger 1:1 (presentation only). Every value
-     comes from FIN.memberStatement / the member record — identical to the
-     screen build in renderMemberStmt; only the markup/CSS is print-styled. */
-  const refFromNotes=txt=>{
-    if(!txt) return '';
-    const s=String(txt);
-    let m=s.match(/(?:إيصال|ايصال|سند|receipt|rcpt|ref|مرجع|رقم|no\.?|#)[^\d]{0,24}(\d{1,9})/i);
-    if(m) return m[1];
-    m=s.match(/^\s*#?\s*(\d{1,9})\s*$/);
-    return m?m[1]:'';
-  };
-  const _hp=_msv.histPaid, _carried=_msv.carried;
-  const moves=_msv.moves;
-  const totSub=_msv.totSub, totPay=_msv.totPay;
-  const balTxt=v=>'<span class="num">₪ '+fmt(Math.abs(v))+'</span>'+(v>0?'<span class="tag dr">'+(_en?'Dr':'مدين')+'</span>':v<0?'<span class="tag cr">'+(_en?'Cr':'دائن')+'</span>':'');
-  const cell=v=>v>0?'<span class="num">₪ '+fmt(v)+'</span>':'<span class="mut">—</span>';
-  let tbody='<tr>'
-    +'<td class="c mut">—</td><td class="ds">'+(_en?'Carried balance before 31/12/2024':'رصيد مُرحّل قبل 31/12/2024')+'</td>'
-    +'<td class="c mut">—</td><td class="c mut">—</td><td class="c mut">—</td><td class="mut">—</td><td class="mut">—</td>'
-    +'<td class="bal">'+balTxt(_carried)+'</td></tr>';
-  moves.forEach(r=>{
-    const isReceipt=r.no&&r.no!=='—';
-    const year=(r.date&&r.date!=='—')?String(r.date).slice(0,4):'—';
-    const sysNo=isReceipt?esc(r.no):'—';
-    const refNo=isReceipt?(refFromNotes(r.desc)||'—'):'—';
-    const desc=isReceipt?(_en?'Payment · Food contribution':'سداد · مساهمة غذاء'):esc(r.desc);
-    const bal=Number(r.bal||0);
-    tbody+='<tr>'
-      +'<td><span class="num">'+fmtDate2(r.date)+'</span></td>'
-      +'<td class="ds">'+desc+'</td>'
-      +'<td class="c">'+year+'</td>'
-      +'<td class="c num">'+sysNo+'</td>'
-      +'<td class="c num">'+refNo+'</td>'
-      +'<td>'+cell(r.dr)+'</td>'
-      +'<td>'+cell(r.cr)+'</td>'
-      +'<td class="bal">'+balTxt(bal)+'</td></tr>';
-  });
-  const finBal=Number(st.finalBalance||0);
-  const finStatus=finBal>0?(_en?'Outstanding — member owes':'على العضو مستحقات')
-                 :finBal<0?(_en?'Credit balance — owed to member':'للعضو رصيد دائن')
-                 :(_en?'Fully settled':'الحساب مسدد بالكامل');
-  /* final balance CAPS the running-balance column (tfoot) — approved layout */
-  const tbl='<table class="dt msdt"><thead><tr>'
-    +'<th>'+(_en?'Date':'التاريخ')+'</th>'
-    +'<th>'+(_en?'Description':'البيان')+'</th>'
-    +'<th class="c">'+(_en?'Year':'السنة')+'</th>'
-    +'<th class="c">'+(_en?'System no.':'رقم النظام')+'</th>'
-    +'<th class="c">'+(_en?'Reference no.':'الرقم المرجعي')+'</th>'
-    +'<th>'+(_en?'Subscription (+)':'اشتراك (+)')+'</th>'
-    +'<th>'+(_en?'Payment (−)':'سداد (−)')+'</th>'
-    +'<th>'+(_en?'Running balance':'الرصيد الجاري')+'</th>'
-    +'</tr></thead><tbody>'+tbody+'</tbody>'
-    +'<tfoot><tr class="final"><td colspan="7">'+(_en?'Current final balance':'الرصيد النهائي الحالي')+' · <span style="font-weight:500">'+finStatus+'</span></td>'
-    +'<td class="bal">'+balTxt(finBal)+'</td></tr></tfoot></table>';
-  const openHTML='<div class="msopen"><span>'+(_en?'Carried balance before 31/12/2024':'الرصيد المرحّل قبل 31/12/2024')+'</span><span>'+balTxt(_carried)+'</span></div>';
-  const sumHTML='<div class="cards">'
-    +'<div class="card"><div class="k">'+(_en?'Subscriptions after system launch':'مجموع الاشتراكات بعد تشغيل النظام')+'</div><div class="v">₪ '+fmt(totSub)+'</div></div>'
-    +'<div class="card"><div class="k">'+(_en?'Payments after system launch':'مجموع السداد بعد تشغيل النظام')+'</div><div class="v">₪ '+fmt(totPay)+'</div></div>'
-    +'<div class="card acc"><div class="k">'+(_en?'Payments against carried balance':'مجموع السداد من الرصيد المرحل')+'</div><div class="v">₪ '+fmt(_hp)+'</div></div>'
-    +'</div>';
-
-  /* PRINT-001 · PR-4 (ROOT-8) — margin comes from @page ONLY. The body no longer
-     adds its own padding:9mm on top of the 9mm page margin (that double inset made
-     the member statement print ~18mm in from each edge — wasted width + shifted). */
-  const css='@page{size:A4 portrait;margin:9mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
-    +'.msopen{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line2);border-inline-start:3px solid var(--teal-line);border-radius:8px;padding:10px 14px;margin:4px 0 14px;font-size:12px;font-weight:600;color:var(--ink2)}'
-    +'.msopen .tag{margin-inline-start:5px;font-weight:600}.msopen .tag.cr{color:var(--pos)}.msopen .tag.dr{color:var(--neg)}'
-    +'table.msdt{font-size:10px}table.msdt td.ds{text-align:right}';
-
-  const subLine=(_en?'Member: <b>'+esc(member.name)+'</b> · No. <b class="num">'+esc(member.member_code||'—')+'</b>'
-                    :'العضو: <b>'+esc(member.name)+'</b> · رقم العضو: <b class="num">'+esc(member.member_code||'—')+'</b>');
-  const body=reportHeader(window.t('members.member_stmt'),{sub:subLine})
-    +'<div class="period">'+window.t('stmt.period_label')+' '+periodLabel+' '+window.t('stmt.active_since')+' '+(member.active_from_year||'—')+(member.phone?' · ☎ '+esc(member.phone):'')+'</div>'
-    +openHTML
-    +tbl
-    +sumHTML
-    +donsHTML
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({printedLabel:window.t('stmt.printed_at'),date:printDate,page:window.t('stmt.page_info')});
-  /* 'pdf' → real file download (identical template); 'print'/'pdf-print' → print dialog. */
-  if(mode==='pdf') savePrintPDF(css, body, 'member-statement-'+esc(member.member_code||member.name||'')+'-'+today(), 'portrait');
-  else openPrintWin(css,body);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 
 /* ═══ §3 PRINT-BUTTON AUDIT ADDITIONS (presentation-only printers) ═══
@@ -552,42 +390,20 @@ window.prtMemberStmt=function(mode){
    DB.annual rows for annual dues). No new computation, openPrintWin +
    the shared template, can.print() gated (and swept for viewers). */
 window.prtMembersList=function(){
-  /* REPORT-001 · R7d — route print through the engine when the flag is ON. */
+  /* REPORT-001 — the unified engine is the sole print path (R8-b removed the legacy
+     string-builder). The R7d flag stays a kill-switch: with it off this surface
+     no-ops rather than falling back — no legacy path remains. */
   if(window.REPORT_ENGINE_MEMBERS_LIST && window.ReportCutoverLists && window.ReportCutoverLists.membersReady()){
     return window.ReportCutoverLists.members('print');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const q=(document.getElementById('q-members')?.value||'').toLowerCase();
-  const st=document.getElementById('f-member-status')?.value||'';
-  let d=DB.members.filter(m=>m.is_active);
-  if(q)d=d.filter(m=>m.name.toLowerCase().includes(q)||(m.phone||'').includes(q));
-  d=d.map(m=>({...m,bal:FIN.memberBalance(m.id)}));
-  if(st==='paid')d=d.filter(m=>m.bal===0);
-  else if(st==='due')d=d.filter(m=>m.bal>0);
-  else if(st==='credit')d=d.filter(m=>m.bal<0);
-  const _en=window.LANG==='en';
-  const rows=d.map((m,i)=>'<tr><td>'+(i+1)+'</td><td style="text-align:right">'+esc(m.name)+'</td><td class="mono">'+esc(m.phone||'—')+'</td>'
-    +'<td class="'+(m.bal>0?'dr':m.bal<0?'cr':'')+' mono">₪ '+fmt(Math.abs(m.bal))+'</td>'
-    +'<td>'+esc(FIN.balanceLabel(m.bal,false))+'</td></tr>').join('');
-  const body=reportHeader(_en?'Family Members List':'قائمة أعضاء العائلة',{sub:(_en?'Members: ':'عدد الأعضاء: ')+d.length})
-    +'<div class="period">'+(_en?'As displayed — filter: ':'كما هو معروض — الفلتر: ')+(st||(_en?'All':'الكل'))+(q?(' · '+esc(q)):'')+'</div>'
-    +'<table class="dt"><thead><tr><th class="c">#</th><th>'+(_en?'Name':'الاسم')+'</th><th>'+(_en?'Phone':'الهاتف')+'</th><th>'+(_en?'Balance ₪':'الرصيد ₪')+'</th><th>'+(_en?'Status':'الحالة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({date:fmtDate2(new Date().toISOString())});
-  openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
 window.prtAnnual=function(){
-  /* REPORT-001 · R7d — route print through the engine when the flag is ON. */
+  /* REPORT-001 — the unified engine is the sole print path (R8-b removed the legacy
+     string-builder). The R7d flag stays a kill-switch: with it off this surface
+     no-ops rather than falling back — no legacy path remains. */
   if(window.REPORT_ENGINE_ANNUAL_LOG && window.ReportCutoverLists && window.ReportCutoverLists.annualReady()){
     return window.ReportCutoverLists.annual('print');
   }
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const _en=window.LANG==='en';
-  const rows=DB.annual.map(a=>'<tr><td class="mono">'+esc(String(a.year))+'</td><td class="mono">₪ '+fmt(a.amount)+'</td><td class="mono">'+esc(String(a.member_count))+'</td>'
-    +'<td class="mono">'+fmtDate2(a.applied_at?a.applied_at.slice(0,10):null)+'</td><td>'+esc(a.applied_by||'—')+'</td></tr>').join('');
-  const body=reportHeader(_en?'Annual Subscriptions Log':'سجل الاشتراكات السنوية',{sub:(_en?'Applied years: ':'السنوات المطبقة: ')+DB.annual.length})
-    +'<table class="dt" style="margin-top:12px"><thead><tr><th class="c">'+(_en?'Year':'السنة')+'</th><th>'+(_en?'Amount ₪':'المبلغ ₪')+'</th><th class="c">'+(_en?'Members':'عدد الأعضاء')+'</th><th class="c">'+(_en?'Applied on':'تاريخ التطبيق')+'</th><th>'+(_en?'Applied by':'بواسطة')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
-    +reportFooter({date:fmtDate2(new Date().toISOString())});
-  openPrintWin('@page{size:A4 portrait;margin:10mm}body{direction:rtl;background:#fff;padding:0}',body);
+  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };
