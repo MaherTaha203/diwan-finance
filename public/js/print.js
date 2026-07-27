@@ -120,7 +120,7 @@ const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#
        fonts.ready and the safety timer resolve.
    The document body, PRINT_TOKENS and the per-call css are byte-for-byte the
    same as before — this is a delivery-mechanism change only, no layout change. */
-function openPrintWin(css,body){
+function openPrintWin(css,body,title){
   /* Early inline bootstrap — the FIRST thing in <head>, after only the inline
      <style> (inline styles never block script execution; an external stylesheet
      <link> would, which is why the fonts are injected from here instead of a
@@ -149,7 +149,10 @@ function openPrintWin(css,body){
     +'if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){setTimeout(fire,80);}).catch(fire);}'
     +'setTimeout(fire,1200);'  /* absolute cap: print even if fonts/QR never resolve */
     +'})();<\/script>';
-  const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
+  /* Optional <title> — the browser's "Save as PDF" pre-fills the file name from it,
+     and the print dialog header shows it. Sanitised (no markup). */
+  const titleTag=title?('<title>'+String(title).replace(/[<>&]/g,' ')+'</title>'):'';
+  const html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+titleTag
     +'<style>'+PRINT_TOKENS+css+'</style>'+bootstrap+'</head><body>'+body+'</body></html>';
   try{
     const prev=document.getElementById('diwan-print-frame');
@@ -174,40 +177,21 @@ function openPrintWin(css,body){
   }
 }
 
-/* Real PDF file DOWNLOAD — shares the exact same body + PRINT_TOKENS as the
-   printed form, so a downloaded كشف/سند is identical to its print. Unlike
-   openPrintWin (which opens the browser print dialog), this saves a .pdf file.
-   Renders any QR codes first, and lazy-loads html2pdf/qrcode from CDN. */
+/* PRINT-001 · PR-3 — "Download PDF" now uses the browser's native print → "Save as
+   PDF" instead of the html2canvas/jsPDF raster pipeline. That pipeline rasterised
+   the document to a JPEG-in-PDF, which produced faded text (ROOT-4), sliced table
+   rows with non-repeating headers (ROOT-6), and a geometry that differed from the
+   printed page (ROOT-3). Routing through openPrintWin gives ONE renderer for both
+   print and PDF: vector, selectable text, real table pagination with repeating
+   <thead>, and identical layout. The browser's Save-as-PDF names the file from the
+   document <title> (passed here as `filename`). The `orient` argument is now
+   redundant — each caller's css already sets the authoritative @page size — and is
+   accepted only for signature compatibility. */
 function savePrintPDF(css, body, filename, orient){
-  orient=orient||'portrait';
-  const build=function(){
-    const host=document.createElement('div');
-    host.style.cssText='position:fixed;left:-10000px;top:0;background:#fff;width:'+(orient==='landscape'?'297mm':'210mm');
-    host.innerHTML='<style>'+PRINT_TOKENS+(css||'')+'</style><div class="pdfroot" style="padding:8mm;background:#fff">'+body+'</div>';
-    document.body.appendChild(host);
-    const emit=function(){
-      const opt={margin:0,filename:(filename||'diwan-document')+'.pdf',
-        image:{type:'jpeg',quality:0.98},
-        html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
-        jsPDF:{unit:'mm',format:'a4',orientation:orient},
-        pagebreak:{mode:['css','legacy'],avoid:['tr','.card','.amount','tr.final','.dfoot','.cards']}};
-      window.html2pdf().set(opt).from(host.querySelector('.pdfroot')).save()
-        .then(function(){host.remove();toast('✓ PDF','ok');})
-        .catch(function(){host.remove();toast(window.t?window.t('errors.save_error'):'تعذّر إنشاء PDF','err');});
-    };
-    const qrEls=host.querySelectorAll('[data-qr-url]');
-    if(qrEls.length && window.QRCode){
-      qrEls.forEach(function(el){try{new window.QRCode(el,{text:el.getAttribute('data-qr-url'),width:52,height:52,colorDark:'#17202E',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.H});}catch(e){}});
-      setTimeout(emit,350);
-    } else emit();
-  };
-  const withScript=function(cond,src,cb){ if(cond()) return cb();
-    const s=document.createElement('script');s.src=src;s.onload=cb;s.onerror=function(){cb();};document.head.appendChild(s); };
-  toast('جارٍ إنشاء PDF…','info');
-  withScript(function(){return !!window.html2pdf;},'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',function(){
-    if(!window.html2pdf){toast(window.t?window.t('errors.save_error'):'تعذّر تحميل مكتبة PDF','err');return;}
-    withScript(function(){return !!window.QRCode||!/data-qr-url/.test(body);},'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',build);
-  });
+  if(typeof openPrintWin==='function'){
+    try{toast('اختر «حفظ كـ PDF» من وجهة الطباعة','info');}catch(e){}
+    openPrintWin(css, body, filename);
+  }
 }
 window.savePrintPDF=savePrintPDF;
 
