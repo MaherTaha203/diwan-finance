@@ -510,6 +510,91 @@
     return buildUsersListModel({ rows: rows, printDate: new Date().toISOString() });
   }
 
+  /* ═══ R7f — Treasury Position + Dues Snapshot ══════════════════════════════
+     PURE builders. The live workspaces (treasury/dues) hold their current view
+     state in scope, map it to the shapes below, and call Report.render(model,
+     'print') — so no runtime gatherer is needed here. Multi-section: summary
+     cards + a health/schedule table + the main movement/members table. */
+  function buildTreasuryPositionModel(source) {
+    source = source || {};
+    var p = source.position || {}, mv = source.movement || {};
+    var moveCols = [
+      { key: 'date', header: T('التاريخ', 'Date'), align: 'start', format: 'date' },
+      { key: 'no', header: T('السند', 'Voucher'), align: 'center', format: 'text' },
+      { key: 'fund', header: T('الصندوق', 'Fund'), align: 'center', format: 'text' },
+      { key: 'party', header: T('الطرف', 'Party'), align: 'start', format: 'text' },
+      { key: 'desc', header: T('البيان', 'Description'), align: 'start', format: 'text' },
+      { key: 'in', header: T('وارد', 'In'), align: 'end', format: 'money' },
+      { key: 'out', header: T('صادر', 'Out'), align: 'end', format: 'money' }
+    ];
+    var healthCols = [
+      { key: 'metric', header: T('المؤشر', 'Metric'), align: 'start', format: 'text' },
+      { key: 'value', header: T('القيمة', 'Value'), align: 'end', format: 'money' }
+    ];
+    var health = [
+      { metric: T('صافي المركز المجمّع', 'Net combined position'), value: Number(p.netCombined || 0) },
+      { metric: T('صافي مركز صندوق الغداء', 'Net Food-fund position'), value: Number(p.netFood || 0) },
+      { metric: T('العجز التاريخي المتبقي', 'Remaining historical deficit'), value: Number(p.deficit || 0) },
+      { metric: T('احتياطي التسوية', 'Settlement reserve'), value: Number(p.reserve || 0) },
+      { metric: T('إجمالي الدعم الحالي', 'Current support total'), value: Number(p.support || 0) },
+      { metric: T('إجمالي تسوية الذمم', 'Debt-settlement total'), value: Number(p.debtSettled || 0) }
+    ];
+    return {
+      meta: { reportId: 'TREASURY_POSITION', title: T('الخزينة والمركز المالي', 'Treasury & Financial Position'), orientation: 'landscape',
+        printDate: source.printDate || null, filters: source.periodLabel ? [source.periodLabel] : [] },
+      summary: [
+        { key: T('صندوق الغداء', 'Food fund'), value: Number(p.food || 0), format: 'money' },
+        { key: T('صندوق الديوان', 'Diwan fund'), value: Number(p.diwan || 0), format: 'money' },
+        { key: T('إجمالي التبرعات', 'Total donations'), value: Number(p.don || 0), format: 'money' },
+        { key: T('المركز المجمّع', 'Combined position'), value: Number(p.combined || 0), format: 'money', tone: (Number(p.combined || 0) >= 0 ? 'pos' : 'neg') }
+      ],
+      sections: [
+        { type: 'table', id: 'health', columns: healthCols, rows: health },
+        { type: 'table', id: 'movement', columns: moveCols, rows: (source.rows || []),
+          totals: { label: T('إجمالي الحركة للفترة', 'Movement total for the period'), cells: { in: Number(mv.totalIn || 0), out: Number(mv.totalOut || 0) } } }
+      ]
+    };
+  }
+
+  function buildDuesSnapshotModel(source) {
+    source = source || {};
+    var s = source.state || {}, rows = source.rows || [], sch = source.schedule || [];
+    var memCols = [
+      { key: 'code', header: T('رقم', 'No.'), align: 'center', format: 'text' },
+      { key: 'name', header: T('العضو', 'Member'), align: 'start', format: 'text' },
+      { key: 'phone', header: T('الهاتف', 'Phone'), align: 'center', format: 'text' },
+      { key: 'due', header: T('مستحق', 'Due'), align: 'end', format: 'money' },
+      { key: 'paid', header: T('مدفوع', 'Paid'), align: 'end', format: 'money' },
+      { key: 'remaining', header: T('متبقٍّ', 'Remaining'), align: 'end', format: 'money' },
+      { key: 'status', header: T('الحالة', 'Status'), align: 'center', format: 'text' }
+    ];
+    var schCols = [
+      { key: 'year', header: T('السنة', 'Year'), align: 'center', format: 'int' },
+      { key: 'amount', header: T('قيمة الاشتراك', 'Amount'), align: 'end', format: 'money' },
+      { key: 'memberCount', header: T('عدد الأعضاء', 'Members'), align: 'center', format: 'int' },
+      { key: 'total', header: T('إجمالي الالتزام', 'Total'), align: 'end', format: 'money' },
+      { key: 'appliedAt', header: T('طُبِّقت', 'Applied'), align: 'center', format: 'text' },
+      { key: 'appliedBy', header: T('بواسطة', 'By'), align: 'start', format: 'text' }
+    ];
+    var totDue = 0, totPaid = 0, totRem = 0;
+    rows.forEach(function (r) { totDue += Number(r.due || 0); totPaid += Number(r.paid || 0); totRem += Number(r.remaining || 0); });
+    var sections = [{ type: 'table', id: 'members', columns: memCols, rows: rows,
+      totals: { label: T('الإجمالي (' + rows.length + ')', 'Total (' + rows.length + ')'), cells: { due: totDue, paid: totPaid, remaining: totRem } } }];
+    if (sch.length) sections.push({ type: 'table', id: 'schedule', columns: schCols, rows: sch });
+    return {
+      meta: { reportId: 'DUES_SNAPSHOT', title: T('اشتراكات سنة ' + (s.year != null ? s.year : ''), 'Annual Subscriptions ' + (s.year != null ? s.year : '')), orientation: 'landscape',
+        printDate: source.printDate || null, filters: source.filterLabel ? [source.filterLabel] : [] },
+      summary: [
+        { key: T('حالة السنة', 'Year status'), value: (source.statusText != null ? source.statusText : ''), format: 'text' },
+        { key: T('قيمة الاشتراك السنوي', 'Annual obligation'), value: Number(s.perMember || 0), format: 'money' },
+        { key: T('عدد الأعضاء المشمولين', 'Eligible members'), value: Number(s.eligible || 0), format: 'int' },
+        { key: T('إجمالي الالتزام', 'Total obligation'), value: Number(s.due || 0), format: 'money' },
+        { key: T('المتبقّي على السنة', 'Outstanding'), value: Number(s.outstanding || 0), format: 'money', tone: (Number(s.outstanding || 0) > 0 ? 'neg' : 'pos') }
+      ],
+      sections: sections
+    };
+  }
+
   /* ── Runtime gatherer (reads FIN/DB globals) — NOT wired to production in R1.
         Provided so R6 can cut the live surface over by calling one function. ── */
   function memberStatementRuntime(memberId, from, to) {
@@ -544,8 +629,10 @@
     root.buildMembersListModel = buildMembersListModel;
     root.buildAnnualLogModel = buildAnnualLogModel;
     root.buildUsersListModel = buildUsersListModel;
+    root.buildTreasuryPositionModel = buildTreasuryPositionModel;
+    root.buildDuesSnapshotModel = buildDuesSnapshotModel;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, buildMembersListModel: buildMembersListModel, buildAnnualLogModel: buildAnnualLogModel, buildUsersListModel: buildUsersListModel, validate: validate, refFromNotes: refFromNotes };
+    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, buildMembersListModel: buildMembersListModel, buildAnnualLogModel: buildAnnualLogModel, buildUsersListModel: buildUsersListModel, buildTreasuryPositionModel: buildTreasuryPositionModel, buildDuesSnapshotModel: buildDuesSnapshotModel, validate: validate, refFromNotes: refFromNotes };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

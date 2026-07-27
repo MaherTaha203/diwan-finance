@@ -429,6 +429,18 @@
        print engine (PR-2). No accounting, no mutation — a pure read affordance. */
     printView() {
       if (typeof window === 'undefined') return;
+      /* REPORT-001 · R7f — route through the unified engine when the flag is ON
+         (this workspace holds the current view state, so it builds the model). */
+      if (window.REPORT_ENGINE_DUES_SNAPSHOT && window.Report && window.Report.get && window.Report.get('DUES_SNAPSHOT') && typeof window.buildDuesSnapshotModel === 'function') {
+        const s = yearState(_dwYear != null ? _dwYear : _defaultYear());
+        const rows = printableRows(s).map(r => ({ code: r.code, name: r.name, phone: r.phone || null, due: r.due, paid: r.paid, remaining: r.remaining, status: r.settled ? T('مسدَّد', 'settled') : T('متبقّي', 'outstanding') }));
+        const sch = schedule().map(a => ({ year: a.year, amount: a.amount, memberCount: (a.memberCount == null ? null : a.memberCount), total: a.total, appliedAt: a.appliedAt, appliedBy: a.appliedBy }));
+        const filterLbl = _dwFilter === 'outstanding' ? T('متبقّي', 'Outstanding') : _dwFilter === 'settled' ? T('مسدَّد', 'Settled') : T('الكل', 'All');
+        const sub = T('سنة الاشتراك ', 'Membership year ') + s.year + ' · ' + T('الفلتر: ', 'filter: ') + filterLbl + (_dwSearch ? (' · ' + _dwSearch) : '');
+        const statusText = s.billed ? T('مُطبَّقة', 'Billed') : T('غير مُطبَّقة', 'Not billed');
+        const model = window.buildDuesSnapshotModel({ state: s, rows, schedule: sch, statusText: statusText, filterLabel: sub, printDate: new Date().toISOString() });
+        return window.Report.render(model, 'print');
+      }
       if (typeof window.openPrintWin !== 'function' || typeof window.reportHeader !== 'function') {
         if (typeof window.print === 'function') window.print(); return;   // graceful fallback (print engine unloaded)
       }

@@ -284,6 +284,15 @@
        fund statements. */
     printPosition() {
       if (typeof window === 'undefined') return;
+      /* REPORT-001 · R7f — route through the unified engine when the flag is ON
+         (this workspace holds the current view state, so it builds the model). */
+      if (window.REPORT_ENGINE_TREASURY_POSITION && window.Report && window.Report.get && window.Report.get('TREASURY_POSITION') && typeof window.buildTreasuryPositionModel === 'function') {
+        const p = position(); const s = movementState(_twPeriod);
+        const periodLbl = _twPeriod === 'ytd' ? T('هذه السنة', 'This year') : _twPeriod === 'd90' ? T('آخر ٩٠ يومًا', 'Last 90 days') : T('كل الفترات', 'All time');
+        const rows = s.rows.map(r => ({ date: (r.date === '—' || !r.date) ? null : r.date, no: r.no || null, fund: fundLabel(r.fund), party: r.name || null, desc: r.desc || null, in: r.in || null, out: r.out || null }));
+        const model = window.buildTreasuryPositionModel({ position: p, movement: { totalIn: s.totalIn, totalOut: s.totalOut }, rows, periodLabel: periodLbl, printDate: new Date().toISOString() });
+        return window.Report.render(model, 'print');
+      }
       if (typeof window.openPrintWin !== 'function' || typeof window.reportHeader !== 'function') {
         if (typeof window.print === 'function') window.print(); return;   // graceful fallback (print engine unloaded)
       }
