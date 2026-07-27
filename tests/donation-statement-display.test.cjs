@@ -41,15 +41,19 @@ ok(label({ movement_type: 'donation_cash', destination_treasury: 'food' }, 0, tr
   && label({ movement_type: 'donation_cash', destination_treasury: 'historical_deficit' }, 75, true) === 'Donation — Historical Deficit Account · Debt Settlement ₪75',
   'English mode: same form, same settlement rule');
 
-/* 5 · wiring: the single label RULE lives in print.js and the live screen + Excel
-   surfaces (app.js) render donation rows through it. REPORT-001 · R8-b: the member
-   statement PRINT/PDF moved to the unified engine (report-model.js carries a pure
-   port of the same rule), so print.js no longer wires it into a print builder — it
-   DEFINES the shared rule the other surfaces call. Old split labels stay removed. */
+/* 5 · wiring: REPORT-001 · R8-c — the member statement's donation rows are now
+   rendered SOLELY by the unified engine, whose model carries a pure port of the same
+   rule (report-model.js `donationDesc`, from the STORED destination + settlement
+   suffix). print.js still DEFINES the shared `donationStmtLabel` rule; app.js no
+   longer calls it directly (the whole member-statement cluster is engine-rendered).
+   Old split labels stay removed. */
+const modelSrc = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'report-model.js'), 'utf8');
 ok(/function donationStmtLabel\(/.test(printSrc),
-  'print.js defines the single donationStmtLabel rule (consumed by screen + Excel; engine ports it)');
-ok((appSrc.match(/donationStmtLabel\(d,\(_alloc\.perReceipt\[d\.id\]\|\|\{\}\)\.debtSettled/g) || []).length === 2,
-  'screen + Excel surfaces both render rows through donationStmtLabel');
+  'print.js still DEFINES the shared donationStmtLabel rule');
+ok(/function donationDesc\(/.test(modelSrc) && /destination_treasury \|\| d\.donation_display_fund/.test(modelSrc),
+  'engine model (report-model.js) ports the same donation label rule (donationDesc) for the member statement');
+ok(!/donationStmtLabel\(/.test(appSrc),
+  'app.js no longer calls donationStmtLabel directly — member statement fully engine-rendered (R8-c)');
 ok(!/donSplit/.test(printSrc) && !/donSplit/.test(appSrc),
   'legacy allocation-split display (donSplit) removed from all statement surfaces');
 
