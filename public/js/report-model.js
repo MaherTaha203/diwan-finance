@@ -39,7 +39,7 @@
   'use strict';
 
   var VALID_ORIENT = ['portrait', 'landscape'];
-  var VALID_FORMAT = ['text', 'num', 'money', 'date', 'tag', 'int'];
+  var VALID_FORMAT = ['text', 'num', 'money', 'date', 'tag', 'int', 'balance'];  /* 'balance' = signed → abs + Dr/Cr tag (R2) */
   var VALID_ALIGN = ['start', 'center', 'end'];
 
   /* ── Frozen schema validator. Returns {ok, errors:[]}. Pure. ── */
@@ -123,7 +123,7 @@
       { key: 'refNo', header: T('الرقم المرجعي', 'Reference no.'), align: 'center', format: 'text' },
       { key: 'sub', header: T('اشتراك (+)', 'Subscription (+)'), align: 'end', format: 'money' },
       { key: 'pay', header: T('سداد (−)', 'Payment (−)'), align: 'end', format: 'money' },
-      { key: 'bal', header: T('الرصيد الجاري', 'Running balance'), align: 'end', format: 'money' }
+      { key: 'bal', header: T('الرصيد الجاري', 'Running balance'), align: 'end', format: 'balance' }
     ];
 
     /* leading carried row + one row per certified move (same derivations as the
@@ -170,7 +170,7 @@
     }
 
     var sections = [
-      { type: 'band', key: T('الرصيد المرحّل قبل 31/12/2024', 'Carried balance before 31/12/2024'), value: carried, format: 'money' },
+      { type: 'band', key: T('الرصيد المرحّل قبل 31/12/2024', 'Carried balance before 31/12/2024'), value: carried, format: 'balance' },
       {
         type: 'table', id: 'ledger', columns: columns, rows: rows,
         totals: { label: T('الرصيد النهائي الحالي', 'Current final balance'), status: finStatus, cells: { bal: finalBalance } }
