@@ -595,6 +595,58 @@
     };
   }
 
+  /* ═══ R7g — Audit Log + Consistency Report ═════════════════════════════════ */
+  function buildAuditLogModel(source) {
+    source = source || {};
+    var rows = source.rows || [];
+    var columns = [
+      { key: 'date', header: T('التاريخ', 'Date'), align: 'start', format: 'date' },
+      { key: 'action', header: T('الإجراء', 'Action'), align: 'center', format: 'text' },
+      { key: 'desc', header: T('الوصف', 'Description'), align: 'start', format: 'text' },
+      { key: 'user', header: T('المستخدم', 'User'), align: 'center', format: 'text' },
+      { key: 'table', header: T('الجدول', 'Table'), align: 'center', format: 'text' }
+    ];
+    return {
+      meta: { reportId: 'AUDIT_LOG', title: T('سجل العمليات', 'Audit Log'), orientation: 'landscape', printDate: source.printDate || null,
+        filters: [T('عدد العمليات: ' + rows.length, 'Entries: ' + rows.length)] },
+      summary: [], sections: [{ type: 'table', id: 'audit', columns: columns, rows: rows }]
+    };
+  }
+
+  function buildConsistencyModel(source) {
+    source = source || {};
+    var v = source.verify || {};
+    var checks = (v.checks || []).map(function (c) { return { check: c.k, valueA: Number(c.a || 0), valueB: Number(c.b || 0),
+      status: c.match ? T('✓ متطابق', '✓ match') : T('⚠ اختلاف', '⚠ mismatch') }; });
+    var verdict = v.allMatch
+      ? T('✓ جميع الكشوف متطابقة — لا اختلاف بين أي سطحين', '✓ All statements agree — no divergence between any two surfaces')
+      : T('⚠ يوجد اختلاف حقيقي — أي فرق بين سطحين خللٌ دستوري (FD-006)', '⚠ A real divergence exists — any difference between two surfaces is a constitutional defect (FD-006)');
+    var sections = [{ type: 'table', id: 'checks',
+      columns: [
+        { key: 'check', header: T('الفحص', 'Check'), align: 'start', format: 'text' },
+        { key: 'valueA', header: T('القيمة أ', 'Value A'), align: 'end', format: 'money' },
+        { key: 'valueB', header: T('القيمة ب', 'Value B'), align: 'end', format: 'money' },
+        { key: 'status', header: T('الحالة', 'Status'), align: 'center', format: 'text' }
+      ], rows: checks }];
+    if ((v.failedMembers || []).length) {
+      sections.push({ type: 'table', id: 'failed',
+        columns: [
+          { key: 'member', header: T('العضو', 'Member'), align: 'start', format: 'text' },
+          { key: 'fails', header: T('الفحوص المخالفة', 'Failing checks'), align: 'start', format: 'text' }
+        ],
+        rows: v.failedMembers.slice(0, 25).map(function (f) { return { member: f.name, fails: f.fails }; }) });
+    }
+    return {
+      meta: { reportId: 'CONSISTENCY', title: T('تقرير المطابقة الدستورية', 'Constitutional Consistency'), orientation: 'portrait', printDate: source.printDate || null,
+        filters: [T('FD-006 · فُحص ' + (v.memberCount || 0) + ' عضوًا', 'FD-006 · ' + (v.memberCount || 0) + ' members checked')] },
+      summary: [
+        { key: T('حالة المطابقة', 'Consistency verdict'), value: verdict, format: 'text', tone: (v.allMatch ? 'pos' : 'neg') },
+        { key: T('عدد الأعضاء المفحوصين', 'Members checked'), value: Number(v.memberCount || 0), format: 'int' }
+      ],
+      sections: sections
+    };
+  }
+
   /* ── Runtime gatherer (reads FIN/DB globals) — NOT wired to production in R1.
         Provided so R6 can cut the live surface over by calling one function. ── */
   function memberStatementRuntime(memberId, from, to) {
@@ -631,8 +683,10 @@
     root.buildUsersListModel = buildUsersListModel;
     root.buildTreasuryPositionModel = buildTreasuryPositionModel;
     root.buildDuesSnapshotModel = buildDuesSnapshotModel;
+    root.buildAuditLogModel = buildAuditLogModel;
+    root.buildConsistencyModel = buildConsistencyModel;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, buildMembersListModel: buildMembersListModel, buildAnnualLogModel: buildAnnualLogModel, buildUsersListModel: buildUsersListModel, buildTreasuryPositionModel: buildTreasuryPositionModel, buildDuesSnapshotModel: buildDuesSnapshotModel, validate: validate, refFromNotes: refFromNotes };
+    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, buildMembersListModel: buildMembersListModel, buildAnnualLogModel: buildAnnualLogModel, buildUsersListModel: buildUsersListModel, buildTreasuryPositionModel: buildTreasuryPositionModel, buildDuesSnapshotModel: buildDuesSnapshotModel, buildAuditLogModel: buildAuditLogModel, buildConsistencyModel: buildConsistencyModel, validate: validate, refFromNotes: refFromNotes };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

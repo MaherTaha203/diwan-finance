@@ -346,6 +346,10 @@ window.reconcileReport=function(){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const F=(typeof FIN!=='undefined'&&FIN)||null;
   const v=F&&F.verifyConsistency?F.verifyConsistency():{checks:[],memberCount:0,failedMembers:[],allMatch:false};
+  /* REPORT-001 · R7g — route the consistency report through the engine when ON. */
+  if(window.REPORT_ENGINE_CONSISTENCY && window.Report && window.Report.get && window.Report.get('CONSISTENCY') && typeof window.buildConsistencyModel==='function'){
+    return window.Report.render(window.buildConsistencyModel({verify:v,printDate:new Date().toISOString()}),'print');
+  }
   const failHTML=v.failedMembers.length
     ? '<div class="period" style="margin-top:10px">أعضاء غير متطابقين</div>'
       +'<table class="dt"><thead><tr><th>العضو</th><th>الفحوص المخالفة</th></tr></thead><tbody>'
