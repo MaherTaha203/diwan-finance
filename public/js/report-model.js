@@ -379,6 +379,60 @@
     return buildDelinquentModel({ years: d.years, rows: d.rows, shown: d.rows.length, totalMembers: total, printDate: new Date().toISOString() });
   }
 
+  /* ═══ R7c — Donations Register ═════════════════════════════════════════════
+     PURE builder. Rows arrive already mapped (the runtime gatherer computes the
+     `direction` label via the shared window.donationDirectionLabel, so print and
+     engine agree). Cash total caps the amount column; in-kind value is shown
+     SEPARATELY (Domain 3 §4.2 — never conflated with cash). */
+  function buildDonationReportModel(source) {
+    source = source || {};
+    var rows = source.rows || [], s = source.summary || {};
+    var columns = [
+      { key: 'date', header: T('التاريخ', 'Date'), align: 'start', format: 'date' },
+      { key: 'ref', header: T('المرجع', 'Ref'), align: 'center', format: 'text' },
+      { key: 'donor', header: T('المتبرع', 'Donor'), align: 'start', format: 'text' },
+      { key: 'amount', header: T('المبلغ', 'Amount'), align: 'end', format: 'money' },
+      { key: 'currency', header: T('العملة', 'Currency'), align: 'center', format: 'text' },
+      { key: 'direction', header: T('الوجهة', 'Direction'), align: 'start', format: 'text' },
+      { key: 'note', header: T('ملاحظات', 'Note'), align: 'start', format: 'text' }
+    ];
+    return {
+      meta: { reportId: 'DONATION_REPORT', title: T('سجل التبرعات', 'Donations Register'), orientation: 'landscape', printDate: source.printDate || null,
+        filters: [T('عدد التبرعات: ' + rows.length, 'Donations: ' + rows.length)] },
+      summary: [
+        { key: T('عدد التبرعات', 'Donation count'), value: Number(s.count || rows.length), format: 'int' },
+        { key: T('التبرعات النقدية (الإجمالي)', 'Cash donations (total)'), value: Number(s.cashTot || 0), format: 'money', tone: 'pos' },
+        { key: T('عيني/خدمي · قيمة توثيقية (ليست نقداً)', 'In-kind · documentary value (not cash)'), value: Number(s.inkindTot || 0), format: 'money' },
+        { key: T('تسوية ذمم', 'Debt settlement'), value: Number(s.foodDebt || 0), format: 'money' },
+        { key: T('الغداء — تسوية العجز', 'Food — deficit settlement'), value: Number(s.foodDeficit || 0), format: 'money' },
+        { key: T('الغداء — دعم حالي', 'Food — current support'), value: Number(s.foodSupport || 0), format: 'money' },
+        { key: T('إلى خزينة الديوان', 'To Diwan treasury'), value: Number(s.toDiwan || 0), format: 'money' }
+      ],
+      sections: [{ type: 'table', id: 'donations', columns: columns, rows: rows,
+        totals: { label: T('الإجمالي النقدي (العيني مستبعَد — §4.2)', 'Cash total (in-kind excluded — §4.2)'),
+          status: T('قيمة عينية توثيقية: ₪' + _grp(s.inkindTot || 0), 'in-kind documentary: ₪' + _grp(s.inkindTot || 0)),
+          cells: { amount: Number(s.cashTot || 0) } } }]
+    };
+  }
+
+  /* Runtime gatherer for the donations register (reads FIN + the shared label). */
+  function donationReportRuntime() {
+    if (typeof root.FIN === 'undefined' || !root.FIN.donationRegister) return null;
+    var FIN = root.FIN, en = root.LANG === 'en';
+    var D = FIN.donationRegister();
+    var gmn = (typeof root.gmn === 'function') ? root.gmn : function () { return null; };
+    var dir = (typeof root.donationDirectionLabel === 'function') ? root.donationDirectionLabel : function () { return ''; };
+    var rows = (D.rows || []).map(function (r) {
+      return { date: r.receipt_date, ref: (r.no != null ? String(r.no) : null),
+               donor: r.payer_name || gmn(r.member_id) || '—',
+               amount: Number(FIN.amountOf ? FIN.amountOf(r) : (r.amount_ils || 0)),
+               currency: (r.currency && r.currency !== 'ILS') ? r.currency : 'ILS',
+               direction: dir(r, D.perReceipt, en), note: r.notes || null };
+    });
+    return buildDonationReportModel({ rows: rows, printDate: new Date().toISOString(),
+      summary: { count: (D.rows || []).length, cashTot: D.cashTot, inkindTot: D.inkindTot, foodDebt: D.foodDebt, foodDeficit: D.foodDeficit, foodSupport: D.foodSupport, toDiwan: D.toDiwan } });
+  }
+
   /* ── Runtime gatherer (reads FIN/DB globals) — NOT wired to production in R1.
         Provided so R6 can cut the live surface over by calling one function. ── */
   function memberStatementRuntime(memberId, from, to) {
@@ -399,7 +453,7 @@
 
   var ReportModel = { validate: validate };
   var ReportModels = { memberStatement: memberStatementRuntime, fundStatement: fundStatementRuntime,
-    annualDebt: annualDebtRuntime, delinquent: delinquentRuntime };
+    annualDebt: annualDebtRuntime, delinquent: delinquentRuntime, donationReport: donationReportRuntime };
 
   if (typeof root !== 'undefined') {
     root.ReportModel = ReportModel;
@@ -408,8 +462,9 @@
     root.buildFundStatementModel = buildFundStatementModel;
     root.buildAnnualDebtModel = buildAnnualDebtModel;
     root.buildDelinquentModel = buildDelinquentModel;
+    root.buildDonationReportModel = buildDonationReportModel;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, validate: validate, refFromNotes: refFromNotes };
+    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, validate: validate, refFromNotes: refFromNotes };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

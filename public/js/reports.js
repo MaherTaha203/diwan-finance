@@ -265,7 +265,24 @@ window.exportDelinquentExcel=function(){
   loadStyledXLSX(doExcel);
 };
 
+/* REPORT-001 · R7c — the donation "direction" label as one reusable rule, so the
+   legacy print and the engine model produce an identical string (Domain 3 display
+   principle: in-kind = documentary; food-directed shows the allocation splits). */
+window.donationDirectionLabel=function(r, perReceipt, en){
+  if(FIN.isInkindDonation(r)) return (en?'In-kind/Service · documentary':'عيني/خدمي · توثيقي')+(r.register_category?' ('+esc(r.register_category)+')':'');
+  if(r.donation_display_fund!=='food') return window.t('receipts.fund_diwan');
+  const sp=(perReceipt||{})[r.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
+  const parts=[];
+  if(sp.debtSettled>0) parts.push(mcLabel('debt')+' ₪'+fmt(sp.debtSettled));
+  if(sp.toDeficit>0)   parts.push(mcLabel('deficit')+' ₪'+fmt(sp.toDeficit));
+  if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
+  return window.t('receipts.fund_food')+(parts.length?' · '+parts.join(' · '):'');
+};
 window.prtDonStmt=function(mode){
+  /* REPORT-001 · R7c — route print/PDF through the engine when the flag is ON. */
+  if(window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()){
+    return window.ReportCutoverDonation.deliver(mode==='pdf'?'pdf':'print');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const _en=window.LANG==='en';
   /* POST-REVIEW FIX 4 — deficit-directed movements belong to the Food Fund
@@ -282,19 +299,7 @@ window.prtDonStmt=function(mode){
   const foodDeficit=D.foodDeficit;   // Historical Deficit Donation -> Reserve
   const foodSupport=D.foodSupport;   // Current Support Donation
   const foodDebt=D.foodDebt;         // Debt Settlement (NOT a donation)
-  const _dalloc={perReceipt:D.perReceipt};
-  const donDir=r=>{
-    /* Domain 3 (Display Principle) — an in-kind/service donation is documentary,
-       never a diwan-directed cash donation; label it by its category. */
-    if(_isInkind(r)) return (_en?'In-kind/Service · documentary':'عيني/خدمي · توثيقي')+(r.register_category?' ('+esc(r.register_category)+')':'');
-    if(r.donation_display_fund!=='food') return window.t('receipts.fund_diwan');
-    const sp=_dalloc.perReceipt[r.id]||{debtSettled:0,toDeficit:0,toCurrent:0};
-    const parts=[];
-    if(sp.debtSettled>0) parts.push(mcLabel('debt')+' ₪'+fmt(sp.debtSettled));
-    if(sp.toDeficit>0)   parts.push(mcLabel('deficit')+' ₪'+fmt(sp.toDeficit));
-    if(sp.toCurrent>0)   parts.push(mcLabel('current')+' ₪'+fmt(sp.toCurrent));
-    return window.t('receipts.fund_food')+(parts.length?' · '+parts.join(' · '):'');
-  };
+  const donDir=r=>window.donationDirectionLabel(r, D.perReceipt, _en);
   const rowsHTML=rows.map(r=>'<tr>'
     +'<td>'+fmtDate2(r.receipt_date)+'</td>'
     +'<td>'+esc(r.no)+'</td>'

@@ -1993,6 +1993,10 @@ window.exportMemberStmt=function(format){
 window.exportPagePDF=function(type){
   if(type==='annual-debt') return window.prtAnnualDebt('pdf');
   if(type==='delinquent') return window.prtDelinquent('pdf');
+  /* REPORT-001 · R7c — route donations PDF through the engine when the flag is ON. */
+  if(type==='don' && window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()){
+    return window.ReportCutoverDonation.deliver('pdf');
+  }
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
   const printDate=new Date().toLocaleDateString('en-GB');
   const titles={
@@ -2093,6 +2097,9 @@ window.exportPageExcel=function(type){
   }
   if(type==='delinquent' && window.REPORT_ENGINE_DELINQUENT && window.ReportCutoverDebt && window.ReportCutoverDebt.delinquentReady()){
     return window.ReportCutoverDebt.delinquent('excel');
+  }
+  if(type==='don' && window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()){
+    return window.ReportCutoverDonation.deliver('excel');
   }
   if(!can.export()){toast('\u0644\u0627 \u062a\u0648\u062c\u062f \u0635\u0644\u0627\u062d\u064a\u0629','err');return;}
   if(type==='delinquent') return window.exportDelinquentExcel();
