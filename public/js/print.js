@@ -330,15 +330,27 @@ function buildPayVoucher(p){
     +'</div></div>';
 }
 
+/* REPORT-001 · R7e — expose the certified voucher builders so the hybrid engine
+   VoucherRenderer can reuse them verbatim (byte-identical output). */
+window.buildRecVoucher=buildRecVoucher;
+window.buildPayVoucher=buildPayVoucher;
+
 /* ── Print functions: all guarded by can.print() ── */
 window.prtRec=function(id){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const r=DB.receipts.find(x=>x.id===id);if(!r)return;
+  /* R7e — route through the unified engine when the flag is ON (same builder). */
+  if(window.REPORT_ENGINE_VOUCHERS && window.Report && window.Report.get && window.Report.get('RECEIPT_VOUCHER')){
+    return window.Report.render('RECEIPT_VOUCHER','print',{record:r});
+  }
   openPrintWin('',buildRecVoucher(r));
 };
 window.prtPay=function(id){
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const p=DB.payments.find(x=>x.id===id);if(!p)return;
+  if(window.REPORT_ENGINE_VOUCHERS && window.Report && window.Report.get && window.Report.get('PAYMENT_VOUCHER')){
+    return window.Report.render('PAYMENT_VOUCHER','print',{record:p});
+  }
   openPrintWin('',buildPayVoucher(p));
 };
 /* PR-6 — removed dead helper amountToWordsAr() (Arabic amount-in-words): no call

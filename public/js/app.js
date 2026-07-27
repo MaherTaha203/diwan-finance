@@ -2385,11 +2385,11 @@ function renderTransferList(){
       +'</tbody></table>'
     : '<div style="font-size:12px;color:var(--tx3)">لا توجد تحويلات داخلية بعد</div>';
 }
-window.prtTransfer=function(id){
-  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
-  const t=FIN.transferRegister().find(x=>x.id===id); if(!t) return;
+/* REPORT-001 · R7e — the internal-transfer voucher as a reusable builder, so the
+   hybrid engine VoucherRenderer produces the identical document. */
+window.buildTransferVoucher=function(t){
   const row=(k,v)=>'<tr><td style="font-weight:600;white-space:nowrap">'+k+'</td><td>'+v+'</td></tr>';
-  const body=reportHeader('سند تحويل داخلي · Internal Transfer Voucher',{sub:'FD-022…FD-025 — إعادة توزيع بين الصناديق، لا إيراد ولا مصروف'})
+  return reportHeader('سند تحويل داخلي · Internal Transfer Voucher',{sub:'FD-022…FD-025 — إعادة توزيع بين الصناديق، لا إيراد ولا مصروف'})
     +'<div class="period">رقم السند: <b class="num">'+esc(t.no)+'</b> · التاريخ: '+fmtDate2(t.transfer_date)+'</div>'
     +'<table class="dt" style="max-width:560px;margin:0 auto"><tbody>'
     +row('من صندوق',TR_FUND_AR[t.source_treasury]||esc(t.source_treasury))
@@ -2401,7 +2401,15 @@ window.prtTransfer=function(id){
     +'</tbody></table>'
     +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
     +reportFooter({date:fmtDate2(new Date().toISOString())});
-  openPrintWin('@page{size:A4;margin:14mm}body{font-family:var(--fa);direction:rtl;background:#fff}',body);
+};
+window.prtTransfer=function(id){
+  if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
+  const t=FIN.transferRegister().find(x=>x.id===id); if(!t) return;
+  /* R7e — route through the unified engine when the flag is ON (same builder). */
+  if(window.REPORT_ENGINE_VOUCHERS && window.Report && window.Report.get && window.Report.get('TRANSFER_VOUCHER')){
+    return window.Report.render('TRANSFER_VOUCHER','print',{record:t});
+  }
+  openPrintWin('@page{size:A4;margin:14mm}body{font-family:var(--fa);direction:rtl;background:#fff}',window.buildTransferVoucher(t));
 };
 function renderSettingsSummary(){
   renderFiscalLockNow();
