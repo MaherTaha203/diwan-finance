@@ -61,8 +61,12 @@ const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#
 +'.period{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.9}'
 +'.period b{color:var(--ink2);font-weight:600}'
 /* ── Summary cards ── */
-+'.cards{display:flex;gap:12px;margin:16px 0 4px}'
-+'.card{flex:1;background:#fff;border:1px solid var(--line);border-top:2px solid var(--line2);border-radius:9px;padding:11px 13px;text-align:center}'
+/* PR-5 (ROOT-11): wrap the KPI row so a many-card report (e.g. the 7-card donation
+   summary) flows onto a second line instead of cramming everything onto one; the
+   flex-basis floor stops cards from squishing below a legible width. 3–4-card
+   statement rows are unaffected (they still fit on one line). */
++'.cards{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 4px}'
++'.card{flex:1 1 130px;background:#fff;border:1px solid var(--line);border-top:2px solid var(--line2);border-radius:9px;padding:11px 13px;text-align:center}'
 +'.card:last-child,.card.acc{border-top-color:var(--teal)}'
 +'.card .k{font-size:9.5px;color:var(--muted);font-weight:600}.card .v{font-size:14px;font-weight:700;color:var(--ink);margin-top:5px;font-family:var(--fe);font-variant-numeric:tabular-nums}'
 +'.card .v.pos{color:var(--pos)}.card .v.neg{color:var(--neg)}'
@@ -106,7 +110,11 @@ const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#
 +'.wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}'
 +'.wm span{transform:rotate(-33deg);font-size:72px;font-weight:800;color:rgba(26,34,48,.035)}'
 +'@page{size:A4 portrait;margin:0}'
-+'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tfoot{display:table-footer-group}tr{page-break-inside:avoid}.dfoot,.cards,.amount,table.dt tr.final{page-break-inside:avoid}.dh,.rule,.title,.period{page-break-after:avoid}}';
+/* PR-5 (ROOT-5): `.cards` was removed from the page-break-inside:avoid list — a tall
+   KPI row that no longer fits was pushed WHOLE to the next page, leaving a large
+   blank gap. It may now break between cards. Small, genuinely atomic units
+   (.amount, tr, tr.final) and the signature block (.dfoot) still stay together. */
++'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tfoot{display:table-footer-group}tr{page-break-inside:avoid}.dfoot,.amount,table.dt tr.final{page-break-inside:avoid}.dh,.rule,.title,.period{page-break-after:avoid}}';
 
 /* PRINT-001 · PR-1 — Unified print renderer.
    Renders into an OFF-SCREEN, same-origin <iframe> (never a popup window) and
