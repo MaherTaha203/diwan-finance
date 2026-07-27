@@ -216,6 +216,81 @@
     };
   }
 
+  /* ═══ R7a — Fund Statement (food · diwan) ═══════════════════════════════════
+     PURE builder: a fundLedgerView (+ computed figure set) → ReportModel. Same
+     ledger the screen/print consume (date · name · desc · credit · debit ·
+     balance · note); numbers pass through unchanged (parity). Food carries three
+     extra figure cards (remaining deficit · reserve+debt · net position). */
+  function buildFundStatementModel(source) {
+    source = source || {};
+    var fund = source.fund === 'food' ? 'food' : 'diwan';
+    var v = source.view || {};
+    var f = source.figures || {};
+    var rows = (v.rows || []);
+    var isFood = fund === 'food';
+    var labelAr = isFood ? 'صندوق الغداء' : 'صندوق الديوان';
+    var labelEn = isFood ? 'Food Fund' : 'Diwan Fund';
+
+    var columns = [
+      { key: 'date', header: T('التاريخ', 'Date'), align: 'start', format: 'date' },
+      { key: 'name', header: T('الاسم', 'Name'), align: 'start', format: 'text' },
+      { key: 'desc', header: T('البيان', 'Description'), align: 'start', format: 'text' },
+      { key: 'credit', header: T('دائن (+)', 'Credit (+)'), align: 'end', format: 'money' },
+      { key: 'debit', header: T('مدين (−)', 'Debit (−)'), align: 'end', format: 'money' },
+      { key: 'balance', header: T('الرصيد', 'Balance'), align: 'end', format: 'money' },
+      { key: 'note', header: T('ملاحظات', 'Note'), align: 'start', format: 'text' }
+    ];
+    var ledgerRows = rows.map(function (r) {
+      return { date: r.date, name: r.name || null, desc: r.desc || null,
+               credit: Number(r.cr || 0) > 0 ? Number(r.cr) : null,
+               debit: Number(r.dr || 0) > 0 ? Number(r.dr) : null,
+               balance: Number(r.run || 0), note: r.note || null };
+    });
+
+    var summary = [
+      { key: T('إجمالي الإيرادات', 'Total income'), value: Number(v.totalCr || 0), format: 'money', tone: 'pos' },
+      { key: T('إجمالي المصروفات', 'Total expenses'), value: Number(v.totalDr || 0), format: 'money', tone: 'neg' },
+      { key: isFood ? T('رصيد صندوق الغداء الحالي', 'Current Food Fund balance') : T('الرصيد الحالي', 'Current balance'),
+        value: Number(f.curBal != null ? f.curBal : v.closing || 0), format: 'money' }
+    ];
+    if (isFood) {
+      summary.push({ key: T('العجز التاريخي المتبقي', 'Remaining historical deficit'), value: Number(f.deficitRemaining || 0), format: 'money', tone: 'neg' });
+      summary.push({ key: T('الاحتياطي + تسوية الذمم', 'Reserve + debt settlement'), value: Number(f.reservePlusDebt || 0), format: 'money' });
+      summary.push({ key: T('صافي مركز صندوق الغداء', 'Net Food Fund position'), value: Number(f.netPosition || 0), format: 'money', tone: (Number(f.netPosition || 0) >= 0 ? 'pos' : 'neg') });
+    }
+
+    return {
+      meta: {
+        reportId: 'FUND_STATEMENT',
+        title: T('كشف الصندوق · ' + labelAr, 'Fund Statement · ' + labelEn),
+        orientation: 'landscape',
+        period: { from: source.from || null, to: source.to || null },
+        printDate: source.printDate || null,
+        filters: source.archived ? [T('🔒 لقطة الإقفال الأرشيفية', '🔒 close-time archive')] : []
+      },
+      summary: summary,
+      sections: [
+        { type: 'table', id: 'ledger', columns: columns, rows: ledgerRows,
+          totals: { label: T('الإجمالي', 'Totals'), cells: { credit: Number(v.totalCr || 0), debit: Number(v.totalDr || 0), balance: Number(v.closing || 0) } } }
+      ]
+    };
+  }
+
+  /* Runtime gatherer for the fund statement (reads FIN/FinContract globals). */
+  function fundStatementRuntime(fund, from, to, type) {
+    if (typeof root.FIN === 'undefined' || !root.FIN.fundLedgerView) return null;
+    var FIN = root.FIN, FC = root.FinContract || {};
+    var arch = (!type && FIN.closedYearLedgerSnapshot) ? FIN.closedYearLedgerSnapshot(fund, from, to) : null;
+    var view = arch || FIN.fundLedgerView(fund, from, to, type || '');
+    var figures = { curBal: (fund === 'food' && FC.foodBalance) ? FC.foodBalance() : view.closing };
+    if (fund === 'food') {
+      figures.deficitRemaining = FC.foodDeficitRemaining ? FC.foodDeficitRemaining() : 0;
+      figures.reservePlusDebt = (FIN._r2 && FIN.foodSettlementReserve && FIN.foodDebtSettlementTotal) ? FIN._r2(FIN.foodSettlementReserve() + FIN.foodDebtSettlementTotal()) : 0;
+      figures.netPosition = FC.foodNetPosition ? FC.foodNetPosition() : 0;
+    }
+    return buildFundStatementModel({ fund: fund, view: view, figures: figures, from: from, to: to, printDate: new Date().toISOString(), archived: !!arch });
+  }
+
   /* ── Runtime gatherer (reads FIN/DB globals) — NOT wired to production in R1.
         Provided so R6 can cut the live surface over by calling one function. ── */
   function memberStatementRuntime(memberId, from, to) {
@@ -235,14 +310,15 @@
   }
 
   var ReportModel = { validate: validate };
-  var ReportModels = { memberStatement: memberStatementRuntime };
+  var ReportModels = { memberStatement: memberStatementRuntime, fundStatement: fundStatementRuntime };
 
   if (typeof root !== 'undefined') {
     root.ReportModel = ReportModel;
     root.ReportModels = ReportModels;
     root.buildMemberStatementModel = buildMemberStatementModel;
+    root.buildFundStatementModel = buildFundStatementModel;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, validate: validate, refFromNotes: refFromNotes };
+    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, validate: validate, refFromNotes: refFromNotes };
   }
 })(typeof window !== 'undefined' ? window : globalThis);
