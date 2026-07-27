@@ -398,11 +398,19 @@ window.buildFundStatementHTML=function(fund){
   return {css:css, body:body, title:title};
 };
 window.prtStmt=function(fund){
+  /* REPORT-001 · R7a — pilot fund cut-over: route print through the engine when ON. */
+  if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
+    return window.ReportCutoverFund.deliver(fund,'print');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const r=window.buildFundStatementHTML(fund);
   openPrintWin(r.css,r.body);
 };
 window.downloadFundStatementPDF=function(fund){
+  /* REPORT-001 · R7a — pilot fund cut-over: route PDF through the engine when ON. */
+  if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
+    return window.ReportCutoverFund.deliver(fund,'pdf');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const r=window.buildFundStatementHTML(fund);
   savePrintPDF(r.css, r.body, (fund==='food'?'Food-Statement':'Diwan-Statement')+'-'+today(), 'landscape');

@@ -938,6 +938,11 @@ window.closeStmtSelector=function(){ const ov=document.getElementById('stmt-sel-
 
 /* ═══ STATEMENTS ═══ */
 window.renderStmt=function(fund){
+  /* REPORT-001 · R7a — pilot fund cut-over: unified engine renders the screen
+     when the flag is ON (screen == print == PDF == Excel). Default OFF → legacy. */
+  if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
+    return window.ReportCutoverFund.renderScreen(fund);
+  }
   const from=document.getElementById(fund+'-stmt-from')?.value||'';
   const to=document.getElementById(fund+'-stmt-to')?.value||'';
   const type=document.getElementById(fund+'-stmt-type')?.value||'';
