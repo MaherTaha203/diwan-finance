@@ -277,9 +277,13 @@ function amountToWordsEn(n){
 function reportFooter(opts){
   opts=opts||{};
   var date=opts.date||new Date().toLocaleDateString('en-GB');
-  var page=opts.page||'صفحة 1';
   var printedLabel=opts.printedLabel||'طُبع:';
-  return '<div class="pgfoot"><span>'+BRAND_NAME+' — '+BRAND_SITE+'</span><span>'+printedLabel+' '+date+'</span><span>'+page+'</span></div>';
+  /* PRINT-001 · PR-4 (ROOT-7) — the page number is no longer printed here. It was
+     hard-coded ("صفحة 1" / "صفحة 1 / 1") and therefore wrong on any multi-page
+     document. Real "Page X of Y" is not computable without a pagination polyfill,
+     so we rely on the browser's own print header/footer page numbers instead. Any
+     `opts.page` a caller still passes is intentionally ignored. */
+  return '<div class="pgfoot"><span>'+BRAND_NAME+' — '+BRAND_SITE+'</span><span>'+printedLabel+' '+date+'</span></div>';
 }
 
 /* VIS-2: single-voucher builders matching approved mockups (01 receipt / 03 payment) */
@@ -521,7 +525,10 @@ window.prtMemberStmt=function(mode){
     +'<div class="card acc"><div class="k">'+(_en?'Payments against carried balance':'مجموع السداد من الرصيد المرحل')+'</div><div class="v">₪ '+fmt(_hp)+'</div></div>'
     +'</div>';
 
-  const css='@page{size:A4 portrait;margin:9mm}body{font-family:var(--fa);direction:rtl;background:#fff;padding:9mm}'
+  /* PRINT-001 · PR-4 (ROOT-8) — margin comes from @page ONLY. The body no longer
+     adds its own padding:9mm on top of the 9mm page margin (that double inset made
+     the member statement print ~18mm in from each edge — wasted width + shifted). */
+  const css='@page{size:A4 portrait;margin:9mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
     +'.msopen{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line2);border-inline-start:3px solid var(--teal-line);border-radius:8px;padding:10px 14px;margin:4px 0 14px;font-size:12px;font-weight:600;color:var(--ink2)}'
     +'.msopen .tag{margin-inline-start:5px;font-weight:600}.msopen .tag.cr{color:var(--pos)}.msopen .tag.dr{color:var(--neg)}'
     +'table.msdt{font-size:10px}table.msdt td.ds{text-align:right}';
