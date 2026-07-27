@@ -165,8 +165,18 @@
       if (def && def.outputs.indexOf(target) < 0) return { ok: false, reason: 'output_not_supported', reportId: reportId, target: target };
 
       var renderer = Renderers[target];
-      var out = renderer.render(model, { reportId: reportId });
-      return { ok: true, skeleton: true, reportId: reportId, target: target, definition: def, result: out };
+      var out = renderer.render(model, { reportId: reportId, opts: opts });
+      /* `skeleton` reflects the renderer: empty skeletons flag empty:true; a real
+         renderer (R3+ print, …) reports its own status and is not a skeleton. */
+      return { ok: true, skeleton: !!(out && out.empty), reportId: reportId, target: target, definition: def, result: out };
+    },
+
+    /* Renderer registration — each renderer phase (R3 print, R4 pdf, R5 excel)
+       ships its own module and swaps its empty skeleton for the real one, without
+       editing the engine core. */
+    registerRenderer: function (target, renderer) {
+      if (REPORT_TARGETS.indexOf(target) >= 0 && renderer && typeof renderer.render === 'function') { Renderers[target] = renderer; return true; }
+      return false;
     },
 
     /* §2.6 — the system builds output buttons from the report's declared `outputs`;
