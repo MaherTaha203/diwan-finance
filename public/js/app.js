@@ -964,180 +964,11 @@ window.renderMemberStmt=function(){
     return window.ReportCutover.renderMemberScreen();
   }
 
-  /* ─── ACCOUNT STATEMENT — approved "Concept 2" ledger (presentation only).
-     NO accounting change: rows, running balances and the final balance come
-     verbatim from FIN.memberStatement(); only the layout/markup is new.        */
-  const mid=document.getElementById('ms-member')?.value;
-  const from=document.getElementById('ms-from')?.value||'';
-  const to=document.getElementById('ms-to')?.value||'';
-  const out=document.getElementById('ms-out');
-  if(!out) return;
-  if(!mid){ out.innerHTML=''; return; }
-
-  const member=gm(mid);
-  if(!member){ out.innerHTML=''; return; }
-
-  const _en=window.LANG==='en';
-  const T=(ar,en)=>_en?en:ar;
-  const printDate=new Date().toLocaleDateString('en-GB');
-
-  /* IG-007 (FD-013): the engine supplies carried balance, movement rows and
-     period totals; this renderer formats only. */
-  const _v=FIN.memberStatementView(mid,from,to);
-  const st=_v.statement;
-  const _alloc=FIN.allocateFoodDonations();
-  const histPaid=_v.histPaid;
-  const carried=_v.carried;
-
-  /* Manual receipt no. lives inside the payment voucher Notes; surface ONLY the
-     number (never the raw notes text). Tune the keywords if your notes differ. */
-  const refFromNotes=txt=>{
-    if(!txt) return '';
-    const s=String(txt);
-    let m=s.match(/(?:إيصال|ايصال|سند|receipt|rcpt|ref|مرجع|رقم|no\.?|#)[^\d]{0,24}(\d{1,9})/i);
-    if(m) return m[1];
-    m=s.match(/^\s*#?\s*(\d{1,9})\s*$/);
-    return m?m[1]:'';
-  };
-
-  /* Movement rows = engine rows minus the two folded historical (date '—') rows,
-     whose net is already represented by `carried`. Running balances are unchanged. */
-  const moves=_v.moves;
-  const totSub=_v.totSub, totPay=_v.totPay;
-  const bodyRows=[];
-  /* Explicit, symmetric balance-polarity marker (DDL-02 B-3): every balance cell
-     shows دائن/مدين for BOTH polarities — never credit-labelled / debit-by-absence. */
-  const polM=v=>v>0?' <span class="as-pol as-pol-dr">'+T('مدين','Dr')+'</span>'
-               :v<0?' <span class="as-pol as-pol-cr">'+T('دائن','Cr')+'</span>':'';
-
-  bodyRows.push(
-    '<tr class="as-open">'
-    +'<td class="as-c">—</td>'
-    +'<td class="as-desc">'+T('رصيد مُرحّل قبل 31/12/2024','Carried balance before 31/12/2024')+'</td>'
-    +'<td class="as-c as-mut">—</td>'
-    +'<td class="as-c as-mut">—</td>'
-    +'<td class="as-c as-mut">—</td>'
-    +'<td class="as-num as-mut">—</td>'
-    +'<td class="as-num as-mut">—</td>'
-    +'<td class="as-num as-bal">₪ '+fmt(Math.abs(carried))+polM(carried)+'</td>'
-    +'</tr>'
-  );
-
-  moves.forEach(r=>{
-    const isReceipt = r.no && r.no!=='—';
-    const year = (r.date && r.date!=='—') ? String(r.date).slice(0,4) : '—';
-    const sysNo = isReceipt ? esc(r.no) : '—';
-    const refNo = isReceipt ? (refFromNotes(r.desc)||'—') : '—';
-    const desc  = isReceipt ? T('سداد · مساهمة غذاء','Payment · Food contribution') : esc(r.desc);
-    const bal   = Number(r.bal||0);
-    bodyRows.push(
-      '<tr>'
-      +'<td class="as-c">'+fdate(r.date)+'</td>'
-      +'<td class="as-desc">'+desc+'</td>'
-      +'<td class="as-c">'+year+'</td>'
-      +'<td class="as-c">'+(isReceipt?'<span class="lnk-no" onclick="window.openVoucherByNo(\''+esc(r.no)+'\')">'+sysNo+'</span>':sysNo)+'</td>'
-      +'<td class="as-c '+(refNo==='—'?'as-mut':'as-ref')+'">'+refNo+'</td>'
-      +'<td class="as-num">'+(r.dr>0?'₪ '+fmt(r.dr):'<span class="as-mut">—</span>')+'</td>'
-      +'<td class="as-num">'+(r.cr>0?'₪ '+fmt(r.cr):'<span class="as-mut">—</span>')+'</td>'
-      +'<td class="as-num as-bal">₪ '+fmt(Math.abs(bal))+polM(bal)+'</td>'
-      +'</tr>'
-    );
-  });
-
-  const finBal=Number(st.finalBalance||0);
-  const finStatus = finBal>0?T('على العضو مستحقات','Outstanding — member owes')
-                  : finBal<0?T('للعضو رصيد دائن','Credit balance — owed to member')
-                  : T('الحساب مسدد بالكامل','Fully settled');
-
-  /* Donation transparency (do NOT affect the balance) — retained for auditors.
-     IG-019 (FD-018): independent-event form «تبرع — [الصندوق الوجهة]» from the
-     stored destination (donationStmtLabel — print.js, one rule for all surfaces);
-     settlement suffix only when the engine actually settled debt. */
-  const dons=FIN.memberDonations(mid); /* ق4: collections live in the main ledger */
-  const donHTML = dons.length ? (
-    '<div class="as-don"><div class="as-don-h">'
-    +T('حركات التبرعات (حدث مستقل — لا يؤثّر على الرصيد إلا بتخصيص تسوية صريح)','Donation movements (independent events — affect the balance only on explicit settlement designation)')
-    +'</div>'
-    +dons.map(d=>'<div class="as-don-r"><span>'+fdate(d.receipt_date)+' — '+donationStmtLabel(d,(_alloc.perReceipt[d.id]||{}).debtSettled,window.LANG==='en')+'</span><span class="as-don-v">₪ '+fmt(FIN.amountOf(d))+'</span></div>').join('')
-    +'</div>'
-  ) : '';
-
-  /* Print ▼ split button — all PDF/print paths use the official print template
-     (prtMemberStmt), never the on-screen layout. Excel uses the data exporter. */
-  const canPrint  = (typeof can!=='undefined' && can.print  && can.print());
-  const canExport = (typeof can!=='undefined' && can.export && can.export());
-  const actions = (canPrint || canExport) ? (
-    '<div class="as-actions"><div class="export-dropdown">'
-    +'<button class="as-btn as-btn-pri as-split" onclick="togglePageExport(event,\'ms-print-menu\')">'
-      +'<i class="ti ti-printer"></i><span>'+T('طباعة','Print')+'</span><i class="ti ti-chevron-down as-split-ar"></i>'
-    +'</button>'
-    +'<div class="export-dropdown-menu" id="ms-print-menu">'
-      +(canPrint?'<button class="export-dropdown-item" onclick="window.prtMemberStmt(\'print\')"><i class="ti ti-file-description"></i>'+T('طباعة كشف الحساب','Print statement')+'</button>':'')
-      +(canPrint?'<button class="export-dropdown-item" onclick="window.prtMemberStmt(\'pdf\')"><i class="ti ti-file-type-pdf"></i>'+T('تنزيل PDF','Download PDF')+'</button>':'')
-      +(canExport?'<button class="export-dropdown-item" onclick="window.exportMemberStmt(\'excel\')"><i class="ti ti-file-spreadsheet"></i>'+T('تصدير Excel','Export Excel')+'</button>':'')
-      +(canPrint?'<button class="export-dropdown-item" onclick="window.prtMemberStmt(\'pdf-print\')"><i class="ti ti-printer"></i>'+T('طباعة PDF','Print PDF')+'</button>':'')
-    +'</div>'
-    +'</div></div>'
-  ) : '';
-
-  out.innerHTML =
-  '<div class="acct-stmt">'
-    +'<div class="as-top">'
-      +'<div class="as-title"><span class="as-brand">م</span><div>'
-        +'<div class="as-h">'+T('كشف حساب العضو','Member Account Statement')+'</div>'
-        +'<div class="as-sub">'+T('المالية ‹ الأعضاء ‹ كشف الحساب','Finance ‹ Members ‹ Account statement')+'</div>'
-      +'</div></div>'
-      +actions
-    +'</div>'
-
-    +'<div class="as-meta">'
-      +'<div class="as-m"><div class="as-k">'+T('اسم العضو','Member name')+'</div><div class="as-v">'+esc(member.name)+'</div></div>'
-      +'<div class="as-m"><div class="as-k">'+T('رقم العضو','Member no.')+'</div><div class="as-v">'+esc(member.member_code||'—')+'</div></div>'
-      +'<div class="as-m"><div class="as-k">'+T('تاريخ التسجيل','Registration')+'</div><div class="as-v">'+(member.active_from_year||'—')+'</div></div>'
-      +'<div class="as-m"><div class="as-k">'+T('تاريخ الطباعة','Print date')+'</div><div class="as-v">'+printDate+'</div></div>'
-    +'</div>'
-
-    +'<div class="as-openbar">'
-      +'<span class="as-openbar-k">'+T('الرصيد المرحّل قبل 31/12/2024','Carried balance before 31/12/2024')+'</span>'
-      +'<span class="as-openbar-v">₪ '+fmt(Math.abs(carried))+polM(carried)+'</span>'
-    +'</div>'
-
-    +'<div class="as-tablewrap"><table class="as-table"><thead><tr>'
-      +'<th class="as-c">'+T('التاريخ','Date')+'</th>'
-      +'<th>'+T('البيان','Description')+'</th>'
-      +'<th class="as-c">'+T('السنة','Year')+'</th>'
-      +'<th class="as-c">'+T('رقم النظام','System no.')+'</th>'
-      +'<th class="as-c">'+T('الرقم المرجعي','Reference no.')+'</th>'
-      +'<th class="as-num">'+T('اشتراك (+)','Subscription (+)')+'</th>'
-      +'<th class="as-num">'+T('سداد (−)','Payment (−)')+'</th>'
-      +'<th class="as-num as-bal">'+T('الرصيد الجاري','Running balance')+'</th>'
-    +'</tr></thead><tbody>'+bodyRows.join('')+'</tbody>'
-    /* final balance CAPS the running-balance column (mirrors the official print) */
-    +'<tfoot><tr class="as-ffinal"><td colspan="7">'+T('الرصيد النهائي الحالي','Current final balance')+' · <span class="as-ffs">'+finStatus+'</span></td>'
-    +'<td class="as-num as-bal">₪ '+fmt(Math.abs(finBal))+polM(finBal)+'</td></tr></tfoot>'
-    +'</table></div>'
-
-    /* Dynamic accounting summaries (presentation only — all values from the
-       existing engine; future subscription years are included automatically). */
-    +'<div class="as-summary">'
-      +'<div class="as-totals">'
-        +'<div class="as-t"><div class="as-k">'+T('مجموع الاشتراكات بعد تشغيل النظام','Subscriptions after system launch')+'</div><div class="as-tv">₪ '+fmt(totSub)+'</div></div>'
-        +'<div class="as-t"><div class="as-k">'+T('مجموع السداد بعد تشغيل النظام','Payments after system launch')+'</div><div class="as-tv">₪ '+fmt(totPay)+'</div></div>'
-        +'<div class="as-t"><div class="as-k">'+T('مجموع السداد من الرصيد المرحل','Payments against carried balance')+'</div><div class="as-tv">₪ '+fmt(histPaid)+'</div></div>'
-      +'</div>'
-    +'</div>'
-
-    +donHTML
-
-    +'<div class="as-foot">'
-      +'<span>'+T('عدد الحركات','Transactions')+': '+moves.length+' · '+T('العملة','Currency')+': ₪</span>'
-      +'<span>'+T('كُشف حساب مُولّد آليًا من النظام المالي — ديوان آل طه','Auto-generated statement — Diwan Al-Taha Finance')+'</span>'
-    +'</div>'
-  +'</div>';
-  /* P2·S1 — Member Financial Lifecycle: read-only INITIAL-STATE card, injected
-     additively after the opening bar. Presentation only; values derive from the
-     certified read model via window.MemberLifecycle (no accounting change). */
-  try{ if(window.MemberLifecycle){ const _ob=out.querySelector('.as-openbar'); if(_ob) _ob.insertAdjacentHTML('afterend', window.MemberLifecycle.initialStateCard(mid,_en)); } }catch(_){}
+  /* REPORT-001 · R8-c — the legacy screen builder was removed; the unified engine
+     renders the member screen (ledger + donations + the ported MemberLifecycle
+     initial-state card). The R6 flag stays a kill-switch: with it off this surface
+     no-ops (clears the container) rather than falling back — no legacy path remains. */
+  const out=document.getElementById('ms-out'); if(out) out.innerHTML='';
 };
 
 
@@ -1889,30 +1720,9 @@ window.exportMemberStmt=function(format){
     toast('\u2713 JSON exported','ok');return;
   }
 
-  /* EXCEL */
-  if(format==='excel'){
-    const _dons=FIN.memberDonations(mid,from,to); /* IG-007 · ق4 excluded by the engine */
-    const _alloc=FIN.allocateFoodDonations();
-    const _donRows=[];
-    if(_dons.length){
-      /* IG-019 (FD-018) — independent-event label from the stored destination
-         (donationStmtLabel — one rule for screen · print · Excel). */
-      _donRows.push([],['حركات التبرعات · Donation movements'],['التاريخ','رقم السند','البيان','المبلغ ₪']);
-      _dons.forEach(d=>{
-        _donRows.push([d.receipt_date,d.no,donationStmtLabel(d,(_alloc.perReceipt[d.id]||{}).debtSettled,false),FIN.amountOf(d)]);
-      });
-      _donRows.push(['التبرع حدث مستقل لا يؤثّر على رصيد العضو إلا إذا خُصِّص صراحةً لتسوية الذمة']);
-    }
-    const doExcel=()=>{
-      const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064f \u062a\u062d\u0645\u064a\u0644 \u0645\u0643\u062a\u0628\u0629 Excel...','info');return;}
-      const wsData=[['\u062f\u064a\u0648\u0627\u0646 \u0622\u0644 \u0637\u0647 \u2014 \u0643\u0634\u0641 \u062d\u0633\u0627\u0628 \u0639\u0636\u0648'],[`\u0627\u0644\u0639\u0636\u0648: ${member.name}${member.phone?'  |  \u260e '+member.phone:''}  |  \u0627\u0644\u0641\u062a\u0631\u0629: ${periodLabel}`],[],['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f','\u0627\u0644\u0628\u064a\u0627\u0646','\u062f\u0627\u0626\u0646 \u20aa','\u0645\u062f\u064a\u0646 \u20aa','\u0627\u0644\u0631\u0635\u064a\u062f \u20aa'],...computed.map(r=>[r.date==='—'?'—':r.date,r.no,r.desc,r.cr>0?r.cr:'',r.dr>0?r.dr:'',r.bal]),[],['\u0631\u0635\u064a\u062f \u0627\u0641\u062a\u062a\u0627\u062d\u064a','','',openBal,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a','','',totalDues,'',''],['\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a','','','',totalPaid,''],['\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a','','','','',finalBal],..._donRows];
-      const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!cols']=[{wch:12},{wch:14},{wch:30},{wch:14},{wch:14},{wch:16}];ws['!rtl']=true;styleDiwanSheet(XLSX,ws,{headerRow:3,money:[3,4,5]});
-      const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'\u0643\u0634\u0641 \u0627\u0644\u062d\u0633\u0627\u0628');XLSX.writeFile(wb,fname+'.xlsx');
-      toast('\u2713 Excel exported','ok');
-    };
-    loadStyledXLSX(doExcel);
-    return;
-  }
+  /* EXCEL — REPORT-001 · R8-c: the legacy XLSX builder was removed; the unified
+     engine serves Excel (routed at the top of this function when the flag is ON).
+     With the flag off this branch no-ops rather than falling back (kill-switch). */
 
   /* HTML/PDF member-statement export uses the SAME official print template as
      prtMemberStmt (unified \u2014 one layout). PR-6: the former inline Cairo/Reem-Kufi

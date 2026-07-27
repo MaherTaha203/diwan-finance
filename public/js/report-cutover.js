@@ -73,7 +73,17 @@
     if (!model) { out.innerHTML = ''; return true; }
     var toolbar = '<div class="rpt-toolbar" id="ms-rpt-toolbar">' +
       root.Report.outputButtons('MEMBER_STATEMENT', { lang: lang(), can: root.can }) + '</div>';
-    out.innerHTML = toolbar + '<div id="ms-rpt-mount"></div>';
+    /* REPORT-001 · R8-c — port the additive MemberLifecycle initial-state card that
+       the legacy screen injected (P2·S1). It is app-chrome (its own theme vars), not
+       part of the .rpt paper, so it sits above the rendered statement. Read-only. */
+    var lc = '';
+    try {
+      var msel = el('ms-member'); var mid = msel && msel.value;
+      if (mid && root.MemberLifecycle && typeof root.MemberLifecycle.initialStateCard === 'function') {
+        lc = root.MemberLifecycle.initialStateCard(mid, lang() === 'en') || '';
+      }
+    } catch (e) { lc = ''; }
+    out.innerHTML = toolbar + lc + '<div id="ms-rpt-mount"></div>';
     root.Report.render(model, 'screen', { mountId: 'ms-rpt-mount', lang: lang() });
     if (!out.__rptWired) { out.addEventListener('click', onOutputClick); out.__rptWired = true; }
     return true;
