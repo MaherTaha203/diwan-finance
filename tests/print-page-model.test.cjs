@@ -16,10 +16,11 @@ const rfBody = rf.replace(/\/\*[\s\S]*?\*\//g, '');
 ok(!/صفحة 1/.test(rfBody), 'reportFooter no longer hard-codes a page number');
 ok((rfBody.match(/<span>/g) || []).length === 2, 'pgfoot now has exactly 2 spans (brand + printed date, no page span)');
 
-/* ROOT-8 — the member statement uses @page margin only, no body padding. */
-const msLine = (printJs.split('\n').find(l => l.includes('@page{size:A4 portrait;margin:9mm}')) || '');
-ok(msLine.length > 0, 'member statement @page margin:9mm present');
-ok(!/padding:9mm/.test(msLine), 'member statement body no longer adds padding:9mm (no double margin)');
+/* ROOT-8 → REPORT-001 · R8-b — the member-statement print builder was removed from
+   print.js; the unified engine now renders it (its @page comes from the shared
+   print/pdf renderer). So print.js no longer carries the legacy 9mm member-statement
+   page CSS, and the ROOT-8 no-double-inset invariant is enforced generally below. */
+ok(!printJs.includes('@page{size:A4 portrait;margin:9mm}'), 'legacy member-statement @page CSS removed from print.js (now engine-rendered) — R8-b');
 
 /* No other live print doc double-margins: no "@page{...margin...}...body{...padding: <n>mm}" pairing. */
 const doubleMargin = /@page\{[^}]*margin:\s*\d+mm[^}]*\}[^']*body\{[^}]*padding:\s*\d+mm/;

@@ -41,9 +41,13 @@ ok(label({ movement_type: 'donation_cash', destination_treasury: 'food' }, 0, tr
   && label({ movement_type: 'donation_cash', destination_treasury: 'historical_deficit' }, 75, true) === 'Donation — Historical Deficit Account · Debt Settlement ₪75',
   'English mode: same form, same settlement rule');
 
-/* 5 · wiring: all three statement surfaces use the single label rule; old split labels removed */
-ok(/donationStmtLabel\(d,\(_alloc\.perReceipt\[d\.id\]\|\|\{\}\)\.debtSettled,_en\)/.test(printSrc),
-  'print surface (prtMemberStmt) renders rows through donationStmtLabel');
+/* 5 · wiring: the single label RULE lives in print.js and the live screen + Excel
+   surfaces (app.js) render donation rows through it. REPORT-001 · R8-b: the member
+   statement PRINT/PDF moved to the unified engine (report-model.js carries a pure
+   port of the same rule), so print.js no longer wires it into a print builder — it
+   DEFINES the shared rule the other surfaces call. Old split labels stay removed. */
+ok(/function donationStmtLabel\(/.test(printSrc),
+  'print.js defines the single donationStmtLabel rule (consumed by screen + Excel; engine ports it)');
 ok((appSrc.match(/donationStmtLabel\(d,\(_alloc\.perReceipt\[d\.id\]\|\|\{\}\)\.debtSettled/g) || []).length === 2,
   'screen + Excel surfaces both render rows through donationStmtLabel');
 ok(!/donSplit/.test(printSrc) && !/donSplit/.test(appSrc),

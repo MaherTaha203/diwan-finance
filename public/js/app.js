@@ -938,81 +938,14 @@ window.closeStmtSelector=function(){ const ov=document.getElementById('stmt-sel-
 
 /* ═══ STATEMENTS ═══ */
 window.renderStmt=function(fund){
-  /* REPORT-001 · R7a — pilot fund cut-over: unified engine renders the screen
-     when the flag is ON (screen == print == PDF == Excel). Default OFF → legacy. */
+  /* REPORT-001 — the unified engine renders the fund-statement screen (screen ==
+     print == PDF == Excel). R8-b removed the legacy screen builder; the R7a flag
+     stays a kill-switch: with it off this surface no-ops rather than falling back. */
   if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
     return window.ReportCutoverFund.renderScreen(fund);
   }
-  const from=document.getElementById(fund+'-stmt-from')?.value||'';
-  const to=document.getElementById(fund+'-stmt-to')?.value||'';
-  const type=document.getElementById(fund+'-stmt-type')?.value||'';
   const out=document.getElementById(fund+'-stmt-out');
-  /* IG-016 (FD-004): an EXACT closed-year range renders from the immutable
-     close-time snapshot (latest for the year); otherwise compute live. */
-  const _arch=(!type)?FIN.closedYearLedgerSnapshot(fund,from,to):null;
-  const lv=_arch||FIN.fundLedgerView(fund,from,to,type); /* IG-007: engine computes running balance + totals */
-  const rows=lv.rows;
-  const _en=window.LANG==='en';
-  const isFood=fund==='food';
-  const fundLabel=isFood?(_en?'Food Fund':'صندوق الغداء'):(_en?'Diwan Fund':'صندوق الديوان');
-  const periodTxt=(from&&to?`${fdate(from)} — ${fdate(to)}`:from?`${window.t('stmt.date_from')} ${fdate(from)}`:to?`${window.t('stmt.date_to')} ${fdate(to)}`:window.t('stmt.all_periods'))+(_arch?(_en?' · 🔒 close-time archive':' · 🔒 لقطة الإقفال الأرشيفية'):'');
-  const printDate=new Date().toLocaleDateString('en-GB');
-  const actions=can.print()?('<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtStmt(\''+fund+'\')"><i class="ti ti-printer"></i>'+window.t('common.print')+'</button></div>'):'';
-  const head='<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
-    +'<div class="as-h">'+(_en?'Fund Statement':'كشف حساب الصندوق')+' · '+fundLabel+'</div>'
-    +'<div class="as-sub">'+(_en?'Finance ‹ Funds ‹ Statement':'المالية ‹ الصناديق ‹ كشف الصندوق')+'</div>'
-    +'</div></div>'+actions+'</div>'
-    +'<div class="as-meta">'
-      +'<div class="as-m"><div class="as-k">'+(_en?'Fund':'الصندوق')+'</div><div class="as-v">'+fundLabel+'</div></div>'
-      +'<div class="as-m"><div class="as-k">'+(_en?'Period':'الفترة')+'</div><div class="as-v">'+periodTxt+'</div></div>'
-      +'<div class="as-m"><div class="as-k">'+(_en?'Transactions':'عدد الحركات')+'</div><div class="as-v">'+rows.length+'</div></div>'
-      +'<div class="as-m"><div class="as-k">'+(_en?'Print date':'تاريخ الطباعة')+'</div><div class="as-v">'+printDate+'</div></div>'
-    +'</div>';
-  if(!rows.length){
-    out.innerHTML='<div class="acct-stmt">'+head+'<div class="as-empty">'+L.noData('ops')+'</div></div>';
-    return;
-  }
-  const totalCr=lv.totalCr,totalDr=lv.totalDr,bal=lv.closing;
-  const body=rows.map(r=>{
-    return '<tr>'
-      +'<td class="as-c">'+fdate(r.date)+'</td>'
-      +'<td class="as-desc">'+(r.no?'<span class="lnk-nm" onclick="window.openPersonByVoucher(\''+esc(r.no)+'\')">'+esc(r.name||'—')+'</span>':esc(r.name||'—'))+'</td>'
-      +'<td class="as-desc">'+esc(r.desc)+'</td>'
-      +'<td class="as-num as-cr">'+(r.cr>0?'₪ '+fmt(r.cr):(r.type==='don'?'<span style="color:var(--don);font-size:11px">'+(_en?'Donation':'تبرع')+'</span>':'—'))+'</td>'
-      +'<td class="as-num as-dr">'+(r.dr>0?'₪ '+fmt(r.dr):'—')+'</td>'
-      +'<td class="as-num as-bal">₪ '+fmt(r.run)+'</td>'
-      +'<td class="as-note">'+esc(r.note||'')+'</td>'
-      +'</tr>';
-  }).join('');
-  const curBal=isFood?FinContract.foodBalance():bal;
-  const curLbl=isFood?(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'):window.t('stmt.current_bal');
-  let figs='<div class="as-figs">'
-    +'<div class="as-fig green"><div class="k">'+window.t('stmt.total_income')+'</div><div class="v">₪ '+fmt(totalCr)+'</div></div>'
-    +'<div class="as-fig red"><div class="k">'+window.t('stmt.total_expenses')+'</div><div class="v">₪ '+fmt(totalDr)+'</div></div>'
-    +'<div class="as-fig '+(curBal>=0?'teal':'red')+'"><div class="k">'+curLbl+'</div><div class="v">₪ '+fmt(curBal)+'</div>'
-      +(isFood?'<div class="s">'+(_en?'Operational':'تشغيلي')+' ₪'+fmt(bal)+' + '+(_en?'Support':'دعم')+' ₪'+fmt(FIN.foodCurrentSupportTotal())+' · '+(_en?'Debt Settle → Deficit (Q5)':'تسوية الذمم ← العجز (ق5)')+' ₪'+fmt(FIN.foodDebtSettlementTotal())+'</div>':'')
-    +'</div>';
-  if(isFood){
-    figs+='<div class="as-fig'+(FinContract.foodDeficitRemaining()<0?' red':'')+'"><div class="k">'+(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي')+'</div><div class="v">₪ '+fmt(FinContract.foodDeficitRemaining())+'</div></div>'
-      +'<div class="as-fig"><div class="k">'+mcLabel('reserve')+' + '+mcLabel('debt')+'</div><div class="v">₪ '+fmt(FIN._r2(FIN.foodSettlementReserve()+FIN.foodDebtSettlementTotal()))+'</div></div>'
-      +'<div class="as-fig '+(FinContract.foodNetPosition()>=0?'green':'red')+'"><div class="k">'+(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء')+'</div><div class="v">₪ '+fmt(FinContract.foodNetPosition())+'</div></div>';
-  }
-  figs+='</div>';
-  const tbl='<div class="as-tablewrap"><table class="as-table"><thead><tr>'
-    +'<th class="as-c">'+window.t('common.date')+'</th>'
-    +'<th>'+window.t('stmt.donor_name')+'</th>'
-    +'<th>'+window.t('stmt.desc')+'</th>'
-    +'<th class="as-num">'+window.t('stmt.credit')+' (+)</th>'
-    +'<th class="as-num">'+window.t('stmt.debit')+' (−)</th>'
-    +'<th class="as-num as-bal">'+window.t('stmt.balance')+'</th>'
-    +'<th>'+window.t('stmt.note')+'</th>'
-    +'</tr></thead><tbody>'+body+'</tbody>'
-    +'<tfoot><tr><td colspan="3">'+(_en?'Totals':'الإجمالي')+'</td><td class="as-num">₪ '+fmt(totalCr)+'</td><td class="as-num">₪ '+fmt(totalDr)+'</td><td class="as-num as-bal">₪ '+fmt(bal)+'</td><td></td></tr></tfoot>'
-    +'</table></div>';
-  out.innerHTML='<div class="acct-stmt">'+head+figs+tbl
-    +'<div class="as-foot"><span>'+(_en?'Transactions':'عدد الحركات')+': '+rows.length+' · '+(_en?'Currency':'العملة')+': ₪</span>'
-    +'<span>'+(_en?'Auto-generated statement — Diwan Al-Taha Finance':'كُشف حساب مُولّد آليًا — ديوان آل طه')+'</span></div>'
-    +'</div>';
+  if(out) out.innerHTML='<div class="as-empty">'+(window.LANG==='en'?'Statement engine unavailable':'محرك الكشف غير متاح')+'</div>';
 };
 
 /* ═══ MEMBER STATEMENT ═══ */

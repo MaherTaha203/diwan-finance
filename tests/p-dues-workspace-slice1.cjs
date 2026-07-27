@@ -74,6 +74,12 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   };
   const { FIN, DuesWorkspace, window } = load(DB, docEls, extras);
   window.print = () => { printed++; };
+  /* REPORT-001 · R8-b — printView routes SOLELY through the unified engine (the legacy
+     openPrintWin builder was removed). Stub a minimal engine so the read-only print
+     path is exercised; render() is the print here. */
+  window.REPORT_ENGINE_DUES_SNAPSHOT = true;
+  window.buildDuesSnapshotModel = () => ({ meta: {}, summary: [], sections: [] });
+  window.Report = { get: () => ({}), render: () => { printed++; } };
   const navCalls = [];
   window.nav = p => navCalls.push(p);
   window.openPersonStmt = () => navCalls.push('stmt');
@@ -142,7 +148,7 @@ const A = (id, cond, detail) => { checks++; const p = !!cond; if (!p) failures++
   A('search + filter controls present (read-only view)', /dw-search/.test(html) && /DuesWorkspace.setFilter/.test(html) && /DuesWorkspace.setSearch/.test(html));
   A('read-only export calls printView (no accounting export engine)', /window.DuesWorkspace.printView\(\)/.test(html));
   DuesWorkspace.printView();
-  A('printView is a pure browser print (read-only), mutates nothing', printed === 1 && DB.subscriptions.length === subBefore, 'printed=' + printed);
+  A('printView routes through the engine (read-only), mutates nothing', printed === 1 && DB.subscriptions.length === subBefore, 'printed=' + printed);
 
   console.log('\n═══ Result: ' + (failures === 0 ? 'DUES SLICE 1 (READ-ONLY) CONFORMANT' : (failures + ' VIOLATION(S)')) +
     '  ·  ' + (checks - failures) + '/' + checks + ' assertions passed ═══');
