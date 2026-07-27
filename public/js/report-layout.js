@@ -50,17 +50,37 @@
   var ALIGN = { start: 'rpt-a-start', center: 'rpt-a-center', end: 'rpt-a-end' };
 
   /* ── components (each returns an HTML string) ── */
+  var DEFAULT_ORG = { name: 'ديوان آل طه', subtitle: 'نظام الإدارة المالية', site: 'diwan-finance.com', logo: '' };
+  function orgOf(meta) { return meta.org || DEFAULT_ORG; }
+
   function header(meta, lang) {
-    var org = meta.org || { name: 'ديوان آل طه', subtitle: 'نظام الإدارة المالية', site: 'diwan-finance.com', logo: '' };
+    var org = orgOf(meta);
     var date = meta.printDate ? fmtDate(meta.printDate) : fmtDate(new Date().toISOString());
-    return '<header class="rpt-header">' +
+    /* Masthead brand (.rpt-mast-brand) shows once on screen and on page 1; in print
+       it is hidden because the running header (.rpt-runhead) carries the brand on
+       every page (R4). Title + meta always stay in the flow (once). */
+    return '<div class="rpt-mast-brand"><header class="rpt-header">' +
       '<div class="rpt-hd-date">' + (lang === 'en' ? 'Printed: ' : 'تاريخ الطباعة: ') + '<span class="rpt-num">' + date + '</span></div>' +
       '<div class="rpt-hd-org"><div class="rpt-hd-txt"><div class="rpt-hd-name">' + esc(pick(org.name, lang)) + '</div>' +
       (org.subtitle ? '<div class="rpt-hd-sub">' + esc(pick(org.subtitle, lang)) + (org.site ? ' · ' + esc(org.site) : '') + '</div>' : '') + '</div>' +
       (org.logo ? '<div class="rpt-hd-chip"><img src="' + esc(org.logo) + '" alt=""></div>' : '') + '</div></header>' +
-      '<div class="rpt-rule"></div>' +
+      '<div class="rpt-rule"></div></div>' +
       '<div class="rpt-title"><h2>' + esc(pick(meta.title, lang)) + '</h2></div>' +
       metaLine(meta, lang);
+  }
+
+  /* R4 — running header/footer: repeat on every printed page via position:fixed
+     (@media print only; hidden on screen). Page numbers come from the browser's
+     own print / Save-as-PDF chrome (no in-document counter). */
+  function runningHeader(meta, lang) {
+    var org = orgOf(meta);
+    return '<div class="rpt-runhead"><span>' + esc(pick(org.name, lang)) + (org.site ? ' — ' + esc(org.site) : '') + '</span></div>';
+  }
+  function runningFooter(meta, lang) {
+    var org = orgOf(meta);
+    var date = meta.printDate ? fmtDate(meta.printDate) : fmtDate(new Date().toISOString());
+    return '<div class="rpt-runfoot"><span>' + esc(pick(org.name, lang)) + ' — ' + esc(org.site || '') + '</span>' +
+      '<span>' + (lang === 'en' ? 'Printed: ' : 'طُبع: ') + '<span class="rpt-num">' + date + '</span></span></div>';
   }
 
   function metaLine(meta, lang) {
@@ -149,6 +169,8 @@
     var lang = opts.lang || (typeof root !== 'undefined' && root.LANG) || 'ar';
     var m = model.meta || {};
     var html = '<div class="rpt-doc" dir="rtl">';
+    html += runningHeader(m, lang);   /* print-only, position:fixed; every page */
+    html += runningFooter(m, lang);   /* print-only, position:fixed; every page */
     html += header(m, lang);
     html += kpi(model.summary, lang);
     html += filters(m, lang);
@@ -196,7 +218,27 @@
     '.rpt-notes{font-size:10px;color:var(--rpt-muted);margin:6px 0}' +
     '.rpt-signs{display:flex;justify-content:space-around;margin-top:30px}.rpt-sign{text-align:center;min-width:150px}.rpt-sign-line{border-top:1.5px solid var(--rpt-ink2);margin-top:34px;padding-top:6px;font-size:11px;color:var(--rpt-ink2);font-weight:600}' +
     '.rpt-footer{border-top:1px solid var(--rpt-line);margin-top:24px;padding-top:8px;display:flex;justify-content:space-between;font-size:9px;color:var(--rpt-faint)}' +
-    '@media print{.rpt-table thead{display:table-header-group}.rpt-table tr{page-break-inside:avoid}.rpt-band,.rpt-total,.rpt-signs{page-break-inside:avoid}.rpt-header,.rpt-rule,.rpt-title,.rpt-meta{page-break-after:avoid}}';
+    /* R4 running header/footer: off on screen; repeated on every printed page. */
+    '.rpt-runhead,.rpt-runfoot{display:none}' +
+    '@media print{' +
+      /* a scroll wrapper makes no sense in print — let the ledger fragment natively. */
+      '.rpt-tablewrap{overflow:visible}' +
+      /* the totals row appears ONCE at the true end of the ledger (table-row-group),
+         never as a misleading mid-ledger footer at the bottom of every page. NOTE:
+         Chromium repeats EITHER a position:fixed running band OR a table-header-group
+         across pages, not both; per the owner's running-header decision the brand band
+         (below) repeats every page and the column headers head the ledger on page 1. */
+      '.rpt-table thead{display:table-header-group}.rpt-table tfoot{display:table-row-group}' +
+      '.rpt-table tr{page-break-inside:avoid}' +
+      '.rpt-band,.rpt-total,.rpt-signs{page-break-inside:avoid}' +
+      '.rpt-header,.rpt-rule,.rpt-title,.rpt-meta{page-break-after:avoid}' +
+      /* the flow masthead + in-flow footer give way to the fixed running bands */
+      '.rpt-mast-brand,.rpt-footer{display:none}' +
+      '.rpt-runhead{display:flex;position:fixed;top:0;left:0;right:0;height:9mm;align-items:center;justify-content:flex-start;' +
+        'border-bottom:1px solid var(--rpt-line2);font-size:9px;color:var(--rpt-muted);font-weight:600;background:#fff}' +
+      '.rpt-runfoot{display:flex;position:fixed;bottom:0;left:0;right:0;height:7mm;align-items:center;justify-content:space-between;' +
+        'border-top:1px solid var(--rpt-line);font-size:8px;color:var(--rpt-faint);background:#fff}' +
+    '}';
 
   var ReportLayout = { build: build, formatCell: cell, REPORT_COMPONENT_CSS: REPORT_COMPONENT_CSS,
     _fmt: { money: money, moneyAbs: moneyAbs, date: fmtDate, balanceCell: balanceCell } };
