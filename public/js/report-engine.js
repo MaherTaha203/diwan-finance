@@ -133,6 +133,7 @@
       }
     };
   }
+  var _voucherRenderer = null;   /* R7e — set via Report.registerVoucherRenderer */
   var Renderers = {
     screen: makeSkeletonRenderer('screen'),
     print: makeSkeletonRenderer('print'),
@@ -164,6 +165,16 @@
       if (reportId && !def) return { ok: false, reason: 'unknown_report', reportId: reportId };
       if (def && def.outputs.indexOf(target) < 0) return { ok: false, reason: 'output_not_supported', reportId: reportId, target: target };
 
+      /* R7e — voucher reports are formal single-record documents, not tabular.
+         They are served by a dedicated hybrid renderer (registered separately)
+         that reuses the certified voucher builders; the tabular renderers and the
+         frozen ReportModel are untouched. */
+      if (def && def.category === 'voucher') {
+        if (!_voucherRenderer) return { ok: false, reason: 'voucher_renderer_unavailable', reportId: reportId, target: target };
+        var vout = _voucherRenderer.render(reportId, target, opts);
+        return { ok: true, skeleton: !!(vout && vout.empty), reportId: reportId, target: target, definition: def, result: vout };
+      }
+
       var renderer = Renderers[target];
       var out = renderer.render(model, { reportId: reportId, opts: opts });
       /* `skeleton` reflects the renderer: empty skeletons flag empty:true; a real
@@ -176,6 +187,13 @@
        editing the engine core. */
     registerRenderer: function (target, renderer) {
       if (REPORT_TARGETS.indexOf(target) >= 0 && renderer && typeof renderer.render === 'function') { Renderers[target] = renderer; return true; }
+      return false;
+    },
+
+    /* R7e — the hybrid voucher renderer (one, shared by all voucher reports).
+       Kept separate from the tabular target renderers on purpose. */
+    registerVoucherRenderer: function (vr) {
+      if (vr && typeof vr.render === 'function') { _voucherRenderer = vr; return true; }
       return false;
     },
 
