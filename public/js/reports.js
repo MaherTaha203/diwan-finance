@@ -25,6 +25,9 @@ function annualDebtModel(filter){
   return FIN.debtReportRows({years:_adYears,filter:filter||_adFilter});
 }
 function annualDebtRows(filter){ return annualDebtModel(filter).rows; }
+/* REPORT-001 · R7b — expose the view-state-aware data fns so the engine gatherers
+   (ReportModels.annualDebt / .delinquent) build a model matching the on-screen view. */
+window.annualDebtModel=annualDebtModel;
 function _adHead(){ const en=window.LANG==='en'; return en
   ? ['Member No.','Member Name','Phone','Debt until 31/12/2024','Paid until 31/12/2024','Selected subscriptions','Selected payments','Settlements & write-offs','Current final balance']
   : ['رقم العضو','اسم العضو','الهاتف','الذمم حتى 31/12/2024','المسدد حتى 31/12/2024','اشتراكات السنوات المحددة','مدفوعات السنوات المحددة','تسويات وشطب','الرصيد النهائي الحالي']; }
@@ -110,6 +113,10 @@ function renderAnnualDebt(){
     +'</div>';
 }
 window.prtAnnualDebt=function(mode){
+  /* REPORT-001 · R7b — route print/PDF through the engine when the flag is ON. */
+  if(window.REPORT_ENGINE_ANNUAL_DEBT && window.ReportCutoverDebt && window.ReportCutoverDebt.annualDebtReady()){
+    return window.ReportCutoverDebt.annualDebt(mode==='pdf'?'pdf':'print');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const en=window.LANG==='en';
   /* IG-006 (FD-006): SAME engine model + SAME view state as the screen —
@@ -175,6 +182,7 @@ function delinquentRows(){
   rows.sort((a,b)=> b.d.unpaidCount-a.d.unpaidCount || String(a.name).localeCompare(String(b.name),'ar'));
   return {years, rows};
 }
+window.delinquentRows=delinquentRows;   /* REPORT-001 · R7b — engine gatherer source */
 function _delHead(years){
   const en=window.LANG==='en';
   return ['رقم العضو','اسم العضو','الهاتف'].concat(years.map(String)).concat([en?'Unpaid years':'عدد السنوات غير المسددة']);
@@ -216,6 +224,10 @@ function renderDelinquent(){
     +'</div>';
 }
 window.prtDelinquent=function(mode){
+  /* REPORT-001 · R7b — route print/PDF through the engine when the flag is ON. */
+  if(window.REPORT_ENGINE_DELINQUENT && window.ReportCutoverDebt && window.ReportCutoverDebt.delinquentReady()){
+    return window.ReportCutoverDebt.delinquent(mode==='pdf'?'pdf':'print');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const en=window.LANG==='en';
   const {years, rows}=delinquentRows();

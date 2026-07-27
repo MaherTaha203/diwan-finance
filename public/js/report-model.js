@@ -291,6 +291,94 @@
     return buildFundStatementModel({ fund: fund, view: view, figures: figures, from: from, to: to, printDate: new Date().toISOString(), archived: !!arch });
   }
 
+  /* ═══ R7b — Annual Debt Report ═════════════════════════════════════════════
+     PURE builder over FIN.debtReportRows (the certified IG-006 model). Fixed 9
+     columns; `current` is a signed balance (Dr/Cr). Numbers pass through. */
+  function buildAnnualDebtModel(source) {
+    source = source || {};
+    var rows = source.rows || [], t = source.totals || {}, shown = source.shown != null ? source.shown : rows.length;
+    var columns = [
+      { key: 'code', header: T('رقم العضو', 'Member No.'), align: 'start', format: 'text' },
+      { key: 'name', header: T('اسم العضو', 'Member Name'), align: 'start', format: 'text' },
+      { key: 'phone', header: T('الهاتف', 'Phone'), align: 'center', format: 'text' },
+      { key: 'hist', header: T('الذمم حتى 31/12/2024', 'Debt until 31/12/2024'), align: 'end', format: 'money' },
+      { key: 'histPaid', header: T('المسدد حتى 31/12/2024', 'Paid until 31/12/2024'), align: 'end', format: 'money' },
+      { key: 'selSub', header: T('اشتراكات السنوات المحددة', 'Selected subscriptions'), align: 'end', format: 'money' },
+      { key: 'selPaid', header: T('مدفوعات السنوات المحددة', 'Selected payments'), align: 'end', format: 'money' },
+      { key: 'resolutions', header: T('تسويات وشطب', 'Settlements & write-offs'), align: 'end', format: 'money' },
+      { key: 'current', header: T('الرصيد النهائي الحالي', 'Current final balance'), align: 'end', format: 'balance' }
+    ];
+    var ledgerRows = rows.map(function (r) {
+      return { code: r.code || '—', name: r.name || null, phone: r.phone || null,
+               hist: Number(r.hist || 0), histPaid: Number(r.histPaid || 0),
+               selSub: Number(r.selSub || 0), selPaid: Number(r.selPaid || 0),
+               resolutions: Number(r.resolutions || 0), current: Number(r.current || 0) };
+    });
+    var filters = [];
+    if (source.filterLabel) filters.push(source.filterLabel);
+    filters.push(T('المعروض: ' + shown + ' / ' + (source.totalMembers || shown), 'Shown: ' + shown + ' / ' + (source.totalMembers || shown)));
+    return {
+      meta: { reportId: 'ANNUAL_DEBT', title: T('تقرير المديونية السنوية', 'Annual Debt Report'), orientation: 'landscape', printDate: source.printDate || null, filters: filters },
+      summary: [],
+      sections: [{ type: 'table', id: 'debt', columns: columns, rows: ledgerRows,
+        totals: { label: T('الإجمالي (' + shown + ')', 'Total (' + shown + ')'),
+          cells: { hist: Number(t.hist || 0), histPaid: Number(t.histPaid || 0), selSub: Number(t.selSub || 0), selPaid: Number(t.selPaid || 0), resolutions: Number(t.resolutions || 0) } } }]
+    };
+  }
+
+  /* ═══ R7b — Delinquent Members Report ═══════════════════════════════════════
+     PURE builder with DYNAMIC per-year columns. Year cells carry the same status
+     string as legacy _delCell (markers + Owner-approved ● marker); no totals. */
+  function delStatus(v) {
+    if (!v || Number(v.due || 0) <= 0) return null;   // renderer shows —
+    if (v.authoritative) {
+      if (v.status === 'paid') return '✓ مسدد ●';
+      if (v.status === 'partial') return '◐ جزئي ●';
+      return '✗ غير مسدد ●';
+    }
+    if (Number(v.paid || 0) >= Number(v.due || 0)) return '✓ مسدد';
+    return '✗ ' + _grp(v.remaining) + ' ₪';
+  }
+  function buildDelinquentModel(source) {
+    source = source || {};
+    var years = (source.years || []).map(Number);
+    var rows = source.rows || [];
+    var shown = source.shown != null ? source.shown : rows.length;
+    var columns = [
+      { key: 'code', header: T('رقم العضو', 'Member No.'), align: 'start', format: 'text' },
+      { key: 'name', header: T('اسم العضو', 'Member Name'), align: 'start', format: 'text' },
+      { key: 'phone', header: T('الهاتف', 'Phone'), align: 'center', format: 'text' }
+    ].concat(years.map(function (y) { return { key: 'y' + y, header: T(String(y), String(y)), align: 'center', format: 'text' }; }))
+      .concat([{ key: 'unpaidCount', header: T('عدد السنوات غير المسددة', 'Unpaid years'), align: 'center', format: 'int' }]);
+    var tableRows = rows.map(function (r) {
+      var d = r.d || {}, by = d.byYear || {};
+      var o = { code: r.code || '—', name: r.name || null, phone: r.phone || null, unpaidCount: Number(d.unpaidCount || 0) };
+      years.forEach(function (y) { o['y' + y] = delStatus(by[y]); });
+      return o;
+    });
+    return {
+      meta: { reportId: 'DELINQUENT', title: T('تقرير الأعضاء المتأخرين', 'Delinquent Members Report'), orientation: 'landscape', printDate: source.printDate || null,
+        filters: [T('المعروض: ' + shown + ' / ' + (source.totalMembers || shown), 'Shown: ' + shown + ' / ' + (source.totalMembers || shown))] },
+      summary: [],
+      sections: [{ type: 'table', id: 'delinquent', columns: columns, rows: tableRows }]
+    };
+  }
+
+  /* Runtime gatherers — read the live view-state-aware globals from reports.js
+     (annualDebtModel / delinquentRows honour the current filter/year chips). */
+  function annualDebtRuntime() {
+    if (typeof root.annualDebtModel !== 'function') return null;
+    var m = root.annualDebtModel();
+    var fl = { all: T('الكل', 'All'), debtors: T('مدينون', 'Debtors'), creditors: T('دائنون', 'Creditors'), zero: T('رصيد صفر', 'Zero balance') }[m.filter] || null;
+    return buildAnnualDebtModel({ rows: m.rows, totals: m.totals, totalMembers: m.totalMembers, shown: m.rows.length, filterLabel: fl, printDate: new Date().toISOString() });
+  }
+  function delinquentRuntime() {
+    if (typeof root.delinquentRows !== 'function') return null;
+    var d = root.delinquentRows();
+    var total = (root.DB && root.DB.members) ? root.DB.members.filter(function (m) { return m.is_active !== false; }).length : d.rows.length;
+    return buildDelinquentModel({ years: d.years, rows: d.rows, shown: d.rows.length, totalMembers: total, printDate: new Date().toISOString() });
+  }
+
   /* ── Runtime gatherer (reads FIN/DB globals) — NOT wired to production in R1.
         Provided so R6 can cut the live surface over by calling one function. ── */
   function memberStatementRuntime(memberId, from, to) {
@@ -310,15 +398,18 @@
   }
 
   var ReportModel = { validate: validate };
-  var ReportModels = { memberStatement: memberStatementRuntime, fundStatement: fundStatementRuntime };
+  var ReportModels = { memberStatement: memberStatementRuntime, fundStatement: fundStatementRuntime,
+    annualDebt: annualDebtRuntime, delinquent: delinquentRuntime };
 
   if (typeof root !== 'undefined') {
     root.ReportModel = ReportModel;
     root.ReportModels = ReportModels;
     root.buildMemberStatementModel = buildMemberStatementModel;
     root.buildFundStatementModel = buildFundStatementModel;
+    root.buildAnnualDebtModel = buildAnnualDebtModel;
+    root.buildDelinquentModel = buildDelinquentModel;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, validate: validate, refFromNotes: refFromNotes };
+    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, validate: validate, refFromNotes: refFromNotes };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

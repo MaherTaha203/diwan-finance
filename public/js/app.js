@@ -2087,6 +2087,13 @@ window.exportPagePDF=function(type){
 
 /* Universal Excel Export */
 window.exportPageExcel=function(type){
+  /* REPORT-001 \u00b7 R7b \u2014 route the debt/delinquent Excel through the engine when ON. */
+  if(type==='annual-debt' && window.REPORT_ENGINE_ANNUAL_DEBT && window.ReportCutoverDebt && window.ReportCutoverDebt.annualDebtReady()){
+    return window.ReportCutoverDebt.annualDebt('excel');
+  }
+  if(type==='delinquent' && window.REPORT_ENGINE_DELINQUENT && window.ReportCutoverDebt && window.ReportCutoverDebt.delinquentReady()){
+    return window.ReportCutoverDebt.delinquent('excel');
+  }
   if(!can.export()){toast('\u0644\u0627 \u062a\u0648\u062c\u062f \u0635\u0644\u0627\u062d\u064a\u0629','err');return;}
   if(type==='delinquent') return window.exportDelinquentExcel();
   const fund=type.startsWith('food')?'food':'diwan';
