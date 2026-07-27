@@ -1997,6 +1997,10 @@ window.exportPagePDF=function(type){
   if(type==='don' && window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()){
     return window.ReportCutoverDonation.deliver('pdf');
   }
+  /* REPORT-001 · R7d — Lists PDF through the engine when their flags are ON. */
+  if(type==='members' && window.REPORT_ENGINE_MEMBERS_LIST && window.ReportCutoverLists && window.ReportCutoverLists.membersReady()) return window.ReportCutoverLists.members('pdf');
+  if(type==='annual'  && window.REPORT_ENGINE_ANNUAL_LOG   && window.ReportCutoverLists && window.ReportCutoverLists.annualReady())  return window.ReportCutoverLists.annual('pdf');
+  if(type==='users'   && window.REPORT_ENGINE_USERS_LIST   && window.ReportCutoverLists && window.ReportCutoverLists.usersReady())   return window.ReportCutoverLists.users('pdf');
   const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
   const printDate=new Date().toLocaleDateString('en-GB');
   const titles={
@@ -2101,6 +2105,10 @@ window.exportPageExcel=function(type){
   if(type==='don' && window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()){
     return window.ReportCutoverDonation.deliver('excel');
   }
+  /* REPORT-001 \u00b7 R7d \u2014 Lists Excel through the engine when their flags are ON. */
+  if(type==='members' && window.REPORT_ENGINE_MEMBERS_LIST && window.ReportCutoverLists && window.ReportCutoverLists.membersReady()) return window.ReportCutoverLists.members('excel');
+  if(type==='annual'  && window.REPORT_ENGINE_ANNUAL_LOG   && window.ReportCutoverLists && window.ReportCutoverLists.annualReady())  return window.ReportCutoverLists.annual('excel');
+  if(type==='users'   && window.REPORT_ENGINE_USERS_LIST   && window.ReportCutoverLists && window.ReportCutoverLists.usersReady())   return window.ReportCutoverLists.users('excel');
   if(!can.export()){toast('\u0644\u0627 \u062a\u0648\u062c\u062f \u0635\u0644\u0627\u062d\u064a\u0629','err');return;}
   if(type==='delinquent') return window.exportDelinquentExcel();
   const fund=type.startsWith('food')?'food':'diwan';
