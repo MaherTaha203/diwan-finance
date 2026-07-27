@@ -67,6 +67,59 @@ between them is an architectural error** (a failing quality gate, §7).
 **Rule (frozen):** adding a fifth medium means adding a renderer that consumes the same
 model — never a parallel data path.
 
+### 2.5 Report Registry (owner amendment — 2026-07-27)
+
+Reports are **never** invoked by function name (`prtMemberStmt()`, `prtAnnualDebt()`, …).
+Every report is a **registry entry keyed by a stable ID**, and the only way to produce a
+report is through the engine:
+
+```
+Report.render("MEMBER_STATEMENT", target)      // id form
+Report.render(model, target)                    // model carries meta.reportId
+```
+
+**Registry IDs (frozen):** `MEMBER_STATEMENT · FUND_STATEMENT · ANNUAL_DEBT ·
+DELINQUENT · DONATION_REPORT · MEMBERS_LIST · ANNUAL_LOG · RECEIPT_VOUCHER ·
+PAYMENT_VOUCHER · TRANSFER_VOUCHER · TREASURY_POSITION · DUES_SNAPSHOT · AUDIT_LOG ·
+USERS_LIST · CONSISTENCY`.
+
+Each entry MUST declare:
+
+| Field | Meaning |
+|---|---|
+| `id` | stable identifier (the only handle callers use) |
+| `title` | `{ar,en}` display title |
+| `icon` | Tabler icon name |
+| `category` | `statement` \| `report` \| `list` \| `voucher` |
+| `orientation` | `portrait` \| `landscape` |
+| `defaultColumns` | ordered column keys for the main table |
+| `outputs` | the report's Output Capability set (see §2.6) |
+| `permission` | `print` (admin\|accountant) \| `export` (admin) |
+
+Adding a new report = **adding a registry entry**, never a new bespoke function.
+
+### 2.6 Output Capability Matrix (owner amendment — 2026-07-27)
+
+A report does **not** decide per-surface, ad-hoc, which outputs it has. Its registry
+entry declares an `outputs` set drawn from `{ screen, print, pdf, excel, csv }`, and the
+**system builds the output controls automatically** from that set:
+
+```
+Report.outputButtons("FUND_STATEMENT", ctx)   // → Print / PDF / Excel / CSV buttons
+```
+
+**Rules (frozen):**
+1. No developer ever hand-writes `<button>Print</button>` (or PDF/Excel/CSV) again — the
+   engine emits them from `outputs`, with the frozen icons/labels/order of §4.6.
+2. Buttons are permission-gated by the entry's `permission` (via `can.print()` /
+   `can.export()`); a report the user may not output shows no buttons.
+3. Every page's output affordance is therefore identical by construction — resolving the
+   Phase-8 inconsistencies and the missing-output gaps found in OUTPUT-001.
+
+> §2.5–§2.6 extend Principle §2 and are themselves constitutional: they change only by a
+> further recorded owner amendment. Implemented in R0 (`public/js/report-engine.js`:
+> `ReportRegistry`, `Report.render`, `Report.outputButtons`).
+
 ---
 
 ## 3 · IMMUTABLE PRINCIPLE — Unified Document Structure
