@@ -1020,6 +1020,12 @@ function fillMemberSelect(){
 }
 window.renderMemberStmt=function(){
 
+  /* REPORT-001 · R6 — when the pilot cut-over flag is ON, the unified engine
+     renders the screen (screen == print == PDF == Excel). Default OFF → legacy. */
+  if(window.REPORT_ENGINE_MEMBER_STATEMENT && window.ReportCutover && window.ReportCutover.ready()){
+    return window.ReportCutover.renderMemberScreen();
+  }
+
   /* ─── ACCOUNT STATEMENT — approved "Concept 2" ledger (presentation only).
      NO accounting change: rows, running balances and the final balance come
      verbatim from FIN.memberStatement(); only the layout/markup is new.        */
@@ -1907,6 +1913,11 @@ window.exportCSV=function(type){
 
 /* ═══ MEMBER STATEMENT EXPORTS ═══ */
 window.exportMemberStmt=function(format){
+  /* REPORT-001 · R6 — pilot cut-over: route Excel through the unified engine when
+     the flag is ON (csv/json/pdf keep their legacy paths). Default OFF → legacy. */
+  if(format==='excel' && window.REPORT_ENGINE_MEMBER_STATEMENT && window.ReportCutover && window.ReportCutover.ready()){
+    return window.ReportCutover.deliverMember('excel');
+  }
   if(!can.export()&&format!=='pdf'){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
   const mid=document.getElementById('ms-member')?.value;
   const member=gm(mid);

@@ -96,6 +96,23 @@
 
   var T = function (ar, en) { return { ar: ar, en: en }; };
 
+  /* Pure port of print.js donationStmtLabel / donationDestLabelAr (IG-017's single
+     destination mapping + IG-019 settlement suffix). Kept language-neutral: returns
+     a bilingual T() value the renderer picks by lang — one label rule for every
+     surface (screen · print · pdf · Excel). Grouping matches the layout's money(). */
+  function _grp(n) { return Math.abs(Math.round(Number(n || 0))).toLocaleString('en-US'); }
+  function donationDesc(meta) {
+    meta = meta || {};
+    var inkind = meta.movementType === 'donation_inkind';
+    var d = meta.destination;
+    var ar = inkind ? 'عيني/خدمي — توثيقي (بلا وجهة نقدية)' : (d === 'food' ? 'صندوق الغداء' : d === 'diwan' ? 'خزينة الديوان' : d === 'historical_deficit' ? 'حساب العجز التاريخي' : '—');
+    var en = inkind ? 'In-kind — documentary (no cash destination)' : (d === 'food' ? 'Food Fund' : d === 'diwan' ? 'Diwan Treasury' : d === 'historical_deficit' ? 'Historical Deficit Account' : '—');
+    var arB = 'تبرع — ' + ar, enB = 'Donation — ' + en;
+    var s = Number(meta.settled) || 0;
+    if (s > 0) { arB += ' · تسوية ذمة ₪' + _grp(s); enB += ' · Debt Settlement ₪' + _grp(s); }
+    return T(arB, enB);
+  }
+
   /* ── PURE builder: certified source → ReportModel. No FIN/DB/DOM access. ──
      source = {
        member: {name, member_code, phone, active_from_year},
@@ -155,14 +172,17 @@
         columns: [
           { key: 'date', header: T('التاريخ', 'Date'), align: 'start', format: 'date' },
           { key: 'ref', header: T('المرجع', 'Ref'), align: 'center', format: 'text' },
+          { key: 'desc', header: T('البيان', 'Description'), align: 'start', format: 'text' },
           { key: 'amount', header: T('المبلغ', 'Amount'), align: 'end', format: 'money' }
         ],
         rows: source.donations.map(function (d) {
+          var meta = { movementType: d.movement_type, destination: d.destination_treasury || d.donation_display_fund, settled: Number(d._settled || 0) };
           return { date: d.receipt_date, ref: (d.no != null ? String(d.no) : null),
+                   /* IG-019 independent-event label — computed from the STORED destination
+                      (the same rule as legacy; bilingual so the renderer picks by lang). */
+                   desc: donationDesc(meta),
                    amount: Number(d.amount_ils || 0),
-                   /* structured meta for the renderer's label (destination + settlement);
-                      not a column → not styling, carried for faithful composition later */
-                   _meta: { movementType: d.movement_type, destination: d.destination_treasury || d.donation_display_fund, settled: Number(d._settled || 0) } };
+                   _meta: meta };
         }),
         footnotes: [T('التبرع حدث مستقل لا يؤثّر على رصيد العضو إلا إذا خُصِّص صراحةً لتسوية الذمة.',
           'A donation is an independent event and does not affect the member balance unless explicitly designated to settle debt.')]

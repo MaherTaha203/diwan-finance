@@ -411,6 +411,11 @@ window.prtMemberStmt=function(mode){
   /* mode: 'print' (default) · 'pdf' (download) · 'pdf-print' — ALL use the same
      official A4 statement template below; only the guidance toast differs. */
   mode=mode||'print';
+  /* REPORT-001 · R6 — pilot cut-over: route print/pdf through the unified engine
+     when the flag is ON (default OFF → legacy template below). */
+  if(window.REPORT_ENGINE_MEMBER_STATEMENT && window.ReportCutover && window.ReportCutover.ready()){
+    return window.ReportCutover.deliverMember((mode==='pdf'||mode==='pdf-print')?'pdf':'print');
+  }
   if(!can.print()){toast(window.t('errors.no_print'),'err');return;}
   const mid=document.getElementById('ms-member')?.value;
   if(!mid){toast(window.t('errors.select_member'),'warn');return;}

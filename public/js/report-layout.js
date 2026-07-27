@@ -218,6 +218,14 @@
     '.rpt-notes{font-size:10px;color:var(--rpt-muted);margin:6px 0}' +
     '.rpt-signs{display:flex;justify-content:space-around;margin-top:30px}.rpt-sign{text-align:center;min-width:150px}.rpt-sign-line{border-top:1.5px solid var(--rpt-ink2);margin-top:34px;padding-top:6px;font-size:11px;color:var(--rpt-ink2);font-weight:600}' +
     '.rpt-footer{border-top:1px solid var(--rpt-line);margin-top:24px;padding-top:8px;display:flex;justify-content:space-between;font-size:9px;color:var(--rpt-faint)}' +
+    /* R6 output toolbar (screen-only affordance, §4.6): the engine builds these
+       buttons from the report's declared outputs — pages never hand-write them. */
+    '.rpt-toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin:0 0 14px}' +
+    '.rpt-out-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border:1px solid var(--rpt-line);border-radius:8px;' +
+      'background:#fff;color:var(--rpt-ink);font:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s}' +
+    '.rpt-out-btn:hover{background:var(--rpt-hd);border-color:var(--rpt-line2)}' +
+    '.rpt-out-btn i{font-size:15px;color:var(--rpt-accent)}' +
+    '@media print{.rpt-toolbar{display:none}}' +
     /* R4 running header/footer: off on screen; repeated on every printed page. */
     '.rpt-runhead,.rpt-runfoot{display:none}' +
     '@media print{' +
