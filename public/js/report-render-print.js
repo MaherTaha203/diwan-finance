@@ -30,10 +30,13 @@
     return parts.join('-').replace(/[^A-Za-z0-9_\-]+/g, '_');
   }
 
+  /* @page margins reserve room for the fixed running header (top) and footer
+     (bottom) that the layout repeats on every printed page (R4): band heights
+     are 9mm/7mm — the margins add a gap so body content never overlaps them. */
   function pageCss(orientation) {
     var o = orientation === 'landscape' ? 'landscape' : 'portrait';
-    var margin = o === 'landscape' ? '10mm' : '9mm';
-    return '@page{size:A4 ' + o + ';margin:' + margin + '}body{margin:0;background:#fff}';
+    var side = o === 'landscape' ? '10mm' : '9mm';
+    return '@page{size:A4 ' + o + ';margin:14mm ' + side + ' 12mm}body{margin:0;background:#fff}';
   }
 
   var PrintRenderer = {
