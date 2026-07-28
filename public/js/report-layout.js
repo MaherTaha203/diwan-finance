@@ -51,7 +51,10 @@
 
   /* ── components (each returns an HTML string) ── */
   var DEFAULT_ORG = { name: 'ديوان آل طه', subtitle: 'نظام الإدارة المالية', site: 'diwan-finance.com', logo: '' };
-  function orgOf(meta) { return meta.org || DEFAULT_ORG; }
+  /* OUTPUT-002-C — the Organization/Output Profile is the single identity source
+     for every report; an explicit meta.org still wins, and DEFAULT_ORG is the last
+     fallback if the profile module is not loaded (e.g. node unit tests). */
+  function orgOf(meta) { return (meta && meta.org) || (root.OutputProfile && root.OutputProfile.org && root.OutputProfile.org()) || DEFAULT_ORG; }
 
   function header(meta, lang) {
     var org = orgOf(meta);
