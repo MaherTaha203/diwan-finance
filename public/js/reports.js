@@ -98,7 +98,7 @@ function renderAnnualDebt(){
 
   el.innerHTML='<div class="acct-stmt">'
     +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
-      +'<div class="as-h">'+(en?'Annual Debt Report':'تقرير المديونية السنوية')+'</div>'
+      +'<h1 class="as-h">'+(en?'Annual Debt Report':'تقرير المديونية السنوية')+'</h1>'
       +'<div class="as-sub">'+(en?'Finance ‹ Members ‹ Debt report':'المالية ‹ الأعضاء ‹ تقرير المديونية')+'</div>'
     +'</div></div>'
     +(can.print()?'<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtAnnualDebt()"><i class="ti ti-printer"></i>'+(en?'Print':'طباعة')+'</button></div>':'')
@@ -192,7 +192,7 @@ function renderDelinquent(){
   const body=rows.map(r=>'<tr>'+_delRowCells(r,years,true)+'</tr>').join('');
   el.innerHTML='<div class="acct-stmt">'
     +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
-      +'<div class="as-h">'+(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين')+'</div>'
+      +'<h1 class="as-h">'+(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين')+'</h1>'
       +'<div class="as-sub">'+(en?'Finance ‹ Members ‹ Delinquent report':'المالية ‹ الأعضاء ‹ تقرير المتأخرين')+'</div>'
     +'</div></div>'
     +(can.print()?'<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtDelinquent()"><i class="ti ti-printer"></i>'+(en?'Print':'طباعة')+'</button></div>':'')
