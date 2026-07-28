@@ -14,7 +14,7 @@
    Screen renderer likewise. This file only builds the components + their CSS.
 
    ReportLayout.build(model, {lang}) -> { html, css }
-     html = header + meta + kpi + filters + [sections: band|table] + signatures + footer
+     html = header + meta + kpi + filters + [sections: band|table] + footer
      css  = REPORT_TOKENS (R0) + REPORT_COMPONENT_CSS (this file)
    ═══════════════════════════════════════════════════════════════════════════ */
 (function (root) {
@@ -174,46 +174,10 @@
     return '<div class="rpt-tablewrap"><table class="rpt-table">' + thead + tbody + tfoot + '</table></div>' + foot;
   }
 
-  /* OUTPUT-002-C C8 — sign-off row: QR (internal deep link) + signature + stamp,
-     driven by the Output Profile. Guarded on OutputProfile so node/tests (no profile)
-     keep the legacy behaviour (explicit meta.signatures only, no QR). */
-  function _out() { return (typeof root !== 'undefined' && root.OutputProfile && root.OutputProfile.output && root.OutputProfile.output()) || null; }
-  function _org() { return (typeof root !== 'undefined' && root.OutputProfile && root.OutputProfile.org && root.OutputProfile.org()) || {}; }
-  function _deepLink(meta) { return (meta && meta.qrUrl) || (typeof root !== 'undefined' && root.ReportDeepLink && root.ReportDeepLink.current && root.ReportDeepLink.current()) || ''; }
-
-  function signatures(meta, lang, target) {
-    var out = _out();
-    var signs = [], stamp = '', qr = '';
-
-    if (meta.signatures && meta.signatures.length) {
-      /* explicit per-report signatures still win (legacy path) */
-      signs = meta.signatures.map(function (s) {
-        return '<div class="rpt-sign"><div class="rpt-sign-line">' + esc(pick(s, lang)) + '</div></div>';
-      });
-    } else if (out && out.showSignature !== false) {
-      var org = _org();
-      var title = pick(org.signatoryTitle, lang) || (lang === 'en' ? 'Authorized Signature' : 'التوقيع المعتمد');
-      var img = org.signatureImage ? '<img class="rpt-sign-img" src="' + esc(org.signatureImage) + '" alt="">' : '';
-      var nm = (pick(org.signatoryName, lang)) ? '<div class="rpt-sign-name">' + esc(pick(org.signatoryName, lang)) + '</div>' : '';
-      signs.push('<div class="rpt-sign">' + img + '<div class="rpt-sign-line">' + esc(title) + '</div>' + nm + '</div>');
-    }
-
-    if (out && out.showStamp) {
-      var so = _org();
-      if (so.stamp) stamp = '<div class="rpt-stamp"><img src="' + esc(so.stamp) + '" alt=""></div>';
-    }
-    if (out && out.showQR !== false && target !== 'screen') {
-      /* the QR image is drawn by the print window (openPrintWin loads the QR lib);
-         on the screen preview the box would be empty, so it is print/PDF only. */
-      var url = _deepLink(meta);
-      if (url) qr = '<div class="rpt-qr"><div class="rpt-qr-box" data-qr-url="' + esc(url) + '"></div>' +
-        '<div class="rpt-qr-cap">' + (lang === 'en' ? 'Scan to open' : 'امسح لفتح التقرير') + '</div></div>';
-    }
-
-    if (!signs.length && !stamp && !qr) return '';
-    return '<div class="rpt-signoff">' + qr +
-      '<div class="rpt-signs">' + signs.join('') + '</div>' + stamp + '</div>';
-  }
+  /* OUTPUT-002-C — reports carry NO signature/QR/stamp sign-off (owner decision):
+     the on-document verification QR + signature belong to the certified vouchers
+     (print.js), not to tabular reports/statements. Removing the sign-off also fixes
+     the multi-page pagination (no orphan sign-off page, no split signature line). */
 
   function footer(meta, lang) {
     var org = meta.org || { name: 'ديوان آل طه', site: 'diwan-finance.com' };
@@ -237,7 +201,6 @@
       if (sec.type === 'band') html += band(sec, lang);
       else if (sec.type === 'table') html += table(sec, lang, opts.windowRows);
     });
-    html += signatures(m, lang, opts.target || 'print');
     html += footer(m, lang);
     html += '</div>';
     var css = ((typeof root !== 'undefined' && root.REPORT_TOKENS) || '') + REPORT_COMPONENT_CSS;
@@ -275,18 +238,6 @@
     '.rpt-table tr.rpt-total td{border-top:2px solid var(--rpt-accent);font-weight:800;font-size:12px;padding:11px 10px}' +
     '.rpt-status{font-weight:500;color:var(--rpt-ink2)}' +
     '.rpt-notes{font-size:10px;color:var(--rpt-muted);margin:6px 0}' +
-    '.rpt-signs{display:flex;justify-content:space-around;margin-top:30px}.rpt-sign{text-align:center;min-width:150px}.rpt-sign-line{border-top:1.5px solid var(--rpt-ink2);margin-top:34px;padding-top:6px;font-size:11px;color:var(--rpt-ink2);font-weight:600}' +
-    /* C8 — sign-off row: QR (deep link) + signature + stamp from the Output Profile */
-    '.rpt-signoff{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-top:26px}' +
-    '.rpt-signoff .rpt-signs{flex:1;margin-top:0}' +
-    '.rpt-sign-img{display:block;max-height:38px;margin:0 auto 2px}' +
-    '.rpt-sign-name{font-size:10px;color:var(--rpt-ink2);margin-top:2px}' +
-    '.rpt-qr{width:74px;text-align:center;flex:0 0 auto}' +
-    '.rpt-qr-box{width:58px;height:58px;border:1px solid var(--rpt-line);border-radius:8px;margin:0 auto;padding:3px;background:#fff}' +
-    '.rpt-qr-box>div,.rpt-qr-box img,.rpt-qr-box canvas{width:52px!important;height:52px!important}' +
-    '.rpt-qr-cap{font-size:7px;color:var(--rpt-ink2);margin-top:3px}' +
-    '.rpt-stamp{flex:0 0 auto}.rpt-stamp img{max-height:70px;max-width:110px;opacity:.9}' +
-    '.rpt-signoff,.rpt-qr-box{page-break-inside:avoid}' +
     '.rpt-footer{border-top:1px solid var(--rpt-line);margin-top:24px;padding-top:8px;display:flex;justify-content:space-between;font-size:9px;color:var(--rpt-faint)}' +
     /* R6 output toolbar (screen-only affordance, §4.6): the engine builds these
        buttons from the report's declared outputs — pages never hand-write them. */
@@ -314,7 +265,7 @@
          (below) repeats every page and the column headers head the ledger on page 1. */
       '.rpt-table thead{display:table-header-group}.rpt-table tfoot{display:table-row-group}' +
       '.rpt-table tr{page-break-inside:avoid}' +
-      '.rpt-band,.rpt-total,.rpt-signs{page-break-inside:avoid}' +
+      '.rpt-band,.rpt-total{page-break-inside:avoid}' +
       '.rpt-header,.rpt-rule,.rpt-title,.rpt-meta{page-break-after:avoid}' +
       /* the masthead IS the page-1 document header in print (logo lives here); only the
          in-flow footer gives way to the fixed running footer band. */
