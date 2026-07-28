@@ -6,6 +6,13 @@
 > engine cutovers are active). Buttons are counted from the live DOM; surfaces from the
 > renderers' pure `compose()`. This is the master reference for OUTPUT-002-B/C.
 
+> **⚠️ CORRECTION (OUTPUT-002-B).** The live-button figures in this inventory came from a harness
+> that missed the hidden **تصدير ▼ (Excel+PDF)** dropdowns (case-sensitive match + hidden-item
+> filter). Corrected facts: **11 report pages share the same export-dropdown** (incl. **users**
+> and **audit** — *not* "0 buttons"); **treasury/dues** carry a print/export button that currently
+> shows **«غير متاح»** (engine unwired); the real duplication is the three statements (page toolbar
+> **+** engine bar). See `SURFACE_COVERAGE` banner; treat these as the authoritative statuses.
+
 ## Legend
 `✅` present & working · `⚠️` present but incomplete · `❌` absent · **Engine** = REPORT-001 ·
 **Legacy** = hand-built path · **Model-only** = engine model exists but no on-screen output button.
