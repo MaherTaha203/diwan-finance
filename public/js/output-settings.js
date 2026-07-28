@@ -26,14 +26,6 @@
   function textOne(id, label) {
     return '<div class="fi"><label>' + esc(label) + '</label><input type="text" id="' + id + '"></div>';
   }
-  function imageRow(key, label) {
-    return '<div class="fi full"><label>' + esc(label) + '</label>' +
-      '<div class="os-img" data-key="' + key + '">' +
-      '<input type="file" accept="image/png,image/jpeg,image/svg+xml" onchange="window.__osImg(event,\'' + key + '\')">' +
-      '<div class="os-img-prev" id="os-prev-' + key + '"></div>' +
-      '<button type="button" class="btn ghost sm" onclick="window.__osImgClear(\'' + key + '\')"><i class="ti ti-trash"></i>' + t('مسح', 'Clear') + '</button>' +
-      '</div></div>';
-  }
   function checkRow(id, label) {
     return '<label class="os-check"><input type="checkbox" id="' + id + '"><span>' + esc(label) + '</span></label>';
   }
@@ -81,18 +73,11 @@
             '<div class="os-2">' + textOne('os-site', t('الموقع الإلكتروني', 'Website')) + textOne('os-phone', t('الهاتف', 'Phone')) + '</div>' +
             '<div class="os-2">' + textOne('os-email', t('البريد', 'Email')) + '</div>' +
             '<div class="os-2">' + textPair('os-address', t('العنوان', 'Address'), t('العنوان', 'Address')) + '</div>' +
-            imageRow('stamp', t('الختم', 'Stamp')) +
-            imageRow('signatureImage', t('صورة التوقيع', 'Signature image')) +
-            '<div class="os-2">' + textPair('os-signatory-name', t('اسم الموقّع', 'Signatory name'), t('اسم الموقّع', 'Signatory name')) + '</div>' +
-            '<div class="os-2">' + textPair('os-signatory-title', t('صفة الموقّع', 'Signatory title'), t('صفة الموقّع', 'Signatory title')) + '</div>' +
-            '<p class="os-hint">' + t('اترك أي حقل فارغًا فلا يظهر على المستند. الصور تُحفظ على هذا الجهاز.', 'Leave any field empty and it will not appear on the document. Images are stored on this device.') + '</p>' +
+            '<p class="os-hint">' + t('اترك أي حقل فارغًا فلا يظهر على المستند.', 'Leave any field empty and it will not appear on the document.') + '</p>' +
           '</div>' +
           /* Output options */
           '<div class="os-grp"><h4><i class="ti ti-printer"></i>' + t('خيارات الإخراج', 'Output options') + '</h4>' +
-            checkRow('os-show-qr', t('إظهار رمز QR (رابط التقرير)', 'Show QR (report link)')) +
-            checkRow('os-show-signature', t('إظهار التوقيع', 'Show signature')) +
-            checkRow('os-show-stamp', t('إظهار الختم', 'Show stamp')) +
-            '<div class="os-2" style="margin-top:8px">' + textPair('os-footer', t('تذييل', 'Footer note'), t('تذييل', 'Footer note')) + '</div>' +
+            '<div class="os-2">' + textPair('os-footer', t('تذييل', 'Footer note'), t('تذييل', 'Footer note')) + '</div>' +
             '<div class="fi full"><label>' + t('الإجراء الافتراضي في قائمة الإخراج', 'Default action in output menu') + '</label>' +
               '<select id="os-default-action"><option value="print">' + t('طباعة', 'Print') + '</option><option value="pdf">PDF</option><option value="excel">Excel</option></select></div>' +
           '</div>' +
@@ -130,12 +115,9 @@
     setVal('os-subtitle-ar', o.subtitle.ar); setVal('os-subtitle-en', o.subtitle.en);
     setVal('os-site', o.site); setVal('os-phone', o.phone); setVal('os-email', o.email);
     setVal('os-address-ar', o.address.ar); setVal('os-address-en', o.address.en);
-    setVal('os-signatory-name-ar', o.signatoryName.ar); setVal('os-signatory-name-en', o.signatoryName.en);
-    setVal('os-signatory-title-ar', o.signatoryTitle.ar); setVal('os-signatory-title-en', o.signatoryTitle.en);
-    _img.logo = o.logo || ''; _img.stamp = o.stamp || ''; _img.signatureImage = o.signatureImage || '';
-    preview('logo'); preview('stamp'); preview('signatureImage');
-    setChk('os-show-logo', out.showLogo); setChk('os-show-qr', out.showQR);
-    setChk('os-show-signature', out.showSignature); setChk('os-show-stamp', out.showStamp);
+    _img.logo = o.logo || '';
+    preview('logo');
+    setChk('os-show-logo', out.showLogo);
     setVal('os-footer-ar', out.footerNote.ar); setVal('os-footer-en', out.footerNote.en);
     setVal('os-default-action', out.defaultAction);
   }
@@ -147,13 +129,10 @@
         subtitle: { ar: getVal('os-subtitle-ar'), en: getVal('os-subtitle-en') },
         site: getVal('os-site'), phone: getVal('os-phone'), email: getVal('os-email'),
         address: { ar: getVal('os-address-ar'), en: getVal('os-address-en') },
-        logo: _img.logo, stamp: _img.stamp, signatureImage: _img.signatureImage,
-        signatoryName: { ar: getVal('os-signatory-name-ar'), en: getVal('os-signatory-name-en') },
-        signatoryTitle: { ar: getVal('os-signatory-title-ar'), en: getVal('os-signatory-title-en') }
+        logo: _img.logo
       },
       output: {
-        showLogo: getChk('os-show-logo'), showQR: getChk('os-show-qr'),
-        showSignature: getChk('os-show-signature'), showStamp: getChk('os-show-stamp'),
+        showLogo: getChk('os-show-logo'),
         footerNote: { ar: getVal('os-footer-ar'), en: getVal('os-footer-en') },
         defaultAction: getVal('os-default-action') || 'print'
       }
