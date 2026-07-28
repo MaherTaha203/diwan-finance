@@ -41,7 +41,7 @@ carried a consistent `تصدير ▼` export UI. Corrected item status:
 | 2 · wire unified bar on 5 reports | -B | ⏹ **N/A** — those pages already have the `تصدير ▼` (Excel+PDF) dropdown + print |
 | 3 · output for users/audit/treasury/dues | -B | ✅ **already present** — users/audit have dropdowns; treasury/dues print routes to engine post-R9 (guard passes) |
 | 4 · transfer voucher → engine | -B | ✅ **already engine-routed** — `TRANSFER_VOUCHER` def registered; `prtTransfer` → `Report.render` post-R9 |
-| 5 · voucher-list Excel → engine | -B | ⏳ **the sole genuine remainder** — rec/pay/don *list* Excel still uses legacy `styleDiwanSheet` |
+| 5 · voucher-list Excel → engine | -B | ✅ **implemented** — new `RECEIPTS_LIST`/`PAYMENTS_LIST` models; rec/pay screen/print/pdf/excel now share one model; legacy `styleDiwanSheet` + `openPrintWin` path removed for these surfaces (donation list Excel was already engine post-R9) |
 | 6 · Excel header parity | -B | ✅ **implemented** (filter subtitle; title/₪ were never missing — audit artifact) |
 | 7 · remove dead legacy | -B | ⏹ **mischaracterized** — `buildRec/Pay/TransferVoucher` are **reused** by the engine's hybrid voucher renderer (not dead); the `openPrintWin` fallbacks are the kept kill-switches |
 | 8 · parity gate | -B | ✅ **verified** — screen==print==pdf on all reports; Excel filter parity; 0 boot errors; node 64/2 |

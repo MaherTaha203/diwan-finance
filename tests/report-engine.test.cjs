@@ -25,7 +25,7 @@ ok(Object.keys(Renderers).sort().join(',') === 'csv,excel,pdf,print,screen', 'fi
 
 /* ── Registry contract ── */
 const REQUIRED_IDS = ['MEMBER_STATEMENT', 'FUND_STATEMENT', 'ANNUAL_DEBT', 'DELINQUENT', 'DONATION_REPORT',
-  'MEMBERS_LIST', 'ANNUAL_LOG', 'RECEIPT_VOUCHER', 'PAYMENT_VOUCHER', 'TRANSFER_VOUCHER',
+  'MEMBERS_LIST', 'RECEIPTS_LIST', 'PAYMENTS_LIST', 'ANNUAL_LOG', 'RECEIPT_VOUCHER', 'PAYMENT_VOUCHER', 'TRANSFER_VOUCHER',
   'TREASURY_POSITION', 'DUES_SNAPSHOT', 'AUDIT_LOG', 'USERS_LIST', 'CONSISTENCY'];
 ok(REQUIRED_IDS.every(id => ReportRegistry[id]), 'registry contains all target-report IDs');
 ok(Report.list().length === REQUIRED_IDS.length, 'registry has exactly the declared reports (' + REQUIRED_IDS.length + ')');

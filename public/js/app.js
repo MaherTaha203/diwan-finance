@@ -1733,7 +1733,41 @@ window.exportMemberStmt=function(format){
 
 
 /* ═══ UNIVERSAL PDF + EXCEL EXPORT ═══ */
+/* OUTPUT-002-B Item 5 — the SINGLE data source for the receipts/payments list on every
+   surface (screen/print/pdf/excel). Resolves party names + localized method/category
+   labels from the same FIN.voucherExportRows the legacy exporter used, then builds one
+   ReportModel. Replaces the styleDiwanSheet dump + the openPrintWin PDF table. */
+window.voucherListModel=function(type){
+  const fund=type.startsWith('food')?'food':'diwan';
+  const fundLabel=fund==='food'?'صندوق الغداء':'صندوق الديوان';
+  const isRec=(type==='food-rec'||type==='diwan-rec');
+  const d=FIN.voucherExportRows(isRec?'rec':'pay',fund).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let total=0;
+  const rows=d.map(r=>{ total+=Number(r.amount||0); return isRec
+    ? {no:r.no,date:r.date,party:(r.member_id?gmn(r.member_id):r.payer_name||''),amount:r.amount,method:L.method(r.payment_method),notes:r.notes||''}
+    : {no:r.no,date:r.date,party:(r.beneficiary_name||gmn(r.member_id)||''),amount:r.amount,category:L.expense(r.expense_type),notes:r.notes||''}; });
+  const title=(isRec?'قائمة إيصالات ':'قائمة مصاريف ')+fundLabel;
+  const src={rows,total,title,printDate:new Date().toISOString()};
+  return isRec?window.buildReceiptsListModel(src):window.buildPaymentsListModel(src);
+};
+/* engine route for the receipts/payments lists. Returns false only for non-list types.
+   For rec/pay it ALWAYS handles the request (engine when the flag is ON; a no-op toast
+   kill-switch when OFF) so the legacy styleDiwanSheet / openPrintWin path is never reached
+   for these surfaces (OUTPUT-002-B Item 5 — legacy fully removed for lists). */
+window.__voucherListDeliver=function(type,target){
+  const isRec=(type==='food-rec'||type==='diwan-rec'), isPay=(type==='food-pay'||type==='diwan-pay');
+  if(!isRec&&!isPay) return false;
+  const flag=isRec?window.REPORT_ENGINE_RECEIPTS_LIST:window.REPORT_ENGINE_PAYMENTS_LIST;
+  const id=isRec?'RECEIPTS_LIST':'PAYMENTS_LIST';
+  if(flag!==false && window.Report && window.Report.get && window.Report.get(id)){
+    window.Report.render(window.voucherListModel(type),target,{lang:window.LANG});
+  } else if(typeof toast==='function'){
+    toast(window.t?window.t('errors.no_print'):'الإخراج غير متاح','err');   /* kill-switch no-op */
+  }
+  return true;
+};
 window.exportPagePDF=function(type){
+  if((type==='food-rec'||type==='diwan-rec'||type==='food-pay'||type==='diwan-pay') && window.__voucherListDeliver(type,'pdf')) return;
   if(type==='annual-debt') return window.prtAnnualDebt('pdf');
   if(type==='delinquent') return window.prtDelinquent('pdf');
   /* REPORT-001 · R7c — route donations PDF through the engine when the flag is ON. */
@@ -1769,27 +1803,9 @@ window.exportPagePDF=function(type){
   let tableHTML='';
   const fund=type.startsWith('food')?'food':'diwan';
 
-  if(type==='food-rec'||type==='diwan-rec'){
-    const d=FIN.voucherExportRows('rec',fund);   /* IG-007: engine row model */
-    let total=0;
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u062f\u0627\u0641\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0637\u0631\u064a\u0642\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
-    d.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(r=>{
-      const amt=r.amount;total+=amt;
-      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.date}</td><td>${esc(r.member_id?gmn(r.member_id):r.payer_name||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.method(r.payment_method)}</td><td>${esc(r.notes)}</td></tr>`;
-    });
-    tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0625\u064a\u0635\u0627\u0644)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
-  }
-  else if(type==='food-pay'||type==='diwan-pay'){
-    const d=FIN.voucherExportRows('pay',fund);   /* IG-007: engine row model */
-    let total=0;
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u0627\u0644\u0641\u0626\u0629</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
-    d.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(p=>{
-      const amt=p.amount;total+=amt;
-      tableHTML+=`<tr><td>${esc(p.no)}</td><td>${p.date}</td><td>${esc(p.beneficiary_name||gmn(p.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${L.expense(p.expense_type)}</td><td>${esc(p.notes)}</td></tr>`;
-    });
-    tableHTML+=`<tr class="final"><td colspan="3">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (${d.length} \u0633\u0646\u062f)</td><td>\u20aa ${fmt(total)}</td><td></td><td></td></tr></tbody></table>`;
-  }
-  else if(type==='food-stmt'||type==='diwan-stmt'){
+  /* OUTPUT-002-B Item 5 \u2014 food/diwan rec+pay PDF now delivered by the engine
+     (window.__voucherListDeliver at the top); the legacy openPrintWin tables were removed. */
+  if(type==='food-stmt'||type==='diwan-stmt'){
     return window.downloadFundStatementPDF(fund);
   }
   else if(type==='don'){
@@ -1859,6 +1875,10 @@ window.exportPageExcel=function(type){
   if(type==='annual'  && window.REPORT_ENGINE_ANNUAL_LOG   && window.ReportCutoverLists && window.ReportCutoverLists.annualReady())  return window.ReportCutoverLists.annual('excel');
   if(type==='users'   && window.REPORT_ENGINE_USERS_LIST   && window.ReportCutoverLists && window.ReportCutoverLists.usersReady())   return window.ReportCutoverLists.users('excel');
   if(!can.export()){toast('\u0644\u0627 \u062a\u0648\u062c\u062f \u0635\u0644\u0627\u062d\u064a\u0629','err');return;}
+  /* OUTPUT-002-B Item 5 \u2014 receipts/payments list Excel through the engine (one model,
+     same as print/pdf); the legacy styleDiwanSheet dump below is no longer reached for
+     these types. */
+  if((type==='food-rec'||type==='diwan-rec'||type==='food-pay'||type==='diwan-pay') && window.__voucherListDeliver(type,'excel')) return;
   /* REPORT-001 \u00b7 R7g \u2014 route the audit-log Excel through the engine when ON (gated above). */
   if(type==='audit' && window.REPORT_ENGINE_AUDIT_LOG && window.Report && window.Report.get && window.Report.get('AUDIT_LOG') && typeof window.buildAuditLogModel==='function'){
     const rows=(DB.audit||[]).map(a=>({date:a.created_at,action:a.action,desc:a.description||null,user:a.user_name||null,table:a.table_name||null}));
@@ -1871,15 +1891,9 @@ window.exportPageExcel=function(type){
 
   /* IG-007 (FD-013): financial row models come from FIN.voucherExportRows;
      this exporter maps them to localized cells only. */
-  if(type==='food-rec'||type==='diwan-rec'){
-    wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u062f\u0627\u0641\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u0627\u0644\u0637\u0631\u064a\u0642\u0629','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    FIN.voucherExportRows('rec',fund).forEach(r=>wsData.push([r.no,r.date,r.member_id?gmn(r.member_id):r.payer_name||'',r.amount,L.method(r.payment_method),r.notes]));
-  }
-  else if(type==='food-pay'||type==='diwan-pay'){
-    wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f','\u0627\u0644\u0645\u0628\u0644\u063a','\u0627\u0644\u0641\u0626\u0629','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    FIN.voucherExportRows('pay',fund).forEach(p=>wsData.push([p.no,p.date,p.beneficiary_name||gmn(p.member_id)||'',p.amount,L.expense(p.expense_type),p.notes]));
-  }
-  else if(type==='don'){
+  /* OUTPUT-002-B Item 5 \u2014 food/diwan rec+pay Excel now delivered by the engine
+     (window.__voucherListDeliver at the top); the legacy styleDiwanSheet dump was removed. */
+  if(type==='don'){
     wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u062a\u0628\u0631\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u064a\u0638\u0647\u0631 \u0641\u064a','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
     /* Domain 3 (Display Principle) — mark in-kind rows as documentary, never blank/cash. */
     FIN.voucherExportRows('don').forEach(r=>wsData.push([r.no,r.date,r.payer_name||gmn(r.member_id)||'',r.amount,
