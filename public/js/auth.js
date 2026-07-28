@@ -163,6 +163,10 @@ if(typeof window.applyLang === 'function'){
   initMobile();
   applyDataProtection();
   applyLoginLang();
+  /* OUTPUT-002-C Item 13 — login-return: replay a deep link opened before auth
+     (or present in the URL) now that the app + role gates are live; no-op otherwise
+     so the default dashboard stays. */
+  try { if (window.ReportDeepLink) window.ReportDeepLink.resume(); } catch (_) {}
 }
 
 window.logout=async function(){
