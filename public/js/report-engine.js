@@ -217,11 +217,21 @@
         return !!(canObj.print && canObj.print());
       };
       if (!allowed(def.permission)) return '';
-      return def.outputs.filter(function (o) { return o !== 'screen'; }).map(function (o) {
+      var outs = def.outputs.filter(function (o) { return o !== 'screen'; }).map(function (o) {
         var lbl = (OUTPUT_LABELS[o] || {})[lang] || o;
         return '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-output="' + o + '">' +
           '<i class="ti ' + (OUTPUT_ICONS[o] || 'ti-download') + '"></i><span>' + lbl + '</span></button>';
       }).join('');
+      /* OUTPUT-002-C Items 14/15 — copy-link + share, bound to the single deep-link
+         source (handled by report-share.js's document delegate; data-action, not
+         data-output, so the render handlers ignore them). */
+      var copyLbl = lang === 'en' ? 'Copy link' : 'نسخ الرابط';
+      var shareLbl = lang === 'en' ? 'Share' : 'مشاركة';
+      outs += '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-action="link">' +
+        '<i class="ti ti-link"></i><span>' + copyLbl + '</span></button>' +
+        '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-action="share">' +
+        '<i class="ti ti-share"></i><span>' + shareLbl + '</span></button>';
+      return outs;
     }
   };
 
