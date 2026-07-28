@@ -4,16 +4,14 @@
    Generalises the R6 pattern so each remaining report migrates with a tiny
    adapter instead of copied glue. `ReportCutoverCore.make(cfg)` returns a
    cut-over object that: defaults its flag OFF, gathers ONE model, routes
-   screen/print/pdf/excel through Report.render (csv falls back to a legacy
-   exporter), and — on screen — injects the engine-built output toolbar plus a
-   single delegated click handler.
+   screen/print/pdf/excel through Report.render, and — on screen — injects the
+   engine-built output toolbar plus a single delegated click handler.
 
    cfg = {
      flag:      'REPORT_ENGINE_<X>',          // window flag name (default OFF)
      reportId:  'FUND_STATEMENT',             // registry id (for outputButtons)
      gather:    function(key){ return model|null },   // key = optional variant (e.g. fund)
      mountId:   function(key){ return '<container id>' },
-     csv:       function(key){ ... },          // optional legacy csv fallback
      permission:function(target){ return bool } // optional; default print/export via can
    }
    Every method takes an optional `key` so one adapter can serve variants
@@ -42,7 +40,6 @@
 
     function deliver(key, target) {
       if (!ready()) return false;
-      if (target === 'csv') { if (typeof cfg.csv === 'function') cfg.csv(key); return true; }
       if (!allow(target)) { toast('err', target === 'excel' ? 'errors.no_permission' : 'errors.no_print', 'لا توجد صلاحية'); return true; }
       var model = cfg.gather(key);
       if (!model) { toast('warn', 'errors.select_member', 'لا توجد بيانات'); return true; }

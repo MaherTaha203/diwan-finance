@@ -60,6 +60,15 @@ window.toggleAdYear=function(y){
   if(_adYears.has(y)) _adYears.delete(y); else _adYears.add(y);
   renderAnnualDebt();
 };
+/* OUTPUT-002-C Item 16 — expose the annual-debt filter state so deep links carry it
+   (read) and can restore it (write). Single source: the same _adFilter/_adYears the
+   report renders from. */
+window.adFilterState=function(){ adEnsureYears(); return { cat:_adFilter, years:Array.from(_adYears||[]).sort((a,b)=>a-b) }; };
+window.adApplyState=function(st){ st=st||{};
+  if(st.cat) _adFilter=st.cat;
+  if(Array.isArray(st.years)&&st.years.length){ adEnsureYears(); _adYears=new Set(st.years.map(Number).filter(Boolean)); }
+  renderAnnualDebt();
+};
 function renderAnnualDebt(){
   const el=document.getElementById('annual-debt-list'); if(!el) return;
   const en=window.LANG==='en';
@@ -177,6 +186,9 @@ function _delRowCells(r, years, link){
 }
 window.setDelPrimary=function(p){ _delPrimary=p; renderDelinquent(); };
 window.setDelYear=function(y){ _delYear=y; renderDelinquent(); };
+/* OUTPUT-002-C Item 16 — expose the delinquent filter state for deep links. */
+window.delFilterState=function(){ return { primary:_delPrimary, year:_delYear }; };
+window.delApplyState=function(st){ st=st||{}; if(st.primary) _delPrimary=st.primary; if(st.year) _delYear=st.year; renderDelinquent(); };
 function renderDelinquent(){
   const el=document.getElementById('delinquent-list'); if(!el) return;
   const en=window.LANG==='en';

@@ -8,7 +8,7 @@
                             name); each entry declares id/title/icon/category/
                             orientation/defaultColumns/outputs/permission.
      · Report             — the engine: Report.render(modelOrId, target[, opts]).
-     · Renderers          — screen/print/pdf/excel/csv, all EMPTY skeletons that
+     · Renderers          — screen/print/pdf/excel, all EMPTY skeletons that
                             share one interface. They render nothing real yet.
      · Report.outputButtons — auto-builds output buttons from a report's declared
                             `outputs` (no developer writes <button>Print</button>).
@@ -68,13 +68,13 @@
   var REPORT_TOKENS = FONT_FACES + TOKEN_VARS;
 
   /* ── Valid output targets (a report may declare any subset of these) ── */
-  var REPORT_TARGETS = ['screen', 'print', 'pdf', 'excel', 'csv'];
+  var REPORT_TARGETS = ['screen', 'print', 'pdf', 'excel'];
 
   /* Frozen output-control icons (§4.6) — the auto-button builder uses these. */
-  var OUTPUT_ICONS = { print: 'ti-printer', pdf: 'ti-file-type-pdf', excel: 'ti-file-spreadsheet', csv: 'ti-file-text', screen: 'ti-eye' };
+  var OUTPUT_ICONS = { print: 'ti-printer', pdf: 'ti-file-type-pdf', excel: 'ti-file-spreadsheet', screen: 'ti-eye' };
   var OUTPUT_LABELS = {
     print: { ar: 'طباعة', en: 'Print' }, pdf: { ar: 'تنزيل PDF', en: 'Download PDF' },
-    excel: { ar: 'تصدير Excel', en: 'Export Excel' }, csv: { ar: 'تصدير CSV', en: 'Export CSV' },
+    excel: { ar: 'تصدير Excel', en: 'Export Excel' },
     screen: { ar: 'عرض', en: 'View' }
   };
 
@@ -89,9 +89,9 @@
   }
   var _defs = [
     R('MEMBER_STATEMENT', { ar: 'كشف الحساب المالي للعضو', en: 'Member Financial Statement' }, 'ti-file-description', 'statement', 'portrait',
-      ['date', 'desc', 'year', 'sysNo', 'refNo', 'sub', 'pay', 'balance'], ['screen', 'print', 'pdf', 'excel', 'csv'], 'print'),
+      ['date', 'desc', 'year', 'sysNo', 'refNo', 'sub', 'pay', 'balance'], ['screen', 'print', 'pdf', 'excel'], 'print'),
     R('FUND_STATEMENT', { ar: 'كشف الصندوق', en: 'Fund Statement' }, 'ti-file-description', 'statement', 'landscape',
-      ['date', 'name', 'desc', 'credit', 'debit', 'balance', 'note'], ['screen', 'print', 'pdf', 'excel', 'csv'], 'print'),
+      ['date', 'name', 'desc', 'credit', 'debit', 'balance', 'note'], ['screen', 'print', 'pdf', 'excel'], 'print'),
     R('ANNUAL_DEBT', { ar: 'تقرير المديونية السنوية', en: 'Annual Debt Report' }, 'ti-report-money', 'report', 'landscape',
       ['code', 'name', 'phone', 'hist', 'histPaid', 'selSub', 'selPaid', 'resolutions', 'current'], ['screen', 'print', 'pdf', 'excel'], 'print'),
     R('DELINQUENT', { ar: 'تقرير الأعضاء المتأخرين', en: 'Delinquent Members' }, 'ti-user-exclamation', 'report', 'landscape',
@@ -142,8 +142,7 @@
     screen: makeSkeletonRenderer('screen'),
     print: makeSkeletonRenderer('print'),
     pdf: makeSkeletonRenderer('pdf'),
-    excel: makeSkeletonRenderer('excel'),
-    csv: makeSkeletonRenderer('csv')
+    excel: makeSkeletonRenderer('excel')
   };
 
   /* ── The engine. Polymorphic first arg:
@@ -217,11 +216,28 @@
         return !!(canObj.print && canObj.print());
       };
       if (!allowed(def.permission)) return '';
-      return def.outputs.filter(function (o) { return o !== 'screen'; }).map(function (o) {
-        var lbl = (OUTPUT_LABELS[o] || {})[lang] || o;
-        return '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-output="' + o + '">' +
-          '<i class="ti ' + (OUTPUT_ICONS[o] || 'ti-download') + '"></i><span>' + lbl + '</span></button>';
-      }).join('');
+      /* OUTPUT-002-C C7 — one «الإخراج ▼» dropdown (print/pdf/excel + copy-link/share/
+         settings). The format items keep .rpt-out-btn + data-output so the cutover
+         deliver handler fires; link/share/settings are data-action items handled by
+         report-share.js. */
+      var items = def.outputs.filter(function (o) { return o !== 'screen'; }).map(function (o) {
+        return { output: o, icon: OUTPUT_ICONS[o] || 'ti-download', label: (OUTPUT_LABELS[o] || {})[lang] || o };
+      });
+      if (typeof root !== 'undefined' && root.OutputMenu) {
+        return root.OutputMenu.build({ report: def.id, menuId: 'outmenu-' + def.id, items: items, includeStandard: true });
+      }
+      /* fallback (node/tests where OutputMenu isn't loaded): inline buttons that still
+         carry the same data-output/data-action hooks. */
+      var copyLbl = lang === 'en' ? 'Copy link' : 'نسخ الرابط';
+      var shareLbl = lang === 'en' ? 'Share' : 'مشاركة';
+      return items.map(function (it) {
+        return '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-output="' + it.output + '">' +
+          '<i class="ti ' + it.icon + '"></i><span>' + it.label + '</span></button>';
+      }).join('') +
+        '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-action="link">' +
+        '<i class="ti ti-link"></i><span>' + copyLbl + '</span></button>' +
+        '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-action="share">' +
+        '<i class="ti ti-share"></i><span>' + shareLbl + '</span></button>';
     }
   };
 

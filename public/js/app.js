@@ -158,7 +158,7 @@ const L = {
    write  = create finance vouchers (admin OR accountant); BO-01 gate.
    admin  = full authority (correct/cancel/reclassify/users/settings/period/etc).
    print  = admin OR accountant (accountant may print own + reports).
-   export = admin only (CSV/PDF/backup stay administrative).
+   export = admin only (PDF/backup stay administrative).
    accountant = convenience predicate for the operational accounting role.
    Ownership-scoped voucher edit (accountant edits only OWN, editable/returned) is
    enforced in crud.js updateRec/updatePay AND authoritatively by RLS + the DB
@@ -1570,7 +1570,7 @@ window.exportPDF=function(type){
 
 /* ═══ A2 ANNUAL DEBT · A3 DELINQUENT · DONATION STATEMENT PRINT ═══
    (extracted to /js/reports.js — Phase B Module 8) */
-/* ═══ EXPORT CSV / BACKUP ═══ */
+/* ═══ BACKUP ═══ */
 /* P0 — a backup must be a COMPLETE, lossless snapshot. The old export dumped the
    partial in-memory DB (7 tables, audit capped at 50 rows, and NO settings — so
    opening balances, rates and the year-lock were silently lost, which made the
@@ -1622,68 +1622,11 @@ window.doRestore=async function(){
 };
 
 
-window.exportCSV=function(type){
-  if(!can.export()){toast(window.t?window.t('errors.no_permission'):'ليس لديك صلاحية التصدير','err');return;}
-  let h,rows;
-  if(type==='food-stmt'){
-    const from=document.getElementById('food-stmt-from')?.value||'';
-    const to=document.getElementById('food-stmt-to')?.value||'';
-    const stmtRows=FIN.fundLedgerView('food',from,to,'').rows; /* IG-007: engine running balance */
-    h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
-    const _en=window.LANG==='en';
-    const summary=[
-      [(_en?'Current Food Fund Balance':'رصيد صندوق الغداء الحالي'),'','',FinContract.foodBalance(),'','',''],
-      [(_en?'Remaining Historical Deficit':'العجز التاريخي المتبقي'),'','',FinContract.foodDeficitRemaining(),'','',''],
-      [mcLabel('reserve'),'','',FIN.foodSettlementReserve(),'','',''],
-      [(_en?'Debt Settlement → Deficit (Q5)':'تسوية ذمم من تبرعات ← العجز (ق5)'),'','',FIN.foodDebtSettlementTotal(),'','',''],
-      [(_en?'Net Food Fund Position':'صافي مركز صندوق الغداء'),'','',FinContract.foodNetPosition(),'','',''],
-      ['','','','','','','']
-    ];
-    rows=[...summary,...stmtRows.map(r=>[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',r.run,r.note||''])];
-  }else if(type==='diwan-stmt'){
-    const from=document.getElementById('diwan-stmt-from')?.value||'';
-    const to=document.getElementById('diwan-stmt-to')?.value||'';
-    const stmtRows=FIN.fundLedgerView('diwan',from,to,'').rows; /* IG-007: engine running balance */
-    h=['التاريخ','الاسم','البيان','دائن ₪','مدين ₪','الرصيد ₪','ملاحظات'];
-    rows=stmtRows.map(r=>[fmtDate2(r.date),r.name,r.desc,r.cr||'',r.dr||'',r.run,r.note||'']);
-  }else if(type==='member-stmt'){
-    /* V-01 FIX: use canonical FIN.memberStatement() — single source of truth (Phase 15) */
-    const mid=document.getElementById('ms-member')?.value;
-    const member=gm(mid);
-    if(!member){toast(window.t('errors.select_member'),'warn');return;}
-    h=['التاريخ','رقم السند','البيان','دائن ₪','مدين ₪','الرصيد ₪'];
-    const st=FIN.memberStatement(mid);
-    rows=st.rows.map(r=>[
-      r.date==='—'?'—':r.date, r.no, r.desc,
-      r.cr>0?r.cr:'', r.dr>0?r.dr:'', r.bal
-    ]);
-  }else if(type==='food-rec'){
-    h=['رقم','التاريخ','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
-    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food').map(r=>[r.no,r.receipt_date,r.payer_name||gmn(r.member_id),FIN.amountOf(r),r.currency,r.payment_method,r.notes]);
-  }else if(type==='food-pay'){
-    h=['رقم','التاريخ','المستفيد','المبلغ ₪','طريقة الصرف','ملاحظات'];
-    rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='food').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),FIN.amountOf(p),p.payment_method,p.notes]);
-  }else if(type==='diwan-rec'){
-    /* Domain 1 — surface the FE-004/FE-005 split on the diwan export too (additive column). */
-    const _det=mt=>mt==='diwan_operational_income'?'إيراد تشغيلي':mt==='diwan_cash_donation'?'تبرع نقدي':'—';
-    h=['رقم','التاريخ','نوع الحدث','الدافع','المبلغ ₪','العملة','طريقة الدفع','ملاحظات'];
-    rows=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='diwan').map(r=>[r.no,r.receipt_date,_det(r.movement_type),r.payer_name||gmn(r.member_id),FIN.amountOf(r),r.currency,r.payment_method,r.notes]);
-  }else if(type==='diwan-pay'){
-    h=['رقم','التاريخ','المستفيد','المبلغ ₪','الفئة','ملاحظات'];
-    rows=DB.payments.filter(p=>!p.is_deleted&&p.fund_type==='diwan').map(p=>[p.no,p.payment_date,p.beneficiary_name||gmn(p.member_id),FIN.amountOf(p),L.expense(p.expense_type),p.notes]);
-  }else{
-    h=['العملية','الوصف','المستخدم','التاريخ'];
-    rows=DB.audit.map(a=>[a.action,a.description,a.user_name,a.created_at]);
-  }
-  const csv='\uFEFF'+[h,...rows].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=type+'_'+today()+'.csv';a.click();
-  toast(window.t('messages.exported'),'ok');
-};
 
 /* ═══ MEMBER STATEMENT EXPORTS ═══ */
 window.exportMemberStmt=function(format){
   /* REPORT-001 · R6 — pilot cut-over: route Excel through the unified engine when
-     the flag is ON (csv/json/pdf keep their legacy paths). Default OFF → legacy. */
+     the flag is ON (json/pdf keep their legacy paths). Default OFF → legacy. */
   if(format==='excel' && window.REPORT_ENGINE_MEMBER_STATEMENT && window.ReportCutover && window.ReportCutover.ready()){
     return window.ReportCutover.deliverMember('excel');
   }
@@ -1704,14 +1647,6 @@ window.exportMemberStmt=function(format){
   const printDate=new Date().toLocaleDateString('en-GB');
   const fname=`member-stmt_${today()}`;
 
-  /* CSV */
-  if(format==='csv'){
-    const h=['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0631\u0642\u0645 \u0627\u0644\u0633\u0646\u062f','\u0627\u0644\u0628\u064a\u0627\u0646','\u062f\u0627\u0626\u0646 \u20aa','\u0645\u062f\u064a\u0646 \u20aa','\u0627\u0644\u0631\u0635\u064a\u062f \u20aa'];
-    const body=computed.map(r=>[r.date==='—'?'—':r.date,r.no,r.desc,r.cr>0?r.cr:'',r.dr>0?r.dr:'',r.bal]);
-    const csv='\uFEFF'+[h,...body].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-    const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=fname+'.csv';a.click();
-    toast('\u2713 CSV exported','ok');return;
-  }
 
   /* JSON */
   if(format==='json'){
@@ -1765,6 +1700,30 @@ window.__voucherListDeliver=function(type,target){
     toast(window.t?window.t('errors.no_print'):'الإخراج غير متاح','err');   /* kill-switch no-op */
   }
   return true;
+};
+/* OUTPUT-002-C C7 — one entry point behind the «الإخراج ▼» menu on list pages.
+   pdf/excel delegate to the existing engine-routed exporters; print routes the SAME
+   report through the engine's print target (symmetric with the pdf dispatch), so the
+   menu's «طباعة» is the engine print of that page's report — no legacy string path. */
+window.pageOutput=function(type,target){
+  target=target||'print';
+  if(target==='excel') return window.exportPageExcel(type);
+  if(target==='pdf')   return window.exportPagePDF(type);
+  /* print */
+  if(type==='food-rec'||type==='diwan-rec'||type==='food-pay'||type==='diwan-pay'){ window.__voucherListDeliver(type,'print'); return; }
+  if(type==='annual-debt') return window.prtAnnualDebt('print');
+  if(type==='delinquent')  return window.prtDelinquent('print');
+  if(type==='don' && window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()) return window.ReportCutoverDonation.deliver('print');
+  if(type==='members' && window.REPORT_ENGINE_MEMBERS_LIST && window.ReportCutoverLists && window.ReportCutoverLists.membersReady()) return window.ReportCutoverLists.members('print');
+  if(type==='annual'  && window.REPORT_ENGINE_ANNUAL_LOG   && window.ReportCutoverLists && window.ReportCutoverLists.annualReady())  return window.ReportCutoverLists.annual('print');
+  if(type==='users'   && window.REPORT_ENGINE_USERS_LIST   && window.ReportCutoverLists && window.ReportCutoverLists.usersReady())   return window.ReportCutoverLists.users('print');
+  if(type==='audit' && window.Report && window.Report.get && window.Report.get('AUDIT_LOG') && typeof window.buildAuditLogModel==='function'){
+    if(typeof can!=='undefined' && can.export && !can.export()){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
+    const rows=(DB.audit||[]).map(a=>({date:a.created_at,action:a.action,desc:a.description||null,user:a.user_name||null,table:a.table_name||null}));
+    return window.Report.render(window.buildAuditLogModel({rows,printDate:new Date().toISOString()}),'print');
+  }
+  /* fallback: the PDF path opens a printable document */
+  return window.exportPagePDF(type);
 };
 window.exportPagePDF=function(type){
   if((type==='food-rec'||type==='diwan-rec'||type==='food-pay'||type==='diwan-pay') && window.__voucherListDeliver(type,'pdf')) return;
@@ -2266,7 +2225,7 @@ init();
  * ═══════════════════════════════════════════════════════════════ */
 (function sealRestrictedFunctions(){
   const PRINT_FNS =['prtRec','prtPay','prtStmt','prtMemberStmt','prtDonStmt','exportPDF'];
-  const EXPORT_FNS=['exportCSV','doBackup'];
+  const EXPORT_FNS=['doBackup'];
   const WRITE_FNS =['saveRec','savePay','saveMember','updateRec','updatePay',
                     'deleteRec','deletePay','updateMember','deleteMember',
                     'applyAnnualDue','saveSettings','inviteUser','changeRole',

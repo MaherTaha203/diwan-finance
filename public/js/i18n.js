@@ -20,7 +20,7 @@ const translations = {
       amount:'المبلغ', currency:'العملة', method:'طريقة الدفع',
       status:'الحالة', name:'الاسم', phone:'الهاتف',
       all:'الكل', yes:'نعم', no:'لا',
-      export_dd:'تصدير ▼', number:'الرقم', amount_ils:'المبلغ ₪',
+      export_dd:'تصدير ▼', output_dd:'الإخراج ▼', copy_link:'نسخ الرابط', share:'مشاركة', output_settings:'إعدادات الإخراج', number:'الرقم', amount_ils:'المبلغ ₪',
       from_date:'من تاريخ', to_date:'إلى تاريخ',
       opening_balance:'الرصيد الافتتاحي',
     },
@@ -358,7 +358,7 @@ const translations = {
       amount:'Amount', currency:'Currency', method:'Payment Method',
       status:'Status', name:'Name', phone:'Phone',
       all:'All', yes:'Yes', no:'No',
-      export_dd:'Export ▼', number:'No.', amount_ils:'Amount ₪',
+      export_dd:'Export ▼', output_dd:'Output ▾', copy_link:'Copy link', share:'Share', output_settings:'Output settings', number:'No.', amount_ils:'Amount ₪',
       from_date:'From Date', to_date:'To Date',
       opening_balance:'Opening Balance',
     },
@@ -1028,9 +1028,6 @@ window.applyLang = function() {
   });
 
   // Export buttons
-  document.querySelectorAll('.btn.sm[onclick*="exportCSV"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-download"></i>${window.t('common.export')}`;
-  });
   document.querySelectorAll('.btn.sm[onclick*="prtStmt"]').forEach(el => {
     el.innerHTML = `<i class="ti ti-printer"></i>${window.t('common.print')}`;
   });
