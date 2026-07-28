@@ -29,7 +29,35 @@
       }
     },
     'food-stmt':  { describe: function () { return {}; }, apply: function () { if (typeof root.renderStmt === 'function') root.renderStmt('food'); } },
-    'diwan-stmt': { describe: function () { return {}; }, apply: function () { if (typeof root.renderStmt === 'function') root.renderStmt('diwan'); } }
+    'diwan-stmt': { describe: function () { return {}; }, apply: function () { if (typeof root.renderStmt === 'function') root.renderStmt('diwan'); } },
+    /* Item 16 — filtered reports carry their view state (category + selected years /
+       primary + year) so a copied/shared link reopens the exact same filtered view. */
+    'annual-debt': {
+      describe: function () {
+        if (typeof root.adFilterState !== 'function') return {};
+        var s = root.adFilterState(), o = {};
+        if (s.cat && s.cat !== 'all') o.cat = s.cat;
+        if (s.years && s.years.length) o.years = s.years.join(',');
+        return o;
+      },
+      apply: function (p) {
+        if (typeof root.adApplyState !== 'function') return;
+        root.adApplyState({ cat: p.cat || 'all', years: p.years ? p.years.split(',') : null });
+      }
+    },
+    'delinquent': {
+      describe: function () {
+        if (typeof root.delFilterState !== 'function') return {};
+        var s = root.delFilterState(), o = {};
+        if (s.primary && s.primary !== 'all') o.primary = s.primary;
+        if (s.year && s.year !== 'all') o.year = s.year;
+        return o;
+      },
+      apply: function (p) {
+        if (typeof root.delApplyState !== 'function') return;
+        root.delApplyState({ primary: p.primary || 'all', year: p.year || 'all' });
+      }
+    }
   };
 
   function authed() {
