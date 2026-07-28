@@ -29,7 +29,10 @@ ok(/rpt-mast-brand/.test(built.html), 'layout still emits the in-flow masthead b
 ok(/\.rpt-runhead,\.rpt-runfoot\{display:none\}/.test(built.css), 'running bands are hidden by default (screen off)');
 ok(/@media print\{[^]*\.rpt-runhead\{display:flex;position:fixed;top:0/.test(built.css), 'in print the running header is fixed to the top of every page');
 ok(/\.rpt-runfoot\{display:flex;position:fixed;bottom:0/.test(built.css), 'in print the running footer is fixed to the bottom of every page');
-ok(/\.rpt-mast-brand,\.rpt-footer\{display:none\}/.test(built.css), 'in print the in-flow masthead + footer give way to the fixed bands');
+/* OUTPUT-002-C: the masthead is now the page-1 document header in print (carries the
+   org logo); only the in-flow footer gives way to the fixed running footer band. */
+ok(/\.rpt-footer\{display:none\}/.test(built.css), 'in print the in-flow footer gives way to the fixed running footer');
+ok(!/\.rpt-mast-brand,\.rpt-footer\{display:none\}/.test(built.css), 'the masthead is no longer hidden in print (logo lives in the printed header)');
 
 /* ── compose() reuses the print renderer's composition ── */
 const c = PdfRenderer.compose(model, { lang: 'ar' });

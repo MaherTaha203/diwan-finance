@@ -65,7 +65,7 @@
           /* Logo — the system brand logo shows in every report by default; this section
              toggles it and lets the admin upload / replace / delete (revert to default). */
           '<div class="os-grp"><h4><i class="ti ti-photo"></i>' + t('شعار المؤسسة', 'Organization logo') + '</h4>' +
-            checkRow('os-show-logo', t('استخدام شعار المؤسسة في جميع التقارير', 'Use the organization logo in all reports')) +
+            checkRow('os-show-logo', t('إظهار شعار المؤسسة في المستندات المطبوعة', 'Show the organization logo in printed documents')) +
             '<div class="os-img" data-key="logo" style="margin-top:8px">' +
               '<div class="os-img-prev" id="os-prev-logo"></div>' +
               '<label class="btn ghost sm" style="cursor:pointer"><i class="ti ti-upload"></i>' + t('تغيير/رفع الشعار', 'Change / upload') +
