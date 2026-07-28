@@ -56,18 +56,22 @@
      fallback if the profile module is not loaded (e.g. node unit tests). */
   function orgOf(meta) { return (meta && meta.org) || (root.OutputProfile && root.OutputProfile.org && root.OutputProfile.org()) || DEFAULT_ORG; }
 
-  function header(meta, lang) {
+  function header(meta, lang, target) {
     var org = orgOf(meta);
     var date = meta.printDate ? fmtDate(meta.printDate) : fmtDate(new Date().toISOString());
-    /* Masthead brand (.rpt-mast-brand) shows once on screen and on page 1; in print
-       it is hidden because the running header (.rpt-runhead) carries the brand on
-       every page (R4). Title + meta always stay in the flow (once). */
+    /* Logo separates system UI from official documents: it belongs to the PRINTED
+       Report Header only. On screen (in-app view) the masthead carries no logo; on
+       print/PDF the org logo sits in the masthead beside the name. The masthead is the
+       page-1 document header in print; the running header (R4) repeats the brand text
+       on continuation pages. Title + meta always stay in the flow (once). */
+    var printLogo = (target !== 'screen') && org.logo
+      ? '<div class="rpt-hd-chip"><img src="' + esc(org.logo) + '" alt=""></div>' : '';
     return '<div class="rpt-mast-brand"><header class="rpt-header">' +
-      '<div class="rpt-hd-date">' + (lang === 'en' ? 'Printed: ' : 'تاريخ الطباعة: ') + '<span class="rpt-num">' + date + '</span></div>' +
       '<div class="rpt-hd-org"><div class="rpt-hd-txt"><div class="rpt-hd-name">' + esc(pick(org.name, lang)) + '</div>' +
       (org.subtitle ? '<div class="rpt-hd-sub">' + esc(pick(org.subtitle, lang)) + (org.site ? ' · ' + esc(org.site) : '') + '</div>' : '') + '</div>' +
-      (org.logo ? '<div class="rpt-hd-chip"><img src="' + esc(org.logo) + '" alt=""></div>' : '') + '</div></header>' +
-      '<div class="rpt-rule"></div></div>' +
+      printLogo + '</div>' +
+      '<div class="rpt-hd-date">' + (lang === 'en' ? 'Printed: ' : 'تاريخ الطباعة: ') + '<span class="rpt-num">' + date + '</span></div>' +
+      '</header><div class="rpt-rule"></div></div>' +
       '<div class="rpt-title"><h1>' + esc(pick(meta.title, lang)) + '</h1></div>' +
       metaLine(meta, lang);
   }
@@ -226,7 +230,7 @@
     var html = '<div class="rpt-doc" dir="rtl">';
     html += runningHeader(m, lang);   /* print-only, position:fixed; every page */
     html += runningFooter(m, lang);   /* print-only, position:fixed; every page */
-    html += header(m, lang);
+    html += header(m, lang, opts.target || 'print');
     html += kpi(model.summary, lang);
     html += filters(m, lang);
     (model.sections || []).forEach(function (sec) {
@@ -249,12 +253,12 @@
     '.rpt-mut{color:var(--rpt-faint)}' +
     '.rpt-header{display:flex;justify-content:space-between;align-items:flex-start}' +
     '.rpt-hd-date{font-size:11px;color:var(--rpt-muted);font-weight:600;padding-top:8px}' +
-    '.rpt-hd-org{display:flex;gap:12px;align-items:center}.rpt-hd-txt{text-align:left}' +
+    '.rpt-hd-org{display:flex;gap:14px;align-items:center}.rpt-hd-txt{text-align:right}' +
     '.rpt-hd-name{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.2px}' +
     '.rpt-hd-sub{font-size:10px;color:var(--rpt-muted);margin-top:4px;line-height:1.7}' +
     '.rpt-hd-chip{width:56px;height:56px;flex:none;display:grid;place-items:center}.rpt-hd-chip img{width:100%;height:100%;object-fit:contain}' +
     '.rpt-rule{height:2px;background:var(--rpt-ink);border-radius:2px;margin-top:14px}' +
-    '.rpt-title{text-align:center;margin:22px 0 2px}.rpt-title h1,.rpt-title h2{font-size:19px;font-weight:700;display:inline-block}' +
+    '.rpt-title{text-align:center;margin:18px 0 6px}.rpt-title h1,.rpt-title h2{font-size:19px;font-weight:700;display:inline-block;margin:0}' +
     '.rpt-meta{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--rpt-muted);font-weight:500;line-height:1.9}.rpt-meta b{color:var(--rpt-ink2);font-weight:600}' +
     '.rpt-cards{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 4px}' +
     '.rpt-card{flex:1 1 130px;background:#fff;border:1px solid var(--rpt-line);border-top:2px solid var(--rpt-line2);border-radius:9px;padding:11px 13px;text-align:center}' +
@@ -312,8 +316,10 @@
       '.rpt-table tr{page-break-inside:avoid}' +
       '.rpt-band,.rpt-total,.rpt-signs{page-break-inside:avoid}' +
       '.rpt-header,.rpt-rule,.rpt-title,.rpt-meta{page-break-after:avoid}' +
-      /* the flow masthead + in-flow footer give way to the fixed running bands */
-      '.rpt-mast-brand,.rpt-footer{display:none}' +
+      /* the masthead IS the page-1 document header in print (logo lives here); only the
+         in-flow footer gives way to the fixed running footer band. */
+      '.rpt-footer{display:none}' +
+      '.rpt-mast-brand{margin-top:1mm}' +
       '.rpt-runhead{display:flex;position:fixed;top:0;left:0;right:0;height:9mm;align-items:center;justify-content:flex-start;' +
         'border-bottom:1px solid var(--rpt-line2);font-size:9px;color:var(--rpt-muted);font-weight:600;background:#fff}' +
       '.rpt-runfoot{display:flex;position:fixed;bottom:0;left:0;right:0;height:7mm;align-items:center;justify-content:space-between;' +
