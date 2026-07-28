@@ -187,7 +187,7 @@ function renderDelinquent(){
     .map(c=>'<button class="tp-tab'+(_delPrimary===c[0]?' on':'')+'" onclick="setDelPrimary(\''+c[0]+'\')">'+c[1]+'</button>').join('');
   const yopts=['<option value="all">'+(en?'All years':'جميع السنوات')+'</option>']
     .concat(years.map(y=>'<option value="'+y+'"'+(String(_delYear)===String(y)?' selected':'')+'>'+y+'</option>')).join('');
-  const yearSel='<select onchange="setDelYear(this.value)" style="height:34px;padding:0 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-weight:700;margin-inline-start:auto">'+yopts+'</select>';
+  const yearSel='<select aria-label="السنة" onchange="setDelYear(this.value)" style="height:34px;padding:0 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-weight:700;margin-inline-start:auto">'+yopts+'</select>';
   const head=_delHead(years).map(h=>'<th>'+h+'</th>').join('');
   const body=rows.map(r=>'<tr>'+_delRowCells(r,years,true)+'</tr>').join('');
   el.innerHTML='<div class="acct-stmt">'

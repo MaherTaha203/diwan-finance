@@ -1440,7 +1440,7 @@ function renderAudit(){
   const list=document.getElementById('audit-list');if(!list)return;
   list.innerHTML=`
     <div class="tb" style="margin-bottom:10px">
-      <div class="sw"><i class="ti ti-search"></i><input class="si" id="audit-q" placeholder="بحث في الوصف أو المستخدم..." oninput="window.onAuditFilter()"></div>
+      <div class="sw"><i class="ti ti-search"></i><input class="si" id="audit-q" aria-label="بحث" placeholder="بحث في الوصف أو المستخدم..." oninput="window.onAuditFilter()"></div>
       <select class="fs" id="audit-action" onchange="window.onAuditFilter()">
         <option value="">كل الأنواع</option>
         <option value="add">إضافة</option>
