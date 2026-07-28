@@ -13,9 +13,10 @@
    == PDF == Excel (spec §7.1). JSON stays on its legacy member-statement
    exporter (not in the parity gate). No FIN/DB/accounting change.
 
-   The tiny guarded branches added to renderMemberStmt / prtMemberStmt /
-   exportMemberStmt delegate here; ALL new behaviour lives in this module so the
-   legacy files carry only a one-line, flag-gated early return.
+   The tiny guarded branches added to renderMemberStmt / prtMemberStmt delegate
+   here; ALL new behaviour lives in this module so the legacy files carry only a
+   one-line, flag-gated early return. (OUTPUT-002-C removed the then-orphaned
+   window.exportMemberStmt entry point — Excel is served by the engine bar.)
    ═══════════════════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';

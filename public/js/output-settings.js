@@ -62,6 +62,18 @@
         '<div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-adjustments-cog"></i></span><span>' + t('إعدادات الإخراج', 'Output settings') + '</span></span>' +
           '<button class="btn ghost" onclick="window.closeM()" aria-label="' + t('إغلاق', 'Close') + '"><i class="ti ti-x"></i></button></div>' +
         '<div class="mbd">' +
+          /* Logo — the system brand logo shows in every report by default; this section
+             toggles it and lets the admin upload / replace / delete (revert to default). */
+          '<div class="os-grp"><h4><i class="ti ti-photo"></i>' + t('شعار المؤسسة', 'Organization logo') + '</h4>' +
+            checkRow('os-show-logo', t('استخدام شعار المؤسسة في جميع التقارير', 'Use the organization logo in all reports')) +
+            '<div class="os-img" data-key="logo" style="margin-top:8px">' +
+              '<div class="os-img-prev" id="os-prev-logo"></div>' +
+              '<label class="btn ghost sm" style="cursor:pointer"><i class="ti ti-upload"></i>' + t('تغيير/رفع الشعار', 'Change / upload') +
+                '<input type="file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" onchange="window.__osImg(event,\'logo\')"></label>' +
+              '<button type="button" class="btn ghost sm" onclick="window.__osImgClear(\'logo\')"><i class="ti ti-trash"></i>' + t('حذف (العودة للافتراضي)', 'Delete (revert to default)') + '</button>' +
+            '</div>' +
+            '<p class="os-hint" id="os-logo-note"></p>' +
+          '</div>' +
           /* Organization */
           '<div class="os-grp"><h4><i class="ti ti-building"></i>' + t('بيانات المؤسسة', 'Organization') + '</h4>' +
             '<div class="os-2">' + textPair('os-name', t('الاسم', 'Name'), t('الاسم', 'Name')) + '</div>' +
@@ -69,7 +81,6 @@
             '<div class="os-2">' + textOne('os-site', t('الموقع الإلكتروني', 'Website')) + textOne('os-phone', t('الهاتف', 'Phone')) + '</div>' +
             '<div class="os-2">' + textOne('os-email', t('البريد', 'Email')) + '</div>' +
             '<div class="os-2">' + textPair('os-address', t('العنوان', 'Address'), t('العنوان', 'Address')) + '</div>' +
-            imageRow('logo', t('الشعار', 'Logo')) +
             imageRow('stamp', t('الختم', 'Stamp')) +
             imageRow('signatureImage', t('صورة التوقيع', 'Signature image')) +
             '<div class="os-2">' + textPair('os-signatory-name', t('اسم الموقّع', 'Signatory name'), t('اسم الموقّع', 'Signatory name')) + '</div>' +
@@ -78,7 +89,6 @@
           '</div>' +
           /* Output options */
           '<div class="os-grp"><h4><i class="ti ti-printer"></i>' + t('خيارات الإخراج', 'Output options') + '</h4>' +
-            checkRow('os-show-logo', t('إظهار الشعار', 'Show logo')) +
             checkRow('os-show-qr', t('إظهار رمز QR (رابط التقرير)', 'Show QR (report link)')) +
             checkRow('os-show-signature', t('إظهار التوقيع', 'Show signature')) +
             checkRow('os-show-stamp', t('إظهار الختم', 'Show stamp')) +
@@ -102,7 +112,16 @@
 
   function preview(key) {
     var box = document.getElementById('os-prev-' + key);
-    if (box) box.innerHTML = _img[key] ? '<img src="' + esc(_img[key]) + '" alt="">' : '<span class="os-hint">' + t('لا توجد صورة', 'none') + '</span>';
+    if (!box) return;
+    if (key === 'logo') {
+      /* logo always previews SOMETHING: the custom upload, else the system default. */
+      var eff = _img.logo || (root.OutputProfile && root.OutputProfile.logoResolved ? root.OutputProfile.logoResolved() : '');
+      box.innerHTML = eff ? '<img src="' + esc(eff) + '" alt="">' : '<span class="os-hint">' + t('لا يوجد شعار', 'none') + '</span>';
+      var note = document.getElementById('os-logo-note');
+      if (note) note.textContent = _img.logo ? t('شعار مخصّص مرفوع', 'Custom uploaded logo') : t('الشعار الافتراضي للنظام', 'System default logo');
+      return;
+    }
+    box.innerHTML = _img[key] ? '<img src="' + esc(_img[key]) + '" alt="">' : '<span class="os-hint">' + t('لا توجد صورة', 'none') + '</span>';
   }
 
   function populate() {

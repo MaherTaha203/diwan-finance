@@ -1624,47 +1624,6 @@ window.doRestore=async function(){
 
 
 /* ═══ MEMBER STATEMENT EXPORTS ═══ */
-window.exportMemberStmt=function(format){
-  /* REPORT-001 · R6 — pilot cut-over: route Excel through the unified engine when
-     the flag is ON (json/pdf keep their legacy paths). Default OFF → legacy. */
-  if(format==='excel' && window.REPORT_ENGINE_MEMBER_STATEMENT && window.ReportCutover && window.ReportCutover.ready()){
-    return window.ReportCutover.deliverMember('excel');
-  }
-  if(!can.export()&&format!=='pdf'){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
-  const mid=document.getElementById('ms-member')?.value;
-  const member=gm(mid);
-  if(!member){toast(window.t('errors.select_member'),'warn');return;}
-  const from=document.getElementById('ms-from')?.value||'';
-  const to=document.getElementById('ms-to')?.value||'';
-  const fd=from?new Date(from):null;
-  const td=to?new Date(to):null;
-  const inRange=d=>{if(!d||d==='—')return true;const dt=new Date(d);if(fd&&dt<fd)return false;if(td&&dt>td)return false;return true;};
-  /* PHASE 11.5 — single balance engine (incl. capped prepaid credit row) */
-  const _st=FIN.memberStatement(mid,from,to);
-  const computed=_st.rows;
-  const openBal=_st.openingBalance, totalDues=_st.totalDues, totalPaid=_st.totalPaid, finalBal=_st.finalBalance;
-  const periodLabel=from&&to?`${from} - ${to}`:from?`\u0645\u0646 ${from}`:to?`\u062d\u062a\u0649 ${to}`:'\u0643\u0644 \u0627\u0644\u0641\u062a\u0631\u0627\u062a';
-  const printDate=new Date().toLocaleDateString('en-GB');
-  const fname=`member-stmt_${today()}`;
-
-
-  /* JSON */
-  if(format==='json'){
-    const payload={generated_at:new Date().toISOString(),member:{id:member.id,name:member.name,active_from_year:member.active_from_year},period:{from,to},summary:{opening_balance:openBal,total_dues:totalDues,total_paid:totalPaid,final_balance:finalBal},rows:computed.map(r=>({date:r.date,voucher_no:r.no,description:r.desc,credit:r.cr,debit:r.dr,running_balance:r.bal}))};
-    const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(payload,null,2));a.download=fname+'.json';a.click();
-    toast('\u2713 JSON exported','ok');return;
-  }
-
-  /* EXCEL — REPORT-001 · R8-c: the legacy XLSX builder was removed; the unified
-     engine serves Excel (routed at the top of this function when the flag is ON).
-     With the flag off this branch no-ops rather than falling back (kill-switch). */
-
-  /* HTML/PDF member-statement export uses the SAME official print template as
-     prtMemberStmt (unified \u2014 one layout). PR-6: the former inline Cairo/Reem-Kufi
-     htmlDoc builder here was dead (computed then discarded by this redirect) and
-     has been removed. */
-  if(format==='html'||format==='pdf'){ return window.prtMemberStmt('pdf'); }
-};
 
 
 /* ═══ UNIVERSAL PDF + EXCEL EXPORT ═══ */
@@ -1743,78 +1702,6 @@ window.exportPagePDF=function(type){
     const rows=(DB.audit||[]).map(a=>({date:a.created_at,action:a.action,desc:a.description||null,user:a.user_name||null,table:a.table_name||null}));
     return window.Report.render(window.buildAuditLogModel({rows,printDate:new Date().toISOString()}),'print');
   }
-  const css='@page{size:A4 landscape;margin:10mm}body{font-family:var(--fa);direction:rtl;background:#fff}'
-  const printDate=new Date().toLocaleDateString('en-GB');
-  const titles={
-    'food-rec':['\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621','Food Fund Receipts'],
-    'food-pay':['\u0645\u0635\u0627\u0631\u064a\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621','Food Fund Expenses'],
-    'food-stmt':['\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u063a\u062f\u0627\u0621','Food Fund Statement'],
-    'diwan-rec':['\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646','Diwan Fund Receipts'],
-    'diwan-pay':['\u0645\u0635\u0627\u0631\u064a\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646','Diwan Fund Expenses'],
-    'diwan-stmt':['\u0643\u0634\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u062f\u064a\u0648\u0627\u0646','Diwan Fund Statement'],
-    'don':['\u0633\u062c\u0644 \u0627\u0644\u062a\u0628\u0631\u0639\u0627\u062a','Donations Registry'],
-    'members':['\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0623\u0639\u0636\u0627\u0621','Members List'],
-    'annual':['\u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0627\u062a \u0627\u0644\u0633\u0646\u0648\u064a\u0629','Annual Subscriptions'],
-    'users':['\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646','Users'],
-    'audit':['\u0633\u062c\u0644 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a','Audit Log']
-  };
-  const t=titles[type]||[type,type];
-  let tableHTML='';
-  const fund=type.startsWith('food')?'food':'diwan';
-
-  /* OUTPUT-002-B Item 5 \u2014 food/diwan rec+pay PDF now delivered by the engine
-     (window.__voucherListDeliver at the top); the legacy openPrintWin tables were removed. */
-  if(type==='food-stmt'||type==='diwan-stmt'){
-    return window.downloadFundStatementPDF(fund);
-  }
-  else if(type==='don'){
-    /* Domain 3 (\u00a74.2) \u2014 mirror prtDonStmt: the printed CASH total must never
-       conflate the in-kind documentary value. Cash = non-in-kind; in-kind is
-       summed and shown SEPARATELY, its rows labelled documentary. */
-    const d=FIN.voucherExportRows('don');   /* IG-007: engine row model (FD-013) */
-    let cashTot=0,inkTot=0;
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0631\u0642\u0645</th><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0645\u062a\u0628\u0631\u0639</th><th>\u0627\u0644\u0645\u0628\u0644\u063a \u20aa</th><th>\u064a\u0638\u0647\u0631 \u0641\u064a</th><th>\u0645\u0644\u0627\u062d\u0638\u0627\u062a</th></tr></thead><tbody>';
-    d.forEach(r=>{
-      const amt=r.amount; if(r.inkind)inkTot+=amt; else cashTot+=amt;
-      const dir=r.inkind
-        ? (window.LANG==='en'?'In-kind/Service \u00b7 documentary':'\u0639\u064a\u0646\u064a/\u062e\u062f\u0645\u064a \u00b7 \u062a\u0648\u062b\u064a\u0642\u064a')+(r.register_category?' ('+esc(r.register_category)+')':'')
-        : r.display_fund+(r.display_fund==='food'?(r.allocation==='reduce_deficit'?' \u00b7 '+(window.LANG==='en'?'Deficit Settlement':'\u062a\u0633\u0648\u064a\u0629 \u0627\u0644\u0639\u062c\u0632'):r.allocation==='support_current'?' \u00b7 '+(window.LANG==='en'?'Current Support':'\u062f\u0639\u0645 \u062d\u0627\u0644\u064a'):''):'');
-      tableHTML+=`<tr><td>${esc(r.no)}</td><td>${r.date}</td><td>${esc(r.payer_name||gmn(r.member_id)||'')}</td><td>\u20aa ${fmt(amt)}</td><td>${dir}</td><td>${esc(r.notes)}</td></tr>`;
-    });
-    tableHTML+=`<tr class="final"><td colspan="3">${window.LANG==='en'?'Cash Total (in-kind excluded \u2014 \u00a74.2)':'\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0646\u0642\u062f\u064a (\u0627\u0644\u0639\u064a\u0646\u064a \u0645\u0633\u062a\u0628\u0639\u064e\u062f \u2014 \u00a74.2)'}</td><td>\u20aa ${fmt(cashTot)}</td><td>${window.LANG==='en'?'in-kind: \u20aa':'\u0639\u064a\u0646\u064a \u062a\u0648\u062b\u064a\u0642\u064a: \u20aa'} ${fmt(inkTot)}</td><td></td></tr></tbody></table>`;
-  }
-  else if(type==='members'){
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0627\u0633\u0645</th><th>\u0627\u0644\u0647\u0627\u062a\u0641</th><th>\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645</th><th>\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a</th></tr></thead><tbody>';
-    DB.members.filter(m=>m.is_active!==false).forEach(m=>{
-      const bal=FIN.memberBalance(m.id);
-      tableHTML+=`<tr><td>${esc(m.name)}</td><td>${m.phone||''}</td><td>\u20aa ${fmt(m.historical_balance_ils||0)}</td><td class="bal">\u20aa ${fmt(bal)}</td></tr>`;
-    });
-    tableHTML+='</tbody></table>';
-  }
-  else if(type==='annual'){
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0633\u0646\u0629</th><th>\u0627\u0644\u0645\u0628\u0644\u063a</th><th>\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621</th><th>\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629</th><th>\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062a\u0637\u0628\u064a\u0642</th></tr></thead><tbody>';
-    DB.annual.forEach(a=>{
-      tableHTML+=`<tr><td>${a.year}</td><td>\u20aa ${fmt(a.amount)}</td><td>${a.member_count}</td><td>${esc(a.applied_by||'')}</td><td>${a.applied_at?.slice(0,10)||''}</td></tr>`;
-    });
-    tableHTML+='</tbody></table>';
-  }
-  else if(type==='audit'){
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u062a\u0627\u0631\u064a\u062e</th><th>\u0627\u0644\u0625\u062c\u0631\u0627\u0621</th><th>\u0627\u0644\u0648\u0635\u0641</th><th>\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645</th><th>\u0627\u0644\u062c\u062f\u0648\u0644</th></tr></thead><tbody>';
-    DB.audit.slice(0,200).forEach(a=>{
-      tableHTML+=`<tr><td style="white-space:nowrap">${a.created_at?.slice(0,10)||''}</td><td>${esc(a.action)}</td><td>${esc(a.description||'')}</td><td>${esc(a.user_name||'')}</td><td>${esc(a.table_name||'')}</td></tr>`;
-    });
-    tableHTML+='</tbody></table>';
-  }
-  else if(type==='users'){
-    tableHTML='<table class="dt"><thead><tr><th>\u0627\u0644\u0628\u0631\u064a\u062f</th><th>\u0627\u0644\u062f\u0648\u0631</th></tr></thead><tbody>';
-    (DB.users||[]).forEach(u=>{
-      tableHTML+=`<tr><td>${esc(u.email)}</td><td>${u.role==='admin'?'\u0645\u062f\u064a\u0631':'\u0645\u0634\u0627\u0647\u062f'}</td></tr>`;
-    });
-    tableHTML+='</tbody></table>';
-  }
-
-  const body=reportHeader(t[0],{sub:t[1]})+'<div class="period">\u0637\u064f\u0628\u0639: '+printDate+'</div>'+tableHTML+reportDfoot('https://www.diwan-finance.com','diwan-finance.com')+reportFooter({date:printDate});
-  savePrintPDF(css, body, (type||'export')+'-'+today(), 'landscape');
 };
 
 /* Universal Excel Export */
@@ -1843,54 +1730,6 @@ window.exportPageExcel=function(type){
     const rows=(DB.audit||[]).map(a=>({date:a.created_at,action:a.action,desc:a.description||null,user:a.user_name||null,table:a.table_name||null}));
     return window.Report.render(window.buildAuditLogModel({rows,printDate:new Date().toISOString()}),'excel');
   }
-  if(type==='delinquent') return window.exportDelinquentExcel();
-  const fund=type.startsWith('food')?'food':'diwan';
-  let wsData=[];
-  const fname='diwan-'+type+'-'+today();
-
-  /* IG-007 (FD-013): financial row models come from FIN.voucherExportRows;
-     this exporter maps them to localized cells only. */
-  /* OUTPUT-002-B Item 5 \u2014 food/diwan rec+pay Excel now delivered by the engine
-     (window.__voucherListDeliver at the top); the legacy styleDiwanSheet dump was removed. */
-  if(type==='don'){
-    wsData=[['#','\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0645\u062a\u0628\u0631\u0639','\u0627\u0644\u0645\u0628\u0644\u063a','\u064a\u0638\u0647\u0631 \u0641\u064a','\u0645\u0644\u0627\u062d\u0638\u0627\u062a']];
-    /* Domain 3 (Display Principle) — mark in-kind rows as documentary, never blank/cash. */
-    FIN.voucherExportRows('don').forEach(r=>wsData.push([r.no,r.date,r.payer_name||gmn(r.member_id)||'',r.amount,
-      r.inkind
-        ? (window.LANG==='en'?'In-kind/Service · documentary':'عيني/خدمي · توثيقي')+(r.register_category?' ('+r.register_category+')':'')
-        : r.display_fund+(r.display_fund==='food'?(r.allocation==='reduce_deficit'?' · '+(window.LANG==='en'?'Deficit Settlement':'تسوية العجز'):r.allocation==='support_current'?' · '+(window.LANG==='en'?'Current Support':'دعم حالي'):''):''),
-      r.notes]));
-  }
-  else if(type==='members'){
-    wsData=[['\u0627\u0644\u0627\u0633\u0645','\u0627\u0644\u0647\u0627\u062a\u0641','\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0630\u0645\u0645 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0646\u0638\u0627\u0645','\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a']];
-    FIN.voucherExportRows('members').forEach(m=>wsData.push([m.name,m.phone,m.historical,m.balance]));
-  }
-  else if(type==='annual'){
-    wsData=[['\u0627\u0644\u0633\u0646\u0629','\u0627\u0644\u0645\u0628\u0644\u063a','\u0639\u062f\u062f \u0627\u0644\u0623\u0639\u0636\u0627\u0621','\u0637\u064f\u0628\u0642 \u0628\u0648\u0627\u0633\u0637\u0629','\u0627\u0644\u062a\u0627\u0631\u064a\u062e']];
-    DB.annual.forEach(a=>wsData.push([a.year,a.amount,a.member_count,a.applied_by||'',a.applied_at?.slice(0,10)||'']));
-  }
-  else if(type==='annual-debt'){
-    /* IG-006 (FD-006): SAME engine model + view state as screen/print. */
-    wsData=[_adHead()];
-    annualDebtRows().forEach(r=>wsData.push([r.code,r.name,r.phone||'',r.hist,r.histPaid,r.selSub,r.selPaid,r.resolutions,r.current]));
-  }
-  else if(type==='audit'){
-    wsData=[['\u0627\u0644\u062a\u0627\u0631\u064a\u062e','\u0627\u0644\u0625\u062c\u0631\u0627\u0621','\u0627\u0644\u0648\u0635\u0641','\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645','\u0627\u0644\u062c\u062f\u0648\u0644']];
-    DB.audit.forEach(a=>wsData.push([a.created_at?.slice(0,10)||'',a.action,a.description||'',a.user_name||'',a.table_name||'']));
-  }
-
-  const doExcel=()=>{
-    const XLSX=window.XLSX;if(!XLSX){toast('\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644...','info');return;}
-    const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
-    const moneyMap={receipts:[3],payments:[3],donation:[3],'food-rec':[3],'diwan-rec':[3],'food-pay':[3],'diwan-pay':[3],don:[3],members:[3,4],annual:[1],'annual-debt':[3,4,5,6,7,8],audit:[],users:[]};
-    const colW={receipts:[10,12,26,14,16,24],payments:[10,12,26,14,16,24],donation:[10,12,26,14,16,24],'food-rec':[10,12,26,14,16,24],'diwan-rec':[10,12,26,14,16,24],'food-pay':[10,12,26,14,16,24],'diwan-pay':[10,12,26,14,16,24],don:[10,12,26,14,16,24],members:[26,16,12,14,16],annual:[10,14,16,18,14],'annual-debt':[14,28,14,16,16,16,16,14,18],audit:[14,12,30,18,14],users:[26,14,14]};
-    if(colW[type])ws['!cols']=colW[type].map(w=>({wch:w}));
-    styleDiwanSheet(XLSX,ws,{headerRow:0,money:(moneyMap[type]||[])});
-    const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a');
-    XLSX.writeFile(wb,fname+'.xlsx');
-    toast('\u2713 Excel','ok');
-  };
-  loadStyledXLSX(doExcel);
 };
 
 /* Toggle export dropdown */

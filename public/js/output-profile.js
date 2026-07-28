@@ -26,7 +26,7 @@
       name:           { ar: 'ديوان آل طه', en: 'Diwan Al Taha' },
       subtitle:       { ar: 'نظام الإدارة المالية', en: 'Financial Management System' },
       site:           'diwan-finance.com',
-      logo:           '',          /* data: URI or URL — empty ⇒ no logo chip            */
+      logo:           '',          /* custom logo (data URI); empty ⇒ the system brand logo */
       address:        { ar: '', en: '' },
       phone:          '',
       email:          '',
@@ -79,13 +79,26 @@
 
   /* ── the unified read shapes ── */
 
-  /* org identity for report-layout.js header/signatures. Honours showLogo so a
-     logo present in the profile can still be suppressed globally. */
+  /* the system's existing brand logo — the DEFAULT shown automatically in every
+     report. Sourced from BrandAssets (the app's single branding source, same asset
+     the vouchers/prints already use); a static URL is the last-resort fallback. */
+  function defaultLogo() {
+    return (typeof root !== 'undefined' && root.BrandAssets && typeof root.BrandAssets.getPrintLogo === 'function' && root.BrandAssets.getPrintLogo())
+      || '/brand/light/PNG/logo-128.png';
+  }
+  /* effective logo (ignores the show/hide toggle): a custom-uploaded logo wins,
+     otherwise the system brand logo. Used by the settings preview. */
+  function logoResolved() { return get().organization.logo || defaultLogo(); }
+  function logoIsCustom() { return !!get().organization.logo; }
+
+  /* org identity for report-layout.js header/signatures. The logo defaults to the
+     system brand logo (so it appears automatically in every report); a custom upload
+     overrides it, and showLogo=false suppresses it everywhere. */
   function org() {
     var o = get().organization, out = get().output;
     return {
       name: o.name, subtitle: o.subtitle, site: o.site,
-      logo: out.showLogo ? o.logo : '',
+      logo: out.showLogo ? logoResolved() : '',
       address: o.address, phone: o.phone, email: o.email,
       stamp: o.stamp, signatureImage: o.signatureImage,
       signatoryName: o.signatoryName, signatoryTitle: o.signatoryTitle
@@ -93,6 +106,7 @@
   }
   function output() { return get().output; }
 
-  root.OutputProfile = { get: get, set: set, reset: reset, org: org, output: output, DEFAULTS: DEFAULTS };
+  root.OutputProfile = { get: get, set: set, reset: reset, org: org, output: output,
+    defaultLogo: defaultLogo, logoResolved: logoResolved, logoIsCustom: logoIsCustom, DEFAULTS: DEFAULTS };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.OutputProfile;
 })(typeof window !== 'undefined' ? window : this);

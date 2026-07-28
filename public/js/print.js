@@ -6,10 +6,11 @@
    builders buildRecVoucher/buildPayVoucher with prtRec/prtPay
    (can.print()-gated), English amount-in-words, print date
    helpers (fmtDate2/fundLabelAr), and the fund/member
-   statement print entrypoints prtStmt/downloadFundStatementPDF/
-   prtMemberStmt. REPORT-001 · R8-b: the legacy statement/list
-   string-builders were removed — those entrypoints now route
-   solely through the unified engine (flag-gated kill-switch); the
+   statement print entrypoints prtStmt/prtMemberStmt. REPORT-001 ·
+   R8-b: the legacy statement/list string-builders were removed —
+   those entrypoints now route solely through the unified engine
+   (flag-gated kill-switch). OUTPUT-002-C cleanup removed the then-
+   orphaned downloadFundStatementPDF wrapper. The
    vouchers stay a hybrid (engine reuses buildRecVoucher/buildPayVoucher).
    Loaded via <script defer> BEFORE
    app.js so sealRestrictedFunctions still wraps prtRec/prtPay/
@@ -363,12 +364,6 @@ window.prtPay=function(id){
 window.prtStmt=function(fund){
   if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
     return window.ReportCutoverFund.deliver(fund,'print');
-  }
-  if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
-};
-window.downloadFundStatementPDF=function(fund){
-  if(window.REPORT_ENGINE_FUND_STATEMENT && window.ReportCutoverFund && window.ReportCutoverFund.ready()){
-    return window.ReportCutoverFund.deliver(fund,'pdf');
   }
   if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
 };

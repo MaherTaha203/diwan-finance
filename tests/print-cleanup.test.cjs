@@ -25,9 +25,11 @@ ok(!/Reem\+Kufi/.test(appJs), 'no Reem+Kufi font link remains in app.js');
 ok(!/family=Cairo/.test(appJs), 'no Cairo font link remains in app.js');
 ok(!/\bhtmlDoc\b/.test(appJs.replace(/\/\*[\s\S]*?\*\//g, '')), 'dead htmlDoc builder removed from app.js (code)');
 
-/* The unified redirect that replaced it is intact. */
-ok(/if\(format==='html'\|\|format==='pdf'\)\{ return window\.prtMemberStmt\('pdf'\); \}/.test(appJs),
-  'HTML/PDF member-statement export still redirects to the unified prtMemberStmt');
+/* OUTPUT-002-C dormant-legacy cleanup: the orphaned window.exportMemberStmt entry
+   point (its only live route was Excel→engine; JSON/PDF branches had no caller) was
+   removed. The member statement's Excel/PDF/print are served by the engine bar. */
+ok(!/window\.exportMemberStmt\s*=/.test(appJs), 'orphaned exportMemberStmt removed from app.js');
+ok(!/format==='json'/.test(appJs), 'member-statement JSON export removed from app.js');
 
 /* No raster PDF library survives anywhere (belt-and-suspenders with PR-3 guard). */
 const jsDir = path.join(__dirname, '..', 'public', 'js');
