@@ -29,11 +29,11 @@ ok(tab.rows.length === 3 && tab.rows[0].amount === 600 && tab.rows[1].currency =
 ok(/عيني/.test(tab.rows[2].direction), 'in-kind direction label carried through');
 ok(dm.summary.length === 7 && dm.summary[1].value === 850 && dm.summary[1].tone === 'pos', 'summary: 7 cards, cash total tagged positive');
 ok(tab.totals.cells.amount === 850, 'totals cap the amount column at the CASH total (in-kind excluded)');
-ok(/توثيقية: ₪400/.test(tab.totals.status.ar), 'totals status shows the separate in-kind documentary value');
+ok(/توثيقية: 400 ₪/.test(tab.totals.status.ar), 'totals status shows the separate in-kind documentary value');
 
 /* ── Part B — layout renders it ── */
 const html = ReportLayout.build(dm, { lang: 'ar' }).html;
-ok(/rpt-doc/.test(html) && html.includes('₪ 850') && /سجل التبرعات/.test(html), 'layout renders the register (cash total + title)');
+ok(/rpt-doc/.test(html) && html.includes('850 ₪') && /سجل التبرعات/.test(html), 'layout renders the register (cash total + title)');
 
 /* ── Part C — outputs-only adapter (globals stubbed) ── */
 require('../public/js/report-cutover-core.js');

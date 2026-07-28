@@ -21,7 +21,7 @@ const model = buildMemberStatementModel({
 /* ── compose() is pure and assembles the deliverable ── */
 const c = PrintRenderer.compose(model, { lang: 'ar' });
 ok(c && !c.error, 'compose() succeeds');
-ok(/rpt-doc/.test(c.html) && c.html.includes('₪ 1,200') && /عضو تجريبي/.test(c.html), 'composed html carries the rendered statement');
+ok(/rpt-doc/.test(c.html) && c.html.includes('1,200 ₪') && /عضو تجريبي/.test(c.html), 'composed html carries the rendered statement');
 ok(/@page\{size:A4 portrait;margin:14mm 9mm 12mm\}/.test(c.css), 'portrait @page reserves running-band margins (top 14mm / side 9mm / bottom 12mm)');
 ok(/@font-face/.test(c.css) && /display:table-header-group/.test(c.css), 'css carries fonts + repeating-header rule');
 ok(c.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'deterministic unified filename');

@@ -94,14 +94,26 @@ const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#
 +'.pgfoot{border-top:1px solid var(--line);margin-top:24px;padding-top:8px;display:flex;justify-content:space-between;font-size:9px;color:var(--faint)}'
 /* ── Vouchers ── */
 +'.page{background:#fff;position:relative;overflow:hidden}'
-+'.voucher{padding:14mm 12mm}'
+/* OUTPUT-002-C F-4 — a single-record voucher FILLS the A4 sheet and sinks its
+   sign-off (QR + signature + brand strip) to the foot of the page, so a short
+   voucher no longer leaves a large blank band under the amount box. min-height
+   (just under A4, .page margin is 0) makes a short voucher fill exactly one page
+   while a rare long one still grows rather than clipping; .voucher stretches to
+   it (align-items:stretch) and .dfoot's margin-top:auto drops the sign-off to the
+   bottom. Scoped to .page.portrait/.voucher so the table-based transfer voucher
+   (no .voucher wrapper) keeps its own flow. */
++'.page.portrait{min-height:296mm;display:flex}'
++'.voucher{flex:1;display:flex;flex-direction:column;padding:14mm 12mm}'
++'.voucher .dfoot{margin-top:auto}'
 +'.rows{margin-top:16px;border:1px solid var(--line);border-radius:9px;overflow:hidden}'
 +'.rows .row{display:flex;border-bottom:1px solid var(--line);padding:10px 14px}.rows .row:last-child{border-bottom:none}.rows .row:nth-child(even){background:var(--zebra)}'
 +'.rows .lbl{width:30%;color:var(--muted);font-size:10.5px;font-weight:600;display:flex;align-items:center}'
 +'.rows .val{flex:1;color:var(--ink);font-size:12px;font-weight:600}'
 +'.amount{display:flex;align-items:center;gap:14px;border:1px solid var(--line2);border-radius:10px;padding:14px 18px;margin-top:16px}'
 +'.amount::before{content:"";width:4px;align-self:stretch;background:var(--teal);border-radius:4px;margin-inline-end:6px}'
-+'.amount .big{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;font-family:var(--fe);color:var(--ink)}.amount .big.cr,.amount .big.dr{color:var(--ink)}'
+/* OUTPUT-002-C F-2 — the big amount reads "number ₪"; isolate LTR so that order
+   survives the RTL voucher's bidi (without isolation the ₪ would jump before it). */
++'.amount .big{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;font-family:var(--fe);color:var(--ink);direction:ltr;unicode-bidi:isolate}.amount .big.cr,.amount .big.dr{color:var(--ink)}'
 +'.amount .words{font-size:11.5px;color:var(--muted);margin-inline-start:auto;max-width:56%;text-align:left;direction:ltr}'
 +'.wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}'
 +'.wm span{transform:rotate(-33deg);font-size:72px;font-weight:800;color:rgba(26,34,48,.035)}'
@@ -230,7 +242,7 @@ function donationStmtLabel(r, settled, en){
     : donationDestLabelAr(r);
   const base = (en?'Donation — ':'تبرع — ') + dest;
   const s = Number(settled)||0;
-  return s>0 ? base + (en?' · Debt Settlement ₪':' · تسوية ذمة ₪') + fmt(s) : base;
+  return s>0 ? base + (en?' · Debt Settlement ':' · تسوية ذمة ') + fmt(s) + ' ₪' : base;
 }
 
 /* ═══ A0.5 — Identity v3 branding · single source of truth for every report/print surface ═══ */
@@ -308,7 +320,7 @@ function buildRecVoucher(r){
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(meth)+'</div></div>'
     +cur+note
     +'</div>'
-    +'<div class="amount"><div class="big cr">₪ '+fmt(FIN.amountOf(r))+'</div><div class="words">'+amountToWordsEn(FIN.amountOf(r))+'</div></div>'
+    +'<div class="amount"><div class="big cr">'+fmt(FIN.amountOf(r))+' ₪</div><div class="words">'+amountToWordsEn(FIN.amountOf(r))+'</div></div>'
     +reportDfoot(verifyUrl,'diwan-finance.com/verify<span class="tok">'+esc(r.verification_token||'')+'</span>')
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';
@@ -328,7 +340,7 @@ function buildPayVoucher(p){
     +'<div class="row"><div class="lbl">طريقة الدفع</div><div class="val">'+esc(L.method(p.payment_method))+'</div></div>'
     +cur+note+appr
     +'</div>'
-    +'<div class="amount"><div class="big dr">₪ '+fmt(FIN.amountOf(p))+'</div><div class="words">'+amountToWordsEn(FIN.amountOf(p))+'</div></div>'
+    +'<div class="amount"><div class="big dr">'+fmt(FIN.amountOf(p))+' ₪</div><div class="words">'+amountToWordsEn(FIN.amountOf(p))+'</div></div>'
     +reportDfoot(verifyUrl,'diwan-finance.com/verify<span class="tok">'+esc(p.verification_token||'')+'</span>')
     +reportFooter({date:fmtDate2(new Date().toISOString()),page:'صفحة 1 / 1'})
     +'</div></div>';

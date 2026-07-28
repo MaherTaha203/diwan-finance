@@ -37,12 +37,12 @@ ok(/rpt-notes/.test(ar.html), 'donation footnote rendered');
 ok(/rpt-footer/.test(ar.html), 'footer rendered');
 
 /* number / date / balance formatting */
-ok(ar.html.includes('₪ 1,200'), 'money formatted with grouping (1,200)');
-ok(ar.html.includes('₪ 900') && ar.html.includes('₪ 550') && ar.html.includes('₪ 800'), 'KPI values formatted (900/550/800)');
+ok(ar.html.includes('1,200 ₪'), 'money formatted with grouping (1,200)');
+ok(ar.html.includes('900 ₪') && ar.html.includes('550 ₪') && ar.html.includes('800 ₪'), 'KPI values formatted (900/550/800)');
 ok(/01\/03\/2025/.test(ar.html), 'date formatted dd/mm/yyyy');
 ok(/مدين/.test(ar.html), 'positive balance shows Dr tag (مدين) in AR');
 ok(ReportLayout._fmt.balanceCell(-50, 'en').includes('Cr') && ReportLayout._fmt.balanceCell(50, 'en').includes('Dr'), 'balanceCell Dr/Cr by sign');
-ok(ReportLayout._fmt.moneyAbs(-350) === '₪ 350', 'balance shows absolute value');
+ok(ReportLayout._fmt.moneyAbs(-350) === '350 ₪', 'balance shows absolute value');
 
 /* totals carry the final balance + status */
 ok(/rpt-total/.test(ar.html) && ar.html.includes('على العضو مستحقات'), 'totals row shows final-balance status (AR)');

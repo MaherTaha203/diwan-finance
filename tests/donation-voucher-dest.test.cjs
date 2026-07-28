@@ -50,7 +50,7 @@ const base = { no: 'REC-9', receipt_date: '2026-05-01', payer_name: 'متبرع 
 /* 4 · FD-017 identity fields all present on the donation voucher */
 (() => {
   const v = build(Object.assign({}, base, { fund_type: 'donation', donation_display_fund: 'food', destination_treasury: 'food' }));
-  ok(v.includes('متبرع كريم') && v.includes('REC-9') && v.includes('₪ 100') && v.includes('01/05/2026') && v.includes('ملاحظة'),
+  ok(v.includes('متبرع كريم') && v.includes('REC-9') && v.includes('100 ₪') && v.includes('01/05/2026') && v.includes('ملاحظة'),
     'donor · number · amount · date · notes all displayed (FD-017)');
 })();
 

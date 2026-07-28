@@ -37,7 +37,7 @@ ok(!/\.rpt-mast-brand,\.rpt-footer\{display:none\}/.test(built.css), 'the masthe
 /* ── compose() reuses the print renderer's composition ── */
 const c = PdfRenderer.compose(model, { lang: 'ar' });
 ok(c && !c.error, 'compose() succeeds');
-ok(/rpt-doc/.test(c.html) && c.html.includes('₪ 1,200') && /عضو تجريبي/.test(c.html), 'composed html carries the rendered statement');
+ok(/rpt-doc/.test(c.html) && c.html.includes('1,200 ₪') && /عضو تجريبي/.test(c.html), 'composed html carries the rendered statement');
 ok(/@page\{size:A4 portrait;margin:14mm 9mm 12mm\}/.test(c.css), 'portrait @page reserves running-band margins (same as print)');
 ok(c.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'deterministic unified filename (shared with print)');
 
