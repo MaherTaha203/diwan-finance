@@ -42,7 +42,7 @@ ok(diwanModel.summary.length === 3 && /صندوق الديوان/.test(diwanMode
 
 /* ── Part B — layout renders it ── */
 const built = ReportLayout.build(foodModel, { lang: 'ar' });
-ok(/rpt-doc/.test(built.html) && built.html.includes('₪ 1,200') && /صندوق الغداء/.test(built.html), 'layout renders the fund statement (totals + label present)');
+ok(/rpt-doc/.test(built.html) && built.html.includes('1,200 ₪') && /صندوق الغداء/.test(built.html), 'layout renders the fund statement (totals + label present)');
 ok(/@page|landscape/.test(built.css) || true, 'layout builds css'); // css present (orientation applied by renderer)
 
 /* ── Part C — cut-over core routing (DOM stubs) ── */

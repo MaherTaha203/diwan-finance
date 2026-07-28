@@ -25,7 +25,7 @@ const model = buildMemberStatementModel({
 
 const c = ScreenRenderer.compose(model, { lang: 'ar' });
 ok(c && !c.error, 'screen compose() succeeds');
-ok(/rpt-doc/.test(c.html) && /عضو تجريبي/.test(c.html) && c.html.includes('₪ 1,200'), 'screen html carries the rendered statement');
+ok(/rpt-doc/.test(c.html) && /عضو تجريبي/.test(c.html) && c.html.includes('1,200 ₪'), 'screen html carries the rendered statement');
 ok(/@font-face/.test(c.css) && /rpt-toolbar/.test(c.css), 'screen css carries tokens + the output-toolbar rules');
 
 const r = Report.render(model, 'screen');
@@ -44,8 +44,8 @@ ok(!Report.render(model, 'csv').ok, 'csv is no longer a valid render target (rem
 const donSec = model.sections.find(s => s.id === 'donations');
 ok(donSec && donSec.columns.some(col => col.key === 'desc'), 'donations table has a desc column');
 const donRow = donSec.rows[0];
-ok(donRow.desc && donRow.desc.ar === 'تبرع — صندوق الغداء · تسوية ذمة ₪100', 'AR donation label matches legacy (destination + settlement suffix)');
-ok(donRow.desc.en === 'Donation — Food Fund · Debt Settlement ₪100', 'EN donation label matches legacy');
+ok(donRow.desc && donRow.desc.ar === 'تبرع — صندوق الغداء · تسوية ذمة 100 ₪', 'AR donation label matches legacy (destination + settlement suffix)');
+ok(donRow.desc.en === 'Donation — Food Fund · Debt Settlement 100 ₪', 'EN donation label matches legacy');
 /* an in-kind, unsettled donation → documentary label, no suffix */
 const m2 = buildMemberStatementModel({ member: { name: 'x' }, view: { statement: { finalBalance: 0 }, carried: 0, moves: [] },
   donations: [{ receipt_date: '2025-01-01', no: 5, amount_ils: 0, movement_type: 'donation_inkind', _settled: 0 }] });

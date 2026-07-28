@@ -109,7 +109,7 @@
     var en = inkind ? 'In-kind — documentary (no cash destination)' : (d === 'food' ? 'Food Fund' : d === 'diwan' ? 'Diwan Treasury' : d === 'historical_deficit' ? 'Historical Deficit Account' : '—');
     var arB = 'تبرع — ' + ar, enB = 'Donation — ' + en;
     var s = Number(meta.settled) || 0;
-    if (s > 0) { arB += ' · تسوية ذمة ₪' + _grp(s); enB += ' · Debt Settlement ₪' + _grp(s); }
+    if (s > 0) { arB += ' · تسوية ذمة ' + _grp(s) + ' ₪'; enB += ' · Debt Settlement ' + _grp(s) + ' ₪'; }
     return T(arB, enB);
   }
 
@@ -410,7 +410,7 @@
       ],
       sections: [{ type: 'table', id: 'donations', columns: columns, rows: rows,
         totals: { label: T('الإجمالي النقدي (العيني مستبعَد — §4.2)', 'Cash total (in-kind excluded — §4.2)'),
-          status: T('قيمة عينية توثيقية: ₪' + _grp(s.inkindTot || 0), 'in-kind documentary: ₪' + _grp(s.inkindTot || 0)),
+          status: T('قيمة عينية توثيقية: ' + _grp(s.inkindTot || 0) + ' ₪', 'in-kind documentary: ' + _grp(s.inkindTot || 0) + ' ₪'),
           cells: { amount: Number(s.cashTot || 0) } } }]
     };
   }

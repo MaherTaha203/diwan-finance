@@ -23,8 +23,10 @@
   /* ── escaping + formatters (presentation lives here, never in the model) ── */
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function pick(v, lang) { return (v && typeof v === 'object' && ('ar' in v || 'en' in v)) ? (lang === 'en' ? (v.en != null ? v.en : v.ar) : (v.ar != null ? v.ar : v.en)) : v; }
-  function money(n) { var x = Number(n || 0); return '₪ ' + Math.round(x).toLocaleString('en-US'); }
-  function moneyAbs(n) { return '₪ ' + Math.abs(Math.round(Number(n || 0))).toLocaleString('en-US'); }
+  /* OUTPUT-002-C F-2 — currency reads "number then ₪" (Arabic-conventional order),
+     e.g. "200 ₪" not "₪ 200". The numeral group stays isolated LTR via .rpt-num. */
+  function money(n) { var x = Number(n || 0); return Math.round(x).toLocaleString('en-US') + ' ₪'; }
+  function moneyAbs(n) { return Math.abs(Math.round(Number(n || 0))).toLocaleString('en-US') + ' ₪'; }
   function fmtDate(d) { if (!d) return '—'; try { var dt = new Date(d); if (isNaN(dt)) return String(d); var p = function (x) { return String(x).padStart(2, '0'); }; return p(dt.getDate()) + '/' + p(dt.getMonth() + 1) + '/' + dt.getFullYear(); } catch (e) { return String(d); } }
 
   /* one balance cell: signed → abs + Dr/Cr tag (matches the current statement) */
@@ -47,7 +49,15 @@
     }
   }
 
-  var ALIGN = { start: 'rpt-a-start', center: 'rpt-a-center', end: 'rpt-a-end' };
+  /* OUTPUT-002-C F-3 — one deterministic alignment policy by column TYPE, applied
+     identically to header, body and totals so a column's head/cells/total always
+     share an edge. Text and amounts (money/balance) align to the RTL start (right,
+     with numerals isolated LTR); identifiers/counts/dates centre. This replaces the
+     per-column `c.align` that drifted between reports. */
+  function colAlign(c) {
+    var f = c && c.format;
+    return (f === 'int' || f === 'num' || f === 'date') ? 'rpt-a-center' : 'rpt-a-start';
+  }
 
   /* ── components (each returns an HTML string) ── */
   var DEFAULT_ORG = { name: 'ديوان آل طه', subtitle: 'نظام الإدارة المالية', site: 'diwan-finance.com', logo: '' };
@@ -80,8 +90,14 @@
      (@media print only; hidden on screen). Page numbers come from the browser's
      own print / Save-as-PDF chrome (no in-document counter). */
   function runningHeader(meta, lang) {
+    /* OUTPUT-002-C F-5 — the running band carries the REPORT TITLE on every printed
+       page, not the org name. On page 1 the masthead already shows the org name +
+       logo, so repeating it in the fixed band was a visible duplication; the title
+       instead tells the reader which report a continuation page belongs to. The site
+       stays as a light brand anchor; the running FOOTER still carries name + site. */
     var org = orgOf(meta);
-    return '<div class="rpt-runhead"><span>' + esc(pick(org.name, lang)) + (org.site ? ' — ' + esc(org.site) : '') + '</span></div>';
+    var title = pick(meta.title, lang);
+    return '<div class="rpt-runhead"><span>' + esc(title || pick(org.name, lang)) + (org.site ? ' — ' + esc(org.site) : '') + '</span></div>';
   }
   function runningFooter(meta, lang) {
     var org = orgOf(meta);
@@ -111,7 +127,9 @@
     if (!summary || !summary.length) return '';
     return '<div class="rpt-cards">' + summary.map(function (s) {
       var tone = s.tone === 'pos' ? ' rpt-pos' : s.tone === 'neg' ? ' rpt-neg' : '';
-      var val = s.format === 'balance' ? balanceCell(s.value, lang) : s.format === 'money' ? money(s.value) : esc(pick(s.value, lang));
+      /* money must be LTR-isolated (.rpt-num) so the "number ₪" order survives bidi
+         in the RTL card; balanceCell already isolates, plain text stays as-is. */
+      var val = s.format === 'balance' ? balanceCell(s.value, lang) : s.format === 'money' ? ('<span class="rpt-num">' + money(s.value) + '</span>') : esc(pick(s.value, lang));
       return '<div class="rpt-card"><div class="rpt-card-k">' + esc(pick(s.key, lang)) + '</div><div class="rpt-card-v' + tone + '">' + val + '</div></div>';
     }).join('') + '</div>';
   }
@@ -123,14 +141,14 @@
   }
 
   function band(sec, lang) {
-    var val = sec.format === 'balance' ? balanceCell(sec.value, lang) : money(sec.value);
+    var val = sec.format === 'balance' ? balanceCell(sec.value, lang) : ('<span class="rpt-num">' + money(sec.value) + '</span>');
     return '<div class="rpt-band"><span>' + esc(pick(sec.key, lang)) + '</span><span>' + val + '</span></div>';
   }
 
   function table(sec, lang, win) {
     var cols = sec.columns || [];
     var thead = '<thead><tr>' + cols.map(function (c) {
-      return '<th class="' + (ALIGN[c.align] || 'rpt-a-start') + '">' + esc(pick(c.header, lang)) + '</th>';
+      return '<th class="' + colAlign(c) + '">' + esc(pick(c.header, lang)) + '</th>';
     }).join('') + '</tr></thead>';
     /* SYS-002 — SCREEN-ONLY row windowing. When `win` is supplied (screen renderer
        only; print/pdf/excel never pass it) and a table exceeds the threshold, only
@@ -143,7 +161,7 @@
     var shown = capped ? allRows.slice(0, win.initial) : allRows;
     var body = shown.map(function (r) {
       return '<tr>' + cols.map(function (c) {
-        return '<td class="' + (ALIGN[c.align] || 'rpt-a-start') + '">' + cell(r[c.key], c.format, lang) + '</td>';
+        return '<td class="' + colAlign(c) + '">' + cell(r[c.key], c.format, lang) + '</td>';
       }).join('') + '</tr>';
     }).join('');
     if (capped) {
@@ -165,7 +183,7 @@
       var tds = '<td class="rpt-a-start" colspan="' + Math.max(1, firstTotalIdx) + '">' + labelTxt + '</td>';
       for (var i = Math.max(1, firstTotalIdx); i < cols.length; i++) {
         var c = cols[i];
-        tds += '<td class="' + (ALIGN[c.align] || 'rpt-a-end') + '">' + (Object.prototype.hasOwnProperty.call(cells, c.key) ? cell(cells[c.key], c.format, lang) : '') + '</td>';
+        tds += '<td class="' + colAlign(c) + '">' + (Object.prototype.hasOwnProperty.call(cells, c.key) ? cell(cells[c.key], c.format, lang) : '') + '</td>';
       }
       tfoot = '<tfoot><tr class="rpt-total">' + tds + '</tr></tfoot>';
     }

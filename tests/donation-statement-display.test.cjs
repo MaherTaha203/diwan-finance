@@ -30,7 +30,7 @@ ok(label({ movement_type: 'donation_inkind', destination_treasury: null, donatio
   'in-kind donation → documentary label (no cash destination, IG-017 rule)');
 
 /* 3 · settlement suffix ONLY when debt was actually settled (FD-008 designation via IG-002 gate) */
-ok(label({ movement_type: 'donation_cash', destination_treasury: 'food' }, 150) === 'تبرع — صندوق الغداء · تسوية ذمة ₪150',
+ok(label({ movement_type: 'donation_cash', destination_treasury: 'food' }, 150) === 'تبرع — صندوق الغداء · تسوية ذمة 150 ₪',
   'settled donation carries the settlement suffix with the settled amount');
 ok(label({ movement_type: 'donation_cash', destination_treasury: 'food' }, 0) === 'تبرع — صندوق الغداء'
   && label({ movement_type: 'donation_cash', destination_treasury: 'food' }, undefined) === 'تبرع — صندوق الغداء',
@@ -38,7 +38,7 @@ ok(label({ movement_type: 'donation_cash', destination_treasury: 'food' }, 0) ==
 
 /* 4 · bilingual: English mode mirrors the same rule */
 ok(label({ movement_type: 'donation_cash', destination_treasury: 'food' }, 0, true) === 'Donation — Food Fund'
-  && label({ movement_type: 'donation_cash', destination_treasury: 'historical_deficit' }, 75, true) === 'Donation — Historical Deficit Account · Debt Settlement ₪75',
+  && label({ movement_type: 'donation_cash', destination_treasury: 'historical_deficit' }, 75, true) === 'Donation — Historical Deficit Account · Debt Settlement 75 ₪',
   'English mode: same form, same settlement rule');
 
 /* 5 · wiring: REPORT-001 · R8-c — the member statement's donation rows are now

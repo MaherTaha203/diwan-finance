@@ -1960,7 +1960,7 @@ window.buildTransferVoucher=function(t){
     +'<table class="dt" style="max-width:560px;margin:0 auto"><tbody>'
     +row('من صندوق',TR_FUND_AR[t.source_treasury]||esc(t.source_treasury))
     +row('إلى صندوق',TR_FUND_AR[t.destination_treasury]||esc(t.destination_treasury))
-    +row('المبلغ','<span class="num">₪ '+fmt(FIN.amountOf(t))+'</span> ('+esc(t.currency||'ILS')+')')
+    +row('المبلغ','<span class="num">'+fmt(FIN.amountOf(t))+' ₪</span> ('+esc(t.currency||'ILS')+')')
     +row('سبب التحويل',esc(t.reason||'—'))
     +row('المشغّل',esc(t.created_by||'—'))
     +row('المدير المعتمد',esc(t.approving_director||'—'))
