@@ -26,7 +26,7 @@ const model = buildMemberStatementModel({
 const c = ExcelRenderer.compose(model, { lang: 'ar' });
 ok(c && !c.error, 'compose() succeeds');
 ok(Array.isArray(c.aoa) && c.aoa.length > 5, 'aoa is a populated array-of-arrays');
-ok(c.filename === 'MEMBER_STATEMENT-A-12-2026-07-27', 'deterministic unified filename (matches print/pdf scheme)');
+ok(c.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'deterministic unified filename (matches print/pdf scheme)');
 ok(c.rtl === true, 'workbook marked RTL');
 ok(typeof c.sheetName === 'string' && c.sheetName.length > 0 && c.sheetName.length <= 31, 'sheet name present and within Excel 31-char limit');
 
@@ -63,7 +63,7 @@ ok(c.primaryHeaderRow === headerRow, 'primary header row seeds autofilter + free
 const r = Report.render(model, 'excel');
 ok(r.ok === true && r.skeleton === false && r.target === 'excel', "Report.render(model,'excel') is no longer a skeleton");
 ok(r.result && r.result.status === 'composed' && r.result.empty === false, 'in node (no XLSX lib) it composes rather than writes, cleanly');
-ok(r.result.filename === 'MEMBER_STATEMENT-A-12-2026-07-27', 'render result carries the filename');
+ok(r.result.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'render result carries the filename');
 
 /* other targets unaffected: print/pdf stay real, screen/csv stay skeletons */
 const PrintRenderer = require('../public/js/report-render-print.js');

@@ -24,7 +24,7 @@ ok(c && !c.error, 'compose() succeeds');
 ok(/rpt-doc/.test(c.html) && c.html.includes('₪ 1,200') && /عضو تجريبي/.test(c.html), 'composed html carries the rendered statement');
 ok(/@page\{size:A4 portrait;margin:14mm 9mm 12mm\}/.test(c.css), 'portrait @page reserves running-band margins (top 14mm / side 9mm / bottom 12mm)');
 ok(/@font-face/.test(c.css) && /display:table-header-group/.test(c.css), 'css carries fonts + repeating-header rule');
-ok(c.filename === 'MEMBER_STATEMENT-A-12-2026-07-27', 'deterministic unified filename');
+ok(c.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'deterministic unified filename');
 
 /* landscape orientation → landscape @page */
 const land = PrintRenderer.compose({ meta: { reportId: 'X', orientation: 'landscape' }, summary: [], sections: [] }, {});
@@ -34,7 +34,7 @@ ok(/@page\{size:A4 landscape;margin:14mm 10mm 12mm\}/.test(land.css), 'landscape
 const r = Report.render(model, 'print');
 ok(r.ok === true && r.skeleton === false && r.target === 'print', "Report.render(model,'print') is no longer a skeleton");
 ok(r.result && r.result.status === 'composed' && r.result.empty === false, 'in node (no openPrintWin) it composes rather than delivers, cleanly');
-ok(r.result.filename === 'MEMBER_STATEMENT-A-12-2026-07-27', 'render result carries the filename');
+ok(r.result.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'render result carries the filename');
 
 /* other targets remain skeletons after R3 (only print is wired) */
 ok(Report.render(model, 'excel').result.status === 'skeleton', 'excel remains a skeleton after R3');

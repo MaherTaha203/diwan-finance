@@ -23,11 +23,15 @@
   /* deterministic, unified filename: <REPORT_ID>-<party?>-<YYYY-MM-DD> */
   function filenameFor(model) {
     var m = model.meta || {};
-    var parts = [m.reportId || 'REPORT'];
-    if (m.party && m.party.code) parts.push(String(m.party.code));
+    /* OUTPUT-002-C Item 12 — human filename «title - party - date» with Arabic preserved;
+       strip only filesystem-reserved characters, never letters/digits. */
+    var ttl = m.title; if (ttl && typeof ttl === 'object') ttl = ttl.ar || ttl.en;
+    var parts = [ttl || m.reportId || 'REPORT'];
+    if (m.party && m.party.name) parts.push(m.party.name);
+    else if (m.party && m.party.code) parts.push(String(m.party.code));
     var d = m.printDate ? new Date(m.printDate) : new Date();
     if (!isNaN(d)) parts.push(d.toISOString().slice(0, 10));
-    return parts.join('-').replace(/[^A-Za-z0-9_\-]+/g, '_');
+    return parts.join(' - ').replace(/[\/\\:*?"<>|\u0000-\u001f]+/g, '').replace(/\s+/g, ' ').trim();
   }
 
   /* @page margins reserve room for the fixed running header (top) and footer
