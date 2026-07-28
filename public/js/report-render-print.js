@@ -52,7 +52,7 @@
       var RL = (typeof root !== 'undefined' && root.ReportLayout) || null;
       if (!RL) return { error: 'layout_unavailable' };
       var lang = opts.lang || (typeof root !== 'undefined' && root.LANG) || 'ar';
-      var built = RL.build(model, { lang: lang });
+      var built = RL.build(model, { lang: lang, target: 'print' });
       var orientation = (model.meta && model.meta.orientation) || 'portrait';
       return {
         html: built.html,

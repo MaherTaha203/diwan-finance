@@ -32,7 +32,7 @@
     if (!RL) return { error: 'layout_unavailable' };
     var lang = opts.lang || (typeof root !== 'undefined' && root.LANG) || 'ar';
     var win = (opts.windowRows !== undefined) ? opts.windowRows : DEFAULT_WINDOW;
-    var built = RL.build(model, { lang: lang, windowRows: win });
+    var built = RL.build(model, { lang: lang, windowRows: win, target: 'screen' });
     return { html: built.html, css: built.css };
   }
 
