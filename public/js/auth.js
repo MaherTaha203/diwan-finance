@@ -210,12 +210,12 @@ function applyPerms(){
         [id*="btn-prt"],[id*="prt-btn"],[id*="print"],
         [class*="btn-print"],[class*="print-btn"],
         button[onclick*="prt"],[data-requires-print],
-        /* Export / CSV / PDF / Excel / Backup buttons */
-        [id*="export"],[id*="csv"],[id*="excel"],[id*="backup"],
+        /* Export / PDF / Excel / Backup buttons */
+        [id*="export"],[id*="excel"],[id*="backup"],
         [id*="download"],[id*="pdf-btn"],
         [class*="btn-export"],[class*="export-btn"],
         button[onclick*="export"],[data-requires-export],
-        button[onclick*="exportCSV"],button[onclick*="exportPDF"],
+        button[onclick*="exportPDF"],
         button[onclick*="doBackup"],
         /* Import buttons */
         [id*="import"],[class*="btn-import"],
@@ -289,7 +289,6 @@ function _sweepRestrictedElements(isAdmin){
     'button[onclick*="prtMember"]',
     'button[onclick*="prtDon"]',
     'button[onclick*="exportPDF"]',
-    'button[onclick*="exportCSV"]',
     'button[onclick*="doBackup"]',
     /* id-based selectors for any static export/print/import buttons */
     '#btn-export-food-rec','#btn-export-food-pay',
@@ -298,7 +297,7 @@ function _sweepRestrictedElements(isAdmin){
     '#btn-export-audit','#btn-export-stmt',
     '#btn-backup','#btn-import',
     '[id^="btn-print"]','[id^="btn-prt"]',
-    '[id^="btn-export"]','[id^="btn-csv"]',
+    '[id^="btn-export"]',
     '[id^="btn-pdf"]','[id^="btn-excel"]',
     '[id^="btn-download"]','[id^="btn-import"]',
   ].join(',');

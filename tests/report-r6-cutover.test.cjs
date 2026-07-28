@@ -32,12 +32,12 @@ const r = Report.render(model, 'screen');
 ok(r.ok === true && r.skeleton === false && r.target === 'screen', "Report.render(model,'screen') is no longer a skeleton");
 ok(r.result && r.result.status === 'composed', 'in node (no DOM) screen composes rather than mounts, cleanly');
 
-/* other targets still behave (print/pdf/excel real once required; csv skeleton) */
+/* other targets still behave (print/pdf/excel real once required) */
 require('../public/js/report-render-print.js');
 require('../public/js/report-render-pdf.js');
 require('../public/js/report-render-excel.js');
 ok(Report.render(model, 'print').skeleton === false && Report.render(model, 'excel').skeleton === false, 'print + excel stay real alongside screen');
-ok(Report.render(model, 'csv').result.status === 'skeleton', 'csv remains a skeleton');
+ok(!Report.render(model, 'csv').ok, 'csv is no longer a valid render target (removed in OUTPUT-002-C)');
 
 /* ───────────────────────── Part B — donation-label parity ───────────────────────── */
 /* the donations table now carries a bilingual desc that mirrors legacy donationStmtLabel */
@@ -78,11 +78,6 @@ Cutover.deliverMember('excel');
 ok(calls.length === 1 && calls[0].target === 'excel', "deliverMember('excel') routes to Report.render(model,'excel')");
 Cutover.deliverMember('pdf');
 ok(calls[1] && calls[1].target === 'pdf', "deliverMember('pdf') routes to Report.render(model,'pdf')");
-/* csv falls back to the legacy exporter (csv renderer not real yet) — no engine call */
-let csvLegacy = 0; globalThis.exportMemberStmt = (fmt) => { if (fmt === 'csv') csvLegacy++; };
-const csvBefore = calls.length;
-Cutover.deliverMember('csv');
-ok(csvLegacy === 1 && calls.length === csvBefore, "deliverMember('csv') falls back to legacy exportMemberStmt('csv'), not the engine");
 
 els['ms-out'].innerHTML = '';
 Cutover.renderMemberScreen();

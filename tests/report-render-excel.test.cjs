@@ -65,13 +65,13 @@ ok(r.ok === true && r.skeleton === false && r.target === 'excel', "Report.render
 ok(r.result && r.result.status === 'composed' && r.result.empty === false, 'in node (no XLSX lib) it composes rather than writes, cleanly');
 ok(r.result.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'render result carries the filename');
 
-/* other targets unaffected: print/pdf stay real, screen/csv stay skeletons */
+/* other targets unaffected: print/pdf stay real, screen stays a skeleton */
 const PrintRenderer = require('../public/js/report-render-print.js');
 require('../public/js/report-render-pdf.js');
 ok(Report.render(model, 'print').skeleton === false, 'print stays real after R5');
 ok(Report.render(model, 'pdf').skeleton === false, 'pdf stays real after R5');
 ok(Report.render(model, 'screen').result.status === 'skeleton', 'screen remains a skeleton after R5');
-ok(Report.render(model, 'csv').result.status === 'skeleton', 'csv remains a skeleton after R5');
+ok(!Report.render(model, 'csv').ok, 'csv is no longer a valid render target (removed in OUTPUT-002-C)');
 
 /* id form still works and is no longer skeleton for excel */
 ok(Report.render('MEMBER_STATEMENT', 'excel', { model: model }).skeleton === false, "id form Report.render('MEMBER_STATEMENT','excel',{model}) uses the real renderer");

@@ -1028,9 +1028,6 @@ window.applyLang = function() {
   });
 
   // Export buttons
-  document.querySelectorAll('.btn.sm[onclick*="exportCSV"]').forEach(el => {
-    el.innerHTML = `<i class="ti ti-download"></i>${window.t('common.export')}`;
-  });
   document.querySelectorAll('.btn.sm[onclick*="prtStmt"]').forEach(el => {
     el.innerHTML = `<i class="ti ti-printer"></i>${window.t('common.print')}`;
   });
