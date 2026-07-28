@@ -349,8 +349,8 @@ const D={
       <td class="c-notes">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
-        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
-        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" aria-label="طباعة الإيصال" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
+        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" aria-label="تعديل الإيصال" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
   'diwan-pay':{render(){
@@ -378,8 +378,8 @@ const D={
       <td class="c-notes">${esc(p.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('payment',p.id,p.no,p.fund_type)}
-        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>`:''}
-        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editPay('${p.id}')"><i class="ti ti-edit"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" aria-label="طباعة السند" onclick="window.prtPay('${p.id}')"><i class="ti ti-printer"></i></button>`:''}
+        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" aria-label="تعديل السند" onclick="window.editPay('${p.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
   'don':{render(){
@@ -432,8 +432,8 @@ const D={
       <td class="c-notes">${esc(r.notes||'—')}</td>
       <td class="tda">
         ${window.attachBtn('receipt',r.id,r.no,r.fund_type)}
-        ${can.print()?`<button class="btn ghost sm ic-print" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
-        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
+        ${can.print()?`<button class="btn ghost sm ic-print" aria-label="طباعة الإيصال" onclick="window.prtRec('${r.id}')"><i class="ti ti-printer"></i></button>`:''}
+        ${can.admin()?`<button class="btn ghost sm" style="color:var(--warn)" aria-label="تعديل الإيصال" onclick="window.editRec('${r.id}')"><i class="ti ti-edit"></i></button>`:''}
       </td></tr>`).join('');
   }},
   'members':{render(){
@@ -1485,9 +1485,9 @@ function renderAuditGrid(){
   </tr>`).join('');
   const pg=document.getElementById('audit-pager');
   if(pg) pg.innerHTML=`
-    <button class="btn ghost sm" ${f.page<=1?'disabled':''} onclick="window.auditPage(-1)"><i class="ti ti-chevron-right"></i></button>
+    <button class="btn ghost sm" aria-label="الصفحة السابقة" ${f.page<=1?'disabled':''} onclick="window.auditPage(-1)"><i class="ti ti-chevron-right"></i></button>
     <span style="font-size:12px;color:var(--tx2)">صفحة ${f.page} من ${pages} · ${total} عملية</span>
-    <button class="btn ghost sm" ${f.page>=pages?'disabled':''} onclick="window.auditPage(1)"><i class="ti ti-chevron-left"></i></button>`;
+    <button class="btn ghost sm" aria-label="الصفحة التالية" ${f.page>=pages?'disabled':''} onclick="window.auditPage(1)"><i class="ti ti-chevron-left"></i></button>`;
 }
 function renderSysInfo(){
   const el=document.getElementById('sys-info');if(!el)return;
@@ -2135,7 +2135,7 @@ function renderTransferList(){
   el.innerHTML=rows.length
     ? '<table class="as-table" style="font-size:12px"><thead><tr><th>السند</th><th>التاريخ</th><th>من</th><th>إلى</th><th class="as-num">المبلغ ₪</th><th></th></tr></thead><tbody>'
       +rows.map(t=>'<tr><td class="mono">'+esc(t.no)+'</td><td>'+esc(t.transfer_date)+'</td><td>'+(TR_FUND_AR[t.source_treasury]||esc(t.source_treasury))+'</td><td>'+(TR_FUND_AR[t.destination_treasury]||esc(t.destination_treasury))+'</td><td class="as-num">₪ '+fmt(FIN.amountOf(t))+'</td>'
-      +'<td>'+(can.print()?'<button class="btn ghost sm" onclick="window.prtTransfer(\''+esc(t.id)+'\')"><i class="ti ti-printer"></i></button>':'')+'</td></tr>').join('')
+      +'<td>'+(can.print()?'<button class="btn ghost sm" aria-label="طباعة سند التحويل" onclick="window.prtTransfer(\''+esc(t.id)+'\')"><i class="ti ti-printer"></i></button>':'')+'</td></tr>').join('')
       +'</tbody></table>'
     : '<div style="font-size:12px;color:var(--tx3)">لا توجد تحويلات داخلية بعد</div>';
 }

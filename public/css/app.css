@@ -46,7 +46,7 @@ body.light {
   color-scheme:light;  /* native controls follow light */
   /* DDL-02 light = frozen Natural-paper base; ink is soft near-black, not pure black */
   --canvas:#F9F8F4; --bg:#F9F8F4; --bg2:#FCFBF8; --bg3:#F1F0EB;
-  --tx:#2C2E33; --ink:#2C2E33; --tx2:#5C5F65; --mut:#8F9299; --tx3:#8F9299; --faint:#8F9299;
+  --tx:#2C2E33; --ink:#2C2E33; --tx2:#5C5F65; --mut:#6e7076; --tx3:#6e7076; --faint:#6e7076;
   --bd:#F0EFE9; --line:#F0EFE9; --bd2:#DCD9D0; --rule:#DCD9D0;
   --soft:#F2F1EC; --row:#FBFAF6;
   --card:#FCFBF8; --sb:#16265E;
@@ -1450,7 +1450,7 @@ body{
 }
 body.light{
   --canvas:#F5F2EA; --bg:#F5F2EA; --bg2:#FBF9F4; --bg3:#EFEBE1;
-  --tx:#1F2937; --ink:#141E2E; --tx2:#57606E; --mut:#8A8F98; --tx3:#8A8F98; --faint:#8A8F98;
+  --tx:#1F2937; --ink:#141E2E; --tx2:#57606E; --mut:#696d74; --tx3:#696d74; --faint:#696d74;
   --bd:#E9E4D8; --line:#E9E4D8; --bd2:#D8D2C2; --rule:#D8D2C2;
   --soft:#F0ECE2; --row:#FAF7F0;
   --card:#FFFFFF;
@@ -1649,7 +1649,7 @@ body:not(.light) #pg-dash .dhero .pri:hover{background:#F3EFE4;border-color:#F3E
 }
 body.light{
   --canvas:#EDF1F7; --bg:#EDF1F7; --bg2:#F7F9FC; --bg3:#E9EDF4;
-  --tx:#17202E; --ink:#141C29; --tx2:#57606E; --mut:#7C8494; --tx3:#7C8494; --faint:#7C8494;
+  --tx:#17202E; --ink:#141C29; --tx2:#57606E; --mut:#666c79; --tx3:#666c79; --faint:#666c79;
   --bd:#E2E7F0; --line:#E2E7F0; --bd2:#D3DAE6; --rule:#D3DAE6;
   --soft:#EFF2F8; --row:#F7F9FC;
   --card:#FFFFFF;
