@@ -149,7 +149,7 @@
     if (q) rows = rows.filter(r => (r.name + ' ' + r.code + ' ' + r.phone).toLowerCase().includes(q));
     const chips = [['all', T('الكل', 'All')], ['outstanding', T('متبقّي', 'Outstanding')], ['settled', T('مسدَّد', 'Settled')]]
       .map(c => '<button class="dw-chip' + (_dwFilter === c[0] ? ' on' : '') + '" onclick="window.DuesWorkspace.setFilter(\'' + c[0] + '\')">' + c[1] + '</button>').join('');
-    const search = '<input class="dw-search" type="search" placeholder="' + T('بحث بالاسم / الرقم / الهاتف', 'search name / code / phone') + '" '
+    const search = '<input class="dw-search" type="search" aria-label="' + T('بحث', 'Search') + '" placeholder="' + T('بحث بالاسم / الرقم / الهاتف', 'search name / code / phone') + '" '
       + 'value="' + E(_dwSearch) + '" oninput="window.DuesWorkspace.setSearch(this.value)">';
     const body = rows.length
       ? '<div class="dw-tablewrap"><table class="dw-table"><thead><tr>'
