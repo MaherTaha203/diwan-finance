@@ -81,9 +81,9 @@ the file + its `<script>` tag.
 - Node suite sweep: **64 pass / 2 fail** — the 2 are the pre-existing documented legacy
   fixture-missing suites (`business-operations-slice1`, `constitutional-explicit-q5`,
   `tests/LEGACY_SUITES.md`); **no new failures**. (Browser-only fix cannot affect node suites.)
-- Constitutional lab (`node lab/run.cjs`): re-run as a supplementary gate; no accounting
-  code was touched by this handoff fix, and the node accounting/business suites already
-  pass unchanged, so FIN certification is unaffected.
+- Constitutional lab (`node lab/run.cjs`): **90/90 checks · 23/23 certified · exit 0** —
+  unchanged from baseline (FOC-001…FOC-025). No accounting code was touched by this
+  handoff fix, so FIN certification is unaffected.
 
 ## Files
 - **new** `public/js/report-handoff.js`
