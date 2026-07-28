@@ -65,7 +65,7 @@
       (org.subtitle ? '<div class="rpt-hd-sub">' + esc(pick(org.subtitle, lang)) + (org.site ? ' · ' + esc(org.site) : '') + '</div>' : '') + '</div>' +
       (org.logo ? '<div class="rpt-hd-chip"><img src="' + esc(org.logo) + '" alt=""></div>' : '') + '</div></header>' +
       '<div class="rpt-rule"></div></div>' +
-      '<div class="rpt-title"><h2>' + esc(pick(meta.title, lang)) + '</h2></div>' +
+      '<div class="rpt-title"><h1>' + esc(pick(meta.title, lang)) + '</h1></div>' +
       metaLine(meta, lang);
   }
 
@@ -217,7 +217,7 @@
     '.rpt-hd-sub{font-size:10px;color:var(--rpt-muted);margin-top:4px;line-height:1.7}' +
     '.rpt-hd-chip{width:56px;height:56px;flex:none;display:grid;place-items:center}.rpt-hd-chip img{width:100%;height:100%;object-fit:contain}' +
     '.rpt-rule{height:2px;background:var(--rpt-ink);border-radius:2px;margin-top:14px}' +
-    '.rpt-title{text-align:center;margin:22px 0 2px}.rpt-title h2{font-size:19px;font-weight:700;display:inline-block}' +
+    '.rpt-title{text-align:center;margin:22px 0 2px}.rpt-title h1,.rpt-title h2{font-size:19px;font-weight:700;display:inline-block}' +
     '.rpt-meta{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--rpt-muted);font-weight:500;line-height:1.9}.rpt-meta b{color:var(--rpt-ink2);font-weight:600}' +
     '.rpt-cards{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 4px}' +
     '.rpt-card{flex:1 1 130px;background:#fff;border:1px solid var(--rpt-line);border-top:2px solid var(--rpt-line2);border-radius:9px;padding:11px 13px;text-align:center}' +
