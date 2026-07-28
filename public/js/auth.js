@@ -188,6 +188,9 @@ function applyPerms(){
   /* Module R: reservation-manager sees ONLY the calendar (CSS lockdown);
      the calendar item itself is admin+reservation only (design Q1: viewer=no). */
   document.body.classList.toggle('role-reservation',rsv);
+  /* OUTPUT-002-C — admin-only items in the «الإخراج ▼» menu (إعدادات الإخراج) are
+     hidden for non-admins via CSS (belt-and-suspenders with the click-time gate). */
+  document.body.classList.toggle('is-admin',a);
   const nbRes=document.getElementById('nb-reservations');
   if(nbRes)nbRes.style.display=(a||rsv)?'':'none';
   const sbRes=document.getElementById('sbsec-reservations');

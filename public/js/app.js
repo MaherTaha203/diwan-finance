@@ -1701,6 +1701,30 @@ window.__voucherListDeliver=function(type,target){
   }
   return true;
 };
+/* OUTPUT-002-C C7 — one entry point behind the «الإخراج ▼» menu on list pages.
+   pdf/excel delegate to the existing engine-routed exporters; print routes the SAME
+   report through the engine's print target (symmetric with the pdf dispatch), so the
+   menu's «طباعة» is the engine print of that page's report — no legacy string path. */
+window.pageOutput=function(type,target){
+  target=target||'print';
+  if(target==='excel') return window.exportPageExcel(type);
+  if(target==='pdf')   return window.exportPagePDF(type);
+  /* print */
+  if(type==='food-rec'||type==='diwan-rec'||type==='food-pay'||type==='diwan-pay'){ window.__voucherListDeliver(type,'print'); return; }
+  if(type==='annual-debt') return window.prtAnnualDebt('print');
+  if(type==='delinquent')  return window.prtDelinquent('print');
+  if(type==='don' && window.REPORT_ENGINE_DONATION_REPORT && window.ReportCutoverDonation && window.ReportCutoverDonation.ready()) return window.ReportCutoverDonation.deliver('print');
+  if(type==='members' && window.REPORT_ENGINE_MEMBERS_LIST && window.ReportCutoverLists && window.ReportCutoverLists.membersReady()) return window.ReportCutoverLists.members('print');
+  if(type==='annual'  && window.REPORT_ENGINE_ANNUAL_LOG   && window.ReportCutoverLists && window.ReportCutoverLists.annualReady())  return window.ReportCutoverLists.annual('print');
+  if(type==='users'   && window.REPORT_ENGINE_USERS_LIST   && window.ReportCutoverLists && window.ReportCutoverLists.usersReady())   return window.ReportCutoverLists.users('print');
+  if(type==='audit' && window.Report && window.Report.get && window.Report.get('AUDIT_LOG') && typeof window.buildAuditLogModel==='function'){
+    if(typeof can!=='undefined' && can.export && !can.export()){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
+    const rows=(DB.audit||[]).map(a=>({date:a.created_at,action:a.action,desc:a.description||null,user:a.user_name||null,table:a.table_name||null}));
+    return window.Report.render(window.buildAuditLogModel({rows,printDate:new Date().toISOString()}),'print');
+  }
+  /* fallback: the PDF path opens a printable document */
+  return window.exportPagePDF(type);
+};
 window.exportPagePDF=function(type){
   if((type==='food-rec'||type==='diwan-rec'||type==='food-pay'||type==='diwan-pay') && window.__voucherListDeliver(type,'pdf')) return;
   if(type==='annual-debt') return window.prtAnnualDebt('pdf');
