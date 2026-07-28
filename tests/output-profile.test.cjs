@@ -23,11 +23,22 @@ const m = OP.get();
 ok(m.organization.phone === '0599', 'patch applied (phone)');
 ok(m.organization.name.en === 'Custom EN' && m.organization.name.ar === 'ديوان آل طه', 'nested patch merges, sibling default kept');
 ok(m.output.showQR === false && m.output.showLogo === true, 'output patch merges, other toggles kept');
-ok(OP.org().logo === '', 'org().logo honours showLogo (still empty logo)');
 
-/* showLogo=false suppresses a set logo */
+/* logo default = the system brand logo (BrandAssets absent under node ⇒ fallback URL),
+   so it appears automatically in reports even with no custom upload */
+ok(OP.org().logo === OP.defaultLogo() && OP.org().logo !== '', 'org().logo defaults to the system brand logo when no custom is set');
+ok(OP.logoIsCustom() === false, 'logoIsCustom() false when using the default');
+ok(OP.logoResolved() === OP.defaultLogo(), 'logoResolved() is the default when no custom');
+
+/* a custom logo overrides the default */
+OP.set({ organization: { logo: 'data:x' } });
+ok(OP.org().logo === 'data:x' && OP.logoIsCustom() === true, 'custom logo overrides the default');
+
+/* showLogo=false suppresses the logo (custom or default) but keeps it stored */
 OP.set({ organization: { logo: 'data:x' }, output: { showLogo: false } });
 ok(OP.org().logo === '' && OP.get().organization.logo === 'data:x', 'showLogo=false hides logo in org() but keeps it stored');
+OP.reset();
+ok(OP.org().logo === OP.defaultLogo(), 'reset restores the default-logo behavior');
 
 /* reset restores defaults */
 OP.reset();
