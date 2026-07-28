@@ -54,6 +54,8 @@ const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#
 /* ── Meta / period line (centered, muted) ── */
 +'.period{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.9}'
 +'.period b{color:var(--ink2);font-weight:600}'
+/* the voucher number (رقم السند) is always RED on the original document */
++'.period .num{color:#C62828;font-weight:700}'
 /* ── Summary cards ── */
 /* PR-5 (ROOT-11): wrap the KPI row so a many-card report (e.g. the 7-card donation
    summary) flows onto a second line instead of cramming everything onto one; the
