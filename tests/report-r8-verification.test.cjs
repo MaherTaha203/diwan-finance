@@ -28,6 +28,8 @@ const models = {
   DELINQUENT: B.buildDelinquentModel({ years: [2025], rows: [{ code: 'A-1', name: 'x', phone: '', d: { unpaidCount: 1, byYear: { 2025: { due: 200, paid: 0, remaining: 200, settled: false, status: 'unpaid', authoritative: false } } } }], shown: 1, totalMembers: 1 }),
   DONATION_REPORT: B.buildDonationReportModel({ rows: [{ date: '2025-01-01', ref: '1', donor: 'x', amount: 100, currency: 'ILS', direction: 'صندوق الغداء', note: null }], summary: { count: 1, cashTot: 100, inkindTot: 0, foodDebt: 0, foodDeficit: 0, foodSupport: 100, toDiwan: 0 } }),
   MEMBERS_LIST: B.buildMembersListModel({ rows: [{ idx: 1, name: 'x', phone: '', balance: 100, status: 'مدين' }] }),
+  RECEIPTS_LIST: B.buildReceiptsListModel({ rows: [{ no: 'R1', date: '2025-01-01', party: 'x', amount: 100, method: 'نقدًا', notes: '' }], total: 100 }),
+  PAYMENTS_LIST: B.buildPaymentsListModel({ rows: [{ no: 'P1', date: '2025-01-01', party: 'y', amount: 80, category: 'صيانة', notes: '' }], total: 80 }),
   ANNUAL_LOG: B.buildAnnualLogModel({ rows: [{ year: 2025, amount: 200, memberCount: 40, appliedAt: '2025-01-01', appliedBy: 'admin' }] }),
   TREASURY_POSITION: B.buildTreasuryPositionModel({ position: { food: 1, diwan: 1, don: 1, combined: 3 }, movement: { totalIn: 1, totalOut: 0 }, rows: [{ date: '2025-01-01', no: '1', fund: 'x', party: 'y', desc: 'z', in: 1, out: null }] }),
   DUES_SNAPSHOT: B.buildDuesSnapshotModel({ state: { year: 2025, perMember: 200, eligible: 1, due: 200, outstanding: 200 }, statusText: 'مُطبَّقة', rows: [{ code: 'A-1', name: 'x', phone: '', due: 200, paid: 0, remaining: 200, status: 'متبقّي' }], schedule: [] }),

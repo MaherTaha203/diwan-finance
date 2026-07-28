@@ -44,14 +44,19 @@
   }
 
   /* deterministic, unified filename — identical scheme to the print/pdf renderer:
-     <REPORT_ID>-<party.code?>-<YYYY-MM-DD> (satisfies the §7 unified-filenames gate). */
+     «<title> - <party.name?> - <YYYY-MM-DD>», Arabic preserved (satisfies the §7
+     unified-filenames gate + OUTPUT-002-C Item 12 human-readable filenames). */
   function filenameFor(model) {
     var m = model.meta || {};
-    var parts = [m.reportId || 'REPORT'];
-    if (m.party && m.party.code) parts.push(String(m.party.code));
+    /* OUTPUT-002-C Item 12 — human filename «title - party - date» with Arabic preserved;
+       strip only filesystem-reserved characters, never letters/digits. */
+    var ttl = m.title; if (ttl && typeof ttl === 'object') ttl = ttl.ar || ttl.en;
+    var parts = [ttl || m.reportId || 'REPORT'];
+    if (m.party && m.party.name) parts.push(m.party.name);
+    else if (m.party && m.party.code) parts.push(String(m.party.code));
     var d = m.printDate ? new Date(m.printDate) : new Date();
     if (!isNaN(d)) parts.push(d.toISOString().slice(0, 10));
-    return parts.join('-').replace(/[^A-Za-z0-9_\-]+/g, '_');
+    return parts.join(' - ').replace(/[\/\\:*?"<>|\u0000-\u001f]+/g, '').replace(/\s+/g, ' ').trim();
   }
 
   /* Excel sheet-name rules: <=31 chars, none of []:*?/\ */
@@ -77,6 +82,11 @@
     } else if (per) {
       bits.push(lang === 'en' ? 'Period: all' : 'الفترة: كل الفترات');
     }
+    /* OUTPUT-002-B · Item 6 — echo the report's filter line into the sheet subtitle,
+       matching the paper surfaces (which render meta.filters as .rpt-filter chips).
+       Filter-based reports (debt/delinquent/donation/lists) carry meta.filters instead
+       of party/period, so without this the Excel subtitle row was blank. */
+    (meta.filters || []).forEach(function (f) { var s = pick(f, lang); if (s) bits.push(s); });
     return bits.join('   |   ');
   }
 

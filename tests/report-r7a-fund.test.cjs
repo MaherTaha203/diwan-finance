@@ -61,13 +61,11 @@ globalThis.Report = { render: (m, target, opts) => { calls.push({ target, opts, 
   outputButtons: () => '<button class="rpt-out-btn" data-output="print"></button>' };
 globalThis.can = null;
 globalThis.REPORT_ENGINE_FUND_STATEMENT = true;
-let csvLegacy = 0; globalThis.exportCSV = (t) => { if (t === 'food-stmt') csvLegacy++; };
 
 const cut = globalThis.ReportCutoverCore.make({
   flag: 'REPORT_ENGINE_FUND_STATEMENT', reportId: 'FUND_STATEMENT',
   mountId: fund => fund + '-stmt-out',
-  gather: fund => globalThis.ReportModels.fundStatement(fund, (els[fund + '-stmt-from'] || {}).value || '', (els[fund + '-stmt-to'] || {}).value || '', (els[fund + '-stmt-type'] || {}).value || ''),
-  csv: fund => globalThis.exportCSV(fund + '-stmt')
+  gather: fund => globalThis.ReportModels.fundStatement(fund, (els[fund + '-stmt-from'] || {}).value || '', (els[fund + '-stmt-to'] || {}).value || '', (els[fund + '-stmt-type'] || {}).value || '')
 });
 
 ok(cut.ready() === true, 'core ready() true when flag ON + engine + model gatherer + FIN present');
@@ -75,8 +73,6 @@ cut.deliver('food', 'excel');
 ok(calls.length === 1 && calls[0].target === 'excel' && calls[0].fund === 'food' && gathered.fund === 'food', "deliver('food','excel') gathers the food model and routes to Report.render(...,'excel')");
 cut.deliver('food', 'pdf');
 ok(calls[1] && calls[1].target === 'pdf', "deliver('food','pdf') routes to the engine");
-cut.deliver('food', 'csv');
-ok(csvLegacy === 1 && calls.length === 2, "deliver('food','csv') falls back to legacy exportCSV, not the engine");
 
 els['food-stmt-out'].innerHTML = '';
 cut.renderScreen('food');

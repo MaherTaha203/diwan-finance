@@ -29,6 +29,28 @@
 | — | Public member report links (access tokens, expiry, permissions) | — | **OUTPUT-003** |
 | — | Email / WhatsApp share, share permissions, temporary links, passwords | — | **OUTPUT-003** |
 
+## ⚠️ OUTPUT-002-B accurate completion status (updated during -B)
+
+Implementing -B revealed that most -B items were **already satisfied** — the R9 handoff fix
+(`window.FIN`/`window.DB`) activated the engine cutovers across the board, and the app already
+carried a consistent `تصدير ▼` export UI. Corrected item status:
+
+| Item | Planned | Actual after measurement |
+|---|---|---|
+| 1 · de-dup statement toolbars | -B | ✅ **implemented** (removed page print/PDF/Excel; engine bar remains) |
+| 2 · wire unified bar on 5 reports | -B | ⏹ **N/A** — those pages already have the `تصدير ▼` (Excel+PDF) dropdown + print |
+| 3 · output for users/audit/treasury/dues | -B | ✅ **already present** — users/audit have dropdowns; treasury/dues print routes to engine post-R9 (guard passes) |
+| 4 · transfer voucher → engine | -B | ✅ **already engine-routed** — `TRANSFER_VOUCHER` def registered; `prtTransfer` → `Report.render` post-R9 |
+| 5 · voucher-list Excel → engine | -B | ✅ **implemented** — new `RECEIPTS_LIST`/`PAYMENTS_LIST` models; rec/pay screen/print/pdf/excel now share one model; legacy `styleDiwanSheet` + `openPrintWin` path removed for these surfaces (donation list Excel was already engine post-R9) |
+| 6 · Excel header parity | -B | ✅ **implemented** (filter subtitle; title/₪ were never missing — audit artifact) |
+| 7 · remove dead legacy | -B | ⏹ **mischaracterized** — `buildRec/Pay/TransferVoucher` are **reused** by the engine's hybrid voucher renderer (not dead); the `openPrintWin` fallbacks are the kept kill-switches |
+| 8 · parity gate | -B | ✅ **verified** — screen==print==pdf on all reports; Excel filter parity; 0 boot errors; node 64/2 |
+
+**Net:** genuine -B implementation = Items **1 + 6** (done) + the audit corrections; everything
+else was already true post-R9 or was an audit artifact. **Item 5** is the only open migration —
+its scope (new list report-models to match the current styled sheet) makes it a natural pair with
+the **-C** list/CSV decision (Item 18), but it is logged here for the owner's call before -C.
+
 ## Phasing
 
 ### OUTPUT-002-B — Unification & legacy removal

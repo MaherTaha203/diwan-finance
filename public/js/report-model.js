@@ -478,6 +478,57 @@
     };
   }
 
+  /* OUTPUT-002-B Item 5 — receipts / payments LIST models (PURE mappers). The caller
+     resolves party names + localized method/category labels (app scope) and passes the
+     pre-shaped rows, exactly as buildMembersListModel does. One model → screen/print/
+     pdf/excel, replacing the legacy styleDiwanSheet dump so all four surfaces share it. */
+  function buildReceiptsListModel(source) {
+    source = source || {};
+    var rows = source.rows || [];
+    var total = Number(source.total || 0);
+    var columns = [
+      { key: 'no', header: T('الرقم', 'No.'), align: 'center', format: 'text' },
+      { key: 'date', header: T('التاريخ', 'Date'), align: 'center', format: 'date' },
+      { key: 'party', header: T('الدافع', 'Payer'), align: 'start', format: 'text' },
+      { key: 'amount', header: T('المبلغ', 'Amount'), align: 'end', format: 'money' },
+      { key: 'method', header: T('الطريقة', 'Method'), align: 'center', format: 'text' },
+      { key: 'notes', header: T('ملاحظات', 'Notes'), align: 'start', format: 'text' }
+    ];
+    return {
+      meta: { reportId: 'RECEIPTS_LIST', title: (source.title || T('قائمة الإيصالات', 'Receipts List')), orientation: 'landscape', printDate: source.printDate || null,
+        filters: [T('العدد: ' + rows.length + ' إيصال', 'Count: ' + rows.length)].concat(source.fundLabel ? [source.fundLabel] : []) },
+      summary: [
+        { key: T('إجمالي المبلغ', 'Total amount'), value: total, format: 'money' },
+        { key: T('عدد الإيصالات', 'Receipts'), value: rows.length, format: 'int' }
+      ],
+      sections: [{ type: 'table', id: 'receipts', columns: columns, rows: rows,
+        totals: { label: T('الإجمالي', 'Total'), cells: { amount: total } } }]
+    };
+  }
+  function buildPaymentsListModel(source) {
+    source = source || {};
+    var rows = source.rows || [];
+    var total = Number(source.total || 0);
+    var columns = [
+      { key: 'no', header: T('الرقم', 'No.'), align: 'center', format: 'text' },
+      { key: 'date', header: T('التاريخ', 'Date'), align: 'center', format: 'date' },
+      { key: 'party', header: T('المستفيد', 'Beneficiary'), align: 'start', format: 'text' },
+      { key: 'amount', header: T('المبلغ', 'Amount'), align: 'end', format: 'money' },
+      { key: 'category', header: T('الفئة', 'Category'), align: 'center', format: 'text' },
+      { key: 'notes', header: T('ملاحظات', 'Notes'), align: 'start', format: 'text' }
+    ];
+    return {
+      meta: { reportId: 'PAYMENTS_LIST', title: (source.title || T('قائمة المصاريف', 'Payments List')), orientation: 'landscape', printDate: source.printDate || null,
+        filters: [T('العدد: ' + rows.length + ' سند', 'Count: ' + rows.length)].concat(source.fundLabel ? [source.fundLabel] : []) },
+      summary: [
+        { key: T('إجمالي المبلغ', 'Total amount'), value: total, format: 'money' },
+        { key: T('عدد السندات', 'Payments'), value: rows.length, format: 'int' }
+      ],
+      sections: [{ type: 'table', id: 'payments', columns: columns, rows: rows,
+        totals: { label: T('الإجمالي', 'Total'), cells: { amount: total } } }]
+    };
+  }
+
   /* Runtime gatherers (read DB/FIN + the live filter inputs, so exports match the
      on-screen list). */
   function membersListRuntime() {
@@ -679,6 +730,8 @@
     root.buildDelinquentModel = buildDelinquentModel;
     root.buildDonationReportModel = buildDonationReportModel;
     root.buildMembersListModel = buildMembersListModel;
+    root.buildReceiptsListModel = buildReceiptsListModel;
+    root.buildPaymentsListModel = buildPaymentsListModel;
     root.buildAnnualLogModel = buildAnnualLogModel;
     root.buildUsersListModel = buildUsersListModel;
     root.buildTreasuryPositionModel = buildTreasuryPositionModel;
@@ -687,6 +740,6 @@
     root.buildConsistencyModel = buildConsistencyModel;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, buildMembersListModel: buildMembersListModel, buildAnnualLogModel: buildAnnualLogModel, buildUsersListModel: buildUsersListModel, buildTreasuryPositionModel: buildTreasuryPositionModel, buildDuesSnapshotModel: buildDuesSnapshotModel, buildAuditLogModel: buildAuditLogModel, buildConsistencyModel: buildConsistencyModel, validate: validate, refFromNotes: refFromNotes };
+    module.exports = { ReportModel: ReportModel, ReportModels: ReportModels, buildMemberStatementModel: buildMemberStatementModel, buildFundStatementModel: buildFundStatementModel, buildAnnualDebtModel: buildAnnualDebtModel, buildDelinquentModel: buildDelinquentModel, buildDonationReportModel: buildDonationReportModel, buildMembersListModel: buildMembersListModel, buildReceiptsListModel: buildReceiptsListModel, buildPaymentsListModel: buildPaymentsListModel, buildAnnualLogModel: buildAnnualLogModel, buildUsersListModel: buildUsersListModel, buildTreasuryPositionModel: buildTreasuryPositionModel, buildDuesSnapshotModel: buildDuesSnapshotModel, buildAuditLogModel: buildAuditLogModel, buildConsistencyModel: buildConsistencyModel, validate: validate, refFromNotes: refFromNotes };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

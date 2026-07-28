@@ -18,15 +18,16 @@ const FLAGS = require('../public/js/report-activation.js');   // <-- activation 
 ok(globalThis.REPORT_ENGINE_MEMBER_STATEMENT === true && globalThis.REPORT_ENGINE_VOUCHERS === true, 'activation OVERRIDES the module default-OFF guards (false → true) regardless of load order');
 
 /* every flag is now ON */
-ok(FLAGS.length === 13, 'activation covers 13 flags (3 vouchers share one)');
+ok(FLAGS.length === 15, 'activation covers 15 flags (3 vouchers share one)');
 ok(FLAGS.every(f => globalThis[f] === true), 'every REPORT_ENGINE_* flag is ON after activation');
-ok(Array.isArray(globalThis.REPORT_ENGINE_FLAGS) && globalThis.REPORT_ENGINE_FLAGS.length === 13, 'the flag list is exposed on window.REPORT_ENGINE_FLAGS');
+ok(Array.isArray(globalThis.REPORT_ENGINE_FLAGS) && globalThis.REPORT_ENGINE_FLAGS.length === 15, 'the flag list is exposed on window.REPORT_ENGINE_FLAGS');
 
 /* every registry report maps to an activated flag */
 const REPORT_FLAG = {
   MEMBER_STATEMENT: 'REPORT_ENGINE_MEMBER_STATEMENT', FUND_STATEMENT: 'REPORT_ENGINE_FUND_STATEMENT',
   ANNUAL_DEBT: 'REPORT_ENGINE_ANNUAL_DEBT', DELINQUENT: 'REPORT_ENGINE_DELINQUENT', DONATION_REPORT: 'REPORT_ENGINE_DONATION_REPORT',
   MEMBERS_LIST: 'REPORT_ENGINE_MEMBERS_LIST', ANNUAL_LOG: 'REPORT_ENGINE_ANNUAL_LOG', USERS_LIST: 'REPORT_ENGINE_USERS_LIST',
+  RECEIPTS_LIST: 'REPORT_ENGINE_RECEIPTS_LIST', PAYMENTS_LIST: 'REPORT_ENGINE_PAYMENTS_LIST',
   RECEIPT_VOUCHER: 'REPORT_ENGINE_VOUCHERS', PAYMENT_VOUCHER: 'REPORT_ENGINE_VOUCHERS', TRANSFER_VOUCHER: 'REPORT_ENGINE_VOUCHERS',
   TREASURY_POSITION: 'REPORT_ENGINE_TREASURY_POSITION', DUES_SNAPSHOT: 'REPORT_ENGINE_DUES_SNAPSHOT',
   AUDIT_LOG: 'REPORT_ENGINE_AUDIT_LOG', CONSISTENCY: 'REPORT_ENGINE_CONSISTENCY'

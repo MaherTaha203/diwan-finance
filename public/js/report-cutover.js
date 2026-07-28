@@ -10,8 +10,8 @@
    With the flag OFF (default) every legacy path runs UNCHANGED — this module is
    inert. With it ON, the four surfaces are served by the engine from ONE model
    (ReportModels.memberStatement → FIN.memberStatementView), so screen == print
-   == PDF == Excel (spec §7.1). CSV/JSON stay on legacy for now (not in the
-   parity gate; they migrate with the csv renderer). No FIN/DB/accounting change.
+   == PDF == Excel (spec §7.1). JSON stays on its legacy member-statement
+   exporter (not in the parity gate). No FIN/DB/accounting change.
 
    The tiny guarded branches added to renderMemberStmt / prtMemberStmt /
    exportMemberStmt delegate here; ALL new behaviour lives in this module so the
@@ -51,12 +51,9 @@
     return !(can.print && !can.print());   // print / pdf
   }
 
-  /* deliver an output. print/pdf/excel go through the engine; csv keeps its
-     legacy exporter (the csv renderer is not real yet — migrates later) so the
-     toolbar's CSV button stays functional. */
+  /* deliver an output — print/pdf/excel all go through the engine. */
   function deliver(target) {
     if (!ready()) return false;
-    if (target === 'csv') { if (typeof root.exportMemberStmt === 'function') root.exportMemberStmt('csv'); return true; }
     if (!allow(target)) { toastErr(target === 'excel' ? 'errors.no_permission' : 'errors.no_print', target === 'excel' ? 'لا توجد صلاحية' : 'لا توجد صلاحية طباعة'); return true; }
     var model = gatherModel();
     if (!model) { toastWarn('errors.select_member', 'اختر عضواً'); return true; }

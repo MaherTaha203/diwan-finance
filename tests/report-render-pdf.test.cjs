@@ -36,13 +36,13 @@ const c = PdfRenderer.compose(model, { lang: 'ar' });
 ok(c && !c.error, 'compose() succeeds');
 ok(/rpt-doc/.test(c.html) && c.html.includes('₪ 1,200') && /عضو تجريبي/.test(c.html), 'composed html carries the rendered statement');
 ok(/@page\{size:A4 portrait;margin:14mm 9mm 12mm\}/.test(c.css), 'portrait @page reserves running-band margins (same as print)');
-ok(c.filename === 'MEMBER_STATEMENT-A-12-2026-07-27', 'deterministic unified filename (shared with print)');
+ok(c.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'deterministic unified filename (shared with print)');
 
 /* ── registration: engine's pdf renderer is now REAL (not a skeleton) ── */
 const r = Report.render(model, 'pdf');
 ok(r.ok === true && r.skeleton === false && r.target === 'pdf', "Report.render(model,'pdf') is no longer a skeleton");
 ok(r.result && r.result.status === 'composed' && r.result.empty === false, 'in node (no openPrintWin) it composes rather than delivers, cleanly');
-ok(r.result.filename === 'MEMBER_STATEMENT-A-12-2026-07-27', 'render result carries the filename');
+ok(r.result.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'render result carries the filename');
 
 /* print is still real (unchanged by R4); excel/screen remain skeletons */
 ok(Report.render(model, 'print').skeleton === false, 'print renderer stays real after R4');

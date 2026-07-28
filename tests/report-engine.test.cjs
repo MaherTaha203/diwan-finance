@@ -9,7 +9,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('PASS ' + m); } else { fail+
 /* ── Success criterion: Report.render(model, <target>) is callable for the four
      media and returns a valid skeleton result without throwing. ── */
 const model = { meta: { reportId: 'MEMBER_STATEMENT', title: 'x' }, sections: [] };
-['screen', 'print', 'pdf', 'excel', 'csv'].forEach(t => {
+['screen', 'print', 'pdf', 'excel'].forEach(t => {
   let r; try { r = Report.render(model, t); } catch (e) { r = { threw: e.message }; }
   ok(r && r.ok === true && r.skeleton === true && r.target === t && r.result && r.result.status === 'skeleton',
     `Report.render(model, '${t}') → valid empty skeleton`);
@@ -21,11 +21,11 @@ ok(byId.ok && byId.reportId === 'MEMBER_STATEMENT' && byId.target === 'print', "
 
 /* renderers are EMPTY (no report migrated in R0) */
 ok(Report.render(model, 'print').result.body === '', 'print renderer body is empty (no report migrated in R0)');
-ok(Object.keys(Renderers).sort().join(',') === 'csv,excel,pdf,print,screen', 'five renderer skeletons present');
+ok(Object.keys(Renderers).sort().join(',') === 'excel,pdf,print,screen', 'four renderer skeletons present (csv removed)');
 
 /* ── Registry contract ── */
 const REQUIRED_IDS = ['MEMBER_STATEMENT', 'FUND_STATEMENT', 'ANNUAL_DEBT', 'DELINQUENT', 'DONATION_REPORT',
-  'MEMBERS_LIST', 'ANNUAL_LOG', 'RECEIPT_VOUCHER', 'PAYMENT_VOUCHER', 'TRANSFER_VOUCHER',
+  'MEMBERS_LIST', 'RECEIPTS_LIST', 'PAYMENTS_LIST', 'ANNUAL_LOG', 'RECEIPT_VOUCHER', 'PAYMENT_VOUCHER', 'TRANSFER_VOUCHER',
   'TREASURY_POSITION', 'DUES_SNAPSHOT', 'AUDIT_LOG', 'USERS_LIST', 'CONSISTENCY'];
 ok(REQUIRED_IDS.every(id => ReportRegistry[id]), 'registry contains all target-report IDs');
 ok(Report.list().length === REQUIRED_IDS.length, 'registry has exactly the declared reports (' + REQUIRED_IDS.length + ')');
@@ -43,9 +43,10 @@ ok(outOk, 'every report’s outputs are a subset of the valid targets');
 ok(permOk, "every report’s permission ∈ {print, export}");
 ok(oriOk, "every report’s orientation ∈ {portrait, landscape}");
 
-/* Member statement (pilot) declares all four+CSV outputs */
-ok(['screen', 'print', 'pdf', 'excel', 'csv'].every(o => ReportRegistry.MEMBER_STATEMENT.outputs.includes(o)),
-  'MEMBER_STATEMENT (pilot) supports screen/print/pdf/excel/csv');
+/* Member statement (pilot) declares all four outputs (csv removed) */
+ok(['screen', 'print', 'pdf', 'excel'].every(o => ReportRegistry.MEMBER_STATEMENT.outputs.includes(o)),
+  'MEMBER_STATEMENT (pilot) supports screen/print/pdf/excel');
+ok(!ReportRegistry.MEMBER_STATEMENT.outputs.includes('csv'), 'MEMBER_STATEMENT no longer declares csv');
 
 /* unsupported output is rejected cleanly (vouchers have no excel) */
 const bad = Report.render('RECEIPT_VOUCHER', 'excel');
@@ -55,8 +56,9 @@ ok(Report.render(model, 'fax').reason === 'unknown_target', 'unknown target reje
 
 /* ── §2.6 auto-built output buttons from the registry (no hand-written buttons) ── */
 const btns = Report.outputButtons('FUND_STATEMENT', { lang: 'en', can: { print: () => true, export: () => true } });
-ok(/data-output="print"/.test(btns) && /data-output="pdf"/.test(btns) && /data-output="excel"/.test(btns) && /data-output="csv"/.test(btns),
-  'outputButtons builds exactly the declared outputs (print/pdf/excel/csv, no screen)');
+ok(/data-output="print"/.test(btns) && /data-output="pdf"/.test(btns) && /data-output="excel"/.test(btns),
+  'outputButtons builds exactly the declared outputs (print/pdf/excel, no screen)');
+ok(!/data-output="csv"/.test(btns), 'csv is not an output (removed in OUTPUT-002-C)');
 ok(!/data-output="screen"/.test(btns), 'screen is not rendered as an output button');
 const gated = Report.outputButtons('AUDIT_LOG', { lang: 'en', can: { print: () => true, export: () => false } });
 ok(gated === '', 'export-permission report yields no buttons when can.export() is false');

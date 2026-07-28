@@ -8,7 +8,7 @@
 
    OFF → the legacy renderStmt/prtStmt run unchanged (this module is inert).
    ON  → both funds render from one ReportModels.fundStatement model, so
-   screen == print == PDF == Excel. csv keeps its legacy exporter. The `key` is
+   screen == print == PDF == Excel. The `key` is
    the fund ('food' | 'diwan'). No FIN/DB/accounting change.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function (root) {
@@ -26,8 +26,7 @@
         var to = (g(fund + '-stmt-to') || {}).value || '';
         var type = (g(fund + '-stmt-type') || {}).value || '';
         return root.ReportModels.fundStatement(fund, from, to, type);
-      },
-      csv: function (fund) { if (typeof root.exportCSV === 'function') root.exportCSV(fund + '-stmt'); }
+      }
     });
   }
 

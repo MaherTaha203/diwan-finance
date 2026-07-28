@@ -4,6 +4,18 @@
 > seeded app (post-R9). Columns mirror the owner's coverage table: does each page offer
 > Screen / Print / PDF / Excel / Share / Deep-Link, and is it complete?
 
+> **⚠️ CORRECTION (OUTPUT-002-B).** The button counts below were taken with a harness whose
+> onclick regex was **case-sensitive** (missed `togglePageExport`) and which **filtered out
+> hidden dropdown-menu items** — so it under-counted and falsely reported "0 buttons" for
+> pages that actually carry a **تصدير ▼ (Excel+PDF) dropdown**. Direct `index.html` + fixed-harness
+> re-measurement shows: **11 report pages carry the same export-dropdown** (members, food/diwan
+> rec+pay, donation, annual-debt, delinquent, annual, **users**, **audit**) plus a print button;
+> **users/audit are NOT empty**; **treasury/dues** have a print/export button that currently
+> toasts **«غير متاح»** (engine unwired). The genuine issues are narrower: **(1)** duplicate
+> toolbars on the three statements (page toolbar + engine bar), **(2)** treasury/dues export
+> unwired, **(3)** three toolbar *styles* (dropdown / flat / engine-bar) to be unified into the
+> single «الإخراج ▼» in **-C**. The rows below are kept for history; treat this banner as authoritative.
+
 ## Coverage matrix (measured)
 
 | Page | Screen | Print | PDF | Excel | Share | Link | Buttons (live) | Status |

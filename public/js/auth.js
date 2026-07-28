@@ -163,6 +163,10 @@ if(typeof window.applyLang === 'function'){
   initMobile();
   applyDataProtection();
   applyLoginLang();
+  /* OUTPUT-002-C Item 13 — login-return: replay a deep link opened before auth
+     (or present in the URL) now that the app + role gates are live; no-op otherwise
+     so the default dashboard stays. */
+  try { if (window.ReportDeepLink) window.ReportDeepLink.resume(); } catch (_) {}
 }
 
 window.logout=async function(){
@@ -184,6 +188,9 @@ function applyPerms(){
   /* Module R: reservation-manager sees ONLY the calendar (CSS lockdown);
      the calendar item itself is admin+reservation only (design Q1: viewer=no). */
   document.body.classList.toggle('role-reservation',rsv);
+  /* OUTPUT-002-C — admin-only items in the «الإخراج ▼» menu (إعدادات الإخراج) are
+     hidden for non-admins via CSS (belt-and-suspenders with the click-time gate). */
+  document.body.classList.toggle('is-admin',a);
   const nbRes=document.getElementById('nb-reservations');
   if(nbRes)nbRes.style.display=(a||rsv)?'':'none';
   const sbRes=document.getElementById('sbsec-reservations');
@@ -206,12 +213,12 @@ function applyPerms(){
         [id*="btn-prt"],[id*="prt-btn"],[id*="print"],
         [class*="btn-print"],[class*="print-btn"],
         button[onclick*="prt"],[data-requires-print],
-        /* Export / CSV / PDF / Excel / Backup buttons */
-        [id*="export"],[id*="csv"],[id*="excel"],[id*="backup"],
+        /* Export / PDF / Excel / Backup buttons */
+        [id*="export"],[id*="excel"],[id*="backup"],
         [id*="download"],[id*="pdf-btn"],
         [class*="btn-export"],[class*="export-btn"],
         button[onclick*="export"],[data-requires-export],
-        button[onclick*="exportCSV"],button[onclick*="exportPDF"],
+        button[onclick*="exportPDF"],
         button[onclick*="doBackup"],
         /* Import buttons */
         [id*="import"],[class*="btn-import"],
@@ -285,7 +292,6 @@ function _sweepRestrictedElements(isAdmin){
     'button[onclick*="prtMember"]',
     'button[onclick*="prtDon"]',
     'button[onclick*="exportPDF"]',
-    'button[onclick*="exportCSV"]',
     'button[onclick*="doBackup"]',
     /* id-based selectors for any static export/print/import buttons */
     '#btn-export-food-rec','#btn-export-food-pay',
@@ -294,7 +300,7 @@ function _sweepRestrictedElements(isAdmin){
     '#btn-export-audit','#btn-export-stmt',
     '#btn-backup','#btn-import',
     '[id^="btn-print"]','[id^="btn-prt"]',
-    '[id^="btn-export"]','[id^="btn-csv"]',
+    '[id^="btn-export"]',
     '[id^="btn-pdf"]','[id^="btn-excel"]',
     '[id^="btn-download"]','[id^="btn-import"]',
   ].join(',');
