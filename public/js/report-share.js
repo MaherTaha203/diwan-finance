@@ -56,6 +56,7 @@
       var a = btn.getAttribute('data-action');
       if (a === 'link') copyLink();
       else if (a === 'share') share();
+      else if (a === 'settings') { if (typeof root.openOutputSettings === 'function') root.openOutputSettings(); }
     });
   }
 

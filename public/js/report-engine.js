@@ -216,21 +216,28 @@
         return !!(canObj.print && canObj.print());
       };
       if (!allowed(def.permission)) return '';
-      var outs = def.outputs.filter(function (o) { return o !== 'screen'; }).map(function (o) {
-        var lbl = (OUTPUT_LABELS[o] || {})[lang] || o;
-        return '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-output="' + o + '">' +
-          '<i class="ti ' + (OUTPUT_ICONS[o] || 'ti-download') + '"></i><span>' + lbl + '</span></button>';
-      }).join('');
-      /* OUTPUT-002-C Items 14/15 — copy-link + share, bound to the single deep-link
-         source (handled by report-share.js's document delegate; data-action, not
-         data-output, so the render handlers ignore them). */
+      /* OUTPUT-002-C C7 — one «الإخراج ▼» dropdown (print/pdf/excel + copy-link/share/
+         settings). The format items keep .rpt-out-btn + data-output so the cutover
+         deliver handler fires; link/share/settings are data-action items handled by
+         report-share.js. */
+      var items = def.outputs.filter(function (o) { return o !== 'screen'; }).map(function (o) {
+        return { output: o, icon: OUTPUT_ICONS[o] || 'ti-download', label: (OUTPUT_LABELS[o] || {})[lang] || o };
+      });
+      if (typeof root !== 'undefined' && root.OutputMenu) {
+        return root.OutputMenu.build({ report: def.id, menuId: 'outmenu-' + def.id, items: items, includeStandard: true });
+      }
+      /* fallback (node/tests where OutputMenu isn't loaded): inline buttons that still
+         carry the same data-output/data-action hooks. */
       var copyLbl = lang === 'en' ? 'Copy link' : 'نسخ الرابط';
       var shareLbl = lang === 'en' ? 'Share' : 'مشاركة';
-      outs += '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-action="link">' +
+      return items.map(function (it) {
+        return '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-output="' + it.output + '">' +
+          '<i class="ti ' + it.icon + '"></i><span>' + it.label + '</span></button>';
+      }).join('') +
+        '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-action="link">' +
         '<i class="ti ti-link"></i><span>' + copyLbl + '</span></button>' +
         '<button type="button" class="rpt-out-btn" data-report="' + def.id + '" data-action="share">' +
         '<i class="ti ti-share"></i><span>' + shareLbl + '</span></button>';
-      return outs;
     }
   };
 
