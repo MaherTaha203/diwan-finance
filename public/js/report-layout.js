@@ -120,16 +120,34 @@
     return '<div class="rpt-band"><span>' + esc(pick(sec.key, lang)) + '</span><span>' + val + '</span></div>';
   }
 
-  function table(sec, lang) {
+  function table(sec, lang, win) {
     var cols = sec.columns || [];
     var thead = '<thead><tr>' + cols.map(function (c) {
       return '<th class="' + (ALIGN[c.align] || 'rpt-a-start') + '">' + esc(pick(c.header, lang)) + '</th>';
     }).join('') + '</tr></thead>';
-    var tbody = '<tbody>' + (sec.rows || []).map(function (r) {
+    /* SYS-002 — SCREEN-ONLY row windowing. When `win` is supplied (screen renderer
+       only; print/pdf/excel never pass it) and a table exceeds the threshold, only
+       the first `initial` detail rows are materialised, followed by a "show all"
+       control. The `tfoot` totals below come from `sec.totals` (the FULL model), so
+       the final balance/totals are ALWAYS correct — windowing hides only detail rows,
+       never a figure, and print/PDF/Excel always render every row. */
+    var allRows = sec.rows || [];
+    var capped = !!(win && win.initial && allRows.length > (win.threshold || win.initial));
+    var shown = capped ? allRows.slice(0, win.initial) : allRows;
+    var body = shown.map(function (r) {
       return '<tr>' + cols.map(function (c) {
         return '<td class="' + (ALIGN[c.align] || 'rpt-a-start') + '">' + cell(r[c.key], c.format, lang) + '</td>';
       }).join('') + '</tr>';
-    }).join('') + '</tbody>';
+    }).join('');
+    if (capped) {
+      body += '<tr class="rpt-more"><td class="rpt-a-start" colspan="' + Math.max(1, cols.length) + '">' +
+        '<button type="button" class="rpt-showall" onclick="window.Report&&window.Report.expandReport&&window.Report.expandReport(this)">' +
+        (lang === 'en'
+          ? ('Showing ' + shown.length + ' of ' + allRows.length + ' rows — show all')
+          : ('عرض ' + shown.length + ' من ' + allRows.length + ' صفًّا — عرض الكل')) +
+        '</button></td></tr>';
+    }
+    var tbody = '<tbody>' + body + '</tbody>';
     var tfoot = '';
     if (sec.totals) {
       var tt = sec.totals, cells = tt.cells || {};
@@ -176,7 +194,7 @@
     html += filters(m, lang);
     (model.sections || []).forEach(function (sec) {
       if (sec.type === 'band') html += band(sec, lang);
-      else if (sec.type === 'table') html += table(sec, lang);
+      else if (sec.type === 'table') html += table(sec, lang, opts.windowRows);
     });
     html += signatures(m, lang);
     html += footer(m, lang);
@@ -226,6 +244,12 @@
     '.rpt-out-btn:hover{background:var(--rpt-hd);border-color:var(--rpt-line2)}' +
     '.rpt-out-btn i{font-size:15px;color:var(--rpt-accent)}' +
     '@media print{.rpt-toolbar{display:none}}' +
+    /* SYS-002 — screen "show all" row (never printed; print always has every row). */
+    '.rpt-more td{text-align:center;padding:6px}' +
+    '.rpt-showall{cursor:pointer;font:inherit;font-size:12px;font-weight:600;color:var(--rpt-accent,#2B3A5C);' +
+      'background:transparent;border:1px dashed var(--rpt-line2,#ccc);border-radius:7px;padding:6px 14px}' +
+    '.rpt-showall:hover{border-style:solid}' +
+    '@media print{.rpt-more{display:none}}' +
     /* R4 running header/footer: off on screen; repeated on every printed page. */
     '.rpt-runhead,.rpt-runfoot{display:none}' +
     '@media print{' +
