@@ -3,7 +3,7 @@
    Read-only reporting layer: A2 annual debt report (annualDebtRows +
    filter/year-chip state, renderAnnualDebt, prtAnnualDebt), A3
    delinquent members report (delinquentRows + primary/year filters,
-   renderDelinquent, prtDelinquent, exportDelinquentExcel) and the
+   renderDelinquent, prtDelinquent — delinquent Excel is engine-routed) and the
    donation statement printer prtDonStmt. FIN.* remains the single
    source of truth for every figure — verbatim move, no calculation,
    query or column changed. Report-local state (_adFilter, _adYears,
@@ -225,28 +225,6 @@ window.prtDelinquent=function(mode){
     return window.ReportCutoverDebt.delinquent(mode==='pdf'?'pdf':'print');
   }
   if(typeof toast==='function') toast(window.t?window.t('errors.no_print'):'الطباعة غير متاحة','err');
-};
-window.exportDelinquentExcel=function(){
-  if(!can.export()){toast(window.t?window.t('errors.no_permission'):'لا توجد صلاحية','err');return;}
-  const {years, rows}=delinquentRows();
-  const head=_delHead(years);
-  const doExcel=()=>{
-    const XLSX=window.XLSX; if(!XLSX){toast('جارٍ تحميل مكتبة Excel...','info');return;}
-    const wsData=[['ديوان آل طه — تقرير الأعضاء المتأخرين'],[_delHeaderLabel()],[],head];
-    rows.forEach(r=>{
-      const yc=years.map(y=>{ const v=r.d.byYear[y]; if(!v||v.due<=0) return '—';
-        if(v.authoritative) return v.status==='paid'?'✓ مسدد ●':v.status==='partial'?'◐ جزئي ●':'✗ غير مسدد ●';
-        return v.paid>=v.due?'✓ مسدد':'✗ '+fmt(v.remaining)+' ₪'; });
-      wsData.push([r.code, r.name, r.phone||'—'].concat(yc).concat([r.d.unpaidCount]));
-    });
-    const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!rtl']=true;
-    ws['!cols']=[{wch:14},{wch:28},{wch:14}].concat(years.map(()=>({wch:12}))).concat([{wch:18}]);
-    styleDiwanSheet(XLSX,ws,{headerRow:3});
-    const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'المتأخرون');
-    XLSX.writeFile(wb,'diwan-delinquent-'+today()+'.xlsx');
-    toast('✓ Excel','ok');
-  };
-  loadStyledXLSX(doExcel);
 };
 
 /* REPORT-001 · R7c — the donation "direction" label as one reusable rule, so the
