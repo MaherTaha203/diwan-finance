@@ -53,22 +53,33 @@ carry, and some (`annual-log`, `users`) are near-empty stubs. Excel today is a r
 not a faithful spreadsheet copy of the report. → **OUTPUT-002-B**: Excel header parity (title
 + filters + currency), and complete the `annual-log`/`users` sheets.
 
-### F-2 divergence table — exactly where each surface differs (measured)
+### F-2 divergence table — corrected after direct `aoa` inspection (OUTPUT-002-B)
 
-| التقرير | Screen | Print | PDF | Excel | سبب الاختلاف (Excel) |
+> **⚠️ Correction (OUTPUT-002-B).** The first `-A` pass detected Excel fields by scanning the
+> spreadsheet `aoa` with **HTML-class regexes** (`rpt-title`, `rpt-filter`) and compared HTML
+> length to JSON length — a **measurement artifact** that produced false "missing" marks. Direct
+> inspection of the real `aoa` shows the Excel export is **much more complete** than first stated.
+> Below is the corrected, evidence-checked table (title text confirmed present in every sheet;
+> `annual-log`/`users` are **complete**, just few seed rows).
+
+| التقرير | Screen | Print | PDF | Excel | الاختلاف الفعلي (Excel) |
 |---|:--:|:--:|:--:|:--:|---|
-| كشف العضو | ✅ | ✅ | ✅ | ❌ | لا عنوان · لا رمز عملة ₪ |
-| كشف الصندوق (غداء/ديوان) | ✅ | ✅ | ✅ | ❌ | لا عنوان · لا رمز عملة ₪ |
-| المديونية السنوية | ✅ | ✅ | ✅ | ❌ | لا عنوان · لا فلاتر · لا رمز عملة ₪ |
-| المتأخرون | ✅ | ✅ | ✅ | ❌ | لا عنوان · لا فلاتر |
-| تقرير التبرعات | ✅ | ✅ | ✅ | ❌ | لا عنوان · لا فلاتر · لا سنة |
-| قائمة الأعضاء | ✅ | ✅ | ✅ | ❌ | لا عنوان · لا فلاتر · لا رمز عملة ₪ |
-| سجل الاشتراكات السنوي | ✅ | ✅ | ✅ | ❌ | لا عنوان · لا فلاتر · لا رمز عملة ₪ · Excel شبه فارغ (len 169) |
-| قائمة المستخدمين | ✅ | ✅ | ✅ | ❌ | قشرة فارغة — لا عنوان/فلاتر ولا بيانات كافية (len 38) |
+| كشف العضو | ✅ | ✅ | ✅ | ✅ | لا فرق جوهري (عنوان+جهة+فترة موجودة) |
+| كشف الصندوق (غداء/ديوان) | ✅ | ✅ | ✅ | ✅ | لا فرق جوهري |
+| المديونية السنوية | ✅ | ✅ | ✅ | ⚠️→✅ | كان سطر الفلتر مفقودًا؛ **أُصلح في -B** |
+| المتأخرون | ✅ | ✅ | ✅ | ⚠️→✅ | سطر الفلتر مفقود؛ **أُصلح** |
+| تقرير التبرعات | ✅ | ✅ | ✅ | ⚠️→✅ | سطر الفلتر مفقود؛ **أُصلح** |
+| قائمة الأعضاء | ✅ | ✅ | ✅ | ⚠️→✅ | سطر الفلتر مفقود؛ **أُصلح** |
+| سجل الاشتراكات السنوي | ✅ | ✅ | ✅ | ✅ | كامل (صفّان في البذرة، ليس قشرة فارغة) |
+| قائمة المستخدمين | ✅ | ✅ | ✅ | ✅ | كامل (مستخدم واحد في البذرة) |
 
-> **Screen = Print = PDF = ✅ في كل صف** (نفس الحقول ونفس الطول المُقاس). **الاختلاف الوحيد
-> في عمود Excel** — وهو فقدان القشرة (عنوان/فلاتر/رمز العملة) لا فقدان الأرقام. هذا الجدول هو
-> المرجع الدقيق لبند **-B رقم 6** (تكافؤ ترويسة Excel).
+**الحقيقة المُقاسة:**
+- **العنوان موجود في كل ورقة Excel** (خطأ القياس السابق: بحث عن صنف HTML لا يوجد في جدول Excel).
+- **الجهة/الفترة موجودة** لكشوف العضو/الصندوق؛ **سطر الفلتر** كان مفقودًا لتقارير القوائم/المديونية
+  (تحمل `meta.filters` بدل الجهة/الفترة) — و`ExcelRenderer.subtitle()` كان يتجاهل `meta.filters`.
+  **الإصلاح في -B:** إضافة `meta.filters` إلى ترويسة Excel (تحقّق: المديونية الآن «الكل | المعروض: 4 / 4»).
+- **رمز ₪:** Excel يستخدم **تنسيق أرقام العملة على مستوى الخلية** لا رمز ₪ نصّي — سلوك جداول صحيح، ليس عيبًا.
+- **لا أوراق "قشرة فارغة":** `annual-log`/`users` مكتملة؛ صِغَر الطول كان بسبب قلّة صفوف البذرة (وطول JSON أقصر من HTML بطبيعته).
 
 **F-3 — QR + Signature: absent from ALL reports.** Only vouchers carry a QR/verification token
 and signature block; statements and reports have neither. The owner's Output Profile asks for

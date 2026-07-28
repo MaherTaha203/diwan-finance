@@ -77,6 +77,11 @@
     } else if (per) {
       bits.push(lang === 'en' ? 'Period: all' : 'الفترة: كل الفترات');
     }
+    /* OUTPUT-002-B · Item 6 — echo the report's filter line into the sheet subtitle,
+       matching the paper surfaces (which render meta.filters as .rpt-filter chips).
+       Filter-based reports (debt/delinquent/donation/lists) carry meta.filters instead
+       of party/period, so without this the Excel subtitle row was blank. */
+    (meta.filters || []).forEach(function (f) { var s = pick(f, lang); if (s) bits.push(s); });
     return bits.join('   |   ');
   }
 
