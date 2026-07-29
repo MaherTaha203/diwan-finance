@@ -55,9 +55,12 @@
       var model = cfg.gather(key);
       if (!model) { out.innerHTML = ''; return true; }
       var mountId = id + '-rpt-mount';
-      out.innerHTML = '<div class="rpt-toolbar">' +
-        root.Report.outputButtons(cfg.reportId, { lang: lang(), can: root.can }) +
-        '</div><div id="' + mountId + '"></div>';
+      /* the engine output toolbar is on by default; a surface whose PAGE already owns
+         the unified «الإخراج ▼» (e.g. the debt reports) passes screenToolbar:false so
+         the button is not duplicated (OUTPUT-002-C dedup). */
+      var toolbar = (cfg.screenToolbar === false) ? '' :
+        ('<div class="rpt-toolbar">' + root.Report.outputButtons(cfg.reportId, { lang: lang(), can: root.can }) + '</div>');
+      out.innerHTML = toolbar + '<div id="' + mountId + '"></div>';
       root.Report.render(model, 'screen', { mountId: mountId, lang: lang() });
       if (!out.__rptWired) {
         out.addEventListener('click', function (e) {

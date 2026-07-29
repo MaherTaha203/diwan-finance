@@ -87,39 +87,22 @@ function renderAnnualDebt(){
     ? avail.map(y=>{const on=_adYears.has(y.year);return '<button class="adr-ychip'+(on?' on':'')+'" onclick="toggleAdYear('+y.year+')"><span class="ck"><i class="ti '+(on?'ti-square-check':'ti-square')+'"></i></span>'+y.year+'<span class="amt">('+fmt(y.due)+' ₪)</span></button>';}).join('')
     : '<span style="font-size:12px;color:var(--tx3)">'+(en?'No subscription years yet':'لا توجد سنوات اشتراك')+'</span>';
 
-  const hd=_adHead();
-  const head='<th>'+hd[0]+'</th><th>'+hd[1]+'</th><th>'+hd[2]+'</th>'
-    +'<th class="as-num">'+hd[3]+'</th><th class="as-num">'+hd[4]+'</th>'
-    +'<th class="as-num">'+hd[5]+'</th><th class="as-num">'+hd[6]+'</th>'
-    +'<th class="as-num">'+hd[7]+'</th><th class="as-num">'+hd[8]+'</th>';
-  /* screen-coloured final balance cell (same thresholds as the print _adCurCell) */
-  const curCell=c=> c>0.005?'<span class="as-dr">₪ '+fmt(c)+(en?' debit':' مدين')+'</span>':c<-0.005?'<span class="as-cr">₪ '+fmt(-c)+(en?' credit':' دائن')+'</span>':'<span style="color:var(--tx3)">₪ 0</span>';
-
-  const t=model.totals;
-  const bodyRows=rows.map(r=>
-    '<tr><td>'+esc(r.code)+'</td><td class="as-desc"><span class="lnk-nm" onclick="window.openPersonStmt(\''+esc(r.id)+'\')">'+esc(r.name)+'</span></td><td>'+(r.phone?esc(r.phone):'—')+'</td>'
-      +'<td class="as-num">₪ '+fmt(r.hist)+'</td><td class="as-num as-cr">₪ '+fmt(r.histPaid)+'</td>'
-      +'<td class="as-num">₪ '+fmt(r.selSub)+'</td><td class="as-num as-cr">₪ '+fmt(r.selPaid)+'</td>'
-      +'<td class="as-num'+(r.resolutions?' as-cr':'')+'">₪ '+fmt(r.resolutions)+'</td>'
-      +'<td class="as-num">'+curCell(r.current)+'</td></tr>').join('');
-  const foot='<tfoot><tr><td colspan="3">'+(en?'Total':'الإجمالي')+' ('+rows.length+')</td>'
-    +'<td class="as-num">₪ '+fmt(t.hist)+'</td><td class="as-num">₪ '+fmt(t.histPaid)+'</td><td class="as-num">₪ '+fmt(t.selSub)+'</td><td class="as-num">₪ '+fmt(t.selPaid)+'</td><td class="as-num">₪ '+fmt(t.resolutions)+'</td><td></td></tr></tfoot>';
-
+  /* OUTPUT-002-C UX Slice 1 — the legacy .as-top document header (with the .as-brand
+     document emblem, the duplicated title, and the standalone print button) and the
+     legacy table/footer are removed. The filter chips remain as SCREEN controls; the
+     report BODY renders through the unified engine (Output Rendering Contract:
+     target='screen' → the document logo is never rendered; print/PDF honour showLogo).
+     The engine's own output toolbar («الإخراج ▼») replaces the old print button. */
   el.innerHTML='<div class="acct-stmt">'
-    +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
-      +'<h1 class="as-h">'+(en?'Annual Debt Report':'تقرير المديونية السنوية')+'</h1>'
-      +'<div class="as-sub">'+(en?'Finance ‹ Members ‹ Debt report':'المالية ‹ الأعضاء ‹ تقرير المديونية')+'</div>'
-    +'</div></div>'
-    +(can.print()?'<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtAnnualDebt()"><i class="ti ti-printer"></i>'+(en?'Print':'طباعة')+'</button></div>':'')
-    +'</div>'
     +'<div class="as-filters"><span class="as-fl-lbl"><i class="ti ti-calendar-stats"></i>'+(en?'Subscription years':'اشتراكات السنوات')+'</span><div class="adr-years">'+yearChips+'</div></div>'
     +'<div class="as-filters"><span class="as-fl-lbl"><i class="ti ti-filter"></i>'+(en?'Category':'التصنيف')+'</span><div class="tp-tabs">'+chips+'</div></div>'
-    +(rows.length
-      ? '<div class="as-tablewrap"><table class="as-table"><thead><tr>'+head+'</tr></thead><tbody>'+bodyRows+'</tbody>'+foot+'</table></div>'
-      : '<div class="as-empty">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>')
-    +'<div class="as-foot"><span>'+(en?'Shown':'المعروض')+': '+rows.length+' / '+total+'</span>'
-    +'<span>'+(en?'Auto-generated report — Diwan Al-Taha Finance':'تقرير مُولّد آليًا — ديوان آل طه')+'</span></div>'
+    +'<div id="annual-debt-engine"></div>'
     +'</div>';
+  if(window.REPORT_ENGINE_ANNUAL_DEBT && window.ReportCutoverDebt && window.ReportCutoverDebt.annualDebtReady()){
+    window.ReportCutoverDebt.annualDebtScreen();
+  }else{
+    const m=document.getElementById('annual-debt-engine'); if(m) m.innerHTML='<div class="as-empty">'+(en?'Report engine unavailable':'محرك التقارير غير متاح')+'</div>';
+  }
 }
 window.prtAnnualDebt=function(mode){
   /* REPORT-001 — the unified engine is the sole print/PDF path (R8-b removed the
@@ -200,22 +183,19 @@ function renderDelinquent(){
   const yopts=['<option value="all">'+(en?'All years':'جميع السنوات')+'</option>']
     .concat(years.map(y=>'<option value="'+y+'"'+(String(_delYear)===String(y)?' selected':'')+'>'+y+'</option>')).join('');
   const yearSel='<select aria-label="السنة" onchange="setDelYear(this.value)" style="height:34px;padding:0 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx);font-size:12.5px;font-weight:700;margin-inline-start:auto">'+yopts+'</select>';
-  const head=_delHead(years).map(h=>'<th>'+h+'</th>').join('');
-  const body=rows.map(r=>'<tr>'+_delRowCells(r,years,true)+'</tr>').join('');
+  /* OUTPUT-002-C UX Slice 1 — legacy .as-top document header (.as-brand emblem +
+     duplicated title + print button) and the legacy table/footer removed; the report
+     BODY renders through the unified engine (screen → no document logo). Filters stay. */
   el.innerHTML='<div class="acct-stmt">'
-    +'<div class="as-top"><div class="as-title"><span class="as-brand"></span><div>'
-      +'<h1 class="as-h">'+(en?'Delinquent Members Report':'تقرير الأعضاء المتأخرين')+'</h1>'
-      +'<div class="as-sub">'+(en?'Finance ‹ Members ‹ Delinquent report':'المالية ‹ الأعضاء ‹ تقرير المتأخرين')+'</div>'
-    +'</div></div>'
-    +(can.print()?'<div class="as-actions"><button class="as-btn as-btn-pri" onclick="window.prtDelinquent()"><i class="ti ti-printer"></i>'+(en?'Print':'طباعة')+'</button></div>':'')
-    +'</div>'
     +'<div class="as-filters"><span class="as-fl-lbl"><i class="ti ti-filter"></i>'+(en?'Category':'التصنيف')+'</span><div class="tp-tabs">'+chips+'</div>'
       +'<span class="as-fl-lbl" style="margin-inline-start:auto"><i class="ti ti-calendar"></i>'+(en?'Year':'السنة')+'</span>'+yearSel+'</div>'
-    +(rows.length?'<div class="as-tablewrap"><table class="as-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
-      :'<div class="as-empty">'+(en?'No members in this category':'لا يوجد أعضاء في هذا التصنيف')+'</div>')
-    +'<div class="as-foot"><span>'+(en?'Shown':'المعروض')+': '+rows.length+' / '+total+'</span>'
-    +'<span>'+(en?'Auto-generated report — Diwan Al-Taha Finance':'تقرير مُولّد آليًا — ديوان آل طه')+'</span></div>'
+    +'<div id="delinquent-engine"></div>'
     +'</div>';
+  if(window.REPORT_ENGINE_DELINQUENT && window.ReportCutoverDebt && window.ReportCutoverDebt.delinquentReady()){
+    window.ReportCutoverDebt.delinquentScreen();
+  }else{
+    const m=document.getElementById('delinquent-engine'); if(m) m.innerHTML='<div class="as-empty">'+(en?'Report engine unavailable':'محرك التقارير غير متاح')+'</div>';
+  }
 }
 window.prtDelinquent=function(mode){
   /* REPORT-001 — the unified engine is the sole print/PDF path (R8-b removed the
