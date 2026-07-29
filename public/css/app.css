@@ -2749,13 +2749,22 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
 @media(prefers-reduced-motion:reduce){ body.nav-min .sb .nb{ transition:none; } }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   OUTPUT-002-C · UX Slice 5 — Payment Form Workspace (PILOT).
-   A reusable financial-form-workspace shell (.fw-*) applied ONLY to the payment
-   voucher form (#m-pay carries `.fw-modal`). Presentation/layout only — every field
-   id, handler, validation and the save payload are unchanged. Other editor modals keep
-   `.modal.editor` (the side-drawer) untouched. To generalise later: add `fw-modal` +
-   the section wrappers to another form — no rule duplication.
+   FORM WORKSPACE SYSTEM  (origin: OUTPUT-002-C Slice 5 payment pilot · generalised
+   in FORM-001 Phase 1 with the receipt form as the 2nd surface).
+   ---------------------------------------------------------------------------
+   BASE  (.fw-modal, .fw-body, .fw-context, .fw-cols, .fw-sec, .fw-sec-h, .fw-fields,
+          .fw-notes, .fw-ft + the responsive shell): positioning, max-width strategy,
+          section/heading structure, spacing rhythm, footer hierarchy, focus/validation
+          placement, RTL, a11y. NO field names / business conditions / accounting.
+   VARIANT · Financial Transaction (.fw-fin): the layer shared by the payment + receipt
+          voucher forms (amount+currency compound, method, cheque, notes, action footer).
+          Donation is NOT locked into this variant until its own discovery (Phase 2).
+   Applied ONLY to #m-pay and #m-rec. Presentation/layout only — every field id, handler,
+   validation and save payload are unchanged; other editor modals keep the side-drawer.
+   Generalising to a new form = add `fw-modal` (+`fw-fin` if financial) + the section
+   wrappers; no rule duplication.
    ═══════════════════════════════════════════════════════════════════════════ */
+.fw-fin{--fw-variant:financial-transaction}   /* variant marker — FT-specific rules hang here */
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* header: title + one-line descriptive subtitle (not the title repeated) */
@@ -2772,6 +2781,11 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
 .fw-modal .fw-fields{display:flex;flex-direction:column;gap:14px}
 .fw-modal .fw-notes{margin-top:20px}
 .fw-modal .fw-notes textarea{min-height:88px}
+/* full-width conditional classification bands (diwan-type / donation sub-tree on the
+   receipt) sit BELOW the two columns; their legacy .sdiv already reads as a section head. */
+.fw-modal .fw-band{margin-top:18px}
+.fw-modal .fw-band .sdiv{margin-top:0}
+.fw-modal .fw-band .fi.full + .fi.full{margin-top:12px}
 /* footer: one primary Save, secondary Save+print, ghost Cancel pushed to the side */
 .fw-modal .fw-ft-spacer{flex:1 1 auto}
 
