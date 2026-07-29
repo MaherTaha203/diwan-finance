@@ -251,16 +251,16 @@ const BRAND_SUBTITLE='نظام الإدارة المالية';
 const BRAND_SITE='diwan-finance.com';
 /* Print branding via BrandAssets (brand-assets.js loads first in the defer queue): dark-ink light-variant logo on white paper, embedded as data URI. URL fallback keeps print alive if the module ever fails to load. */
 const BRAND_LOGO=(window.BrandAssets&&window.BrandAssets.getPrintLogo())||'/brand/light/PNG/logo-128.png';
-/* Shared report/print header — vouchers, statements, reports, future A2/A3/A4. opts:{sub,no} */
+/* OUTPUT-002-C — unified Letterhead for vouchers, matching the report engine: identity
+   ONCE (org name + system name + logo) → rule → title → one context line (no + sub).
+   The print DATE is NOT here — it lives once in the footer (dedup). */
 function reportHeader(title,opts){
   opts=opts||{};
-  var date=opts.date||new Date().toLocaleDateString('en-GB');
-  var dateLine=(opts.dateText!=null)?opts.dateText:('تاريخ الطباعة: <span class="num">'+date+'</span>');
   var parts=[];
   if(opts.no) parts.push((opts.noLabel||'رقم السند')+': <b class="num">'+opts.no+'</b>');
   if(opts.sub) parts.push(opts.sub);
   var meta=parts.length?('<div class="period">'+parts.join(' · ')+'</div>'):'';
-  return '<div class="dh"><div class="date">'+dateLine+'</div>'
+  return '<div class="dh">'
     +'<div class="org"><div class="txt"><h1>'+BRAND_NAME+'</h1>'
     +'<div class="osub">'+BRAND_SUBTITLE+' · '+BRAND_SITE+'</div></div>'
     +'<div class="chip"><img src="'+BRAND_LOGO+'" alt="'+BRAND_NAME+'"></div></div></div>'
@@ -268,12 +268,18 @@ function reportHeader(title,opts){
     +'<div class="title"><h2>'+title+'</h2></div>'
     +meta;
 }
-/* Single-signature footer (Identity v4): QR + «توقيع الديوان» only. */
+/* Sign-off (QR + «توقيع الديوان»). OUTPUT-002-C — gated by the Output Profile: QR shows
+   only when output.showQR, the signature only when output.showSignature. Vouchers are
+   certified documents, so both DEFAULT to on; the owner can hide either from settings.
+   Returns '' when both are off (no empty sign-off row). */
 function reportDfoot(qrUrl,capHtml){
-  return '<div class="dfoot"><div class="qr-u"><div class="box">'
-    +(qrUrl?('<div data-qr-url="'+qrUrl+'"></div>'):'')+'</div>'
-    +'<div class="cap">'+(capHtml||'diwan-finance.com')+'</div></div>'
-    +'<div class="sig-one"><div class="line">توقيع الديوان</div></div></div>';
+  var out=(window.OutputProfile&&window.OutputProfile.output&&window.OutputProfile.output())||{};
+  var showQR=out.showQR!==false, showSig=out.showSignature!==false;
+  if(!showQR&&!showSig) return '';
+  var qr=showQR?('<div class="qr-u"><div class="box">'+(qrUrl?('<div data-qr-url="'+qrUrl+'"></div>'):'')
+    +'</div><div class="cap">'+(capHtml||'diwan-finance.com')+'</div></div>'):'';
+  var sig=showSig?'<div class="sig-one"><div class="line">توقيع الديوان</div></div>':'';
+  return '<div class="dfoot">'+qr+sig+'</div>';
 }
 /* Amount in words — English (vouchers). Whole shekels. */
 function amountToWordsEn(n){
@@ -299,7 +305,10 @@ function reportFooter(opts){
      document. Real "Page X of Y" is not computable without a pagination polyfill,
      so we rely on the browser's own print header/footer page numbers instead. Any
      `opts.page` a caller still passes is intentionally ignored. */
-  return '<div class="pgfoot"><span>'+BRAND_NAME+' — '+BRAND_SITE+'</span><span>'+printedLabel+' '+date+'</span></div>';
+  /* OUTPUT-002-C — dedup: the brand line (name — site) is already in the header, so the
+     footer carries ONLY the print date (its single home). Page numbers come from the
+     print engine / browser chrome, as noted above. */
+  return '<div class="pgfoot"><span>'+printedLabel+' <span class="num">'+date+'</span></span></div>';
 }
 
 /* VIS-2: single-voucher builders matching approved mockups (01 receipt / 03 payment) */
