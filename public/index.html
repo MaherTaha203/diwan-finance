@@ -700,32 +700,41 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
 <!-- MODALS -->
 <div class="ov" id="ov">
   <!-- Module R: reservation form (add + edit share one form) -->
-  <div class="modal editor" id="m-res-form" style="display:none;max-width:460px">
-    <div class="mhd"><span class="mtt" id="m-res-form-title"><i class="ti ti-calendar-plus"></i>حجز جديد</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
-    <div class="mbd">
+  <!-- FORM-001 Phase 5 · reservation (Entity variant — 2nd entity surface). Base workspace
+       + .fw-entity compact card. Presentation/layout only — every field id, handler, error
+       div and the dynamic #m-res-form-title / #res-f-save are preserved; resValidate/resSave
+       read the same DOM. -->
+  <div class="modal editor fw-modal fw-entity" id="m-res-form" style="display:none">
+    <div class="mhd"><span class="mtt"><span class="fw-hd-txt"><span id="m-res-form-title"><i class="ti ti-calendar-plus"></i>حجز جديد</span><span class="fw-sub">تفاصيل الحجز والزبون</span></span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd fw-body">
       <input type="hidden" id="res-f-id">
-      <div class="fi"><label data-i18n="reservations.f_date">التاريخ <em>*</em></label><input type="date" id="res-f-date" aria-label="تصفية بالتاريخ"><div class="ferr" id="res-f-date-err"></div></div>
-      <div class="fi"><label data-i18n="reservations.f_name">اسم الزبون <em>*</em></label><input type="text" id="res-f-name" aria-label="تصفية بالاسم" placeholder="الاسم الكامل" data-i18n-placeholder="reservations.f_name_ph" maxlength="80"><div class="ferr" id="res-f-name-err"></div></div>
-      <div class="fi"><label data-i18n="reservations.f_phone">رقم الهاتف <em>*</em></label><input type="text" id="res-f-phone" aria-label="تصفية بالهاتف" placeholder="05XXXXXXXX" inputmode="numeric" dir="ltr" maxlength="14"><div class="ferr" id="res-f-phone-err"></div></div>
-      <div class="fi"><label data-i18n="reservations.f_type">نوع الحجز <em>*</em></label>
-        <select class="fs" id="res-f-type" aria-label="تصفية بالنوع" style="width:100%">
-          <option value="">اختر النوع…</option>
-          <option value="wedding">زفاف</option>
-          <option value="engagement">خطوبة</option>
-          <option value="henna">حنّاء</option>
-          <option value="wedding_lunch">غداء عرس</option>
-          <option value="evening_party">سهرة</option>
-          <option value="talbeh">طلبة</option>
-          <option value="small_party">حفلة صغيرة</option>
-          <option value="large_party_two_floors">حفلة كبيرة (طابقان)</option>
-          <option value="birthday">عيد ميلاد</option>
-          <option value="graduation">تخرج</option>
-          <option value="lecture">محاضرة</option>
-          <option value="general">عام</option>
-        </select><div class="ferr" id="res-f-type-err"></div></div>
-      <div class="fi"><label data-i18n="common.notes">ملاحظات</label><textarea id="res-f-notes" rows="2" placeholder="اختياري — عدد الضيوف، تجهيزات خاصة…" data-i18n-placeholder="reservations.f_notes_ph"></textarea></div>
+      <section class="fw-sec">
+        <h3 class="fw-sec-h">تفاصيل الحجز</h3>
+        <div class="fg">
+          <div class="fi full"><label data-i18n="reservations.f_date">التاريخ <em>*</em></label><input type="date" id="res-f-date" aria-label="تصفية بالتاريخ"><div class="ferr" id="res-f-date-err"></div></div>
+          <div class="fi"><label data-i18n="reservations.f_name">اسم الزبون <em>*</em></label><input type="text" id="res-f-name" aria-label="تصفية بالاسم" placeholder="الاسم الكامل" data-i18n-placeholder="reservations.f_name_ph" maxlength="80"><div class="ferr" id="res-f-name-err"></div></div>
+          <div class="fi"><label data-i18n="reservations.f_phone">رقم الهاتف <em>*</em></label><input type="text" id="res-f-phone" aria-label="تصفية بالهاتف" placeholder="05XXXXXXXX" inputmode="numeric" dir="ltr" maxlength="14"><div class="ferr" id="res-f-phone-err"></div></div>
+          <div class="fi full"><label data-i18n="reservations.f_type">نوع الحجز <em>*</em></label>
+            <select class="fs" id="res-f-type" aria-label="تصفية بالنوع" style="width:100%">
+              <option value="">اختر النوع…</option>
+              <option value="wedding">زفاف</option>
+              <option value="engagement">خطوبة</option>
+              <option value="henna">حنّاء</option>
+              <option value="wedding_lunch">غداء عرس</option>
+              <option value="evening_party">سهرة</option>
+              <option value="talbeh">طلبة</option>
+              <option value="small_party">حفلة صغيرة</option>
+              <option value="large_party_two_floors">حفلة كبيرة (طابقان)</option>
+              <option value="birthday">عيد ميلاد</option>
+              <option value="graduation">تخرج</option>
+              <option value="lecture">محاضرة</option>
+              <option value="general">عام</option>
+            </select><div class="ferr" id="res-f-type-err"></div></div>
+          <div class="fi full"><label data-i18n="common.notes">ملاحظات</label><textarea id="res-f-notes" rows="2" placeholder="اختياري — عدد الضيوف، تجهيزات خاصة…" data-i18n-placeholder="reservations.f_notes_ph"></textarea></div>
+        </div>
+      </section>
     </div>
-    <div class="mft"><button class="btn" onclick="window.closeM()" data-i18n="common.cancel">إلغاء</button><button class="btn primary" id="res-f-save" onclick="window.resSave()"><i class="ti ti-check"></i>حفظ الحجز</button></div>
+    <div class="mft fw-ft"><button class="btn primary" id="res-f-save" onclick="window.resSave()"><i class="ti ti-check"></i>حفظ الحجز</button><span class="fw-ft-spacer"></span><button class="btn ghost" onclick="window.closeM()" data-i18n="common.cancel">إلغاء</button></div>
   </div>
   <!-- Module R: reservation details -->
   <div class="modal" id="m-res-view" style="display:none;max-width:460px">
