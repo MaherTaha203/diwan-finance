@@ -14,7 +14,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('PASS ' + m); } else { fail+
 const rf = printJs.slice(printJs.indexOf('function reportFooter('), printJs.indexOf('function reportFooter(') + 900);
 const rfBody = rf.replace(/\/\*[\s\S]*?\*\//g, '');
 ok(!/صفحة 1/.test(rfBody), 'reportFooter no longer hard-codes a page number');
-ok((rfBody.match(/<span>/g) || []).length === 2, 'pgfoot now has exactly 2 spans (brand + printed date, no page span)');
+ok((rfBody.match(/<span>/g) || []).length === 1, 'pgfoot has exactly 1 bare span — the print date only (brand line removed for dedup, OUTPUT-002-C)');
 
 /* ROOT-8 → REPORT-001 · R8-b — the member-statement print builder was removed from
    print.js; the unified engine now renders it (its @page comes from the shared
