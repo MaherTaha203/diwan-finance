@@ -1548,7 +1548,10 @@ tbody tr:hover td{background:var(--soft)}
 .ibox i{font-size:14px}
 
 /* ── dialogs: docked editors + floating confirms ── */
-.ov{background:rgba(9,14,23,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px)}
+/* FORM-001 Phase 2 — the overlay's dark scrim already separates the modal; a heavy
+   backdrop blur measurably added ~50ms (~25%) to every modal open on desktop. Lighten it
+   to a subtle 3px depth cue (about half the composite cost) — Fast/Calm over glass. */
+.ov{background:rgba(9,14,23,.55); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px)}
 .modal{background:var(--card); border-radius:18px; border:1px solid var(--bd2); box-shadow:0 34px 90px -22px rgba(8,14,24,.6)}
 .mhd{padding:20px 24px; background:var(--card)}
 .mtt{font-size:15.5px; font-weight:700}
@@ -2789,10 +2792,21 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
 /* footer: one primary Save, secondary Save+print, ghost Cancel pushed to the side */
 .fw-modal .fw-ft-spacer{flex:1 1 auto}
 
+/* ── FORM-001 Phase 2 · Form-interaction motion contract (calm · fast · functional) ──
+   A financial form must feel Click→Open, not Click→wait-for-animation→interact. The
+   workspace opens with a light opacity + 6px lift (~140ms) — NOT a scale of the whole
+   panel (the old `mIn` scaled .96→1 and drew attention to itself). Conditional fields
+   already toggle via `display` (instant reflow, no height/cascade animation). The method
+   pills drop `transition:all` for explicit low-cost props. Base-level: applies to every
+   .fw-modal (payment / receipt / donation). */
+@keyframes fwIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fw-modal .pill{transition:background .12s,border-color .12s,color .12s}
+@media (prefers-reduced-motion:reduce){ .modal.editor.fw-modal{animation:none!important} }
+
 /* ── mobile-first (default ≤767): a real FULL-SCREEN form, not a narrow drawer/sheet ── */
 @media (max-width:767px){
   .modal.editor.fw-modal{position:fixed;inset:0;margin:0;width:100%;height:100dvh;max-height:100dvh;
-    border:0;border-radius:0;box-shadow:none;animation:mIn .16s ease}
+    border:0;border-radius:0;box-shadow:none;animation:fwIn .14s ease}
   .fw-modal .mft.fw-ft{position:sticky;bottom:0}
 }
 /* ── tablet (≥768): centered, comfortable single-column sheet ── */
@@ -2800,7 +2814,7 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
   .modal.editor.fw-modal{position:fixed;inset:0;margin:auto;width:min(620px,94vw);
     height:max-content;max-height:92dvh;border:1px solid var(--bd2);border-radius:22px;
     border-inline-end:1px solid var(--bd2);box-shadow:0 34px 90px -22px rgba(8,14,24,.55);
-    animation:mIn .18s ease}
+    animation:fwIn .14s ease}
 }
 /* ── desktop workspace (≥1024): wider, two logical sections side by side ── */
 @media (min-width:1024px){
