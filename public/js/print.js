@@ -251,21 +251,44 @@ const BRAND_SUBTITLE='نظام الإدارة المالية';
 const BRAND_SITE='diwan-finance.com';
 /* Print branding via BrandAssets (brand-assets.js loads first in the defer queue): dark-ink light-variant logo on white paper, embedded as data URI. URL fallback keeps print alive if the module ever fails to load. */
 const BRAND_LOGO=(window.BrandAssets&&window.BrandAssets.getPrintLogo())||'/brand/light/PNG/logo-128.png';
+/* OUTPUT-002-C Slice 4 — voucher document identity now reads from the Organization/Output
+   Profile (the single identity source every output document shares), NOT from local BRAND_*
+   constants. The historical BRAND_* remain only as the last-resort fallback for contexts
+   where the profile module is not loaded (isolated tests). This is a DATA-SOURCE change,
+   not a presentation one: the same fields (name + system name + site + logo + signatory
+   title) are rendered in the same places — vouchers simply stop being a second source of
+   truth. The logo follows the profile's Show-Logo toggle and any custom upload exactly like
+   the report engine (org().logo is '' when Show Logo is off), so print/PDF vouchers honour
+   the same logo contract; nothing new (phone/email/address) is added to the document. */
+function voucherOrg(){
+  var pk=function(v,f){ return (v&&typeof v==='object')?(v.ar!=null&&v.ar!==''?v.ar:(v.en!=null&&v.en!==''?v.en:f)):(v!=null&&v!==''?v:f); };
+  var o=(window.OutputProfile&&window.OutputProfile.org&&window.OutputProfile.org())||null;
+  if(!o) return { name:BRAND_NAME, subtitle:BRAND_SUBTITLE, site:BRAND_SITE, logo:BRAND_LOGO, signatoryTitle:'توقيع الديوان' };
+  return {
+    name: pk(o.name, BRAND_NAME),
+    subtitle: pk(o.subtitle, BRAND_SUBTITLE),
+    site: (o.site!=null?o.site:BRAND_SITE),
+    logo: (o.logo||''),                              /* '' when Show Logo OFF; custom or brand default otherwise */
+    signatoryTitle: pk(o.signatoryTitle, 'توقيع الديوان')
+  };
+}
 /* OUTPUT-002-C — unified Letterhead for vouchers, matching the report engine: identity
    ONCE (org name + system name + logo) → rule → title → one context line (no + sub).
    The print DATE is NOT here — it lives once in the footer (dedup). */
 function reportHeader(title,opts){
   opts=opts||{};
+  var org=voucherOrg();
   var parts=[];
   if(opts.no) parts.push((opts.noLabel||'رقم السند')+': <b class="num">'+opts.no+'</b>');
   if(opts.sub) parts.push(opts.sub);
   var meta=parts.length?('<div class="period">'+parts.join(' · ')+'</div>'):'';
   return '<div class="dh">'
-    +'<div class="org"><div class="txt"><h1>'+BRAND_NAME+'</h1>'
-    +'<div class="osub">'+BRAND_SUBTITLE+' · '+BRAND_SITE+'</div></div>'
-    +'<div class="chip"><img src="'+BRAND_LOGO+'" alt="'+BRAND_NAME+'"></div></div></div>'
+    +'<div class="org"><div class="txt"><h1>'+esc(org.name)+'</h1>'
+    +'<div class="osub">'+esc(org.subtitle)+(org.site?(' · '+esc(org.site)):'')+'</div></div>'
+    +(org.logo?('<div class="chip"><img src="'+esc(org.logo)+'" alt="'+esc(org.name)+'"></div>'):'')
+    +'</div></div>'
     +'<div class="rule"></div>'
-    +'<div class="title"><h2>'+title+'</h2></div>'
+    +'<div class="title"><h2>'+esc(title)+'</h2></div>'
     +meta;
 }
 /* Sign-off (QR + «توقيع الديوان»). OUTPUT-002-C — gated by the Output Profile: QR shows
@@ -278,7 +301,7 @@ function reportDfoot(qrUrl,capHtml){
   if(!showQR&&!showSig) return '';
   var qr=showQR?('<div class="qr-u"><div class="box">'+(qrUrl?('<div data-qr-url="'+qrUrl+'"></div>'):'')
     +'</div><div class="cap">'+(capHtml||'diwan-finance.com')+'</div></div>'):'';
-  var sig=showSig?'<div class="sig-one"><div class="line">توقيع الديوان</div></div>':'';
+  var sig=showSig?'<div class="sig-one"><div class="line">'+esc(voucherOrg().signatoryTitle)+'</div></div>':'';
   return '<div class="dfoot">'+qr+sig+'</div>';
 }
 /* Amount in words — English (vouchers). Whole shekels. */
