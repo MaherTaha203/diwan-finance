@@ -61,15 +61,39 @@ ok(/fw-modal/.test(resTag) && /fw-entity/.test(resTag) && !/fw-fin/.test(resTag)
 ok(['res-f-id','res-f-date','res-f-name','res-f-phone','res-f-type','res-f-notes','res-f-save','m-res-form-title'].every(id => html.includes('id="' + id + '"')), 'reservation form preserves all field ids + dynamic title/save ids');
 ok(['res-f-date-err','res-f-name-err','res-f-phone-err','res-f-type-err'].every(id => html.includes('id="' + id + '"')), 'reservation per-field error slots preserved');
 
+/* ── FORM-001 Phase 6 · Settings variant (m-output-settings, built in output-settings.js) ──
+   The settings modal is created dynamically, so it isn't in index.html — assert against the
+   builder source + the app.css variant rule. */
+const os = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'output-settings.js'), 'utf8');
+ok(/class="modal editor fw-modal fw-settings"/.test(os) && !/fw-fin/.test(os) && !/fw-entity/.test(os), '#m-output-settings is the Settings variant (fw-modal fw-settings, not financial/entity)');
+ok(/class="mbd fw-body"/.test(os), 'settings body uses the Base scrollable shell (mbd fw-body)');
+ok(/class="mft fw-ft"/.test(os) && /fw-ft-spacer/.test(os), 'settings has the Base sticky footer (mft fw-ft with primary Save · spacer · ghost Reset)');
+ok(!/\.mbd\{max-height:72vh/.test(os), 'the legacy .mbd max-height override was removed (Base scroll + sticky footer now handle overflow)');
+ok(['os-show-logo','os-name','os-subtitle','os-site','os-phone','os-email','os-address','os-footer','os-default-action','os-prev-logo','os-logo-note'].every(id => os.includes("'" + id + "'") || os.includes('"' + id + '"')), 'settings form preserves its field ids/bases (read by populate/collect)');
+ok(/\.modal\.editor\.fw-modal\.fw-settings\{width:min\(640px/.test(css), 'Settings variant is a wider config card (min(640px), between the Entity card and the FT workspace)');
+
+/* ── FORM-001 Phase 7 · Administrative variant (m-invite, m-reclass) ──
+   These were already-centered plain `.modal` dialogs (not editor drawers); Phase 7 adopts
+   the Base workspace shell + a compact Administrative variant for structural/motion
+   consistency. Presentation only — every field id + handler preserved. */
+const invTag = (html.match(/<div class="modal editor[^"]*" id="m-invite"/) || [''])[0];
+const rclTag = (html.match(/<div class="modal editor[^"]*" id="m-reclass"/) || [''])[0];
+ok(/fw-modal/.test(invTag) && /fw-admin/.test(invTag) && !/fw-fin/.test(invTag) && !/fw-entity/.test(invTag), '#m-invite is the Administrative variant (fw-modal fw-admin, not financial/entity)');
+ok(/fw-modal/.test(rclTag) && /fw-admin/.test(rclTag) && !/fw-fin/.test(rclTag) && !/fw-entity/.test(rclTag), '#m-reclass is the Administrative variant (fw-modal fw-admin, not financial/entity)');
+ok(['cu-name','cu-role','cu-phone','cu-email','cu-idhint','cu-manual-block','cu-pass','cu-note','cu-bar','cu-lvl','cu-force','cu-submit'].every(id => html.includes('id="' + id + '"')), 'create-user form preserves all field ids');
+ok(['rcl-info','rcl-type','rcl-dest','rcl-amount','rcl-amount-hint','rcl-reason'].every(id => html.includes('id="' + id + '"')), 'reclassify form preserves all field ids');
+ok(/name="cu-mode"/.test(html), 'create-user password-mode radios preserved (cu-mode)');
+ok(/\.modal\.editor\.fw-modal\.fw-admin\{width:min\(520px/.test(css), 'Administrative variant is a compact action card (min(520px), narrower than the Entity/Settings cards)');
+
 /* ── FORM-001 Phase 4 · audit completeness ──
    Every `.modal editor` INPUT form in index.html must be either converted (carries
    `fw-modal`) or an explicitly-listed known-unconverted candidate, so a new legacy
    drawer can't slip in unclassified. Update KNOWN_UNCONVERTED only via the audit. */
-const KNOWN_UNCONVERTED = [];   /* reservations converted in Phase 5; only Settings (m-output-settings, dynamic) + Administrative remain, per the audit */
+const KNOWN_UNCONVERTED = [];   /* all editor forms converted through Phase 7; Settings (m-output-settings) is dynamic */
 const editorForms = [...html.matchAll(/<div class="modal editor[^"]*" id="([^"]+)"/g)].map(m => ({ id: m[1], cls: m[0] }));
 const unclassified = editorForms.filter(f => !/fw-modal/.test(f.cls) && !KNOWN_UNCONVERTED.includes(f.id));
 ok(unclassified.length === 0, 'every .modal.editor form is converted (fw-modal) or a listed audit candidate' + (unclassified.length ? ' — stray: ' + unclassified.map(f => f.id).join(',') : ''));
-ok(editorForms.filter(f => /fw-modal/.test(f.cls)).length === 5, 'exactly the 5 expected forms are converted (m-pay/m-rec/m-member/m-edit-member/m-res-form)');
+ok(editorForms.filter(f => /fw-modal/.test(f.cls)).length === 7, 'exactly the 7 expected forms are converted (m-pay/m-rec/m-member/m-edit-member/m-res-form/m-invite/m-reclass)');
 
 console.log(fail ? ('FAILED — ' + pass + ' passed, ' + fail + ' failed') : ('ALL PASS — ' + pass + ' passed'));
 process.exit(fail ? 1 : 0);

@@ -36,7 +36,6 @@
       var st = document.createElement('style');
       st.id = 'os-style';
       st.textContent =
-        '#' + MODAL_ID + ' .mbd{max-height:72vh;overflow:auto}' +
         '#' + MODAL_ID + ' .os-grp{border:1px solid var(--bd2,#e5e7eb);border-radius:10px;padding:12px;margin:0 0 14px}' +
         '#' + MODAL_ID + ' .os-grp>h4{margin:0 0 10px;font-size:13px;font-weight:800;color:var(--tx,inherit);display:flex;gap:6px;align-items:center}' +
         '#' + MODAL_ID + ' .os-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}' +
@@ -50,10 +49,13 @@
     var cont = document.getElementById('ov') || document.body;
     var wrap = document.createElement('div');
     wrap.innerHTML =
-      '<div class="modal editor" id="' + MODAL_ID + '" style="display:none;max-width:640px">' +
-        '<div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-adjustments-cog"></i></span><span>' + t('إعدادات الإخراج', 'Output settings') + '</span></span>' +
+      /* FORM-001 Phase 6 · Settings variant — Base workspace (.fw-modal) + .fw-settings
+         (a wider, sectioned, scrollable config card with a sticky Save/Reset footer).
+         Presentation only — every field id + handler is unchanged. */
+      '<div class="modal editor fw-modal fw-settings" id="' + MODAL_ID + '" style="display:none">' +
+        '<div class="mhd"><span class="mtt"><span class="mico"><i class="ti ti-adjustments-cog"></i></span><span class="fw-hd-txt"><span>' + t('إعدادات الإخراج', 'Output settings') + '</span><span class="fw-sub">' + t('هوية المستندات وخيارات الطباعة', 'Document identity & print options') + '</span></span></span>' +
           '<button class="btn ghost" onclick="window.closeM()" aria-label="' + t('إغلاق', 'Close') + '"><i class="ti ti-x"></i></button></div>' +
-        '<div class="mbd">' +
+        '<div class="mbd fw-body">' +
           /* Logo — the system brand logo shows in every report by default; this section
              toggles it and lets the admin upload / replace / delete (revert to default). */
           '<div class="os-grp"><h4><i class="ti ti-photo"></i>' + t('شعار المؤسسة', 'Organization logo') + '</h4>' +
@@ -81,10 +83,12 @@
             '<div class="fi full"><label>' + t('الإجراء الافتراضي في قائمة الإخراج', 'Default action in output menu') + '</label>' +
               '<select id="os-default-action"><option value="print">' + t('طباعة', 'Print') + '</option><option value="pdf">PDF</option><option value="excel">Excel</option></select></div>' +
           '</div>' +
-          '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">' +
-            '<button class="btn ghost" onclick="window.resetOutputSettings()"><i class="ti ti-rotate"></i>' + t('استعادة الافتراضي', 'Reset') + '</button>' +
-            '<button class="btn primary" onclick="window.saveOutputSettings()"><i class="ti ti-device-floppy"></i>' + t('حفظ', 'Save') + '</button>' +
-          '</div>' +
+        '</div>' +
+        /* sticky Base footer (.fw-ft): primary Save · spacer · ghost Reset */
+        '<div class="mft fw-ft">' +
+          '<button class="btn primary" onclick="window.saveOutputSettings()"><i class="ti ti-device-floppy"></i>' + t('حفظ', 'Save') + '</button>' +
+          '<span class="fw-ft-spacer"></span>' +
+          '<button class="btn ghost" onclick="window.resetOutputSettings()"><i class="ti ti-rotate"></i>' + t('استعادة الافتراضي', 'Reset') + '</button>' +
         '</div>' +
       '</div>';
     cont.appendChild(wrap);
