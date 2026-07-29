@@ -55,5 +55,15 @@ ok(!/id="m-member"[\s\S]{0,400}fw-cols/.test(html), 'the Entity form does not us
 /* Entity forms are NOT financial — they must not carry the FT variant class */
 ok(!/fw-fin/.test(memTag) && !/fw-fin/.test(ememTag), 'member forms are Entity, not Financial-Transaction (no fw-fin)');
 
+/* ── FORM-001 Phase 4 · audit completeness ──
+   Every `.modal editor` INPUT form in index.html must be either converted (carries
+   `fw-modal`) or an explicitly-listed known-unconverted candidate, so a new legacy
+   drawer can't slip in unclassified. Update KNOWN_UNCONVERTED only via the audit. */
+const KNOWN_UNCONVERTED = ['m-res-form'];   /* reservations — next Entity candidate (Phase-4 audit) */
+const editorForms = [...html.matchAll(/<div class="modal editor[^"]*" id="([^"]+)"/g)].map(m => ({ id: m[1], cls: m[0] }));
+const unclassified = editorForms.filter(f => !/fw-modal/.test(f.cls) && !KNOWN_UNCONVERTED.includes(f.id));
+ok(unclassified.length === 0, 'every .modal.editor form is converted (fw-modal) or a listed audit candidate' + (unclassified.length ? ' — stray: ' + unclassified.map(f => f.id).join(',') : ''));
+ok(editorForms.filter(f => /fw-modal/.test(f.cls)).length === 4, 'exactly the 4 expected forms are converted (m-pay/m-rec/m-member/m-edit-member)');
+
 console.log(fail ? ('FAILED — ' + pass + ' passed, ' + fail + ' failed') : ('ALL PASS — ' + pass + ' passed'));
 process.exit(fail ? 1 : 0);
