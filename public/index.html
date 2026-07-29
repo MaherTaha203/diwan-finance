@@ -830,17 +830,42 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   </div>
 
   <!-- Member Modal -->
-  <div class="modal editor" id="m-member" style="display:none;max-width:480px">
-    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-user-plus"></i></span>إضافة عضو جديد</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="mem-name" placeholder="الاسم الرباعي"><span class="ferr" id="e-mem-name"><i class="ti ti-alert-circle"></i>مطلوب</span></div><div class="fi"><label>الهاتف</label><input type="tel" id="mem-phone" placeholder="05x-xxx-xxxx"></div><div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="mem-from-year" min="2000" max="2100" step="1" oninput="window.onMemberFromYearChange('new')"></div><div class="fi"><label>الرصيد التاريخي ₪ <span style="font-size:10px;color:var(--tx3)">(محسوب تلقائياً)</span></label><input type="number" id="mem-balance" value="0" step="0.01"><span id="mem-hist-hint" style="font-size:10px;color:var(--tx3);display:block;margin-top:2px"></span></div><div class="fi full"><label>ملاحظات</label><textarea id="mem-notes" placeholder="ملاحظات..."></textarea></div></div></div>
-    <div class="mft"><button class="btn primary" onclick="window.saveMember()"><i class="ti ti-device-floppy"></i>حفظ</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  <!-- FORM-001 Phase 3 · member (Entity variant). Base workspace shell + .fw-entity compact
+       card. Presentation/layout only — every field id, handler and error span is preserved;
+       saveMember reads the same DOM. -->
+  <div class="modal editor fw-modal fw-entity" id="m-member" style="display:none">
+    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-user-plus"></i></span><span class="fw-hd-txt"><span>إضافة عضو جديد</span><span class="fw-sub">بيانات عضو العائلة</span></span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd fw-body">
+      <section class="fw-sec">
+        <h3 class="fw-sec-h">بيانات العضو</h3>
+        <div class="fg">
+          <div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="mem-name" placeholder="الاسم الرباعي"><span class="ferr" id="e-mem-name"><i class="ti ti-alert-circle"></i>مطلوب</span></div>
+          <div class="fi"><label>الهاتف</label><input type="tel" id="mem-phone" placeholder="05x-xxx-xxxx"></div>
+          <div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="mem-from-year" min="2000" max="2100" step="1" oninput="window.onMemberFromYearChange('new')"></div>
+          <div class="fi full"><label>الرصيد التاريخي ₪ <span style="font-size:10px;color:var(--tx3)">(محسوب تلقائياً)</span></label><input type="number" id="mem-balance" value="0" step="0.01"><span id="mem-hist-hint" style="font-size:10px;color:var(--tx3);display:block;margin-top:2px"></span></div>
+          <div class="fi full"><label>ملاحظات</label><textarea id="mem-notes" placeholder="ملاحظات..."></textarea></div>
+        </div>
+      </section>
+    </div>
+    <div class="mft fw-ft"><button class="btn primary" onclick="window.saveMember()"><i class="ti ti-device-floppy"></i>حفظ</button><span class="fw-ft-spacer"></span><button class="btn ghost" onclick="window.closeM()">إلغاء</button></div>
   </div>
 
   <!-- Edit Member -->
-  <div class="modal editor" id="m-edit-member" style="display:none;max-width:480px">
-    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-edit"></i></span>تعديل بيانات العضو</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
-    <div class="mbd"><input type="hidden" id="edit-mem-id"><div class="fg"><div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="edit-mem-name"></div><div class="fi"><label>الهاتف</label><input type="tel" id="edit-mem-phone"></div><div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="edit-mem-from-year" min="2000" max="2100" step="1" oninput="window.onMemberFromYearChange('edit')"></div><div class="fi"><label>الرصيد التاريخي ₪ <span style="font-size:10px;color:var(--tx3)">(محسوب تلقائياً)</span></label><input type="number" id="edit-mem-balance" step="0.01"><span id="edit-mem-hist-hint" style="font-size:10px;color:var(--tx3);display:block;margin-top:2px"></span></div><div class="fi full"><label>ملاحظات</label><textarea id="edit-mem-notes"></textarea></div></div></div>
-    <div class="mft"><button class="btn primary" onclick="window.updateMember()"><i class="ti ti-device-floppy"></i>حفظ التعديل</button><button class="btn danger" onclick="window.deleteMember()"><i class="ti ti-trash"></i>حذف العضو</button><button class="btn" onclick="window.closeM()">إلغاء</button></div>
+  <div class="modal editor fw-modal fw-entity" id="m-edit-member" style="display:none">
+    <div class="mhd"><span class="mtt"><span class="mico diwan"><i class="ti ti-edit"></i></span><span class="fw-hd-txt"><span>تعديل بيانات العضو</span><span class="fw-sub">تحديث بيانات عضو العائلة</span></span></span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd fw-body"><input type="hidden" id="edit-mem-id">
+      <section class="fw-sec">
+        <h3 class="fw-sec-h">بيانات العضو</h3>
+        <div class="fg">
+          <div class="fi full"><label>الاسم الكامل <span class="req">*</span></label><input type="text" id="edit-mem-name"></div>
+          <div class="fi"><label>الهاتف</label><input type="tel" id="edit-mem-phone"></div>
+          <div class="fi"><label>سنة بدء الاشتراك</label><input type="number" id="edit-mem-from-year" min="2000" max="2100" step="1" oninput="window.onMemberFromYearChange('edit')"></div>
+          <div class="fi full"><label>الرصيد التاريخي ₪ <span style="font-size:10px;color:var(--tx3)">(محسوب تلقائياً)</span></label><input type="number" id="edit-mem-balance" step="0.01"><span id="edit-mem-hist-hint" style="font-size:10px;color:var(--tx3);display:block;margin-top:2px"></span></div>
+          <div class="fi full"><label>ملاحظات</label><textarea id="edit-mem-notes"></textarea></div>
+        </div>
+      </section>
+    </div>
+    <div class="mft fw-ft"><button class="btn primary" onclick="window.updateMember()"><i class="ti ti-device-floppy"></i>حفظ التعديل</button><button class="btn danger" onclick="window.deleteMember()"><i class="ti ti-trash"></i>حذف العضو</button><span class="fw-ft-spacer"></span><button class="btn ghost" onclick="window.closeM()">إلغاء</button></div>
   </div>
 
  <!-- Edit Receipt -->

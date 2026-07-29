@@ -42,5 +42,18 @@ ok(/@media \(prefers-reduced-motion:reduce\)\{ ?\.modal\.editor\.fw-modal\{anima
 const blur = (css.match(/\.ov\{[^}]*backdrop-filter:blur\((\d+)px\)/) || [])[1];
 ok(blur !== undefined && Number(blur) <= 3, 'overlay backdrop blur is light (<=3px) — measured to cut ~25% off modal-open on desktop');
 
+/* ── FORM-001 Phase 3 · Entity variant (members) ── */
+const memTag = (html.match(/<div class="modal editor[^"]*" id="m-member"/) || [''])[0];
+const ememTag = (html.match(/<div class="modal editor[^"]*" id="m-edit-member"/) || [''])[0];
+ok(/fw-modal/.test(memTag) && /fw-entity/.test(memTag), '#m-member carries the Base (fw-modal) + Entity (fw-entity) classes');
+ok(/fw-modal/.test(ememTag) && /fw-entity/.test(ememTag), '#m-edit-member carries the Base + Entity classes');
+ok(['mem-name','mem-phone','mem-from-year','mem-balance','mem-notes'].every(id => html.includes('id="' + id + '"')), 'member create form preserves all field ids');
+ok(['edit-mem-id','edit-mem-name','edit-mem-phone','edit-mem-from-year','edit-mem-balance','edit-mem-notes'].every(id => html.includes('id="' + id + '"')), 'member edit form preserves all field ids');
+/* the Entity variant is a COMPACT card, not the wide FT workspace, and not two FT columns */
+ok(/\.modal\.editor\.fw-modal\.fw-entity\{width:min\(560px/.test(css), 'Entity variant is a compact centered card (min(560px), narrower than the FT workspace)');
+ok(!/id="m-member"[\s\S]{0,400}fw-cols/.test(html), 'the Entity form does not use the FT two-column split (single logical section)');
+/* Entity forms are NOT financial — they must not carry the FT variant class */
+ok(!/fw-fin/.test(memTag) && !/fw-fin/.test(ememTag), 'member forms are Entity, not Financial-Transaction (no fw-fin)');
+
 console.log(fail ? ('FAILED — ' + pass + ' passed, ' + fail + ' failed') : ('ALL PASS — ' + pass + ' passed'));
 process.exit(fail ? 1 : 0);
