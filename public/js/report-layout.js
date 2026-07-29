@@ -200,19 +200,32 @@
   function build(model, opts) {
     opts = opts || {};
     var lang = opts.lang || (typeof root !== 'undefined' && root.LANG) || 'ar';
+    var target = opts.target || 'print';
     var m = model.meta || {};
-    var html = '<div class="rpt-doc" dir="rtl">';
     /* OUTPUT-002-C — one Letterhead (once), KPIs once, sections, one footer. No
        fixed running-header band (it duplicated the title/site on page 1); no separate
        filters band (filters now live in the single context line). Continuation pages
        repeat only the table column headers via table-header-group. */
-    html += header(m, lang, opts.target || 'print');
-    html += kpi(model.summary, lang);
+    var body = header(m, lang, target) + kpi(model.summary, lang);
     (model.sections || []).forEach(function (sec) {
-      if (sec.type === 'band') html += band(sec, lang);
-      else if (sec.type === 'table') html += table(sec, lang, opts.windowRows);
+      if (sec.type === 'band') body += band(sec, lang);
+      else if (sec.type === 'table') body += table(sec, lang, opts.windowRows);
     });
-    html += footer(m, lang);
+    body += footer(m, lang);
+    /* OUTPUT-002-C UX Slice 2 — print pagination. A `position:fixed` running footer
+       reserves NO flow space, so on a full page the last table row packed down to the
+       content-box edge collided with (or printed under) the footer. The fix reserves a
+       real band at the foot of EVERY printed page via a `table-footer-group` spacer: the
+       flow now breaks ABOVE that band, and the fixed footer paints over the reserved
+       (empty) band — still pinned to the page bottom on every page, including the last.
+       Screen keeps the flat, unpaginated flow (footer sits once at the end). */
+    var html = '<div class="rpt-doc" dir="rtl">';
+    if (target === 'print' || target === 'pdf') {
+      html += '<table class="rpt-runpage"><tfoot class="rpt-runspacer"><tr><td></td></tr></tfoot>' +
+        '<tbody><tr><td>' + body + '</td></tr></tbody></table>';
+    } else {
+      html += body;
+    }
     html += '</div>';
     var css = ((typeof root !== 'undefined' && root.REPORT_TOKENS) || '') + REPORT_COMPONENT_CSS;
     return { html: html, css: css };
@@ -271,6 +284,14 @@
     '@media print{' +
       /* a scroll wrapper makes no sense in print — let the ledger fragment natively. */
       '.rpt-tablewrap{overflow:visible}' +
+      /* OUTPUT-002-C UX Slice 2 — the running-footer reservation. The whole report flows
+         inside `.rpt-runpage > tbody`; its `tfoot` (table-footer-group) repeats an EMPTY
+         band at the foot of every printed page, so the paginator keeps table rows clear of
+         the fixed footer that paints over that band (no row under the footer, no clipping). */
+      '.rpt-runpage{width:100%;border-collapse:collapse}' +
+      '.rpt-runpage>tbody>tr>td{padding:0;border:0}' +
+      '.rpt-runspacer{display:table-footer-group}' +
+      '.rpt-runspacer>tr>td{height:9mm;padding:0;border:0}' +
       /* Column headers repeat on continuation pages (table-header-group) — the ONLY
          repeated element, and not a duplication of identity. Totals appear once at the
          true end (table-row-group), never as a mid-ledger footer. The Letterhead + KPIs
