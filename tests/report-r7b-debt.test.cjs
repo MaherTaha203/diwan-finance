@@ -28,7 +28,11 @@ ok(dm.meta.reportId === 'ANNUAL_DEBT' && dm.meta.orientation === 'landscape', 'm
 const dtab = dm.sections[0];
 ok(dtab.columns.map(c => c.key).join(',') === 'code,name,phone,hist,histPaid,selSub,selPaid,resolutions,current', 'the 9 declared columns in order');
 ok(dtab.columns[8].format === 'balance', 'current column is a signed balance (Dr/Cr)');
-ok(dtab.rows[0].current === 350 && dtab.rows[1].current === -50, 'signed current preserved (debtor + creditor)');
+/* Slice 3 — rows are now canonically ordered by Arabic name, so assert by identity,
+   not by position: signed `current` is preserved for each member (values untouched). */
+ok(dtab.rows.find(r => r.code === 'A-1').current === 350 && dtab.rows.find(r => r.code === 'A-2').current === -50, 'signed current preserved (debtor + creditor)');
+/* and the canonical order is applied: «سالم» (س) precedes «محمد» (م). */
+ok(dtab.rows[0].name === 'سالم' && dtab.rows[1].name === 'محمد', 'rows are ascending by Arabic name (canonical, shared across surfaces)');
 ok(dtab.totals.cells.selSub === 600 && dtab.totals.cells.resolutions === 50 && !('current' in dtab.totals.cells), 'totals carry sums but not current');
 ok(dm.meta.filters.some(f => /الكل/.test(f.ar)) && dm.meta.filters.some(f => /2 \/ 2/.test(f.ar)), 'filters carry category + shown/total');
 

@@ -291,6 +291,29 @@
     return buildFundStatementModel({ fund: fund, view: view, figures: figures, from: from, to: to, printDate: new Date().toISOString(), archived: !!arch });
   }
 
+  /* OUTPUT-002-C UX Slice 3 — one Arabic-aware, canonical ascending sort by name,
+     reused wherever a report needs a stable member ordering. Intl.Collator('ar')
+     handles ألف/همزة/تشكيل and embedded digits; a member-code tiebreak makes equal
+     names deterministic; falls back to source order if Intl is unavailable (old
+     runtime). Mutates the array in place and returns it. Ordering only — never values. */
+  var _arCollator = null;
+  function arCollator() {
+    if (_arCollator === null) {
+      try { _arCollator = new Intl.Collator('ar', { numeric: true, sensitivity: 'base' }); }
+      catch (e) { _arCollator = false; }
+    }
+    return _arCollator;
+  }
+  function sortByArabicName(list) {
+    var coll = arCollator();
+    if (!coll || !Array.isArray(list)) return list;
+    list.sort(function (a, b) {
+      var c = coll.compare((a && a.name) || '', (b && b.name) || '');
+      return c !== 0 ? c : String((a && a.code) || '').localeCompare(String((b && b.code) || ''));
+    });
+    return list;
+  }
+
   /* ═══ R7b — Annual Debt Report ═════════════════════════════════════════════
      PURE builder over FIN.debtReportRows (the certified IG-006 model). Fixed 9
      columns; `current` is a signed balance (Dr/Cr). Numbers pass through. */
@@ -314,6 +337,13 @@
                selSub: Number(r.selSub || 0), selPaid: Number(r.selPaid || 0),
                resolutions: Number(r.resolutions || 0), current: Number(r.current || 0) };
     });
+    /* OUTPUT-002-C UX Slice 3 — CANONICAL ascending order by member name, applied ONCE
+       here in the shared model. Every surface (screen · print · PDF · Excel) consumes
+       these same `sections[].rows`, so all four inherit one identical order — no per-
+       renderer sort. Arabic-aware via Intl.Collator (ألف/همزة/تشكيل + embedded digits
+       order naturally); a stable member-code tiebreak keeps equal names deterministic.
+       PRESENTATION ORDER ONLY — no FIN / values / debt figures change. */
+    sortByArabicName(ledgerRows);
     var filters = [];
     if (source.filterLabel) filters.push(source.filterLabel);
     filters.push(T('المعروض: ' + shown + ' / ' + (source.totalMembers || shown), 'Shown: ' + shown + ' / ' + (source.totalMembers || shown)));
