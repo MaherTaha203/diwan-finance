@@ -74,7 +74,16 @@
      table's own column headers repeat (table-header-group), which is not duplication. */
   function header(meta, lang, target) {
     var org = orgOf(meta);
-    var printLogo = (target !== 'screen') && org.logo
+    /* OUTPUT-002-C UX Slice 1 — the whole document-brand masthead (logo + org name +
+       system name + website) is DOCUMENT identity and belongs to Print/PDF only. On
+       SCREEN it is never rendered: the org name and the website are part of the
+       document brand just like the logo, and the app shell already carries the
+       organisation identity. The screen report shows only its title + context line +
+       body. This is the Output Rendering Contract — decided by `target`, not by CSS. */
+    if (target === 'screen') {
+      return '<div class="rpt-title"><h1>' + esc(pick(meta.title, lang)) + '</h1></div>' + metaLine(meta, lang);
+    }
+    var printLogo = org.logo
       ? '<div class="rpt-hd-chip"><img src="' + esc(org.logo) + '" alt=""></div>' : '';
     return '<div class="rpt-mast-brand"><header class="rpt-header">' +
       '<div class="rpt-hd-org"><div class="rpt-hd-txt"><div class="rpt-hd-name">' + esc(pick(org.name, lang)) + '</div>' +
