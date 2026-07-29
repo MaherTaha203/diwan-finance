@@ -22,23 +22,20 @@ const model = buildMemberStatementModel({
     moves: [{ date: '2025-03-01', no: 'REC-1', desc: 'إيصال 4477', dr: 0, cr: 400, bal: 800 }] }
 });
 
-/* ── the shared layout now carries the running header/footer bands (R4) ── */
+/* ── OUTPUT-002-C — one Letterhead + one fixed footer; no running-header band ── */
 const built = ReportLayout.build(model, { lang: 'ar' });
-ok(/rpt-runhead/.test(built.html) && /rpt-runfoot/.test(built.html), 'layout html emits the running header + footer bands');
-ok(/rpt-mast-brand/.test(built.html), 'layout still emits the in-flow masthead brand (shown on screen)');
-ok(/\.rpt-runhead,\.rpt-runfoot\{display:none\}/.test(built.css), 'running bands are hidden by default (screen off)');
-ok(/@media print\{[^]*\.rpt-runhead\{display:flex;position:fixed;top:0/.test(built.css), 'in print the running header is fixed to the top of every page');
-ok(/\.rpt-runfoot\{display:flex;position:fixed;bottom:0/.test(built.css), 'in print the running footer is fixed to the bottom of every page');
-/* OUTPUT-002-C: the masthead is now the page-1 document header in print (carries the
-   org logo); only the in-flow footer gives way to the fixed running footer band. */
-ok(/\.rpt-footer\{display:none\}/.test(built.css), 'in print the in-flow footer gives way to the fixed running footer');
-ok(!/\.rpt-mast-brand,\.rpt-footer\{display:none\}/.test(built.css), 'the masthead is no longer hidden in print (logo lives in the printed header)');
+ok(!/rpt-runhead/.test(built.html) && !/rpt-runfoot/.test(built.html), 'no duplicating running-header/footer bands are emitted');
+ok(/rpt-mast-brand/.test(built.html), 'layout emits the in-flow masthead brand (the single Letterhead)');
+ok(/rpt-footer/.test(built.html), 'layout emits the single footer (the one home of the print date)');
+ok(/@media print\{[^]*\.rpt-footer\{position:fixed;bottom:0/.test(built.css), 'in print the single footer is fixed to the bottom of every page');
+ok(/\.rpt-table thead\{display:table-header-group\}/.test(built.css), 'column headers repeat on continuation pages (the only repeated element)');
+ok(!/\.rpt-mast-brand,\.rpt-footer\{display:none\}/.test(built.css), 'the masthead prints (logo lives in the printed Letterhead)');
 
 /* ── compose() reuses the print renderer's composition ── */
 const c = PdfRenderer.compose(model, { lang: 'ar' });
 ok(c && !c.error, 'compose() succeeds');
 ok(/rpt-doc/.test(c.html) && c.html.includes('1,200 ₪') && /عضو تجريبي/.test(c.html), 'composed html carries the rendered statement');
-ok(/@page\{size:A4 portrait;margin:14mm 9mm 12mm\}/.test(c.css), 'portrait @page reserves running-band margins (same as print)');
+ok(/@page\{size:A4 portrait;margin:14mm 9mm 12mm;/.test(c.css) && /@bottom-center\{content:counter\(page\)/.test(c.css), 'portrait @page: A4 margins + page-counter box');
 ok(c.filename === 'كشف الحساب المالي للعضو - عضو تجريبي - 2026-07-27', 'deterministic unified filename (shared with print)');
 
 /* ── registration: engine's pdf renderer is now REAL (not a skeleton) ── */

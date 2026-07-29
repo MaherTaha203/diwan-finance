@@ -66,44 +66,23 @@
      fallback if the profile module is not loaded (e.g. node unit tests). */
   function orgOf(meta) { return (meta && meta.org) || (root.OutputProfile && root.OutputProfile.org && root.OutputProfile.org()) || DEFAULT_ORG; }
 
+  /* OUTPUT-002-C — the single unified Letterhead (Financial Enterprise). It appears
+     ONCE at the top of page 1 and carries every identity element exactly once:
+     logo (print/PDF only) + org name + system name — then a ruled title — then ONE
+     context line (member/fund/period/filters). The print DATE is NOT here: it lives
+     once in the footer. On continuation pages nothing of this repeats; only the
+     table's own column headers repeat (table-header-group), which is not duplication. */
   function header(meta, lang, target) {
     var org = orgOf(meta);
-    var date = meta.printDate ? fmtDate(meta.printDate) : fmtDate(new Date().toISOString());
-    /* Logo separates system UI from official documents: it belongs to the PRINTED
-       Report Header only. On screen (in-app view) the masthead carries no logo; on
-       print/PDF the org logo sits in the masthead beside the name. The masthead is the
-       page-1 document header in print; the running header (R4) repeats the brand text
-       on continuation pages. Title + meta always stay in the flow (once). */
     var printLogo = (target !== 'screen') && org.logo
       ? '<div class="rpt-hd-chip"><img src="' + esc(org.logo) + '" alt=""></div>' : '';
     return '<div class="rpt-mast-brand"><header class="rpt-header">' +
       '<div class="rpt-hd-org"><div class="rpt-hd-txt"><div class="rpt-hd-name">' + esc(pick(org.name, lang)) + '</div>' +
       (org.subtitle ? '<div class="rpt-hd-sub">' + esc(pick(org.subtitle, lang)) + (org.site ? ' · ' + esc(org.site) : '') + '</div>' : '') + '</div>' +
       printLogo + '</div>' +
-      '<div class="rpt-hd-date">' + (lang === 'en' ? 'Printed: ' : 'تاريخ الطباعة: ') + '<span class="rpt-num">' + date + '</span></div>' +
       '</header><div class="rpt-rule"></div></div>' +
       '<div class="rpt-title"><h1>' + esc(pick(meta.title, lang)) + '</h1></div>' +
       metaLine(meta, lang);
-  }
-
-  /* R4 — running header/footer: repeat on every printed page via position:fixed
-     (@media print only; hidden on screen). Page numbers come from the browser's
-     own print / Save-as-PDF chrome (no in-document counter). */
-  function runningHeader(meta, lang) {
-    /* OUTPUT-002-C F-5 — the running band carries the REPORT TITLE on every printed
-       page, not the org name. On page 1 the masthead already shows the org name +
-       logo, so repeating it in the fixed band was a visible duplication; the title
-       instead tells the reader which report a continuation page belongs to. The site
-       stays as a light brand anchor; the running FOOTER still carries name + site. */
-    var org = orgOf(meta);
-    var title = pick(meta.title, lang);
-    return '<div class="rpt-runhead"><span>' + esc(title || pick(org.name, lang)) + (org.site ? ' — ' + esc(org.site) : '') + '</span></div>';
-  }
-  function runningFooter(meta, lang) {
-    var org = orgOf(meta);
-    var date = meta.printDate ? fmtDate(meta.printDate) : fmtDate(new Date().toISOString());
-    return '<div class="rpt-runfoot"><span>' + esc(pick(org.name, lang)) + ' — ' + esc(org.site || '') + '</span>' +
-      '<span>' + (lang === 'en' ? 'Printed: ' : 'طُبع: ') + '<span class="rpt-num">' + date + '</span></span></div>';
   }
 
   function metaLine(meta, lang) {
@@ -120,6 +99,12 @@
       parts.push((lang === 'en' ? 'Period: ' : 'الفترة: ') + lbl);
     }
     if (meta.docNo) parts.push((lang === 'en' ? 'Doc no. ' : 'رقم السند: ') + '<b class="rpt-num">' + esc(meta.docNo) + '</b>');
+    /* filters belong to the SAME single context line (not a separate band) so the
+       report's identifying data reads once, in one place (dedup mandate). */
+    if (meta.filters && meta.filters.length) {
+      parts.push((lang === 'en' ? 'Filters: ' : 'الفلتر: ') +
+        meta.filters.map(function (f) { return esc(pick(f, lang)); }).join(' · '));
+    }
     return parts.length ? '<div class="rpt-meta">' + parts.join(' · ') + '</div>' : '';
   }
 
@@ -132,12 +117,6 @@
       var val = s.format === 'balance' ? balanceCell(s.value, lang) : s.format === 'money' ? ('<span class="rpt-num">' + money(s.value) + '</span>') : esc(pick(s.value, lang));
       return '<div class="rpt-card"><div class="rpt-card-k">' + esc(pick(s.key, lang)) + '</div><div class="rpt-card-v' + tone + '">' + val + '</div></div>';
     }).join('') + '</div>';
-  }
-
-  function filters(meta, lang) {
-    if (!meta.filters || !meta.filters.length) return '';
-    return '<div class="rpt-filters">' + (lang === 'en' ? 'Filters: ' : 'الفلتر: ') +
-      meta.filters.map(function (f) { return '<span class="rpt-chip">' + esc(pick(f, lang)) + '</span>'; }).join(' ') + '</div>';
   }
 
   function band(sec, lang) {
@@ -197,11 +176,15 @@
      (print.js), not to tabular reports/statements. Removing the sign-off also fixes
      the multi-page pagination (no orphan sign-off page, no split signature line). */
 
+  /* OUTPUT-002-C — ONE simple footer, the single home of the print date (removed from
+     the header). It repeats at the foot of every printed page (the standard place for
+     a running date) and reserves a page-number slot. Page numbers: a paged engine fills
+     `@bottom-*` counters (see report-render-print pageCss); Chrome's own print chrome
+     supplies "page X of Y". No org name / site / time is repeated here. */
   function footer(meta, lang) {
-    var org = meta.org || { name: 'ديوان آل طه', site: 'diwan-finance.com' };
     var date = meta.printDate ? fmtDate(meta.printDate) : fmtDate(new Date().toISOString());
-    return '<div class="rpt-footer"><span>' + esc(pick(org.name, lang)) + ' — ' + esc(org.site || '') + '</span>' +
-      '<span>' + (lang === 'en' ? 'Printed: ' : 'طُبع: ') + '<span class="rpt-num">' + date + '</span></span></div>';
+    return '<div class="rpt-footer"><span>' + (lang === 'en' ? 'Printed: ' : 'طُبع: ') +
+      '<span class="rpt-num">' + date + '</span></span><span class="rpt-pageno"></span></div>';
   }
 
   /* ── the ordered assembly (spec §3) ── */
@@ -210,11 +193,12 @@
     var lang = opts.lang || (typeof root !== 'undefined' && root.LANG) || 'ar';
     var m = model.meta || {};
     var html = '<div class="rpt-doc" dir="rtl">';
-    html += runningHeader(m, lang);   /* print-only, position:fixed; every page */
-    html += runningFooter(m, lang);   /* print-only, position:fixed; every page */
+    /* OUTPUT-002-C — one Letterhead (once), KPIs once, sections, one footer. No
+       fixed running-header band (it duplicated the title/site on page 1); no separate
+       filters band (filters now live in the single context line). Continuation pages
+       repeat only the table column headers via table-header-group. */
     html += header(m, lang, opts.target || 'print');
     html += kpi(model.summary, lang);
-    html += filters(m, lang);
     (model.sections || []).forEach(function (sec) {
       if (sec.type === 'band') html += band(sec, lang);
       else if (sec.type === 'table') html += table(sec, lang, opts.windowRows);
@@ -241,11 +225,15 @@
     '.rpt-rule{height:2px;background:var(--rpt-ink);border-radius:2px;margin-top:14px}' +
     '.rpt-title{text-align:center;margin:18px 0 6px}.rpt-title h1,.rpt-title h2{font-size:19px;font-weight:700;display:inline-block;margin:0}' +
     '.rpt-meta{text-align:center;margin:11px 0 18px;font-size:11.5px;color:var(--rpt-muted);font-weight:500;line-height:1.9}.rpt-meta b{color:var(--rpt-ink2);font-weight:600}' +
-    '.rpt-cards{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 4px}' +
-    '.rpt-card{flex:1 1 130px;background:#fff;border:1px solid var(--rpt-line);border-top:2px solid var(--rpt-line2);border-radius:9px;padding:11px 13px;text-align:center}' +
-    '.rpt-card-k{font-size:9.5px;color:var(--rpt-muted);font-weight:600}.rpt-card-v{font-size:14px;font-weight:700;margin-top:5px;font-family:var(--rpt-fe);font-variant-numeric:tabular-nums}' +
+    /* OUTPUT-002-C — KPIs as a FLAT enterprise stat strip (Swiss), shown once at the
+       top. No rounded cards / no big boxes: a single ruled row, cells split by hairlines,
+       values right-aligned tabular. */
+    '.rpt-cards{display:flex;gap:0;margin:14px 0 6px;border-top:1.5px solid var(--rpt-ink);border-bottom:1px solid var(--rpt-line2)}' +
+    '.rpt-card{flex:1;padding:8px 12px;text-align:right;border-inline-start:1px solid var(--rpt-line)}' +
+    '.rpt-card:first-child{border-inline-start:0}' +
+    '.rpt-card-k{font-size:9px;letter-spacing:.03em;color:var(--rpt-muted);font-weight:600}' +
+    '.rpt-card-v{font-size:14px;font-weight:700;margin-top:3px;font-family:var(--rpt-fe);font-variant-numeric:tabular-nums;color:var(--rpt-ink)}' +
     '.rpt-card-v.rpt-pos{color:var(--rpt-pos)}.rpt-card-v.rpt-neg{color:var(--rpt-neg)}' +
-    '.rpt-filters{margin:8px 0;font-size:11px;color:var(--rpt-muted)}.rpt-chip{display:inline-block;border:1px solid var(--rpt-line2);border-radius:20px;padding:1px 9px;margin-inline-start:4px}' +
     '.rpt-band{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--rpt-line2);border-inline-start:3px solid var(--rpt-accent);border-radius:8px;padding:10px 14px;margin:4px 0 14px;font-size:12px;font-weight:600;color:var(--rpt-ink2)}' +
     '.rpt-tablewrap{overflow-x:auto}' +
     '.rpt-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}' +
@@ -271,28 +259,22 @@
       'background:transparent;border:1px dashed var(--rpt-line2,#ccc);border-radius:7px;padding:6px 14px}' +
     '.rpt-showall:hover{border-style:solid}' +
     '@media print{.rpt-more{display:none}}' +
-    /* R4 running header/footer: off on screen; repeated on every printed page. */
-    '.rpt-runhead,.rpt-runfoot{display:none}' +
     '@media print{' +
       /* a scroll wrapper makes no sense in print — let the ledger fragment natively. */
       '.rpt-tablewrap{overflow:visible}' +
-      /* the totals row appears ONCE at the true end of the ledger (table-row-group),
-         never as a misleading mid-ledger footer at the bottom of every page. NOTE:
-         Chromium repeats EITHER a position:fixed running band OR a table-header-group
-         across pages, not both; per the owner's running-header decision the brand band
-         (below) repeats every page and the column headers head the ledger on page 1. */
+      /* Column headers repeat on continuation pages (table-header-group) — the ONLY
+         repeated element, and not a duplication of identity. Totals appear once at the
+         true end (table-row-group), never as a mid-ledger footer. The Letterhead + KPIs
+         stay whole on page 1 (page-break-after:avoid). */
       '.rpt-table thead{display:table-header-group}.rpt-table tfoot{display:table-row-group}' +
       '.rpt-table tr{page-break-inside:avoid}' +
       '.rpt-band,.rpt-total{page-break-inside:avoid}' +
-      '.rpt-header,.rpt-rule,.rpt-title,.rpt-meta{page-break-after:avoid}' +
-      /* the masthead IS the page-1 document header in print (logo lives here); only the
-         in-flow footer gives way to the fixed running footer band. */
-      '.rpt-footer{display:none}' +
-      '.rpt-mast-brand{margin-top:1mm}' +
-      '.rpt-runhead{display:flex;position:fixed;top:0;left:0;right:0;height:9mm;align-items:center;justify-content:flex-start;' +
-        'border-bottom:1px solid var(--rpt-line2);font-size:9px;color:var(--rpt-muted);font-weight:600;background:#fff}' +
-      '.rpt-runfoot{display:flex;position:fixed;bottom:0;left:0;right:0;height:7mm;align-items:center;justify-content:space-between;' +
-        'border-top:1px solid var(--rpt-line);font-size:8px;color:var(--rpt-faint);background:#fff}' +
+      '.rpt-header,.rpt-rule,.rpt-title,.rpt-meta,.rpt-cards{page-break-after:avoid}' +
+      '.rpt-mast-brand{margin-top:0}' +
+      /* ONE running footer: the single home of the print date, at the foot of every
+         page. Sits inside the @page bottom margin reserved by report-render-print. */
+      '.rpt-footer{position:fixed;bottom:0;left:0;right:0;margin:0;padding:1.5mm 0 0;' +
+        'border-top:1px solid var(--rpt-line);background:#fff;font-size:8px;color:var(--rpt-faint)}' +
     '}';
 
   var ReportLayout = { build: build, formatCell: cell, REPORT_COMPONENT_CSS: REPORT_COMPONENT_CSS,

@@ -34,13 +34,16 @@
     return parts.join(' - ').replace(/[\/\\:*?"<>|\u0000-\u001f]+/g, '').replace(/\s+/g, ' ').trim();
   }
 
-  /* @page margins reserve room for the fixed running header (top) and footer
-     (bottom) that the layout repeats on every printed page (R4): band heights
-     are 9mm/7mm — the margins add a gap so body content never overlaps them. */
+  /* OUTPUT-002-C — A4 with comfortable enterprise margins. There is no longer a top
+     running-header band (dedup); the bottom margin reserves room for the single fixed
+     running footer (the print date). Page numbers: a paged engine fills @bottom-center
+     with "X / Y"; Chrome ignores @page margin boxes and prints its own page numbers. */
   function pageCss(orientation) {
     var o = orientation === 'landscape' ? 'landscape' : 'portrait';
     var side = o === 'landscape' ? '10mm' : '9mm';
-    return '@page{size:A4 ' + o + ';margin:14mm ' + side + ' 12mm}body{margin:0;background:#fff}';
+    return '@page{size:A4 ' + o + ';margin:14mm ' + side + ' 12mm;' +
+      '@bottom-center{content:counter(page) " / " counter(pages);font-size:8px;color:#9AA3B2}}' +
+      'body{margin:0;background:#fff}';
   }
 
   var PrintRenderer = {
