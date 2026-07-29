@@ -2747,3 +2747,52 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
   body.nav-min .nbg-acc .nbg-h{ height:auto; min-height:46px; font-size:15px; }
 }
 @media(prefers-reduced-motion:reduce){ body.nav-min .sb .nb{ transition:none; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OUTPUT-002-C · UX Slice 5 — Payment Form Workspace (PILOT).
+   A reusable financial-form-workspace shell (.fw-*) applied ONLY to the payment
+   voucher form (#m-pay carries `.fw-modal`). Presentation/layout only — every field
+   id, handler, validation and the save payload are unchanged. Other editor modals keep
+   `.modal.editor` (the side-drawer) untouched. To generalise later: add `fw-modal` +
+   the section wrappers to another form — no rule duplication.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* header: title + one-line descriptive subtitle (not the title repeated) */
+.fw-modal .mhd .mtt{align-items:flex-start}
+.fw-modal .fw-hd-txt{display:flex;flex-direction:column;line-height:1.3}
+.fw-modal .fw-sub{font-size:11.5px;font-weight:500;color:var(--mut,var(--tx3));margin-top:3px}
+
+/* body rhythm */
+.fw-modal .fw-context{margin-bottom:4px}
+.fw-modal .fw-cols{display:flex;flex-direction:column;gap:20px;margin-top:16px}
+.fw-modal .fw-sec{display:flex;flex-direction:column;gap:12px;min-width:0}
+.fw-modal .fw-sec-h{margin:0;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--mut,var(--tx2));padding-bottom:8px;border-bottom:1px solid var(--line,var(--bd2))}
+.fw-modal .fw-fields{display:flex;flex-direction:column;gap:14px}
+.fw-modal .fw-notes{margin-top:20px}
+.fw-modal .fw-notes textarea{min-height:88px}
+/* footer: one primary Save, secondary Save+print, ghost Cancel pushed to the side */
+.fw-modal .fw-ft-spacer{flex:1 1 auto}
+
+/* ── mobile-first (default ≤767): a real FULL-SCREEN form, not a narrow drawer/sheet ── */
+@media (max-width:767px){
+  .modal.editor.fw-modal{position:fixed;inset:0;margin:0;width:100%;height:100dvh;max-height:100dvh;
+    border:0;border-radius:0;box-shadow:none;animation:mIn .16s ease}
+  .fw-modal .mft.fw-ft{position:sticky;bottom:0}
+}
+/* ── tablet (≥768): centered, comfortable single-column sheet ── */
+@media (min-width:768px){
+  .modal.editor.fw-modal{position:fixed;inset:0;margin:auto;width:min(620px,94vw);
+    height:max-content;max-height:92dvh;border:1px solid var(--bd2);border-radius:22px;
+    border-inline-end:1px solid var(--bd2);box-shadow:0 34px 90px -22px rgba(8,14,24,.55);
+    animation:mIn .18s ease}
+}
+/* ── desktop workspace (≥1024): wider, two logical sections side by side ── */
+@media (min-width:1024px){
+  .modal.editor.fw-modal{width:min(960px,94vw)}
+  .fw-modal .fw-cols{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:start}
+  .fw-modal .fw-cols .fw-sec{padding-block:2px}
+  .fw-modal .fw-cols .fw-sec:first-child{padding-inline-end:28px}
+  .fw-modal .fw-cols .fw-sec:last-child{padding-inline-start:28px;border-inline-start:1px solid var(--line,var(--bd2))}
+}
