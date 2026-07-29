@@ -19,15 +19,21 @@ function model(logo) {
 }
 const LOGO = 'data:image/png;base64,iVBORw0KGgo=';
 
-/* 1 · SCREEN — the document logo is NEVER rendered, even when a logo is configured. */
+/* 1 · SCREEN — the whole document-brand masthead is NEVER rendered: no logo, and no
+   org name / system name / website (all are document brand, per the owner). */
 const scr = ReportLayout.build(model(LOGO), { lang: 'ar', target: 'screen' });
 ok(!/rpt-hd-chip/.test(scr.html) && !/<img/.test(scr.html),
   'SCREEN: document logo is never rendered (contract), even with a logo configured');
+ok(!/rpt-mast-brand/.test(scr.html) && !/ديوان آل طه/.test(scr.html) && !/diwan-finance\.com/.test(scr.html),
+  'SCREEN: no document brand masthead — org name + website absent (they are brand)');
+ok(/rpt-title/.test(scr.html), 'SCREEN: the report title is still shown (only the brand masthead is gone)');
 
 /* 2 · PRINT — the logo IS rendered when Show Logo is on (org.logo present). */
 const prn = ReportLayout.build(model(LOGO), { lang: 'ar', target: 'print' });
 ok(/rpt-hd-chip/.test(prn.html) && /<img/.test(prn.html),
   'PRINT: document logo IS rendered when Show Logo is enabled (org.logo present)');
+ok(/rpt-mast-brand/.test(prn.html) && /ديوان آل طه/.test(prn.html) && /diwan-finance\.com/.test(prn.html),
+  'PRINT: the full brand masthead (logo + org name + website) IS rendered');
 
 /* 3 · PDF path uses the same target !== screen branch → logo present. */
 const pdf = ReportLayout.build(model(LOGO), { lang: 'ar', target: 'pdf' });
