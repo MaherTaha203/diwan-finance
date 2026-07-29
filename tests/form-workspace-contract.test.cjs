@@ -61,6 +61,17 @@ ok(/fw-modal/.test(resTag) && /fw-entity/.test(resTag) && !/fw-fin/.test(resTag)
 ok(['res-f-id','res-f-date','res-f-name','res-f-phone','res-f-type','res-f-notes','res-f-save','m-res-form-title'].every(id => html.includes('id="' + id + '"')), 'reservation form preserves all field ids + dynamic title/save ids');
 ok(['res-f-date-err','res-f-name-err','res-f-phone-err','res-f-type-err'].every(id => html.includes('id="' + id + '"')), 'reservation per-field error slots preserved');
 
+/* ── FORM-001 Phase 6 · Settings variant (m-output-settings, built in output-settings.js) ──
+   The settings modal is created dynamically, so it isn't in index.html — assert against the
+   builder source + the app.css variant rule. */
+const os = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'output-settings.js'), 'utf8');
+ok(/class="modal editor fw-modal fw-settings"/.test(os) && !/fw-fin/.test(os) && !/fw-entity/.test(os), '#m-output-settings is the Settings variant (fw-modal fw-settings, not financial/entity)');
+ok(/class="mbd fw-body"/.test(os), 'settings body uses the Base scrollable shell (mbd fw-body)');
+ok(/class="mft fw-ft"/.test(os) && /fw-ft-spacer/.test(os), 'settings has the Base sticky footer (mft fw-ft with primary Save · spacer · ghost Reset)');
+ok(!/\.mbd\{max-height:72vh/.test(os), 'the legacy .mbd max-height override was removed (Base scroll + sticky footer now handle overflow)');
+ok(['os-show-logo','os-name','os-subtitle','os-site','os-phone','os-email','os-address','os-footer','os-default-action','os-prev-logo','os-logo-note'].every(id => os.includes("'" + id + "'") || os.includes('"' + id + '"')), 'settings form preserves its field ids/bases (read by populate/collect)');
+ok(/\.modal\.editor\.fw-modal\.fw-settings\{width:min\(640px/.test(css), 'Settings variant is a wider config card (min(640px), between the Entity card and the FT workspace)');
+
 /* ── FORM-001 Phase 4 · audit completeness ──
    Every `.modal editor` INPUT form in index.html must be either converted (carries
    `fw-modal`) or an explicitly-listed known-unconverted candidate, so a new legacy

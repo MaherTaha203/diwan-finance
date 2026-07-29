@@ -2844,3 +2844,16 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
     height:max-content;max-height:92dvh;border:0;border-radius:20px 20px 0 0;
     box-shadow:0 -18px 60px -20px rgba(8,14,24,.5)}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FORM-001 · Phase 6 — SETTINGS variant (.fw-settings)  [m-output-settings]
+   Settings forms are grouped, scrollable config — not a single transaction and not a
+   short identity card. So the Settings variant reuses the BASE shell (fw-modal: the
+   scrollable .fw-body + the sticky .fw-ft footer) but widens the card a touch to sit
+   the two-up field groups comfortably. On mobile it stays the Base full-screen sheet
+   (the content is long). Presentation only — no field/handler change.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width:768px){
+  /* a slightly wider config card (between the Entity card and the FT workspace) */
+  .modal.editor.fw-modal.fw-settings{width:min(640px,94vw)}
+}
