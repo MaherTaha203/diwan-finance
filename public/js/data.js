@@ -50,7 +50,7 @@ function updateRateDisplay(){
    window.loadAll keeps its original fetch+render behavior for every other
    caller (post-save refresh flows) — no behavior change outside login. */
 async function loadAllData(){
-    const[r1,r2,r3,r4,r5,r6,r7,,r8,r9,r10,r11,r12]=await Promise.all([
+    const[r1,r2,r3,r4,r5,r6,r7,,r8,r9,r10,r11,r12,r13,r14]=await Promise.all([
       SB.from('receipts').select('id,no,verification_token,fund_type,receipt_date,payer_type,member_id,contact_id,payer_name,amount,currency,amount_ils,exchange_rate,payment_method,description,notes,donation_display_fund,food_donation_allocation,created_by,created_at,is_deleted,version,manual_allocation,manual_debt_settlement,manual_historical_donation,manual_current_support,movement_type,destination_treasury,source_treasury,movement_reason,register_category,created_by_uid,ownership_state').order('receipt_date',{ascending:false}),
       SB.from('payments').select('id,no,verification_token,fund_type,payment_date,beneficiary_type,member_id,beneficiary_name,amount,currency,amount_ils,exchange_rate,expense_type,payment_method,description,notes,approved_by,created_by,created_at,is_deleted,version,movement_type,destination_treasury,source_treasury,movement_reason,created_by_uid,ownership_state').order('payment_date',{ascending:false}),
       SB.from('members').select(
@@ -77,11 +77,19 @@ async function loadAllData(){
       /* Historical Subscription Truth (Owner-approved workbook, 2026-07-25) —
          presentation authority for year status; never enters any balance. */
       SB.from('historical_subscription_truth').select('id,member_id,year,status,source,approved_by,approved_at'),
+      /* TRUTH-001 (Phase 1) — additive, tolerant reads of the new canonical-status
+         foundations. Both are EMPTY on creation and UNREAD by any report today
+         (Repository is unconsumed until the Phase-5 flag cutover); they contribute
+         nothing now. Parallel with the rest, so no login-path latency change. A
+         missing table (migration not yet applied) resolves to [] via `||[]`. */
+      SB.from('import_batches').select('id,import_source,content_hash,checksum,row_count,imported_by,imported_at,notes'),
+      SB.from('current_subscription_status').select('id,member_id,year,status,source,provenance,updated_at'),
     ]);
     DB.receipts=r1.data||[];DB.payments=r2.data||[];DB.members=r3.data||[];
     DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];DB.subscriptions=r7.data||[];DB._alloc=null;
     DB.refunds=r8.data||[];DB.member_write_offs=r9.data||[];DB.internal_transfers=r10.data||[];DB.fiscal_snapshots=r11.data||[];
     DB.historical_subscription_truth=r12.data||[];
+    DB.import_batches=(r13&&r13.data)||[];DB.current_subscription_status=(r14&&r14.data)||[]; /* TRUTH-001 P1 — empty & unread today */
     DB._loaded=true;   /* P0 — mark a successful load so read-only panels can tell "not loaded yet" from a genuine zero */
 }
 async function loadAll(){
