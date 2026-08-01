@@ -83,15 +83,26 @@ ok(!/\bupdate\s+public\.|\bdelete\s+from\b|\btruncate\b|\bdrop\s+table\b|\bdrop\
    'migration alters NO existing data / column / policy (no update/delete/truncate/drop)');
 ok(!/paid_amount_ils/i.test(mCode), 'migration never touches paid_amount_ils (code)');
 
-/* ── 7. No runtime path calls the new interface or the RPC ── */
+/* ── 7. The only runtime callers of the settlement interface are the flag-gated
+      wiring points added by later PRs: crud.js posts via postFromForm (PR-4) and
+      operations.js voids via ReceiptSettlement.cancel (PR-6). Both are keyed on
+      the OFF-by-default flag, so the foundation stays inert until it is enabled.
+      No OTHER file calls the interface, and the RPCs are called only by the
+      settlement module itself. ── */
 const jsDir = path.join(__dirname, '..', 'public', 'js');
 const files = fs.readdirSync(jsDir).filter(f => f.endsWith('.js') && f !== 'receipt-settlement.js');
 let callers = [];
 for (const f of files) {
   const s = read(path.join(jsDir, f));
-  if (/ReceiptSettlement\.(post|cancel|refund)\s*\(|postReceiptSettlement\s*\(|cancelReceiptSettlement\s*\(|refundReceiptSettlement\s*\(|create_receipt_with_settlement/.test(s)) callers.push(f);
+  if (/ReceiptSettlement\.(post|cancel|refund)\s*\(|postReceiptSettlement\s*\(|cancelReceiptSettlement\s*\(|refundReceiptSettlement\s*\(|create_receipt_with_settlement|void_receipt_settlement/.test(s)) callers.push(f);
 }
-ok(callers.length === 0, 'no runtime file calls the settlement interface directly (post/cancel/refund) — found: [' + callers.join(', ') + ']');
+const allowedCallers = ['operations.js'];   /* PR-6: BO-03 cancel voids settlement (flag-gated); PR-4 post uses postFromForm (not matched here) */
+ok(callers.every(f => allowedCallers.includes(f)),
+   'only the flag-gated wiring points call the settlement interface — found: [' + callers.join(', ') + ']');
+if (callers.includes('operations.js')) {
+  const opsSrc = read(path.join(jsDir, 'operations.js'));
+  ok(/RECEIPT_ALLOCATION_ENABLED === true/.test(opsSrc), 'operations.js cancel voiding is flag-gated (foundation stays inert when OFF)');
+}
 
 /* ── 8. Behavioural OFF-inertness: flag OFF ⇒ post() calls no RPC and resolves disabled ── */
 (async function () {

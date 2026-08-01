@@ -181,6 +181,28 @@
     try { await recordVoucherVersion(kind, preRow, Object.assign({}, preRow, upd), 'إلغاء · Cancellation', newVer); }
     catch (e) { return fail('E_HISTORY', e.message); }
     try { await logAction('delete', logLabel || `إلغاء سند ${row.no} (نسخة ${newVer})`, tbl, id); } catch (_) {}
+
+    /* P-RECEIPT-ALLOCATION · PR-6 — void the receipt's explicit settlement lines
+       through the single void authority (ReceiptSettlement.cancel → the SECURITY
+       DEFINER RPC). No second cancellation path: the receipt is already cancelled
+       above; this only makes its recorded settlement lines VOID in data, reversing
+       exactly what was recorded. Runs ONLY when the flag is ON and only for a
+       RECEIPT that carries an explicit-settlement marker (manual_allocation — set
+       by the atomic posting RPC). The gate reads the RECEIPT ROW only, never the
+       loaded settlement store, so memberAllocation stays the single settlement
+       reader. A receipt with no active settlement lines is a harmless no-op: the
+       RPC raises settlement_void_none, which is swallowed. Flag OFF ⇒ this block
+       is dead ⇒ byte-identical. A void failure never corrupts balances either: a
+       cancelled (is_deleted) receipt is already excluded from settlement
+       attribution by the read seam, so the money cancellation stands regardless. */
+    if (kind === 'receipt' && row.manual_allocation
+        && typeof window !== 'undefined' && window.RECEIPT_ALLOCATION_ENABLED === true
+        && window.ReceiptSettlement && typeof window.ReceiptSettlement.cancel === 'function') {
+      try {
+        const v = await window.ReceiptSettlement.cancel(id);
+        if (v && v.ok) { try { await logAction('delete', `إبطال أسطر التسوية للسند ${row.no}`, 'allocation_records', id); } catch (_) {} }
+      } catch (_) { /* no active settlement lines / read seam already reverses via is_deleted */ }
+    }
     return { ok: true, data: { version: newVer }, no: row.no };
   }
 
