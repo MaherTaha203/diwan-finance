@@ -88,7 +88,7 @@ async function loadAllData(){
        path and every balance are byte-identical to today. */
     DB.allocation_records=[];
     if(typeof window!=='undefined' && window.RECEIPT_ALLOCATION_ENABLED===true){
-      try{ const _ar=await SB.from('allocation_records').select('source_ref,source_kind,member_id,obligation_kind,year,amount_allocated').eq('source_kind','receipt_settlement'); DB.allocation_records=(_ar&&_ar.data)||[]; }catch(_){/* tolerant */}
+      try{ const _ar=await SB.from('allocation_records').select('source_ref,source_kind,member_id,obligation_kind,year,amount_allocated,voided_at').eq('source_kind','receipt_settlement'); DB.allocation_records=(_ar&&_ar.data)||[]; }catch(_){/* tolerant */}
     }
     DB._loaded=true;   /* P0 — mark a successful load so read-only panels can tell "not loaded yet" from a genuine zero */
 }

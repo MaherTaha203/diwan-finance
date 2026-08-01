@@ -204,16 +204,18 @@ const FIN={
        (DB.allocation_records, source_kind='receipt_settlement'). Flag-gated and
        per-receipt-exclusive: a receipt WITH settlement lines is attributed by
        those lines (and excluded from the legacy pool); legacy receipts keep the
-       oldest-first FD-002 waterfall. Only non-deleted receipts' lines count
-       (cancellation-aware). NEUTRAL / byte-identical when the flag is OFF or no
-       settlement rows exist. Does NOT touch totals, finalBalance, FD-002 math,
-       paid_amount_ils, or member_subscriptions. */
+       oldest-first FD-002 waterfall. Only non-deleted receipts' ACTIVE (non-
+       voided) lines count — cancellation-aware in two ways: a cancelled receipt
+       drops out of _liveIds, AND a line the void authority (PR-6) marked
+       voided_at is skipped regardless. NEUTRAL / byte-identical when the flag is
+       OFF or no settlement rows exist. Does NOT touch totals, finalBalance,
+       FD-002 math, paid_amount_ils, or member_subscriptions. */
     const _rsOn=(typeof window!=='undefined'&&window.RECEIPT_ALLOCATION_ENABLED===true);
     const _explRcpt={}, _explYear={}; let _explHist=0;
     if(_rsOn){
       const _liveIds={}; DB.receipts.forEach(r=>{ if(!r.is_deleted&&r.member_id===memberId) _liveIds[r.id]=true; });
       (DB.allocation_records||[]).forEach(a=>{
-        if(!a||a.source_kind!=='receipt_settlement'||a.member_id!==memberId||!_liveIds[a.source_ref]) return;
+        if(!a||a.source_kind!=='receipt_settlement'||a.member_id!==memberId||!_liveIds[a.source_ref]||a.voided_at) return;
         const amt=r2(Number(a.amount_allocated||0)); _explRcpt[a.source_ref]=true;
         if(a.obligation_kind==='due'&&a.year!=null&&perYear[Number(a.year)]) _explYear[Number(a.year)]=r2((_explYear[Number(a.year)]||0)+amt);
         else if(a.obligation_kind==='historical') _explHist=r2(_explHist+amt);

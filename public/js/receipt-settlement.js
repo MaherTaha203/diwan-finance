@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    P-RECEIPT-ALLOCATION · Receipt Settlement wiring
-   PR-1 (foundation) + PR-4 (wire Settlement Editor → Atomic Posting RPC).
+   PR-1 (foundation) + PR-4 (wire → Atomic Posting RPC) + PR-6 (cancellation).
    ---------------------------------------------------------------------------
-   ONE posting path for explicit settlement, gated by the feature flag:
+   ONE posting path AND one void path for explicit settlement, gated by the flag:
 
      window.RECEIPT_ALLOCATION_ENABLED  — DEFAULT OFF. OFF ⇒ this module is inert
        and the legacy receipt flow (saveRec → BusinessOps.createVoucher) runs
@@ -13,10 +13,15 @@
               writer. It NEVER calls BusinessOps.createVoucher (no dual write),
               NEVER writes allocation_records from the client (RLS forbids it),
               NEVER writes paid_amount_ils. The RPC commits everything or nothing.
-   cancel() / refund() remain disabled stubs (later PRs).
+   cancel() → SB.rpc('void_receipt_settlement', …)  — the SOLE client caller of
+              THE single void authority. It voids exactly the recorded lines of a
+              cancelled receipt (no guessing, no redistribution, no recalculation)
+              and NEVER writes paid_amount_ils / member_subscriptions. Invoked by
+              BusinessOps.cancelVoucher (BO-03) only, after the receipt is soft-
+              deleted, and only for a receipt that carries explicit settlement.
+   refund() remains a disabled stub (later PR).
 
-   Reverting PR-4 = flag stays OFF (already default) ⇒ behaviour is today's. Full
-   revert = restore the PR-1 stub + drop the saveRec/openRec guards.
+   Reverting PR-4/PR-6 = flag stays OFF (already default) ⇒ behaviour is today's.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -107,11 +112,19 @@
     });
   }
 
-  function cancel() { return Promise.resolve(DISABLED); }  /* later PR */
+  /* THE settlement void call — SB.rpc ONLY, the single client caller of the sole
+     void authority. Voids exactly the recorded lines of the cancelled receipt. */
+  function cancel(receiptId) {
+    if (!enabled()) return Promise.resolve(DISABLED);
+    if (!receiptId) return Promise.resolve({ ok: false, error: 'no_receipt' });
+    if (typeof root.SB === 'undefined' || !root.SB.rpc) return Promise.resolve({ ok: false, error: 'no_sb' });
+    return root.SB.rpc('void_receipt_settlement', { p_receipt_id: receiptId })
+      .then(function (r) { return r && r.error ? { ok: false, error: r.error.message } : { ok: true, data: r && r.data }; });
+  }
   function refund() { return Promise.resolve(DISABLED); }  /* later PR */
 
   var ReceiptSettlement = {
-    version: 4, enabled: enabled,
+    version: 6, enabled: enabled,
     buildDestinations: buildDestinations, mountInReceiptForm: mountInReceiptForm,
     post: post, postFromForm: postFromForm, cancel: cancel, refund: refund
   };
