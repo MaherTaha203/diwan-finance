@@ -199,12 +199,32 @@ const FIN={
       perYear[y].due=r2(perYear[y].due+due);
       perYear[y].remaining_seed=r2(perYear[y].remaining_seed+Math.max(0,due-paid));
     });
+    /* ═══ P-RECEIPT-ALLOCATION · PR-5 — Consumer Seam (single read authority) ═══
+       memberAllocation is the ONLY reader of recorded settlement attribution
+       (DB.allocation_records, source_kind='receipt_settlement'). Flag-gated and
+       per-receipt-exclusive: a receipt WITH settlement lines is attributed by
+       those lines (and excluded from the legacy pool); legacy receipts keep the
+       oldest-first FD-002 waterfall. Only non-deleted receipts' lines count
+       (cancellation-aware). NEUTRAL / byte-identical when the flag is OFF or no
+       settlement rows exist. Does NOT touch totals, finalBalance, FD-002 math,
+       paid_amount_ils, or member_subscriptions. */
+    const _rsOn=(typeof window!=='undefined'&&window.RECEIPT_ALLOCATION_ENABLED===true);
+    const _explRcpt={}, _explYear={}; let _explHist=0;
+    if(_rsOn){
+      const _liveIds={}; DB.receipts.forEach(r=>{ if(!r.is_deleted&&r.member_id===memberId) _liveIds[r.id]=true; });
+      (DB.allocation_records||[]).forEach(a=>{
+        if(!a||a.source_kind!=='receipt_settlement'||a.member_id!==memberId||!_liveIds[a.source_ref]) return;
+        const amt=r2(Number(a.amount_allocated||0)); _explRcpt[a.source_ref]=true;
+        if(a.obligation_kind==='due'&&a.year!=null&&perYear[Number(a.year)]) _explYear[Number(a.year)]=r2((_explYear[Number(a.year)]||0)+amt);
+        else if(a.obligation_kind==='historical') _explHist=r2(_explHist+amt);
+      });
+    }
     const q4=DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection'&&r.member_id===memberId)
       .reduce((s,r)=>s+FIN.amountOf(r),0);
     let histSeed=r2(Number(m.historical_balance_ils||0)-Number(m.historical_payments_ils||0)-q4);
     if(histSeed<0){ pool=r2(pool-histSeed); histSeed=0; }          /* over-collected history → pool */
-    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId)
-      .reduce((s,r)=>s+FIN.amountOf(r),0);
+    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId&&!_explRcpt[r.id])
+      .reduce((s,r)=>s+FIN.amountOf(r),0);   /* PR-5: explicitly-settled receipts are attributed by their lines, not pooled */
     const donSettled=Number(FIN.allocateFoodDonations().perMember[memberId]||0);
     /* CA-007 write-offs (IG-008 conformance): a debt write-off resolves the
        receivable exactly like a non-cash credit (enters the FD-002 pool), and a
@@ -218,10 +238,15 @@ const FIN={
     const refunded=((typeof DB!=='undefined'&&DB.refunds)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId)
       .reduce((s,r)=>s+FIN.amountOf(r),0);
     pool=r2(pool+liveFood+donSettled+debtWO-creditWO-refunded);
-    const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),remaining:perYear[y].remaining_seed,createdAt:y+'-01-01'}));
-    if(histSeed>0) obligations.push({id:'hist',kind:'historical',remaining:histSeed,createdAt:'2000-01-01'});
+    /* PR-5 — apply explicit settlement FIRST: pre-seed per-year allocated + hist,
+       and let the legacy pool cover only the RESIDUAL obligation. Neutral when OFF
+       (all explicit values are 0 ⇒ byte-identical to the legacy computation). */
+    Object.keys(perYear).forEach(y=>{ perYear[y].allocated=r2(_explYear[y]||0); });
+    const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),remaining:Math.max(r2(perYear[y].remaining_seed-(perYear[y].allocated||0)),0),createdAt:y+'-01-01'}));
+    const _histResidual=Math.max(r2(histSeed-_explHist),0);
+    if(_histResidual>0) obligations.push({id:'hist',kind:'historical',remaining:_histResidual,createdAt:'2000-01-01'});
     const eng=(typeof window!=='undefined'&&window.MODEL2Allocation)||null;
-    let creditRemaining=pool, histAllocated=0;
+    let creditRemaining=pool, histAllocated=r2(_explHist);
     if(eng&&pool>0&&obligations.length){
       const res=eng.computeAllocation({currentYear:new Date().getFullYear(),amount:pool,obligations});
       res.allocations.forEach(a=>{
