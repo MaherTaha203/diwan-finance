@@ -211,12 +211,20 @@ const FIN={
        OFF or no settlement rows exist. Does NOT touch totals, finalBalance,
        FD-002 math, paid_amount_ils, or member_subscriptions. */
     const _rsOn=(typeof window!=='undefined'&&window.RECEIPT_ALLOCATION_ENABLED===true);
-    const _explRcpt={}, _explYear={}; let _explHist=0;
+    /* _explAll: every receipt that carries ANY settlement line (active, voided, or
+       refunded) — an explicit-settlement receipt whose money is described SOLELY by
+       its lines, so it is excluded from the FD-002 pool entirely and its refunds are
+       reversed by un-attributing its lines (PR-7), never by the pool. _explYear/
+       _explHist accumulate only ACTIVE lines' attribution. */
+    const _explAll={}, _explYear={}; let _explHist=0;
     if(_rsOn){
       const _liveIds={}; DB.receipts.forEach(r=>{ if(!r.is_deleted&&r.member_id===memberId) _liveIds[r.id]=true; });
       (DB.allocation_records||[]).forEach(a=>{
-        if(!a||a.source_kind!=='receipt_settlement'||a.member_id!==memberId||!_liveIds[a.source_ref]||a.voided_at) return;
-        const amt=r2(Number(a.amount_allocated||0)); _explRcpt[a.source_ref]=true;
+        if(!a||a.source_kind!=='receipt_settlement'||a.member_id!==memberId||!_liveIds[a.source_ref]) return;
+        _explAll[a.source_ref]=true;                 /* explicit-settlement receipt (any line) */
+        if(a.voided_at) return;                       /* PR-6: cancelled receipt ⇒ line voided */
+        if(a.refunded_at) return;                     /* PR-7: refunded ⇒ line reversed (attribution un-done) */
+        const amt=r2(Number(a.amount_allocated||0));
         if(a.obligation_kind==='due'&&a.year!=null&&perYear[Number(a.year)]) _explYear[Number(a.year)]=r2((_explYear[Number(a.year)]||0)+amt);
         else if(a.obligation_kind==='historical') _explHist=r2(_explHist+amt);
       });
@@ -225,8 +233,8 @@ const FIN={
       .reduce((s,r)=>s+FIN.amountOf(r),0);
     let histSeed=r2(Number(m.historical_balance_ils||0)-Number(m.historical_payments_ils||0)-q4);
     if(histSeed<0){ pool=r2(pool-histSeed); histSeed=0; }          /* over-collected history → pool */
-    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId&&!_explRcpt[r.id])
-      .reduce((s,r)=>s+FIN.amountOf(r),0);   /* PR-5: explicitly-settled receipts are attributed by their lines, not pooled */
+    const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId&&!_explAll[r.id])
+      .reduce((s,r)=>s+FIN.amountOf(r),0);   /* PR-5/PR-7: explicitly-settled receipts are attributed by their lines, never pooled */
     const donSettled=Number(FIN.allocateFoodDonations().perMember[memberId]||0);
     /* CA-007 write-offs (IG-008 conformance): a debt write-off resolves the
        receivable exactly like a non-cash credit (enters the FD-002 pool), and a
@@ -236,8 +244,15 @@ const FIN={
     const debtWO=wos.filter(r=>r.movement_type==='debt_write_off').reduce((s,r)=>s+FIN.amountOf(r),0);
     const creditWO=wos.filter(r=>r.movement_type==='credit_write_off').reduce((s,r)=>s+FIN.amountOf(r),0);
     /* FD-009 (IG-012): a member-linked refund takes paid money back — it leaves
-       the credit pool, recreating debt through the same FD-002 waterfall. */
-    const refunded=((typeof DB!=='undefined'&&DB.refunds)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId)
+       the credit pool, recreating debt through the same FD-002 waterfall.
+       PR-7 (allocation-aware): a refund AGAINST an explicit-settlement receipt is
+       reversed by un-attributing its refunded settlement lines (above), so it must
+       NOT also leave the pool — that money was never pooled. Only LEGACY refunds
+       (origin not an explicit receipt) reduce the pool. Flag OFF ⇒ _explAll empty
+       ⇒ every refund counts, byte-identical to today. memberStatement is untouched:
+       its finalBalance still recreates debt for EVERY refund (the correct total). */
+    const refunded=((typeof DB!=='undefined'&&DB.refunds)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId
+        &&!(_rsOn&&r.origin_receipt_id&&_explAll[r.origin_receipt_id]))
       .reduce((s,r)=>s+FIN.amountOf(r),0);
     pool=r2(pool+liveFood+donSettled+debtWO-creditWO-refunded);
     /* PR-5 — apply explicit settlement FIRST: pre-seed per-year allocated + hist,

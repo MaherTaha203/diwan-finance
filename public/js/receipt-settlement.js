@@ -19,9 +19,13 @@
               and NEVER writes paid_amount_ils / member_subscriptions. Invoked by
               BusinessOps.cancelVoucher (BO-03) only, after the receipt is soft-
               deleted, and only for a receipt that carries explicit settlement.
-   refund() remains a disabled stub (later PR).
+   refund() → SB.rpc('refund_receipt_settlement', …)  — the SOLE client caller of
+              THE single refund-reversal authority. It reverses exactly the SELECTED
+              settlement lines of the refunded receipt (full = all, partial = the
+              chosen lines) and NEVER writes paid_amount_ils / member_subscriptions.
+              Invoked by BusinessOps.refundReceipt (BO-11) only.
 
-   Reverting PR-4/PR-6 = flag stays OFF (already default) ⇒ behaviour is today's.
+   Reverting PR-4/PR-6/PR-7 = flag stays OFF (default) ⇒ behaviour is today's.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -121,10 +125,22 @@
     return root.SB.rpc('void_receipt_settlement', { p_receipt_id: receiptId })
       .then(function (r) { return r && r.error ? { ok: false, error: r.error.message } : { ok: true, data: r && r.data }; });
   }
-  function refund() { return Promise.resolve(DISABLED); }  /* later PR */
+  /* THE settlement refund-reversal call — SB.rpc ONLY, the single client caller of
+     the sole refund-reversal authority. Reverses exactly the selected settlement
+     lines of the refunded receipt: lineIds omitted/empty ⇒ full refund (all active
+     lines); a list ⇒ partial refund (only those lines). No guessing, no
+     redistribution, no reconstruction. */
+  function refund(receiptId, lineIds) {
+    if (!enabled()) return Promise.resolve(DISABLED);
+    if (!receiptId) return Promise.resolve({ ok: false, error: 'no_receipt' });
+    if (typeof root.SB === 'undefined' || !root.SB.rpc) return Promise.resolve({ ok: false, error: 'no_sb' });
+    var ids = (lineIds && lineIds.length) ? lineIds : null;
+    return root.SB.rpc('refund_receipt_settlement', { p_receipt_id: receiptId, p_line_ids: ids })
+      .then(function (r) { return r && r.error ? { ok: false, error: r.error.message } : { ok: true, data: r && r.data }; });
+  }
 
   var ReceiptSettlement = {
-    version: 6, enabled: enabled,
+    version: 7, enabled: enabled,
     buildDestinations: buildDestinations, mountInReceiptForm: mountInReceiptForm,
     post: post, postFromForm: postFromForm, cancel: cancel, refund: refund
   };
