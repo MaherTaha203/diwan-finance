@@ -58,6 +58,9 @@ window.openRec=function(fund='food'){
   const funSel=document.getElementById('rec-fund');
   if(funSel){funSel.value=fund;window.onRecFundChange();}
   document.getElementById('rec-date').value=today();
+  /* P-RECEIPT-ALLOCATION · PR-4 — mount the Settlement Editor ONLY when the flag
+     is ON (default OFF ⇒ this is a no-op and the modal is byte-identical). */
+  if(window.ReceiptSettlement && window.ReceiptSettlement.enabled()){ try{ window.ReceiptSettlement.mountInReceiptForm(); }catch(_){} }
 };
 window.openPay=function(fund='food'){
   if(!can.write()){toast(window.t('errors.no_permission_add'),'err');return;}
