@@ -342,7 +342,7 @@
      FD-009 (IG-012): the member-debt effect of a member-linked refund lives in the
      engine at read time (FIN.memberStatement/memberAllocation) — the refund row
      recreates the member's debt on the refund date; nothing extra is written here. */
-  async function refundReceipt({ originId, amountILS, reason, logLabel } = {}) {
+  async function refundReceipt({ originId, amountILS, reason, logLabel, settlementLineIds } = {}) {
     var RE = (typeof window !== 'undefined' && window.RefundEngine) || (typeof RefundEngine !== 'undefined' ? RefundEngine : null);
     if (!(typeof window !== 'undefined' && window.MODEL2_ALLOCATION_ENABLED)) return fail('E_DISABLED', 'الاسترداد غير مُفعَّل (MODEL2 V2.0)');
     if (!RE) return fail('E_ENGINE', 'محرّك الاسترداد غير متوفّر');
@@ -368,6 +368,30 @@
     const { data, error } = await SB.from('refunds').insert(payload).select().single();   /* dedicated table; payments untouched */
     if (error) return fail('E_WRITE', error.message);
     try { await logAction('add', logLabel || ('استرداد سند ' + (origin.no || originId) + ' · ' + res.row.amount_ils), 'refunds', data && data.id); } catch (_) {}
+
+    /* P-RECEIPT-ALLOCATION · PR-7 — reverse the refunded settlement lines through the
+       single refund-reversal authority (ReceiptSettlement.refund → the SECURITY
+       DEFINER RPC). No second refund authority: the money movement above is the
+       existing (legacy) refund; this only makes the reversed settlement lines
+       inactive so the read seam un-attributes exactly what was refunded. Runs ONLY
+       when the flag is ON and only for an explicit-settlement origin (manual_allocation).
+       A FULL refund reverses ALL lines (null); a PARTIAL refund reverses only the
+       SELECTED lines (settlementLineIds) — no guessing. An origin with no active
+       settlement lines is a harmless no-op (settlement_refund_none, swallowed). Flag
+       OFF ⇒ this block is dead ⇒ byte-identical, and legacy refunds are unchanged. A
+       reversal failure never corrupts totals: memberStatement recreates the debt for
+       every refund regardless. */
+    if (origin.manual_allocation
+        && typeof window !== 'undefined' && window.RECEIPT_ALLOCATION_ENABLED === true
+        && window.ReceiptSettlement && typeof window.ReceiptSettlement.refund === 'function') {
+      const _lines = res.isFull ? null : (Array.isArray(settlementLineIds) && settlementLineIds.length ? settlementLineIds : null);
+      if (res.isFull || _lines) {
+        try {
+          const rr = await window.ReceiptSettlement.refund(originId, _lines);
+          if (rr && rr.ok) { try { await logAction('edit', `عكس أسطر التسوية للاسترداد — السند ${origin.no}`, 'allocation_records', originId); } catch (_) {} }
+        } catch (_) { /* legacy refund money stands; read seam handles attribution */ }
+      }
+    }
     return { ok: true, data, no: payload.no, isFull: res.isFull, remainingAfter: res.remainingAfter };
   }
 
