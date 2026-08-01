@@ -90,4 +90,18 @@ Both share **one** constitutional root: **the adopted truth (`historical_subscri
 **The proof, stated once:** the money is wrong *before* any report runs, because the system trusts the raw imported *amount* over the owner's adopted *truth*. Adoption today confers presentation authority but **not** financial authority — and that gap, not the Annual Debt report, is where the problem actually begins.
 
 ---
+
+## Addendum — consumption vs. conversion (precision correction)
+
+An earlier phrasing called `memberStatement()` "the first *consumer* of the wrong value." That is imprecise and is corrected here: **`memberStatement()` is not a consumer of a value produced elsewhere — it is itself a *conversion* site.** There is **no separate converter component**; the conversion is **inlined** at the point each function reads the raw frozen field.
+
+- **The divergence is the conversion, not the consumption.** The constitutional violation is the **act of classifying `paid_amount_ils` as a `paid` (payment) movement** — the instant a frozen, adopted historical snapshot is admitted into the engine as **money** indistinguishable from a live ERP receipt.
+- **Site 1 — `memberStatement` (`fin.js:62` → `114-115`):** stamps the snapshot `cls:'paid'` and nets it **fungibly across all years** in `finalBalance`. This is a conversion (snapshot → member-level fungible credit), and it is the **upstream-most** one (its `finalBalance` feeds `memberAllocation.outstanding`, `fin.js:241`).
+- **Site 2 — `memberAllocation` (`fin.js:196-197`):** reads the same raw field and pools the overpayment into the FD-002 unattributed pool, which the waterfall then **distributes** to specific other years. This is the literal *"convert into a **distributable** ERP payment"* act.
+- These two are **independent siblings**, each reading `member_subscriptions.paid_amount_ils` directly — **not** a producer→consumer chain. Neither consults `historical_subscription_truth`.
+
+**Precise answer to the question "is `memberStatement` only the first consumer, or is the first divergence the place that turns `paid_amount_ils` into distributable ERP payments?":**
+It is the **conversion** that is the first divergence — and `memberStatement` is one of the two conversion sites (the upstream-most), **not** a mere consumer. If a single narrowest line is wanted: *fungible payment at all* → `fin.js:62`; *distributable across years* → `fin.js:197`. Both share the one root: **the frozen adopted import is reclassified as money while the adopted-truth record has no authority over it.**
+
+---
 **Study only — no code, no architecture, no tables, no plan. `fin.js` at baseline; FD-002 / Allocation Engine / DB untouched.**
