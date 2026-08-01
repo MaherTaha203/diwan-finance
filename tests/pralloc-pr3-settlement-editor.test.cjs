@@ -72,11 +72,12 @@ const src = read(P('settlement-editor.js')).replace(/\/\*[\s\S]*?\*\//g, '').rep
 ok(!/\bSB\b|\.rpc\(|create_receipt_with_settlement|allocation_records|\.insert\(|\.update\(|\.upsert\(/.test(src), 'module never persists / calls the RPC / writes allocation_records');
 ok(!/\bFIN\b|memberAllocation|memberStatement|debtReportRows|paid_amount_ils|BusinessOps\./.test(src), 'module references no FIN / BusinessOps / paid_amount_ils symbol');
 
-/* no runtime file mounts/consumes the editor */
+/* the editor's ONLY mounter is the flag-gated settlement wiring module (PR-4) */
 const jsDir = path.join(__dirname, '..', 'public', 'js');
 let callers = fs.readdirSync(jsDir).filter(f => f.endsWith('.js') && f !== 'settlement-editor.js')
   .filter(f => /SettlementEditor\.(mount|computeState)\s*\(/.test(read(path.join(jsDir, f))));
-ok(callers.length === 0, 'no runtime file mounts the editor — found: [' + callers.join(', ') + ']');
+ok(callers.length === 1 && callers[0] === 'receipt-settlement.js',
+   'the editor is mounted only by receipt-settlement.js (flag-gated) — found: [' + callers.join(', ') + ']');
 
 /* feature flag still OFF (receipt-settlement.js from PR-1) */
 ok(/RECEIPT_ALLOCATION_ENABLED[\s\S]*?=\s*false/.test(read(P('receipt-settlement.js'))), 'feature flag still defaults OFF');

@@ -63,6 +63,24 @@ window.saveRec=async function(print=false){
   /* P0 — year-end lock also restricts CREATE (mirrors the edit/cancel guards). */
   if(voucherLocked(date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إنشاء سند بتاريخ ضمن سنة مقفلة','err'); return; }
 
+  /* P-RECEIPT-ALLOCATION · PR-4 — the SINGLE posting-path gate. When the feature
+     flag is ON, explicit settlement is the ONLY path: post through the atomic RPC
+     and RETURN — the legacy body below never executes (no dual write). When OFF
+     (default), this is a no-op and the legacy flow is byte-identical. */
+  if(window.ReceiptSettlement && window.ReceiptSettlement.enabled()){
+    let _pt=document.getElementById('rec-payer-type').value;
+    return window.ReceiptSettlement.postFromForm({
+      fund, payerType:_pt,
+      memberId:document.getElementById('rec-member')?.value||null,
+      payerName: _pt==='member'?gmn(document.getElementById('rec-member')?.value):(document.getElementById('rec-payer-name')?.value||''),
+      currency:document.getElementById('rec-currency').value,
+      amount:parseFloat(document.getElementById('rec-amount')?.value)||0,
+      amountILS:getILS('rec'), rate:getRate('rec'),
+      date, method:document.getElementById('rec-method').value||'cash',
+      notes:document.getElementById('rec-notes').value, print
+    });
+  }
+
   let payerName='';
   if(payerType==='member') payerName=gmn(memberId);
   else if(payerType==='contact') payerName=DB.contacts.find(c=>c.id===contactId)?.name||'';

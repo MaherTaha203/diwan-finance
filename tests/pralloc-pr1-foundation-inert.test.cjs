@@ -52,24 +52,20 @@ const RS = require(P('receipt-settlement.js'));
 
 ok(global.window.RECEIPT_ALLOCATION_ENABLED === false, 'Feature flag defaults OFF');
 ok(RS && RS.enabled() === false, 'ReceiptSettlement.enabled() === false');
-ok(RS.post().disabled === true && RS.cancel().disabled === true && RS.refund().disabled === true,
-   'post/cancel/refund return a disabled result (no work)');
+ok(typeof RS.post === 'function' && typeof RS.cancel === 'function' && typeof RS.refund === 'function',
+   'post/cancel/refund are defined');
 
 /* ── 3. Additive, non-overwriting BusinessOps integration ── */
 ok(global.window.BusinessOps.createVoucher() === 'ORIGINAL', 'existing BusinessOps.createVoucher is NOT overwritten');
-ok(typeof global.window.BusinessOps.postReceiptSettlement === 'function'
-   && global.window.BusinessOps.postReceiptSettlement().disabled === true,
-   'BusinessOps gains disabled settlement stubs (additive)');
+ok(typeof global.window.BusinessOps.postReceiptSettlement === 'function', 'BusinessOps gains settlement methods (additive)');
 
 /* ── 4. FIN is byte-identical AFTER the module loads (flag OFF == current) ── */
 const after = snap();
 ok(after === before, 'FIN outputs byte-identical with the module loaded (OFF) vs current system');
 
-/* ── 5. Module touches no FIN / DB / SB / report symbol (code only, comments stripped) ── */
-const stripJs = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
-const src = stripJs(read(P('receipt-settlement.js')));
-ok(!/\bSB\b|\.insert\(|\.update\(|\.delete\(|\.upsert\(|\.rpc\(/.test(src), 'module makes no database call');
-ok(!/\bFIN\b|memberAllocation|memberStatement|memberDelinquency|debtReportRows|\bDB\./.test(src), 'module references no FIN / DB read-model symbol');
+/* ── 5. All activation is keyed on the OFF-by-default flag (PR-4 wiring is flag-gated) ── */
+const src = read(P('receipt-settlement.js'));
+ok(/function enabled\(\)\s*\{\s*return root\.RECEIPT_ALLOCATION_ENABLED === true/.test(src), 'module keys all activation on the OFF-by-default flag');
 
 /* ── 6. Migration is additive-only and its RPC is an inert skeleton ── */
 const migDir = path.join(__dirname, '..', 'supabase', 'migrations');
@@ -95,7 +91,15 @@ for (const f of files) {
   const s = read(path.join(jsDir, f));
   if (/ReceiptSettlement\.(post|cancel|refund)\s*\(|postReceiptSettlement\s*\(|cancelReceiptSettlement\s*\(|refundReceiptSettlement\s*\(|create_receipt_with_settlement/.test(s)) callers.push(f);
 }
-ok(callers.length === 0, 'no runtime file calls the settlement interface or RPC — found: [' + callers.join(', ') + ']');
+ok(callers.length === 0, 'no runtime file calls the settlement interface directly (post/cancel/refund) — found: [' + callers.join(', ') + ']');
 
-console.log('\nPR-1 foundation inertness: ' + pass + ' passed, ' + fail + ' failed');
-process.exit(fail ? 1 : 0);
+/* ── 8. Behavioural OFF-inertness: flag OFF ⇒ post() calls no RPC and resolves disabled ── */
+(async function () {
+  global.window.RECEIPT_ALLOCATION_ENABLED = false;
+  let rpc = 0; global.window.SB = { rpc: function () { rpc++; return Promise.resolve({ data: {}, error: null }); } };
+  const r = await RS.post({ amount_ils: 100 }, [{ obligation_kind: 'due', year: 2026, amount_allocated: 100 }]);
+  ok(rpc === 0, 'flag OFF: post() calls no RPC (inert)');
+  ok(r && r.disabled === true, 'flag OFF: post() resolves disabled');
+  console.log('\nPR-1 foundation inertness: ' + pass + ' passed, ' + fail + ' failed');
+  process.exit(fail ? 1 : 0);
+})();

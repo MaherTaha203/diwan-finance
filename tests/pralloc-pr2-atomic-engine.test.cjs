@@ -39,11 +39,14 @@ ok(!/member_subscriptions/i.test(codeIdents), 'RPC never touches member_subscrip
 ok(/revoke all on function public\.create_receipt_with_settlement\(jsonb, jsonb\) from public, anon, authenticated/i.test(code),
    'RPC is REVOKED from public/anon/authenticated (uncallable by clients)');
 
-/* ── still no runtime caller anywhere (JS) ── */
+/* ── the RPC's ONLY caller is the flag-gated settlement wiring module (PR-4) ── */
 const jsDir = path.join(__dirname, '..', 'public', 'js');
 let callers = fs.readdirSync(jsDir).filter(f => f.endsWith('.js'))
   .filter(f => /create_receipt_with_settlement/.test(read(path.join(jsDir, f))));
-ok(callers.length === 0, 'no runtime JS calls create_receipt_with_settlement — found: [' + callers.join(', ') + ']');
+ok(callers.length === 1 && callers[0] === 'receipt-settlement.js',
+   'the RPC is called only by receipt-settlement.js (flag-gated) — found: [' + callers.join(', ') + ']');
+ok(/RECEIPT_ALLOCATION_ENABLED === true/.test(read(path.join(jsDir, 'receipt-settlement.js'))),
+   'that caller keys the call on the OFF-by-default flag');
 
 /* ── feature flag still defaults OFF ── */
 const rs = read(path.join(jsDir, 'receipt-settlement.js'));
