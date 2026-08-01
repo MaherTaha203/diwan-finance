@@ -82,6 +82,14 @@ async function loadAllData(){
     DB.contacts=r4.data||[];DB.annual=r5.data||[];DB.audit=r6.data||[];DB.subscriptions=r7.data||[];DB._alloc=null;
     DB.refunds=r8.data||[];DB.member_write_offs=r9.data||[];DB.internal_transfers=r10.data||[];DB.fiscal_snapshots=r11.data||[];
     DB.historical_subscription_truth=r12.data||[];
+    /* P-RECEIPT-ALLOCATION · PR-5 — load recorded settlement attribution ONLY when
+       the feature flag is ON. Consumed solely by FIN.memberAllocation (single reader).
+       When OFF: no query is issued and DB.allocation_records stays [] ⇒ the login
+       path and every balance are byte-identical to today. */
+    DB.allocation_records=[];
+    if(typeof window!=='undefined' && window.RECEIPT_ALLOCATION_ENABLED===true){
+      try{ const _ar=await SB.from('allocation_records').select('source_ref,source_kind,member_id,obligation_kind,year,amount_allocated').eq('source_kind','receipt_settlement'); DB.allocation_records=(_ar&&_ar.data)||[]; }catch(_){/* tolerant */}
+    }
     DB._loaded=true;   /* P0 — mark a successful load so read-only panels can tell "not loaded yet" from a genuine zero */
 }
 async function loadAll(){
