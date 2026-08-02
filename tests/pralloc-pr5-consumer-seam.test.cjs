@@ -74,14 +74,18 @@ ok(offBal === onBal, 'Case7 Golden Reference: outstanding identical regardless o
 ok(onBal === onFinal && offBal === offFinal, 'Case7: outstanding == memberStatement.finalBalance (totals untouched)');
 ok(onFinal === offFinal, 'Case7: finalBalance byte-identical ON vs OFF (memberStatement not modified)');
 
-/* ── Single-reader proof: fin.js is the sole CONSUMER of DB.allocation_records;
-      data.js only ASSIGNS it (the loader). No other file references it. ── */
+/* ── Single-ATTRIBUTION-reader proof: fin.js is the sole file that computes
+      attribution/balances from DB.allocation_records; data.js only ASSIGNS it
+      (loader); refund-ui.js (PR-7A) only PRESENTS rows in the refund dialog and
+      computes NO attribution. No other file references it. ── */
 const jsDir = path.join(__dirname, '..', 'public', 'js');
+const PRESENTATION = ['data.js', 'refund-ui.js'];   /* loader + refund dialog display — non-attribution */
 let refs = fs.readdirSync(jsDir).filter(f => f.endsWith('.js'))
   .filter(f => /DB\.allocation_records/.test(read(path.join(jsDir, f))));
-ok(refs.length === 2 && refs.indexOf('fin.js') >= 0 && refs.indexOf('data.js') >= 0,
-   'DB.allocation_records referenced only by fin.js (reader) + data.js (loader) — found: [' + refs.join(', ') + ']');
+ok(refs.indexOf('fin.js') >= 0 && refs.every(f => f === 'fin.js' || PRESENTATION.indexOf(f) >= 0),
+   'DB.allocation_records read only by fin.js (attribution) + data.js (loader) + refund-ui.js (display) — found: [' + refs.join(', ') + ']');
 ok(/\(DB\.allocation_records\|\|\[\]\)\.forEach/.test(read(P('fin.js'))), 'fin.js is the CONSUMER (iterates DB.allocation_records)');
+ok(!/perYear|finalBalance|creditRemaining|computeAllocation/.test(read(P('refund-ui.js'))), 'refund-ui.js computes NO attribution/balances (presentation only)');
 const dataSrc = read(P('data.js'));
 ok(!/DB\.allocation_records\)?\.(forEach|filter|map|reduce|find|some)/.test(dataSrc), 'data.js only ASSIGNS/loads DB.allocation_records (never consumes it)');
 /* data.js loads it; allocation-integration.js writes it; neither reads it for attribution */

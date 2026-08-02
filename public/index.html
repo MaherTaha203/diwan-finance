@@ -989,6 +989,13 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   إلغاء السند
 </button>
 
+<!-- P-RECEIPT-ALLOCATION · PR-7A — Refund action (hidden unless the receipt is
+     refund-eligible; toggled by editRec via RefundUI.syncEditButton). -->
+<button class="btn warn" id="edit-rec-refund-btn" style="display:none" onclick="window.openRefund(document.getElementById('edit-rec-id').value)">
+  <i class="ti ti-arrow-back-up"></i>
+  استرداد
+</button>
+
 <button class="btn" onclick="window.closeM()">
   إلغاء
 </button>
@@ -996,6 +1003,11 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   </div>
 </div>
 
+  <!-- P-RECEIPT-ALLOCATION · PR-7A — Refund dialog (populated by refund-ui.js). -->
+  <div class="modal" id="m-refund" style="display:none;max-width:640px" role="dialog" aria-modal="true" aria-labelledby="m-refund-title">
+    <div class="mhd"><span class="mtt" id="m-refund-title"><span class="mico"><i class="ti ti-arrow-back-up"></i></span>استرداد إيصال · Refund</span><button class="btn ghost" onclick="window.closeM()" aria-label="إغلاق"><i class="ti ti-x"></i></button></div>
+    <div class="mbd"><div id="refund-body"></div></div>
+  </div>
 
   <!-- Edit Payment -->
   <div class="modal" id="m-edit-pay" style="display:none;max-width:420px">
@@ -1248,6 +1260,7 @@ async function updateLoginMemberCount() {
 <script defer src="/js/operations.js?v=2.0"></script>
 <script defer src="/js/receipt-settlement.js?v=0.1"></script>
 <script defer src="/js/settlement-editor.js?v=0.1"></script>
+<script defer src="/js/refund-ui.js?v=0.1"></script>
 <script defer src="/js/member-lifecycle.js?v=3.0"></script>
 <script defer src="/js/collection-workspace.js?v=3.0"></script>
 <script defer src="/js/payment-workspace.js?v=3.0"></script>

@@ -98,9 +98,11 @@ const jsFiles = fs.readdirSync(jsDir).filter(f => f.endsWith('.js'));
 const callersOf = re => jsFiles.filter(f => re.test(read(path.join(jsDir, f))));
 
 const readers = jsFiles.filter(f => /DB\.allocation_records/.test(read(path.join(jsDir, f))));
-ok(readers.length === 2 && readers.includes('fin.js') && readers.includes('data.js'),
-   'ONE read authority: DB.allocation_records only in fin.js (reader) + data.js (loader) — [' + readers.join(', ') + ']');
+const nonAttribution = ['data.js', 'refund-ui.js'];   /* loader + PR-7A refund-dialog display */
+ok(readers.includes('fin.js') && readers.every(f => f === 'fin.js' || nonAttribution.includes(f)),
+   'ONE attribution reader: fin.js; non-attribution = data.js (loader) + refund-ui.js (display) — [' + readers.join(', ') + ']');
 ok(/\(DB\.allocation_records\|\|\[\]\)\.forEach/.test(read(P('fin.js'))), '  …fin.js is the consumer (memberAllocation)');
+ok(!/perYear|finalBalance|computeAllocation/.test(read(P('refund-ui.js'))), '  …refund-ui.js computes no attribution (presentation only)');
 
 const writeCallers = callersOf(/create_receipt_with_settlement/);
 ok(writeCallers.length === 1 && writeCallers[0] === 'receipt-settlement.js', 'ONE write authority: create RPC called only by receipt-settlement.js — [' + writeCallers.join(', ') + ']');
