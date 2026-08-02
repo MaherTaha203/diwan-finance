@@ -727,6 +727,9 @@ window.editRec=function(id){
   }
 
   window._voucherOwnBanner('rec',r,'receipt');
+  /* P-RECEIPT-ALLOCATION · PR-7A — show the Refund action only for refund-eligible
+     receipts (UI-only; RefundUI decides eligibility; inert when the flag is OFF). */
+  try{ if(window.RefundUI&&window.RefundUI.syncEditButton) window.RefundUI.syncEditButton(r); }catch(_){}
   window.openM('edit-rec');
 };
 /* AUTH-003 — ownership-scoped edit gate (mirrors RLS + the DB ownership trigger):

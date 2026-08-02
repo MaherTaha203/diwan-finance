@@ -2877,3 +2877,43 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
     height:max-content;max-height:92dvh;border:0;border-radius:20px 20px 0 0;
     box-shadow:0 -18px 60px -20px rgba(8,14,24,.5)}
 }
+
+/* ═══ P-RECEIPT-ALLOCATION · PR-7A — Refund dialog (UI only; reuses design tokens) ═══ */
+.btn.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.btn.warn:hover{border-color:var(--warn)}
+.rfd-meta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-bottom:12px}
+.rfd-meta>div{display:flex;flex-direction:column;gap:2px;min-width:120px}
+.rfd-k{font-size:11px;color:var(--tx3)}
+.rfd-v{font-size:14px;font-weight:600;color:var(--tx)}
+.rfd-modes{display:flex;gap:8px;margin-bottom:10px}
+.rfd-tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
+.rfd-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:520px}
+.rfd-table th{text-align:start;padding:8px 10px;background:var(--soft);color:var(--tx2);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+.rfd-table td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--tx)}
+.rfd-table tr:last-child td{border-bottom:none}
+.rfd-num{text-align:end;font-family:var(--fmono)}
+.rfd-c{width:34px;text-align:center}
+.rfd-row.rfd-disabled{opacity:.55}
+.rfd-lock{color:var(--tx3)}
+.rfd-badge{font-size:10.5px;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.rfd-badge.rfd-active{background:var(--pos-bg);color:var(--pos)}
+.rfd-badge.rfd-refunded{background:var(--warn-bg);color:var(--warn)}
+.rfd-badge.rfd-voided{background:var(--neg-bg);color:var(--neg)}
+.rfd-notes{color:var(--tx2);max-width:160px}
+.rfd-reason{margin-bottom:12px}
+.rfd-reason label{display:block;font-size:12px;color:var(--tx2);margin-bottom:4px}
+.rfd-reason textarea{width:100%;padding:8px 10px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-family:var(--fn);resize:vertical}
+.rfd-summary{display:flex;flex-wrap:wrap;gap:8px 20px;padding:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg3);margin-bottom:6px}
+.rfd-summary>div{display:flex;flex-direction:column;gap:2px}
+.rfd-summary span{font-size:11px;color:var(--tx3)}
+.rfd-summary b{font-size:14px;color:var(--tx);font-family:var(--fmono)}
+.rfd-state.ok b{color:var(--pos)} .rfd-state.bad b{color:var(--danger)}
+.rfd-actions{padding-inline:0;background:transparent;border-top:none;margin-top:6px}
+.rfd-confirm-lines ul{margin:6px 0 0;padding-inline-start:18px} .rfd-confirm-lines li{margin:2px 0;font-size:13px}
+.rfd-confirm-total{margin-top:10px;font-size:14px} .rfd-confirm-total b{font-family:var(--fmono)}
+.rfd-confirm-reason{margin-top:8px;font-size:12.5px;color:var(--tx2)}
+@media (max-width:560px){
+  .rfd-meta>div{min-width:44%}
+  .rfd-table{font-size:12px}
+  .rfd-actions .btn{flex:1}
+}
