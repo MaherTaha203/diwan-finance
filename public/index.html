@@ -1237,6 +1237,14 @@ async function updateLoginMemberCount() {
 })();
 </script>
 
+<!-- ═══ P-RECEIPT-ALLOCATION · PRODUCTION ACTIVATION ═══
+     The official activation path: the bootstrap feature flag is turned ON here,
+     before the deferred bundle loads, so every Receipt Allocation consumer
+     (posting, Settlement Editor, allocation reading, cancellation) evaluates it as
+     active at startup. Refund stays OUT of scope: MODEL2_ALLOCATION_ENABLED is
+     intentionally NOT set (remains OFF), so no Refund UI appears and Receipt
+     Cancellation is the only operational reversal. To roll back, set this to false. -->
+<script>window.RECEIPT_ALLOCATION_ENABLED = true;</script>
 <script defer src="/js/brand-assets.js?v=1.0"></script>
 <script defer src="/js/utils.js?v=2.2"></script>
 <script defer src="/js/i18n.js?v=2.3"></script>
