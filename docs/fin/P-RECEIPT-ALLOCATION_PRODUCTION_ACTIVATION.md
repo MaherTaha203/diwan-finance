@@ -14,7 +14,9 @@ Repository: `diwan-finance` · target branch: `main`.
 | Refund | **OUT OF SCOPE** — separate flag, stays OFF; no UI entry point on activation |
 
 ## 2. Activation Mechanism (official production activation path)
-Receipt Allocation is activated by setting the runtime flag **`window.RECEIPT_ALLOCATION_ENABLED = true`** at application bootstrap (before the JS bundle loads). This is a deliberate deploy‑time toggle — there is no separate settings/env surface, by design (no new activation architecture was introduced).
+The official Production Activation mechanism for this project is the bootstrap feature flag (`window.RECEIPT_ALLOCATION_ENABLED`), which is evaluated by all Receipt Allocation consumers during application startup. This project intentionally provides no runtime settings or environment-based activation surface.
+
+Activation therefore means setting `window.RECEIPT_ALLOCATION_ENABLED = true` at application bootstrap (before the JS bundle loads); it is a deliberate, reversible deploy‑time toggle.
 
 - `RECEIPT_ALLOCATION_ENABLED = true` → activates posting (atomic RPC), the Settlement Editor, allocation reading, and settlement‑aware cancellation.
 - `MODEL2_ALLOCATION_ENABLED` → **leave unset/false.** It independently gates refund execution; keeping it off keeps refund entirely dormant. The refund UI is now also gated on this flag, so **no refund control appears** while Receipt Allocation is active.
