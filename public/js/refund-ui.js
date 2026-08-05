@@ -20,7 +20,15 @@
   if (!root) return;
   var doc = (typeof document !== 'undefined') ? document : null;
 
-  function enabled() { return !!(root.ReceiptSettlement && root.ReceiptSettlement.enabled && root.ReceiptSettlement.enabled()); }
+  /* Refund is OUTSIDE the Receipt-Allocation production activation scope. The refund
+     UI appears ONLY when refund EXECUTION is enabled (MODEL2_ALLOCATION_ENABLED),
+     which is independent of the allocation activation flag. So activating Receipt
+     Allocation (RECEIPT_ALLOCATION_ENABLED) does NOT surface any refund entry point;
+     cancellation remains the only operational reversal path. Both flags default OFF. */
+  function enabled() {
+    return !!(root.ReceiptSettlement && root.ReceiptSettlement.enabled && root.ReceiptSettlement.enabled())
+      && root.MODEL2_ALLOCATION_ENABLED === true;
+  }
   function isAdmin() { return !!(root.can && typeof root.can.admin === 'function' && root.can.admin()); }
   function LANG() { return root.LANG === 'en' ? 'en' : 'ar'; }
   function L(ar, en) { return LANG() === 'en' ? en : ar; }

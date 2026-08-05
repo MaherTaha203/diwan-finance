@@ -14,6 +14,7 @@ const read = p => fs.readFileSync(p, 'utf8');
 /* ---- load the module against a mock window (no DOM; eligible() needs no DOM) ---- */
 global.window = {};
 global.window.RECEIPT_ALLOCATION_ENABLED = true;
+global.window.MODEL2_ALLOCATION_ENABLED = true;   /* refund execution flag — refund UI is out of the allocation-activation scope and requires this */
 let adminFlag = true, flagOn = true;
 global.window.ReceiptSettlement = { enabled: () => flagOn };
 global.window.can = { admin: () => adminFlag };
@@ -28,6 +29,8 @@ setDB([R()], [AL('R')]);
 ok(RefundUI.eligible(global.window.DB.receipts[0]) === true, 'eligible: posted receipt with an active settlement line + admin + flag ON');
 
 flagOn = false; ok(RefundUI.eligible(R()) === false, 'NOT eligible: feature flag OFF'); flagOn = true;
+/* PR-7A activation scope: refund UI stays hidden unless refund execution (MODEL2) is ON */
+global.window.MODEL2_ALLOCATION_ENABLED = false; ok(RefundUI.eligible(R()) === false, 'NOT eligible: refund execution flag (MODEL2_ALLOCATION_ENABLED) OFF — refund out of allocation activation'); global.window.MODEL2_ALLOCATION_ENABLED = true;
 adminFlag = false; ok(RefundUI.eligible(R()) === false, 'NOT eligible: non-admin user'); adminFlag = true;
 
 setDB([R({ is_deleted: true })], [AL('R')]);
