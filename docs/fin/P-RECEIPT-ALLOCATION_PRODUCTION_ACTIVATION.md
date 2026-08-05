@@ -1,8 +1,8 @@
 # P-RECEIPT-ALLOCATION — Production Activation Package
 
-**Scope‑final release package for activating Receipt Allocation in production. Refund is COMPLETELY OUT OF SCOPE and does not participate in this activation. Receipt Cancellation is the only operational reversal mechanism.**
+**Production Activation is IMPLEMENTED BY THIS PR.** The bootstrap feature flag `RECEIPT_ALLOCATION_ENABLED` is set ON in `public/index.html`, so on merge Receipt Allocation is active in production. Refund is COMPLETELY OUT OF SCOPE (`MODEL2_ALLOCATION_ENABLED` remains OFF, no Refund UI). Receipt Cancellation is the only operational reversal mechanism.
 
-Repository: `diwan-finance` · target branch: `main`.
+Repository: `diwan-finance` · target branch: `main` · activation carrier: this PR.
 
 ## 1. Activation Scope (owner‑final)
 | Capability | Status |
@@ -16,12 +16,10 @@ Repository: `diwan-finance` · target branch: `main`.
 ## 2. Activation Mechanism (official production activation path)
 The official Production Activation mechanism for this project is the bootstrap feature flag (`window.RECEIPT_ALLOCATION_ENABLED`), which is evaluated by all Receipt Allocation consumers during application startup. This project intentionally provides no runtime settings or environment-based activation surface.
 
-Activation therefore means setting `window.RECEIPT_ALLOCATION_ENABLED = true` at application bootstrap (before the JS bundle loads); it is a deliberate, reversible deploy‑time toggle.
+**This PR performs that activation:** `public/index.html` sets `window.RECEIPT_ALLOCATION_ENABLED = true` at bootstrap, before the deferred bundle loads, so every consumer evaluates it as active at startup. It remains a reversible toggle (set to `false` to roll back).
 
-- `RECEIPT_ALLOCATION_ENABLED = true` → activates posting (atomic RPC), the Settlement Editor, allocation reading, and settlement‑aware cancellation.
-- `MODEL2_ALLOCATION_ENABLED` → **leave unset/false.** It independently gates refund execution; keeping it off keeps refund entirely dormant. The refund UI is now also gated on this flag, so **no refund control appears** while Receipt Allocation is active.
-
-Both flags default OFF; nothing activates until the flag above is explicitly set.
+- `RECEIPT_ALLOCATION_ENABLED = true` (set by this PR) → activates posting (atomic RPC), the Settlement Editor, allocation reading, and settlement‑aware cancellation.
+- `MODEL2_ALLOCATION_ENABLED` → **intentionally NOT set (remains OFF).** It independently gates refund execution; keeping it off keeps refund entirely dormant. The refund UI is also gated on this flag, so **no refund control appears** while Receipt Allocation is active.
 
 ## 3. What activation does (verified against merged `main`)
 - **Single posting authority.** With the flag on, `saveRec` routes every receipt through `ReceiptSettlement.postFromForm` → `SB.rpc('create_receipt_with_settlement')` and returns; the legacy posting body never runs (`crud.js:70`, `receipt-settlement.js:90`). The atomic RPC is the only settlement writer; direct client writes are blocked by RLS (PR‑4).
@@ -36,11 +34,10 @@ Both flags default OFF; nothing activates until the flag above is explicitly set
    - `select column_name from information_schema.columns where table_name='allocation_records' and column_name in ('notes','voided_at');` → expect **2**.
    - Migrations present in the repo: `pralloc_pr1_foundation`, `pralloc_pr2_atomic_engine`, `pralloc_pr4_settlement_rls`, `pralloc_pr6_void` (the `pralloc_pr7_refund` migration is additive and harmless but **not required** for this scope).
 2. **Backup** — take/verify a current DB restore point.
-3. **Confirm flags** — `RECEIPT_ALLOCATION_ENABLED` will be set true at activation; `MODEL2_ALLOCATION_ENABLED` stays false.
-4. **Deploy** the merged code (no code change is required to keep refund dormant — the refund UI is now flag‑gated on the refund flag).
-5. **Enable** — set `RECEIPT_ALLOCATION_ENABLED = true` via the bootstrap and deploy.
-6. **Smoke test** on production with a controlled test member (Section 5).
-7. **Confirm no refund control** appears anywhere in the receipt UI.
+3. **Confirm flags** — `RECEIPT_ALLOCATION_ENABLED` is set true in code by this PR (`index.html`); `MODEL2_ALLOCATION_ENABLED` is not set (stays false).
+4. **Merge & deploy** this PR — merging is what activates Receipt Allocation in production (the flag is already ON in the bundle). No separate enable step is required.
+5. **Smoke test** on production with a controlled test member (Section 5).
+6. **Confirm no refund control** appears anywhere in the receipt UI.
 
 ## 5. Live Operational UAT Checklist (post‑activation)
 Perform as an administrator on the activated environment.
@@ -60,14 +57,16 @@ Perform as an administrator on the activated environment.
 3. No schema rollback is required; the additive columns/RPCs are harmless when unused.
 
 ## 7. GO‑LIVE Report
-- **Code state:** merged `main` @ `461e6f1` + this activation change (refund removed from the activation surface). Full automated suite: **80 green / 2 pre‑existing known‑red** (`business-operations-slice1`, `constitutional-explicit-q5`).
-- **In scope, verified wired:** posting (single atomic authority), Settlement Editor, allocation reading, cancellation (single reversal authority).
-- **Out of scope, confirmed dormant:** refund — separate flag OFF, and the refund UI is now gated on that flag, so activation exposes no refund path.
-- **Blockers to go‑live:** none architectural. Remaining are operational: confirm DB objects live, take backup, set the flag, run Section 5 UAT.
+- **Activation carrier:** THIS PR. `public/index.html` sets `RECEIPT_ALLOCATION_ENABLED = true` at bootstrap, so **merging this PR is the production activation** — Receipt Allocation becomes active on deploy with no separate enable step.
+- **Code state:** merged `main` @ `461e6f1` + this activation (flag ON + refund held out of the activation surface). Full automated suite: **80 green / 2 pre‑existing known‑red** (`business-operations-slice1`, `constitutional-explicit-q5`).
+- **In scope, active on merge:** posting (single atomic authority), Settlement Editor, allocation reading, cancellation (single reversal authority).
+- **Out of scope, confirmed dormant:** refund — `MODEL2_ALLOCATION_ENABLED` not set; the refund UI is gated on that flag, so activation exposes no refund path.
+- **Accounting:** no engine/authority/total change; existing balances unchanged (the read seam is neutral until settlement records exist).
+- **Blockers to go‑live:** none. Post‑merge operational steps: confirm DB objects live (Section 4.1), backup, run Section 5 UAT.
 - **Reversal:** single toggle (Section 6).
 
 ## 8. Owner Memo
-Receipt Allocation is ready for production activation. Activation is a single, reversible toggle (`RECEIPT_ALLOCATION_ENABLED = true`); it turns on explicit settlement posting, the editor, allocation‑aware reports, and settlement cancellation. It changes **workflow** (allocation becomes explicit at posting) but not **financial totals** — Final Balance, Treasury, Ledger, Historical Truth, `paid_amount_ils`, and `member_subscriptions` are unaffected except through the new settlement records. **Refund is deliberately excluded** from this activation: its execution flag stays off and its UI no longer appears, so **cancellation is the only reversal available to accountants.** Refund can be activated later as a separate decision without any further allocation work. To roll back at any time, set the flag to false and redeploy.
+Receipt Allocation is now activated **by this PR**: `RECEIPT_ALLOCATION_ENABLED` is set ON in the bundle, so merging turns on explicit settlement posting, the editor, allocation‑aware reports, and settlement cancellation in production. It changes **workflow** (allocation becomes explicit at posting) but not **financial totals** — Final Balance, Treasury, Ledger, Historical Truth, `paid_amount_ils`, and `member_subscriptions` are unaffected except through the new settlement records. **Refund is deliberately excluded**: its execution flag stays off and its UI does not appear, so **Receipt Cancellation is the only reversal available to accountants.** Refund can be activated later as a separate decision without any further allocation work. To roll back at any time, set the flag to false and redeploy.
 
 ---
 *Refund appears in this document only to state its exclusion. It is not part of Production Activation, the deployment checklist, the go‑live path, or the operational reversal mechanism.*
