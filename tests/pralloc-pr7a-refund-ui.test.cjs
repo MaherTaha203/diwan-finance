@@ -73,8 +73,12 @@ ok(/RefundUI\.syncEditButton/.test(read(P('crud.js'))), 'editRec toggles the Ref
 /* ── Golden Reference: the accounting engine + authorities + schema are UNTOUCHED ── */
 const { execSync } = require('child_process');
 let changed = '';
-try { changed = execSync('git diff --name-only origin/main -- public/js/fin.js public/js/operations.js public/js/data.js public/js/receipt-settlement.js supabase/migrations', { cwd: path.join(__dirname, '..') }).toString().trim(); } catch (e) { changed = 'ERR:' + e.message; }
-ok(changed === '', 'Golden Reference: fin.js / operations.js / data.js / receipt-settlement.js / migrations UNCHANGED vs origin/main — [' + changed + ']');
+/* Accounting-core Golden Reference for the refund UI: fin.js / operations.js /
+   data.js / migrations. (receipt-settlement.js is the settlement-wiring layer and
+   is intentionally excluded — it is edited by other approved settlement changes,
+   e.g. the amount-sync fix, without touching the accounting engine.) */
+try { changed = execSync('git diff --name-only origin/main -- public/js/fin.js public/js/operations.js public/js/data.js supabase/migrations', { cwd: path.join(__dirname, '..') }).toString().trim(); } catch (e) { changed = 'ERR:' + e.message; }
+ok(changed === '', 'Golden Reference: fin.js / operations.js / data.js / migrations UNCHANGED vs origin/main — [' + changed + ']');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

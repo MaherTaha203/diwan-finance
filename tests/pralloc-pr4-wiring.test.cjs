@@ -75,6 +75,41 @@ const RS = require(P('receipt-settlement.js'));
   ok(/grant execute on function public\.create_receipt_with_settlement\(jsonb, jsonb\) to authenticated/i.test(m), 'RPC granted to authenticated (activation)');
   ok(!/revoke[\s\S]*allocation_records[\s\S]*from authenticated/i.test(m) || true, 'MODEL2 non-settlement writes remain (scoped fence)');
 
+  /* ── 8. AMOUNT SYNC (fix): editor opts.receiptAmount tracks the live field ──
+     The editor mounts when the form opens (amount empty); it must then follow the
+     field as the accountant types, and Save must use the live amount. */
+  let amtVal = '0', listeners = [];
+  const amtEl = {
+    get value() { return amtVal; }, set value(v) { amtVal = v; }, style: {},
+    addEventListener: function (t, fn) { if (t === 'input') listeners.push(fn); },
+    removeEventListener: function (t, fn) { if (t === 'input') listeners = listeners.filter(f => f !== fn); },
+    fire: function () { listeners.slice().forEach(f => f()); }
+  };
+  global.document.getElementById = function (id) {
+    if (id === 'rec-amount') return amtEl;
+    if (id === 'rec-settlement') return { style: {} };
+    if (id === 'rec-member') return { value: 'M1', style: {} };
+    return { value: '', style: {} };
+  };
+  let capturedOpts = null;
+  global.window.SettlementEditor = { mount: function (slot, opts) { capturedOpts = opts; return {
+    getState: function () { return { canSave: Number(opts.receiptAmount) > 0, rows: [], receiptAmount: opts.receiptAmount }; },
+    refresh: function () {}
+  }; } };
+  global.window.getILS = function () { return Number(amtEl.value) || 0; };
+
+  amtVal = '0';
+  RS.mountInReceiptForm();
+  ok(capturedOpts && capturedOpts.receiptAmount === 0, 'sync: editor mounts with the current (empty) field amount = 0');
+  ok(listeners.length === 1, 'sync: exactly one input listener registered');
+  amtEl.value = '150'; amtEl.fire();
+  ok(capturedOpts.receiptAmount === 150, 'sync: opts.receiptAmount follows the field on input (0 → 150)');
+  RS.mountInReceiptForm();                         /* reopen */
+  ok(listeners.length === 1, 'sync: reopening does NOT add a duplicate listener (remove-before-add)');
+  amtEl.value = '175';                             /* change WITHOUT firing input */
+  await RS.postFromForm({ fund: 'food', payerType: 'member', memberId: 'M1', amount: 175, amountILS: 175, currency: 'ILS', rate: 1, date: '2026-06-01', method: 'cash', notes: '' });
+  ok(capturedOpts.receiptAmount === 175, 'sync: postFromForm refreshes opts.receiptAmount from the field before getState (final safety)');
+
   console.log('\nPR-4 wiring: ' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();

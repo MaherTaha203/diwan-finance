@@ -37,7 +37,20 @@
   var DISABLED = { ok: false, disabled: true, error: 'receipt_settlement_disabled' };
   function enabled() { return root.RECEIPT_ALLOCATION_ENABLED === true; }
 
-  var _editor = null;   /* the mounted SettlementEditor instance (when ON) */
+  var _editor = null;      /* the mounted SettlementEditor instance (when ON) */
+  var _editorOpts = null;  /* the SAME opts object the editor closes over — mutating
+                              opts.receiptAmount is picked up live by the editor's
+                              render()/getState() (no editor change needed). */
+
+  /* Keep the editor's receiptAmount in sync with the live receipt-amount field.
+     Stable module-scope handler ⇒ remove-before-add guarantees exactly ONE
+     listener across dialog reopens. The generic SettlementEditor is untouched:
+     the DOM/getILS coupling lives only here, in the integration layer. */
+  function _syncEditorAmount() {
+    if (!_editorOpts) return;
+    _editorOpts.receiptAmount = recAmount();
+    if (_editor && typeof _editor.refresh === 'function') _editor.refresh();
+  }
 
   /* Build the member's settlement destinations from FIN (read-only): each open
      subscription year (outstanding = remaining), the historical deficit, plus
@@ -75,11 +88,25 @@
     if (!slot) return null;
     var memberId = (document.getElementById('rec-member') || {}).value || null;
     slot.style.display = '';
-    _editor = root.SettlementEditor.mount(slot, {
+    /* Named opts kept by reference so the amount field can stay in sync without any
+       editor/computeState change (render/getState read opts.receiptAmount live). */
+    var opts = {
       receiptAmount: recAmount(),
       destinations: buildDestinations(memberId),
       lockedThroughYear: root.LOCKED_THROUGH_YEAR
-    });
+    };
+    _editorOpts = opts;
+    _editor = root.SettlementEditor.mount(slot, opts);
+    /* Sync opts.receiptAmount with the receipt-amount field on every change.
+       remove-before-add with the stable _syncEditorAmount reference guarantees
+       exactly ONE listener across reopens (no duplicates, no leak); it coexists
+       with the field's inline oninput=calcILS (a separate handler). */
+    var amtEl = document.getElementById('rec-amount');
+    if (amtEl && typeof amtEl.addEventListener === 'function') {
+      if (typeof amtEl.removeEventListener === 'function') amtEl.removeEventListener('input', _syncEditorAmount);
+      amtEl.addEventListener('input', _syncEditorAmount);
+    }
+    _syncEditorAmount();   /* reconcile now (covers an amount typed before mount) */
     return _editor;
   }
 
@@ -96,6 +123,9 @@
   function postFromForm(ctx) {
     ctx = ctx || {};
     if (!enabled()) return Promise.resolve(DISABLED);
+    /* Final safety sync: guarantee the editor's amount equals the live field at the
+       moment of Save, even if an input event was missed. Same by-reference opts. */
+    if (_editor && _editorOpts) _editorOpts.receiptAmount = recAmount();
     var st = _editor ? _editor.getState() : null;
     var toast = root.toast || function () {};
     if (!st || !st.canSave) { toast('التسوية غير مكتملة — راجع الأسطر', 'err'); return Promise.resolve({ ok: false, error: 'invalid_settlement' }); }
