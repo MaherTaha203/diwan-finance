@@ -61,6 +61,10 @@ window.openRec=function(fund='food'){
   /* P-RECEIPT-ALLOCATION · PR-4 — mount the Settlement Editor ONLY when the flag
      is ON (default OFF ⇒ this is a no-op and the modal is byte-identical). */
   if(window.ReceiptSettlement && window.ReceiptSettlement.enabled()){ try{ window.ReceiptSettlement.mountInReceiptForm(); }catch(_){} }
+  /* F-5 — mountInReceiptForm() shows the editor slot; re-apply the food-receipt UX so
+     the vestigial editor stays hidden for a member Food Receipt and the position card
+     reflects any preselected member. Presentation only. */
+  if(window.syncDeficitControl)window.syncDeficitControl();
 };
 window.openPay=function(fund='food'){
   if(!can.write()){toast(window.t('errors.no_permission_add'),'err');return;}
@@ -161,7 +165,62 @@ window.syncDeficitControl=function(){
       d=(al&&al.historical?Number(al.historical.remaining||0):0)||0; }catch(_){}
     hint.textContent=d>0.005?('العجز التاريخي المتاح: '+d.toFixed(2)+' ₪'):'لا يوجد عجز تاريخي مسجَّل على هذا العضو';
   }
-  if(window.renderFoodConfirmation)window.renderFoodConfirmation();   /* F-4 refresh */
+  if(window.syncFoodEditorVisibility)window.syncFoodEditorVisibility();  /* F-5 UX-01 */
+  if(window.renderMemberPosition)window.renderMemberPosition();          /* F-5 UX-03 */
+  if(window.renderFoodConfirmation)window.renderFoodConfirmation();      /* F-4 refresh */
+};
+
+/* ═══ F-5 (trial) — calmer Food-Receipt input, presentation only ═══
+   NO financial change: allocation is still decided solely by FoodReceiptDecision
+   .decide(); these functions only read FIN (read-only) and toggle visibility.
+   Gated strictly to a member Food Receipt while settlement is ON — every other
+   receipt is byte-identical to today. */
+
+/* UX-01 — the manual Settlement Editor is vestigial for a member Food Receipt (its
+   rows are ignored since F-2). Hide it so the operator is not misled by a dead,
+   self-saving allocation table. It stays visible for every non-food receipt, where
+   it remains the REAL allocation surface. */
+window.syncFoodEditorVisibility=function(){
+  const slot=document.getElementById('rec-settlement');
+  if(!slot)return;
+  const fund=(document.getElementById('rec-fund')||{}).value;
+  const pt=(document.getElementById('rec-payer-type')||{}).value;
+  const on=!!(window.ReceiptSettlement&&window.ReceiptSettlement.enabled&&window.ReceiptSettlement.enabled());
+  const foodMember=fund==='food'&&pt==='member';
+  slot.style.display=(on&&!foodMember)?'':'none';
+};
+
+/* UX-03 — read-only Member Position card: the moment a member is chosen, show their
+   ERP subscription years and historical deficit (the SAME FIN reads decide() uses),
+   so the accountant understands the situation before entering an amount. It computes
+   no allocation. */
+window.renderMemberPosition=function(){
+  const card=document.getElementById('rec-position');
+  if(!card)return;
+  const fund=(document.getElementById('rec-fund')||{}).value;
+  const pt=(document.getElementById('rec-payer-type')||{}).value;
+  const on=!!(window.ReceiptSettlement&&window.ReceiptSettlement.enabled&&window.ReceiptSettlement.enabled());
+  const mid=(document.getElementById('rec-member')||{}).value;
+  if(!(on&&fund==='food'&&pt==='member'&&mid)){card.style.display='none';card.innerHTML='';return;}
+  const subYears=[];let deficit=0;
+  try{
+    const by=((window.FIN&&window.FIN.memberDelinquency)?window.FIN.memberDelinquency(mid):{}||{}).byYear||{};
+    Object.keys(by).forEach(function(y){const r=Number(by[y].remaining||0);if(r>0.005)subYears.push({y:Number(y),r:r});});
+    subYears.sort(function(a,b){return a.y-b.y;});
+    const al=(window.FIN&&window.FIN.memberAllocation)?window.FIN.memberAllocation(mid):null;
+    deficit=(al&&al.historical?Number(al.historical.remaining||0):0)||0;
+  }catch(_){}
+  const fmt=function(n){return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
+  const row=function(label,val,color){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:3px 0">'
+    +'<span style="color:var(--tx2)">'+label+'</span><span style="font-weight:700;font-variant-numeric:tabular-nums'+(color?';color:'+color:'')+'">'+fmt(val)+' ₪</span></div>';};
+  let rows='';
+  if(subYears.length)subYears.forEach(function(y){rows+=row('اشتراك سنة '+y.y,y.r);});
+  else rows+='<div style="font-size:12px;color:var(--tx3);padding:3px 0">لا اشتراكات مستحقّة</div>';
+  if(deficit>0.005)rows+=row('عجز تاريخي',deficit,'var(--food)');
+  card.innerHTML='<div style="background:var(--panel2,var(--diwan-bg));border:1px solid var(--bd,var(--food));border-radius:var(--r);padding:9px 12px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--food);margin-bottom:5px"><i class="ti ti-user-check"></i> <span data-i18n="receipts.member_position">وضع العضو المالي</span></div>'
+    +rows+'</div>';
+  card.style.display='';
 };
 /* Show/clear the amount field with the checkbox (unchecked ⇒ amount is 0). */
 window.onDeficitToggle=function(){
