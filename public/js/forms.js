@@ -161,6 +161,7 @@ window.syncDeficitControl=function(){
       d=(al&&al.historical?Number(al.historical.remaining||0):0)||0; }catch(_){}
     hint.textContent=d>0.005?('العجز التاريخي المتاح: '+d.toFixed(2)+' ₪'):'لا يوجد عجز تاريخي مسجَّل على هذا العضو';
   }
+  if(window.renderFoodConfirmation)window.renderFoodConfirmation();   /* F-4 refresh */
 };
 /* Show/clear the amount field with the checkbox (unchecked ⇒ amount is 0). */
 window.onDeficitToggle=function(){
@@ -168,6 +169,7 @@ window.onDeficitToggle=function(){
   const amtWrap=document.getElementById('rec-deficit-amt-wrap');
   if(amtWrap)amtWrap.style.display=(cb&&cb.checked)?'':'none';
   if(!(cb&&cb.checked)){ const amt=document.getElementById('rec-deficit-amount'); if(amt)amt.value=''; }
+  if(window.renderFoodConfirmation)window.renderFoodConfirmation();   /* F-4 refresh */
 };
 /* THE single reader of the accountant's Historical-Deficit decision: 0 unless the
    box is ticked AND a positive amount is entered. No allocation, no distribution. */
@@ -177,6 +179,51 @@ window.getRecDeficitAmount=function(){
   const amt=document.getElementById('rec-deficit-amount');
   const v=parseFloat(amt&&amt.value);
   return (isFinite(v)&&v>0)?v:0;
+};
+
+/* ═══ F-4 — Confirmation Layer (viewer only) ═══
+   Shows the accountant EXACTLY what will be posted, taken verbatim from the same
+   FoodReceiptDecision.decide() the posting path uses. It CALCULATES NOTHING: every
+   value is read straight off the returned decision (a step amount, decision.amount,
+   decision.remaining). No sums, no re-allocation, no financial reformatting. */
+window.buildFoodConfirmationRows=function(decision){
+  if(!decision)return [];
+  const rows=[];
+  decision.steps.forEach(function(s){                 /* one row per decide() step */
+    const label=s.kind==='historical'?'خصم العجز التاريخي'
+      :s.kind==='future'?('اشتراك مستقبلي — سنة '+s.year)
+      :('اشتراك سنة '+s.year);
+    rows.push({key:s.kind+(s.year?(':'+s.year):''),label:label,value:s.amount});
+  });
+  rows.push({key:'total',label:'إجمالي المقبوض',value:decision.amount});      /* decide().amount */
+  rows.push({key:'remaining',label:'المتبقٍّ',value:decision.remaining});     /* decide().remaining */
+  return rows;
+};
+window.renderFoodConfirmation=function(){
+  const panel=document.getElementById('rec-confirm');
+  if(!panel)return;
+  const fund=(document.getElementById('rec-fund')||{}).value;
+  const pt=(document.getElementById('rec-payer-type')||{}).value;
+  const RSx=window.ReceiptSettlement;
+  const on=!!(RSx&&RSx.enabled&&RSx.enabled());
+  const mid=(document.getElementById('rec-member')||{}).value;
+  const amt=window.getILS?(Number(window.getILS('rec'))||0):(parseFloat((document.getElementById('rec-amount')||{}).value)||0);
+  const show=on&&fund==='food'&&pt==='member'&&!!mid&&amt>0.005&&RSx&&typeof RSx.foodDecisionLines==='function';
+  if(!show){panel.style.display='none';panel.innerHTML='';return;}
+  const fd=RSx.foodDecisionLines(mid,amt,window.getRecDeficitAmount?window.getRecDeficitAmount():0);
+  if(!fd||!fd.decision){panel.style.display='none';panel.innerHTML='';return;}
+  const rows=window.buildFoodConfirmationRows(fd.decision);
+  let html='<div style="background:var(--food-bg);border:1px solid var(--food);border-radius:var(--r);padding:10px 12px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--food);margin-bottom:8px"><i class="ti ti-eye"></i> <span data-i18n="receipts.confirm_title">ما سيقوم به النظام عند الحفظ</span></div>';
+  rows.forEach(function(r){
+    const strong=(r.key==='total'||r.key==='remaining');
+    html+='<div data-key="'+r.key+'" style="display:flex;justify-content:space-between;gap:12px;font-size:12px;'
+      +(strong?'font-weight:700;border-top:1px solid var(--food);margin-top:6px;padding-top:6px':'padding:2px 0')+'">'
+      +'<span>'+r.label+'</span><span class="cf-val">'+Number(r.value).toFixed(2)+' ₪</span></div>';
+  });
+  html+='</div>';
+  panel.innerHTML=html;
+  panel.style.display='';
 };
 window.onPayFundChange=function(){
   const fund=document.getElementById('pay-fund').value;
