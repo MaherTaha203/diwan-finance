@@ -1,0 +1,4478 @@
+{
+ "_meta": {
+  "source": "ralifvemgapmsgrjgazh",
+  "generated_at": "2026-08-06T10:02:04.117089+00:00",
+  "note": "READ-ONLY prod snapshot for lab decision validation"
+ },
+ "members": [
+  {
+   "id": "9f991f13-b24a-46ad-bba5-d2ecf9834fcf",
+   "name": "رمزي راتب درويش طه",
+   "member_code": "TAHA-0051",
+   "is_active": true,
+   "historical_balance_ils": 200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2024,
+   "opening_balance": 200
+  },
+  {
+   "id": "ce5b2f95-d4bf-464b-991c-e718dd02494f",
+   "name": "ثابت محمد درويش طه",
+   "member_code": "TAHA-0029",
+   "is_active": true,
+   "historical_balance_ils": 0,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2025,
+   "opening_balance": 0
+  },
+  {
+   "id": "c9d55bac-a975-42f9-8ff1-0366be9640ec",
+   "name": "ابراهيم يوسف يونس طه",
+   "member_code": "TAHA-0001",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "33e4751e-2fee-43da-b9ca-b50fe784688b",
+   "name": "احسان اسعد سعيد طه",
+   "member_code": "TAHA-0002",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "name": "احسان محمد صدقي طه",
+   "member_code": "TAHA-0003",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "f1603c93-ab19-4ea8-85d2-08d111a09875",
+   "name": "تحسين عبد الفتاح طه",
+   "member_code": "TAHA-0027",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "49e87eb7-39e2-425b-ba01-0d6640ab8eb7",
+   "name": "توفيق اسعد طه",
+   "member_code": "TAHA-0028",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1990,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 210
+  },
+  {
+   "id": "f9b159bb-842d-4643-a9ef-2fc2da3edd4f",
+   "name": "حسن عودة حسن طه",
+   "member_code": "TAHA-0038",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2016,
+   "opening_balance": 2000
+  },
+  {
+   "id": "8e3d0f12-f20a-4547-a207-bcdc296025c4",
+   "name": "حسني احمد حسني طه",
+   "member_code": "TAHA-0039",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 870
+  },
+  {
+   "id": "7c5fd6d9-c986-45bf-b995-c3e6459665a7",
+   "name": "حسين درويش حسين طه",
+   "member_code": "TAHA-0040",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2020,
+   "opening_balance": 2200
+  },
+  {
+   "id": "15dfe4f0-4395-4112-aa7c-34d8b7743a30",
+   "name": "حسين محمد كمال حسين طه",
+   "member_code": "TAHA-0041",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "a59ccea4-ed81-4df7-9f6a-50e91c578242",
+   "name": "حسين جلال درويش طه",
+   "member_code": "TAHA-0042",
+   "is_active": true,
+   "historical_balance_ils": 2000,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2016,
+   "opening_balance": 2000
+  },
+  {
+   "id": "dd45b0c0-8425-4e5b-8230-f8b5e566f826",
+   "name": "خالد عبد الجليل اسعد طه",
+   "member_code": "TAHA-0043",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "7b49e7d2-4019-4819-8691-7497f7bc0026",
+   "name": "درويش حسين درويش طه",
+   "member_code": "TAHA-0044",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "53f506bb-36b0-4fd7-9c1f-b2151ed02849",
+   "name": "راتب عبد الهادي درويش طه",
+   "member_code": "TAHA-0045",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 540
+  },
+  {
+   "id": "4d207645-9289-4b40-af86-7049bd828212",
+   "name": "رامي صلاح عبد الله",
+   "member_code": "TAHA-0046",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 300,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1900
+  },
+  {
+   "id": "add4a092-2abc-43be-86bb-e667f58e22b7",
+   "name": "رامي موسى حسن طه",
+   "member_code": "TAHA-0047",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "2892b042-773a-4761-be7d-b7964ed36ca3",
+   "name": "رائد احمد حسني طه",
+   "member_code": "TAHA-0048",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 870
+  },
+  {
+   "id": "de895c77-9caa-47d9-90e6-7725a544c42d",
+   "name": "رائد نظمي عرفات طه",
+   "member_code": "TAHA-0049",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 930,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1270
+  },
+  {
+   "id": "168849f4-6aa1-4e5f-99e0-d19ea4e47f93",
+   "name": "ربحي عرفات اسعد طه",
+   "member_code": "TAHA-0050",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "72b373a8-1777-49f2-b4c9-b87ddd1f72fd",
+   "name": "زياد الاسمر",
+   "member_code": "TAHA-0053",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 910,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1290
+  },
+  {
+   "id": "a60e5519-9318-43e2-9da9-7e01cc1ef69f",
+   "name": "سامح درويش حسين طه",
+   "member_code": "TAHA-0055",
+   "is_active": true,
+   "historical_balance_ils": 600,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2022,
+   "opening_balance": 600
+  },
+  {
+   "id": "8e6121ae-943b-4b52-bb7d-c6e21f0e2dbf",
+   "name": "سامر يونس طه",
+   "member_code": "TAHA-0056",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "abbf5b78-f207-4a12-aa1c-efdc84d6d2e0",
+   "name": "سعدات اسعد طه",
+   "member_code": "TAHA-0057",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 957,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1043
+  },
+  {
+   "id": "57e267e3-d63e-4ba4-b998-90403dd270df",
+   "name": "سعيد سعدات اسعد طه",
+   "member_code": "TAHA-0058",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "6331e838-50a7-404b-bdd0-c916d85debc4",
+   "name": "سمير عارف اسعد طه",
+   "member_code": "TAHA-0059",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "afc45ac7-4fa7-4e04-8494-44d53e6b5d07",
+   "name": "سهيل عارف طه",
+   "member_code": "TAHA-0060",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "502ace9f-7171-4deb-9ab2-1fa90744919c",
+   "name": "شادي سعدات",
+   "member_code": "TAHA-0061",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "09f41382-4153-475d-aa54-81caeec0eb21",
+   "name": "شادي نزار عبد العزيز",
+   "member_code": "TAHA-0062",
+   "is_active": true,
+   "historical_balance_ils": 1600,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2017,
+   "opening_balance": 1600
+  },
+  {
+   "id": "7271a215-12d8-4078-b09c-83f61862bddc",
+   "name": "صالح الاسمر",
+   "member_code": "TAHA-0063",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "e61b87da-a9ea-4c26-9e7b-2687b59570b2",
+   "name": "صالح فواز يونس طه",
+   "member_code": "TAHA-0064",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1450,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 150
+  },
+  {
+   "id": "bdf59748-7653-436f-94b7-69963efc1897",
+   "name": "صبحي عرفات اسعد طه",
+   "member_code": "TAHA-0065",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "5482b49f-9058-4dac-bc62-8068c8290609",
+   "name": "صدقي كمال الصدقي طه",
+   "member_code": "TAHA-0066",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "de748942-93d6-41f6-a70a-787c702e589c",
+   "name": "ضياء سامي فايز طه",
+   "member_code": "TAHA-0068",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "27de1496-83a6-4ba5-9877-84dbfd3d66fd",
+   "name": "طارق ابراهيم حسني \" ابناء المرحوم\"",
+   "member_code": "TAHA-0069",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 120
+  },
+  {
+   "id": "a9ccfa55-0122-4f60-8e67-ec4c36dfa371",
+   "name": "طه احمد حسني طه",
+   "member_code": "TAHA-0070",
+   "is_active": true,
+   "historical_balance_ils": 1800,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2016,
+   "opening_balance": 870
+  },
+  {
+   "id": "63d65907-5841-4d34-bde3-9e57a3cc5400",
+   "name": "عادل عيسى طه",
+   "member_code": "TAHA-0071",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 390,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1810
+  },
+  {
+   "id": "ad1494eb-c57c-4910-b839-4d8f994449a0",
+   "name": "عارف جهاد اسعد طه",
+   "member_code": "TAHA-0072",
+   "is_active": true,
+   "historical_balance_ils": 1600,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2017,
+   "opening_balance": 1000
+  },
+  {
+   "id": "bd8d56d5-eb4b-45c3-8758-0720c3ca93c5",
+   "name": "عامر جميل موسى طه",
+   "member_code": "TAHA-0073",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2275,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": -75
+  },
+  {
+   "id": "0f72eff4-b513-4c9c-a26f-0a1fd46357c9",
+   "name": "عبد الجابر فرح طه",
+   "member_code": "TAHA-0074",
+   "is_active": true,
+   "historical_balance_ils": 2000,
+   "historical_payments_ils": 1390,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2016,
+   "opening_balance": 610
+  },
+  {
+   "id": "595ac35e-c315-4308-bd68-6ca19995ec92",
+   "name": "عبد الحكيم يونس عليان",
+   "member_code": "TAHA-0075",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "6cc1a4e2-9008-4b13-bf68-bc1e4a2935eb",
+   "name": "عدنان رشيد عبد الله طه",
+   "member_code": "TAHA-0078",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "a387396e-2f4f-43d9-b3fa-1d9bfc6b16bc",
+   "name": "عزمي عرفات اسعد طه",
+   "member_code": "TAHA-0079",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "4a8f8210-b650-495a-9170-7ca3d472ca47",
+   "name": "عطا معروف اسعد طه",
+   "member_code": "TAHA-0080",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "1da0b55f-0716-4499-b7be-dfa2f1a45718",
+   "name": "عطا نمر موسى طه",
+   "member_code": "TAHA-0081",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "bddb7381-3f19-4c08-bce3-970a512866da",
+   "name": "علي احمد موسى طه",
+   "member_code": "TAHA-0082",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "8e3e5a7f-64d5-4393-b3be-7f4f078d2aa7",
+   "name": "عمار رشيد عبد الله طه",
+   "member_code": "TAHA-0084",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "cb9f453d-cb97-413a-a7cb-644ff0332fd9",
+   "name": "عبد الناصر احمد طه \" ابو احمد \"",
+   "member_code": "TAHA-0077",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "f30863b6-9b44-4334-b671-61c8f61fa3c1",
+   "name": "زهير عبد العزيز طه",
+   "member_code": "TAHA-0052",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "573e6c79-2c3d-474d-8b8c-268c71bed14d",
+   "name": "زياد حسين عبد الله طه",
+   "member_code": "TAHA-0054",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 200,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "f471cd55-db67-47ea-b1d6-ac177a95bb17",
+   "name": "صلاح حسين عبد الله طه",
+   "member_code": "TAHA-0067",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 200,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "dea9ad6a-7c76-4896-972f-8ef6bb84d322",
+   "name": "عبد الله حسين عبد الله طه",
+   "member_code": "TAHA-0076",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 200,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "c2cec3a7-4122-4f41-a1e9-8fd3c2117c97",
+   "name": "عماد يونس طه",
+   "member_code": "TAHA-0083",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2204,
+   "credit_balance_ils": 4,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": -4
+  },
+  {
+   "id": "894bc4ef-b6dd-40d8-bb98-93ad943c52f1",
+   "name": "عوني محمد صدقي طه",
+   "member_code": "TAHA-0085",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "eb3303c7-2b04-475e-8145-3386deadcaad",
+   "name": "غسان فوزي عيسى طه",
+   "member_code": "TAHA-0086",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "ceee93af-be39-4314-9c2f-e8013791adf5",
+   "name": "غسان نزار عبد العزيز طه",
+   "member_code": "TAHA-0087",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "06a18522-058e-474c-9148-5c826be0bbfd",
+   "name": "فادي نعيم عبد الجابر طه",
+   "member_code": "TAHA-0088",
+   "is_active": true,
+   "historical_balance_ils": 1400,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2018,
+   "opening_balance": 1400
+  },
+  {
+   "id": "f1fc9578-7137-4c5d-8e2a-677991f4d03c",
+   "name": "فايز عبد الرحمن فايز طه",
+   "member_code": "TAHA-0089",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 773
+  },
+  {
+   "id": "bd24e5eb-d030-4e29-b26c-b510d446ea68",
+   "name": "فخري باسم فخري طه",
+   "member_code": "TAHA-0090",
+   "is_active": true,
+   "historical_balance_ils": 400,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2023,
+   "opening_balance": 400
+  },
+  {
+   "id": "ce5f5c97-a573-4702-bfa6-0ece4bf5f751",
+   "name": "مازن نظمي عرفات  طه",
+   "member_code": "TAHA-0099",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "8398f063-e785-4840-9539-4499516d9878",
+   "name": "مالك سامي فايز طه",
+   "member_code": "TAHA-0100",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "47cdbd80-8f1f-4256-b1b1-d6e1ceeec8aa",
+   "name": "مالك عطا معروف اسعد  طه",
+   "member_code": "TAHA-0101",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "94cb0a62-ea87-4d34-b5ee-c64e3e5fbdde",
+   "name": "ماهر راتب عبد الهادي طه",
+   "member_code": "TAHA-0102",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "name": "ماهر محمد فايز طه",
+   "member_code": "TAHA-0103",
+   "is_active": true,
+   "historical_balance_ils": 1400,
+   "historical_payments_ils": 1400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2018,
+   "opening_balance": 0
+  },
+  {
+   "id": "0a85d9ce-b2b8-45af-bcac-d646c5e08e60",
+   "name": "محمد احمد حسني طه",
+   "member_code": "TAHA-0104",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 870
+  },
+  {
+   "id": "bf5f2760-61b3-40ee-9c9f-6b13cb35efbc",
+   "name": "محمد كمال حسين عبد الله طه",
+   "member_code": "TAHA-0115",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "9f46fd12-1fa5-4613-90be-e51f58cffdbc",
+   "name": "محمد محمود درويش طه",
+   "member_code": "TAHA-0116",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "3ea860bc-524c-401e-b578-da87c93a0074",
+   "name": "محمد وحيد طه",
+   "member_code": "TAHA-0117",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 800
+  },
+  {
+   "id": "d232625e-3922-4cb0-82da-d5d591cab31d",
+   "name": "محمود  زيد النبالي",
+   "member_code": "TAHA-0118",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "fafb2dac-0ef0-4a33-be0f-a014c388cf4f",
+   "name": "محمود حسين درويش طه",
+   "member_code": "TAHA-0119",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "bd9607fd-4590-4e4e-9117-609a8b03019b",
+   "name": "محمود مصطفى عبد الله طه",
+   "member_code": "TAHA-0120",
+   "is_active": false,
+   "historical_balance_ils": 1200,
+   "historical_payments_ils": 1600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2019,
+   "opening_balance": -400
+  },
+  {
+   "id": "bffeb046-fa49-4d37-95d6-8d8c3c0f3b4b",
+   "name": "مراد اسعد سعيد طه",
+   "member_code": "TAHA-0121",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "db6ff768-c949-49af-90ac-cb5b4bee6837",
+   "name": "مراد نعيم فايز طه",
+   "member_code": "TAHA-0122",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "b7b3f322-5b8b-4f7d-8da0-18f817644bdd",
+   "name": "مشير  يوسف يونس  طه",
+   "member_code": "TAHA-0123",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "25005b4d-2694-495e-a7e4-aace0d047464",
+   "name": "موسى حسن موسى  طه",
+   "member_code": "TAHA-0124",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "1d0e01d2-f8bd-4ea8-a8aa-46b2bf1e08a8",
+   "name": "مؤيد وحيد طه",
+   "member_code": "TAHA-0125",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 800
+  },
+  {
+   "id": "f7ddc692-ace4-456f-bc96-26a5a4af4973",
+   "name": "ناجي زيد النبالي",
+   "member_code": "TAHA-0126",
+   "is_active": true,
+   "historical_balance_ils": 1600,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2017,
+   "opening_balance": 1600
+  },
+  {
+   "id": "f1ae47e0-c60c-4a36-b044-1894345ed08d",
+   "name": "نادر عزمي عرفات  طه",
+   "member_code": "TAHA-0127",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 530,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1670
+  },
+  {
+   "id": "46f3ca18-30cc-46be-8036-dbe4d93d175f",
+   "name": "نادر يوسف عليان",
+   "member_code": "TAHA-0128",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "3bef2f13-802e-4f89-8670-56dde3a66bde",
+   "name": "نزار عبد العزيز طه",
+   "member_code": "TAHA-0129",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "017ffa6d-8437-44fb-a0f3-8b06e18c4312",
+   "name": "نصيف عيسى طه",
+   "member_code": "TAHA-0130",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "c3066102-f773-4c63-9d2a-bb4147385e46",
+   "name": "نضال سليمان طه",
+   "member_code": "TAHA-0131",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "e1239602-fb83-448f-a2a9-e14af7455377",
+   "name": "نظمي عرفات اسعد طه",
+   "member_code": "TAHA-0132",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "d2dfe698-516c-4f2c-b8b2-77b96a44e0f8",
+   "name": "نعيم عبد الجابر",
+   "member_code": "TAHA-0133",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "788ff81e-9fb3-4ae6-855d-e5b97557239c",
+   "name": "نمر عطا نمر طه",
+   "member_code": "TAHA-0134",
+   "is_active": true,
+   "historical_balance_ils": 0,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2026,
+   "opening_balance": 0
+  },
+  {
+   "id": "5a87fd83-ac21-43ab-9b8c-14e660c1a2a0",
+   "name": "هاني عبد الجابر",
+   "member_code": "TAHA-0136",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "ab3d7baf-965b-4bde-b4ef-86a5ebc3ef03",
+   "name": "هشام عادل عيسى طه",
+   "member_code": "TAHA-0137",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "4dcbbed4-e44a-46cf-b27a-bcd459e6e539",
+   "name": "وائل عبد الحكيم طه",
+   "member_code": "TAHA-0138",
+   "is_active": true,
+   "historical_balance_ils": 800,
+   "historical_payments_ils": 850,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2021,
+   "opening_balance": -50
+  },
+  {
+   "id": "9bfa6d07-f1c1-4d46-9cff-fe2c14f336ed",
+   "name": "وسام محمود درويش طه",
+   "member_code": "TAHA-0139",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "554402e9-7474-463d-9bb4-36ba18e280c9",
+   "name": "هادي راتب درويش طه",
+   "member_code": "TAHA-0135",
+   "is_active": true,
+   "historical_balance_ils": 800,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2021,
+   "opening_balance": 800
+  },
+  {
+   "id": "c6e0d9b3-58cb-48bb-9cb6-c8484c4e71f0",
+   "name": "وليد عبد الجابر طه",
+   "member_code": "TAHA-0140",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 600
+  },
+  {
+   "id": "a976406a-0f91-49cb-a42e-72e7be92c000",
+   "name": "يوسف عبد الحكيم طه",
+   "member_code": "TAHA-0141",
+   "is_active": true,
+   "historical_balance_ils": 400,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2023,
+   "opening_balance": 400
+  },
+  {
+   "id": "5d3df6f0-f941-4981-975a-951ba144b540",
+   "name": "رفيق اسعد طه",
+   "member_code": "TAHA-0142",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "6df78931-ba50-4be2-af61-5344a12b6b4b",
+   "name": "نائل لطفي اسعد طه",
+   "member_code": "TAHA-0143",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "ffcd1dbe-ffe9-485f-9132-3fbad321a78d",
+   "name": "هيثم فخري طه",
+   "member_code": "TAHA-0144",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "d30aa1ba-f7ef-4b0d-9faf-c1e3ada21973",
+   "name": "بسام عبد الفتاح عيسى طه",
+   "member_code": "TAHA-0145",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "1ea9c492-1984-4624-b44d-4894df08e136",
+   "name": "مهند سمير عارف",
+   "member_code": "TAHA-0146",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "c056c1cd-b764-4736-b3a6-570700648c6d",
+   "name": "احمد سعدات اسعد طه \" احمد سعيد\"",
+   "member_code": "TAHA-0004",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "5814d2ee-2b22-4f44-8533-035fe31ed9a1",
+   "name": "احمد عبد الناصر طه",
+   "member_code": "TAHA-0005",
+   "is_active": true,
+   "historical_balance_ils": 1200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2019,
+   "opening_balance": 1200
+  },
+  {
+   "id": "7ccc97af-4277-4eb5-9013-171070bfc0fd",
+   "name": "احمد كامل عيسى طه",
+   "member_code": "TAHA-0007",
+   "is_active": true,
+   "historical_balance_ils": 200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2024,
+   "opening_balance": 200
+  },
+  {
+   "id": "ea02143c-85b5-47c4-b874-3e31dbbe9352",
+   "name": "احمد محمد فايز طه",
+   "member_code": "TAHA-0008",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 600
+  },
+  {
+   "id": "f507abaf-54d6-4fbd-b8d2-a910b56bf035",
+   "name": "احمد عطا نمر طه",
+   "member_code": "TAHA-0006",
+   "is_active": true,
+   "historical_balance_ils": 0,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2026,
+   "opening_balance": 0
+  },
+  {
+   "id": "1de5d1f4-fd7e-4a76-9e24-24cc3528cd83",
+   "name": "احمد محمود زيد النبالي",
+   "member_code": "TAHA-0009",
+   "is_active": true,
+   "historical_balance_ils": 1800,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2016,
+   "opening_balance": 1600
+  },
+  {
+   "id": "36cc6fd5-cf34-4eaf-87fc-7691af6f52e7",
+   "name": "احمد وحيد طه",
+   "member_code": "TAHA-0010",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "084cfbda-557b-49eb-8328-9722d3832d1a",
+   "name": "اديب اسعد طه",
+   "member_code": "TAHA-0011",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 390,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1810
+  },
+  {
+   "id": "9b661f30-5c2e-4380-8d14-1eb39cb906c8",
+   "name": "اسامة سامي فايز طه",
+   "member_code": "TAHA-0012",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "4f53bbef-6a29-4864-8412-3e08a99fc3a4",
+   "name": "يزن نضال طه",
+   "member_code": "TAHA-0147",
+   "is_active": true,
+   "historical_balance_ils": 1600,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2017,
+   "opening_balance": 1400
+  },
+  {
+   "id": "579a3590-8a5e-44e7-9a32-e66b10df4440",
+   "name": "باسل صلاح عبد الله طه",
+   "member_code": "TAHA-0148",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "92eec686-4b04-48ad-9e3e-a2fbd632987e",
+   "name": "حسام محمد كمال طه",
+   "member_code": "TAHA-0149",
+   "is_active": false,
+   "historical_balance_ils": 0,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 200,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2027,
+   "opening_balance": -200
+  },
+  {
+   "id": "cd71ec36-c00b-4606-b061-a708413aa05f",
+   "name": "فراس عدنان رشيد طه",
+   "member_code": "TAHA-0091",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "766989fd-d913-4520-8a1b-f9555825dd64",
+   "name": "قاصد حسن طه",
+   "member_code": "TAHA-0094",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 590,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1610
+  },
+  {
+   "id": "21080469-d462-41d2-a470-d6a0ecbe9e7a",
+   "name": "كمال الصدقي طه",
+   "member_code": "TAHA-0095",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "93c23aa6-31c7-4490-8045-a1db4a970ac4",
+   "name": "كمال زياد عبد الله طه",
+   "member_code": "TAHA-0096",
+   "is_active": true,
+   "historical_balance_ils": 200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2024,
+   "opening_balance": 200
+  },
+  {
+   "id": "e11aa03f-2f10-46d0-b4e2-b74428c0fe98",
+   "name": "لؤي درويش حسين طه",
+   "member_code": "TAHA-0097",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "659739d7-8c6f-412b-a77d-eae4d14527d9",
+   "name": "لؤي وحيد طه",
+   "member_code": "TAHA-0098",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "e101127d-77be-414b-86d5-4c987a37cab9",
+   "name": "فرح عبد الجابر",
+   "member_code": "TAHA-0092",
+   "is_active": false,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 870,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1330
+  },
+  {
+   "id": "3a264879-ab71-459d-af09-e53abbad242c",
+   "name": "فواز يونس طه",
+   "member_code": "TAHA-0093",
+   "is_active": false,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "882ffb36-fd87-466e-88af-98e2d9c0d4f5",
+   "name": "اسامة عادل عيسى",
+   "member_code": "TAHA-0013",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "01717e94-3013-4272-ae99-2681cf96d7d8",
+   "name": "اسعد سعيد طه",
+   "member_code": "TAHA-0014",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 710,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1490
+  },
+  {
+   "id": "5269ef11-bbf8-4f9b-a1fc-9a5d38bf8db6",
+   "name": "اسماعيل يونس طه",
+   "member_code": "TAHA-0015",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 457,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1743
+  },
+  {
+   "id": "1f738b25-028e-466e-bf14-5eb74e108ca8",
+   "name": "اشرف عدنان رشيد طه",
+   "member_code": "TAHA-0016",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1000
+  },
+  {
+   "id": "f92af3f6-f47b-4ce1-96f8-642f5b068362",
+   "name": "امجد سعدات اسعد طه",
+   "member_code": "TAHA-0017",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1157,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 843
+  },
+  {
+   "id": "50993ea6-3afb-4d43-a89c-46c8e9754db8",
+   "name": "اياد وحيد طه",
+   "member_code": "TAHA-0018",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1200
+  },
+  {
+   "id": "5f240768-4a64-4a4e-87e5-b6111380b5e2",
+   "name": "اياد يوسف يونس  طه",
+   "member_code": "TAHA-0019",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 400
+  },
+  {
+   "id": "24e84345-a2ef-4361-8ab5-1c5f2d984e9e",
+   "name": "ايمن سامر  يونس طه",
+   "member_code": "TAHA-0020",
+   "is_active": true,
+   "historical_balance_ils": 600,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2022,
+   "opening_balance": 600
+  },
+  {
+   "id": "d2196cef-1b36-4802-9fea-8280ae9f579b",
+   "name": "ايمن عبد الرحمن فايز طه",
+   "member_code": "TAHA-0021",
+   "is_active": true,
+   "historical_balance_ils": 2000,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2015,
+   "opening_balance": 1000
+  },
+  {
+   "id": "5318fef8-3374-44db-a5ce-511845080561",
+   "name": "إيهاب سهيل عارف",
+   "member_code": "TAHA-0022",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1600
+  },
+  {
+   "id": "b4b3fbf2-fa09-4f70-8c46-5a0b1873c866",
+   "name": "إيهاب وليد عبد الجابر طه",
+   "member_code": "TAHA-0023",
+   "is_active": true,
+   "historical_balance_ils": 200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2024,
+   "opening_balance": 200
+  },
+  {
+   "id": "21220d30-8c41-4220-9775-3bbfbe6c3753",
+   "name": "باسل إبراهيم يونس طه",
+   "member_code": "TAHA-0024",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1820
+  },
+  {
+   "id": "db40f708-dbcc-4779-b7d9-2c27003841ed",
+   "name": "باسم فخري عيسى طه",
+   "member_code": "TAHA-0025",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 900,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 190
+  },
+  {
+   "id": "2412563d-f6c4-40ec-b3ea-8ad3b7bb207e",
+   "name": "باسم مصطفى عبد الله طه",
+   "member_code": "TAHA-0026",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "c0c3a7ac-c05b-492d-a2c6-7150f12c9d39",
+   "name": "جلال حسين درويش طه",
+   "member_code": "TAHA-0031",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1395,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 805
+  },
+  {
+   "id": "ad085be0-26be-4f87-a3a0-5737073982e5",
+   "name": "جمال اسماعيل يونس",
+   "member_code": "TAHA-0032",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2204,
+   "credit_balance_ils": 4,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": -4
+  },
+  {
+   "id": "0ad3b792-e0be-4803-9cd6-b1fdba48a76e",
+   "name": "حاتم سامي فايز طه",
+   "member_code": "TAHA-0033",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 800,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1400
+  },
+  {
+   "id": "aa4052b4-4edb-4fa0-a008-dd0c0d4e6114",
+   "name": "حاتم عبد الرازق درويش طه",
+   "member_code": "TAHA-0034",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "c2a26f57-b90f-4ba8-81b0-8ef3bfa2107d",
+   "name": "حسام سعدات",
+   "member_code": "TAHA-0036",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 180,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2020
+  },
+  {
+   "id": "e480dc48-12cc-448f-957c-580336a6ab58",
+   "name": "حسام راتب عبد الهادي طه",
+   "member_code": "TAHA-0037",
+   "is_active": true,
+   "historical_balance_ils": 1600,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2017,
+   "opening_balance": 1600
+  },
+  {
+   "id": "e3eff640-3202-4eed-b1b4-0ad37477c3c6",
+   "name": "حاتم راتبدرويش طه",
+   "member_code": "TAHA-0035",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "13a73d9d-1b9a-49d6-9d81-7c91b6100adb",
+   "name": "ثائر نصيف طه",
+   "member_code": "TAHA-0030",
+   "is_active": true,
+   "historical_balance_ils": 0,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2025,
+   "opening_balance": 0
+  },
+  {
+   "id": "1db6025d-1348-40f2-8bb7-04d31e807599",
+   "name": "علي توفيق  عبد الحليم طه",
+   "member_code": null,
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "9f4c20ed-2445-4a40-9491-f706006d392c",
+   "name": "راني موسى حسن طه",
+   "member_code": null,
+   "is_active": true,
+   "historical_balance_ils": 200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2025,
+   "opening_balance": 200
+  },
+  {
+   "id": "1f99757b-3cb6-44b3-be7d-d74bb3ff5c3c",
+   "name": "محمد علي  توفيق اسعد طه",
+   "member_code": "TAHA-0105",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2000
+  },
+  {
+   "id": "0bae4ddb-056d-46d8-bc8b-f50478f59394",
+   "name": "محمد حسين درويش طه",
+   "member_code": "TAHA-0106",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 2000,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": -235
+  },
+  {
+   "id": "856033cb-5daf-4893-944f-a97f2ad57e61",
+   "name": "محمد ربحي عرفات طه",
+   "member_code": "TAHA-0107",
+   "is_active": true,
+   "historical_balance_ils": 600,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2022,
+   "opening_balance": 600
+  },
+  {
+   "id": "06d4c979-1e45-4c58-a683-7892557c44c7",
+   "name": "محمد زيد النبالي",
+   "member_code": "TAHA-0108",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 2200
+  },
+  {
+   "id": "c95703b2-469a-4a0d-95d5-12d6699fc2ae",
+   "name": "محمد سامي فايز طه",
+   "member_code": "TAHA-0109",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 400,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1800
+  },
+  {
+   "id": "8c2dfeb7-607e-48b3-a550-b0d8eeb99607",
+   "name": "محمد صدقي طه",
+   "member_code": "TAHA-0110",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1130,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 1070
+  },
+  {
+   "id": "8ed58ad8-d851-49d3-be7e-dbcf866539fd",
+   "name": "محمد عبد الخالق",
+   "member_code": "TAHA-0111",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1200,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2014,
+   "opening_balance": 350
+  },
+  {
+   "id": "d302c72e-3acf-4824-8d99-903ab766469c",
+   "name": "محمد عبد الناصر طه",
+   "member_code": "TAHA-0112",
+   "is_active": true,
+   "historical_balance_ils": 1600,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2017,
+   "opening_balance": 1600
+  },
+  {
+   "id": "77bc8737-50a3-4436-bcf3-33ebb5ca4416",
+   "name": "محمد فايز عبد الرحمن طه",
+   "member_code": "TAHA-0113",
+   "is_active": true,
+   "historical_balance_ils": 2200,
+   "historical_payments_ils": 1600,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 400,
+   "active_from_year": 2014,
+   "opening_balance": 0
+  },
+  {
+   "id": "ba0b3086-c503-4bb5-a25d-5b13b9b860ea",
+   "name": "محمد كامل عيسى طه",
+   "member_code": "TAHA-0114",
+   "is_active": true,
+   "historical_balance_ils": 400,
+   "historical_payments_ils": 0,
+   "credit_balance_ils": 0,
+   "prepaid_subscription_ils": 0,
+   "active_from_year": 2023,
+   "opening_balance": 400
+  }
+ ],
+ "subscriptions": [
+  {
+   "member_id": "f9b159bb-842d-4643-a9ef-2fc2da3edd4f",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8e3d0f12-f20a-4547-a207-bcdc296025c4",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 730
+  },
+  {
+   "member_id": "7c5fd6d9-c986-45bf-b995-c3e6459665a7",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "15dfe4f0-4395-4112-aa7c-34d8b7743a30",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "a59ccea4-ed81-4df7-9f6a-50e91c578242",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "dd45b0c0-8425-4e5b-8230-f8b5e566f826",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "7b49e7d2-4019-4819-8691-7497f7bc0026",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "53f506bb-36b0-4fd7-9c1f-b2151ed02849",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 660
+  },
+  {
+   "member_id": "4d207645-9289-4b40-af86-7049bd828212",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "add4a092-2abc-43be-86bb-e667f58e22b7",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "2892b042-773a-4761-be7d-b7964ed36ca3",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 730
+  },
+  {
+   "member_id": "de895c77-9caa-47d9-90e6-7725a544c42d",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "168849f4-6aa1-4e5f-99e0-d19ea4e47f93",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9f991f13-b24a-46ad-bba5-d2ecf9834fcf",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "72b373a8-1777-49f2-b4c9-b87ddd1f72fd",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "a60e5519-9318-43e2-9da9-7e01cc1ef69f",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8e6121ae-943b-4b52-bb7d-c6e21f0e2dbf",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "abbf5b78-f207-4a12-aa1c-efdc84d6d2e0",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "57e267e3-d63e-4ba4-b998-90403dd270df",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "6331e838-50a7-404b-bdd0-c916d85debc4",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "afc45ac7-4fa7-4e04-8494-44d53e6b5d07",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "502ace9f-7171-4deb-9ab2-1fa90744919c",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "09f41382-4153-475d-aa54-81caeec0eb21",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "7271a215-12d8-4078-b09c-83f61862bddc",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e61b87da-a9ea-4c26-9e7b-2687b59570b2",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 600
+  },
+  {
+   "member_id": "bdf59748-7653-436f-94b7-69963efc1897",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5482b49f-9058-4dac-bc62-8068c8290609",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "de748942-93d6-41f6-a70a-787c702e589c",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "27de1496-83a6-4ba5-9877-84dbfd3d66fd",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 480
+  },
+  {
+   "member_id": "a9ccfa55-0122-4f60-8e67-ec4c36dfa371",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 730
+  },
+  {
+   "member_id": "63d65907-5841-4d34-bde3-9e57a3cc5400",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ad1494eb-c57c-4910-b839-4d8f994449a0",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bd8d56d5-eb4b-45c3-8758-0720c3ca93c5",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "0f72eff4-b513-4c9c-a26f-0a1fd46357c9",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "595ac35e-c315-4308-bd68-6ca19995ec92",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "cb9f453d-cb97-413a-a7cb-644ff0332fd9",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "6cc1a4e2-9008-4b13-bf68-bc1e4a2935eb",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "a387396e-2f4f-43d9-b3fa-1d9bfc6b16bc",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "4a8f8210-b650-495a-9170-7ca3d472ca47",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1da0b55f-0716-4499-b7be-dfa2f1a45718",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bddb7381-3f19-4c08-bce3-970a512866da",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8e3e5a7f-64d5-4393-b3be-7f4f078d2aa7",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f471cd55-db67-47ea-b1d6-ac177a95bb17",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "dea9ad6a-7c76-4896-972f-8ef6bb84d322",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "c2cec3a7-4122-4f41-a1e9-8fd3c2117c97",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "894bc4ef-b6dd-40d8-bb98-93ad943c52f1",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "eb3303c7-2b04-475e-8145-3386deadcaad",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ceee93af-be39-4314-9c2f-e8013791adf5",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "06a18522-058e-474c-9148-5c826be0bbfd",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f1fc9578-7137-4c5d-8e2a-677991f4d03c",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 827
+  },
+  {
+   "member_id": "bd24e5eb-d030-4e29-b26c-b510d446ea68",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ce5f5c97-a573-4702-bfa6-0ece4bf5f751",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8398f063-e785-4840-9539-4499516d9878",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "47cdbd80-8f1f-4256-b1b1-d6e1ceeec8aa",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "94cb0a62-ea87-4d34-b5ee-c64e3e5fbdde",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "0a85d9ce-b2b8-45af-bcac-d646c5e08e60",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 730
+  },
+  {
+   "member_id": "bf5f2760-61b3-40ee-9c9f-6b13cb35efbc",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "9f46fd12-1fa5-4613-90be-e51f58cffdbc",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "3ea860bc-524c-401e-b578-da87c93a0074",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "d232625e-3922-4cb0-82da-d5d591cab31d",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "fafb2dac-0ef0-4a33-be0f-a014c388cf4f",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bd9607fd-4590-4e4e-9117-609a8b03019b",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bffeb046-fa49-4d37-95d6-8d8c3c0f3b4b",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "db6ff768-c949-49af-90ac-cb5b4bee6837",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "b7b3f322-5b8b-4f7d-8da0-18f817644bdd",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "25005b4d-2694-495e-a7e4-aace0d047464",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1d0e01d2-f8bd-4ea8-a8aa-46b2bf1e08a8",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "f7ddc692-ace4-456f-bc96-26a5a4af4973",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f1ae47e0-c60c-4a36-b044-1894345ed08d",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "46f3ca18-30cc-46be-8036-dbe4d93d175f",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "3bef2f13-802e-4f89-8670-56dde3a66bde",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "017ffa6d-8437-44fb-a0f3-8b06e18c4312",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c3066102-f773-4c63-9d2a-bb4147385e46",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e1239602-fb83-448f-a2a9-e14af7455377",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d2dfe698-516c-4f2c-b8b2-77b96a44e0f8",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "788ff81e-9fb3-4ae6-855d-e5b97557239c",
+   "year": 2025,
+   "due_amount_ils": 0,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "554402e9-7474-463d-9bb4-36ba18e280c9",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5a87fd83-ac21-43ab-9b8c-14e660c1a2a0",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ab3d7baf-965b-4bde-b4ef-86a5ebc3ef03",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "4dcbbed4-e44a-46cf-b27a-bcd459e6e539",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9bfa6d07-f1c1-4d46-9cff-fe2c14f336ed",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c6e0d9b3-58cb-48bb-9cb6-c8484c4e71f0",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "a976406a-0f91-49cb-a42e-72e7be92c000",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5d3df6f0-f941-4981-975a-951ba144b540",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "6df78931-ba50-4be2-af61-5344a12b6b4b",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ffcd1dbe-ffe9-485f-9132-3fbad321a78d",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d30aa1ba-f7ef-4b0d-9faf-c1e3ada21973",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1ea9c492-1984-4624-b44d-4894df08e136",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c056c1cd-b764-4736-b3a6-570700648c6d",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5814d2ee-2b22-4f44-8533-035fe31ed9a1",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f507abaf-54d6-4fbd-b8d2-a910b56bf035",
+   "year": 2025,
+   "due_amount_ils": 0,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "7ccc97af-4277-4eb5-9013-171070bfc0fd",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ea02143c-85b5-47c4-b874-3e31dbbe9352",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1de5d1f4-fd7e-4a76-9e24-24cc3528cd83",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "36cc6fd5-cf34-4eaf-87fc-7691af6f52e7",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "084cfbda-557b-49eb-8328-9722d3832d1a",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9b661f30-5c2e-4380-8d14-1eb39cb906c8",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "4f53bbef-6a29-4864-8412-3e08a99fc3a4",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "579a3590-8a5e-44e7-9a32-e66b10df4440",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "92eec686-4b04-48ad-9e3e-a2fbd632987e",
+   "year": 2025,
+   "due_amount_ils": 0,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "cd71ec36-c00b-4606-b061-a708413aa05f",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e101127d-77be-414b-86d5-4c987a37cab9",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "3a264879-ab71-459d-af09-e53abbad242c",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "766989fd-d913-4520-8a1b-f9555825dd64",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "21080469-d462-41d2-a470-d6a0ecbe9e7a",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "93c23aa6-31c7-4490-8045-a1db4a970ac4",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e11aa03f-2f10-46d0-b4e2-b74428c0fe98",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "659739d7-8c6f-412b-a77d-eae4d14527d9",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "882ffb36-fd87-466e-88af-98e2d9c0d4f5",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "01717e94-3013-4272-ae99-2681cf96d7d8",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5269ef11-bbf8-4f9b-a1fc-9a5d38bf8db6",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1f738b25-028e-466e-bf14-5eb74e108ca8",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f92af3f6-f47b-4ce1-96f8-642f5b068362",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "50993ea6-3afb-4d43-a89c-46c8e9754db8",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "5f240768-4a64-4a4e-87e5-b6111380b5e2",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "24e84345-a2ef-4361-8ab5-1c5f2d984e9e",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c9d55bac-a975-42f9-8ff1-0366be9640ec",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "33e4751e-2fee-43da-b9ca-b50fe784688b",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f1603c93-ab19-4ea8-85d2-08d111a09875",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "49e87eb7-39e2-425b-ba01-0d6640ab8eb7",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ce5b2f95-d4bf-464b-991c-e718dd02494f",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f30863b6-9b44-4334-b671-61c8f61fa3c1",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 1525
+  },
+  {
+   "member_id": "573e6c79-2c3d-474d-8b8c-268c71bed14d",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "d2196cef-1b36-4802-9fea-8280ae9f579b",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "5318fef8-3374-44db-a5ce-511845080561",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "b4b3fbf2-fa09-4f70-8c46-5a0b1873c866",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "21220d30-8c41-4220-9775-3bbfbe6c3753",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 380
+  },
+  {
+   "member_id": "db40f708-dbcc-4779-b7d9-2c27003841ed",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 1110
+  },
+  {
+   "member_id": "2412563d-f6c4-40ec-b3ea-8ad3b7bb207e",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "13a73d9d-1b9a-49d6-9d81-7c91b6100adb",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c0c3a7ac-c05b-492d-a2c6-7150f12c9d39",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ad085be0-26be-4f87-a3a0-5737073982e5",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "0ad3b792-e0be-4803-9cd6-b1fdba48a76e",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "aa4052b4-4edb-4fa0-a008-dd0c0d4e6114",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e3eff640-3202-4eed-b1b4-0ad37477c3c6",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c2a26f57-b90f-4ba8-81b0-8ef3bfa2107d",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e480dc48-12cc-448f-957c-580336a6ab58",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1f99757b-3cb6-44b3-be7d-d74bb3ff5c3c",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "0bae4ddb-056d-46d8-bc8b-f50478f59394",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 435
+  },
+  {
+   "member_id": "856033cb-5daf-4893-944f-a97f2ad57e61",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "06d4c979-1e45-4c58-a683-7892557c44c7",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c95703b2-469a-4a0d-95d5-12d6699fc2ae",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8c2dfeb7-607e-48b3-a550-b0d8eeb99607",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8ed58ad8-d851-49d3-be7e-dbcf866539fd",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 450
+  },
+  {
+   "member_id": "d302c72e-3acf-4824-8d99-903ab766469c",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "77bc8737-50a3-4436-bcf3-33ebb5ca4416",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 1000
+  },
+  {
+   "member_id": "ba0b3086-c503-4bb5-a25d-5b13b9b860ea",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c9d55bac-a975-42f9-8ff1-0366be9640ec",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "33e4751e-2fee-43da-b9ca-b50fe784688b",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f1603c93-ab19-4ea8-85d2-08d111a09875",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "49e87eb7-39e2-425b-ba01-0d6640ab8eb7",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ce5b2f95-d4bf-464b-991c-e718dd02494f",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f9b159bb-842d-4643-a9ef-2fc2da3edd4f",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8e3d0f12-f20a-4547-a207-bcdc296025c4",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "7c5fd6d9-c986-45bf-b995-c3e6459665a7",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "15dfe4f0-4395-4112-aa7c-34d8b7743a30",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "a59ccea4-ed81-4df7-9f6a-50e91c578242",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "dd45b0c0-8425-4e5b-8230-f8b5e566f826",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "7b49e7d2-4019-4819-8691-7497f7bc0026",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "53f506bb-36b0-4fd7-9c1f-b2151ed02849",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "4d207645-9289-4b40-af86-7049bd828212",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1db6025d-1348-40f2-8bb7-04d31e807599",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "add4a092-2abc-43be-86bb-e667f58e22b7",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "2892b042-773a-4761-be7d-b7964ed36ca3",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "de895c77-9caa-47d9-90e6-7725a544c42d",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "168849f4-6aa1-4e5f-99e0-d19ea4e47f93",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9f991f13-b24a-46ad-bba5-d2ecf9834fcf",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "72b373a8-1777-49f2-b4c9-b87ddd1f72fd",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "a60e5519-9318-43e2-9da9-7e01cc1ef69f",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8e6121ae-943b-4b52-bb7d-c6e21f0e2dbf",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "abbf5b78-f207-4a12-aa1c-efdc84d6d2e0",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "57e267e3-d63e-4ba4-b998-90403dd270df",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "6331e838-50a7-404b-bdd0-c916d85debc4",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "afc45ac7-4fa7-4e04-8494-44d53e6b5d07",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "502ace9f-7171-4deb-9ab2-1fa90744919c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "09f41382-4153-475d-aa54-81caeec0eb21",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "7271a215-12d8-4078-b09c-83f61862bddc",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e61b87da-a9ea-4c26-9e7b-2687b59570b2",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bdf59748-7653-436f-94b7-69963efc1897",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5482b49f-9058-4dac-bc62-8068c8290609",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "de748942-93d6-41f6-a70a-787c702e589c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "27de1496-83a6-4ba5-9877-84dbfd3d66fd",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "a9ccfa55-0122-4f60-8e67-ec4c36dfa371",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "63d65907-5841-4d34-bde3-9e57a3cc5400",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ad1494eb-c57c-4910-b839-4d8f994449a0",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bd8d56d5-eb4b-45c3-8758-0720c3ca93c5",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "0f72eff4-b513-4c9c-a26f-0a1fd46357c9",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "595ac35e-c315-4308-bd68-6ca19995ec92",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "cb9f453d-cb97-413a-a7cb-644ff0332fd9",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "6cc1a4e2-9008-4b13-bf68-bc1e4a2935eb",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f30863b6-9b44-4334-b671-61c8f61fa3c1",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 275
+  },
+  {
+   "member_id": "573e6c79-2c3d-474d-8b8c-268c71bed14d",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f471cd55-db67-47ea-b1d6-ac177a95bb17",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "dea9ad6a-7c76-4896-972f-8ef6bb84d322",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c2cec3a7-4122-4f41-a1e9-8fd3c2117c97",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "0a85d9ce-b2b8-45af-bcac-d646c5e08e60",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bf5f2760-61b3-40ee-9c9f-6b13cb35efbc",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "9f46fd12-1fa5-4613-90be-e51f58cffdbc",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "3ea860bc-524c-401e-b578-da87c93a0074",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d232625e-3922-4cb0-82da-d5d591cab31d",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "fafb2dac-0ef0-4a33-be0f-a014c388cf4f",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bd9607fd-4590-4e4e-9117-609a8b03019b",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bffeb046-fa49-4d37-95d6-8d8c3c0f3b4b",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "db6ff768-c949-49af-90ac-cb5b4bee6837",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "b7b3f322-5b8b-4f7d-8da0-18f817644bdd",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "25005b4d-2694-495e-a7e4-aace0d047464",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1d0e01d2-f8bd-4ea8-a8aa-46b2bf1e08a8",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f7ddc692-ace4-456f-bc96-26a5a4af4973",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f1ae47e0-c60c-4a36-b044-1894345ed08d",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "46f3ca18-30cc-46be-8036-dbe4d93d175f",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "3bef2f13-802e-4f89-8670-56dde3a66bde",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "017ffa6d-8437-44fb-a0f3-8b06e18c4312",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c3066102-f773-4c63-9d2a-bb4147385e46",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e1239602-fb83-448f-a2a9-e14af7455377",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d2dfe698-516c-4f2c-b8b2-77b96a44e0f8",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "788ff81e-9fb3-4ae6-855d-e5b97557239c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "554402e9-7474-463d-9bb4-36ba18e280c9",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5a87fd83-ac21-43ab-9b8c-14e660c1a2a0",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ab3d7baf-965b-4bde-b4ef-86a5ebc3ef03",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "4dcbbed4-e44a-46cf-b27a-bcd459e6e539",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9bfa6d07-f1c1-4d46-9cff-fe2c14f336ed",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c6e0d9b3-58cb-48bb-9cb6-c8484c4e71f0",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "a976406a-0f91-49cb-a42e-72e7be92c000",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5d3df6f0-f941-4981-975a-951ba144b540",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "6df78931-ba50-4be2-af61-5344a12b6b4b",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ffcd1dbe-ffe9-485f-9132-3fbad321a78d",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d30aa1ba-f7ef-4b0d-9faf-c1e3ada21973",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1ea9c492-1984-4624-b44d-4894df08e136",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c056c1cd-b764-4736-b3a6-570700648c6d",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5814d2ee-2b22-4f44-8533-035fe31ed9a1",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f507abaf-54d6-4fbd-b8d2-a910b56bf035",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "7ccc97af-4277-4eb5-9013-171070bfc0fd",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ea02143c-85b5-47c4-b874-3e31dbbe9352",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "1de5d1f4-fd7e-4a76-9e24-24cc3528cd83",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9f4c20ed-2445-4a40-9491-f706006d392c",
+   "year": 2025,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "36cc6fd5-cf34-4eaf-87fc-7691af6f52e7",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "084cfbda-557b-49eb-8328-9722d3832d1a",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9b661f30-5c2e-4380-8d14-1eb39cb906c8",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "4f53bbef-6a29-4864-8412-3e08a99fc3a4",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "579a3590-8a5e-44e7-9a32-e66b10df4440",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "92eec686-4b04-48ad-9e3e-a2fbd632987e",
+   "year": 2026,
+   "due_amount_ils": 0,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "cd71ec36-c00b-4606-b061-a708413aa05f",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e101127d-77be-414b-86d5-4c987a37cab9",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "3a264879-ab71-459d-af09-e53abbad242c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "766989fd-d913-4520-8a1b-f9555825dd64",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "21080469-d462-41d2-a470-d6a0ecbe9e7a",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "93c23aa6-31c7-4490-8045-a1db4a970ac4",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e11aa03f-2f10-46d0-b4e2-b74428c0fe98",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "659739d7-8c6f-412b-a77d-eae4d14527d9",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "882ffb36-fd87-466e-88af-98e2d9c0d4f5",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "01717e94-3013-4272-ae99-2681cf96d7d8",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5269ef11-bbf8-4f9b-a1fc-9a5d38bf8db6",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1f738b25-028e-466e-bf14-5eb74e108ca8",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f92af3f6-f47b-4ce1-96f8-642f5b068362",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "50993ea6-3afb-4d43-a89c-46c8e9754db8",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5f240768-4a64-4a4e-87e5-b6111380b5e2",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "24e84345-a2ef-4361-8ab5-1c5f2d984e9e",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "d2196cef-1b36-4802-9fea-8280ae9f579b",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "5318fef8-3374-44db-a5ce-511845080561",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "b4b3fbf2-fa09-4f70-8c46-5a0b1873c866",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "21220d30-8c41-4220-9775-3bbfbe6c3753",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "db40f708-dbcc-4779-b7d9-2c27003841ed",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "2412563d-f6c4-40ec-b3ea-8ad3b7bb207e",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "13a73d9d-1b9a-49d6-9d81-7c91b6100adb",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c0c3a7ac-c05b-492d-a2c6-7150f12c9d39",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ad085be0-26be-4f87-a3a0-5737073982e5",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 400
+  },
+  {
+   "member_id": "0ad3b792-e0be-4803-9cd6-b1fdba48a76e",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "aa4052b4-4edb-4fa0-a008-dd0c0d4e6114",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e3eff640-3202-4eed-b1b4-0ad37477c3c6",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c2a26f57-b90f-4ba8-81b0-8ef3bfa2107d",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "e480dc48-12cc-448f-957c-580336a6ab58",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1f99757b-3cb6-44b3-be7d-d74bb3ff5c3c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "0bae4ddb-056d-46d8-bc8b-f50478f59394",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "856033cb-5daf-4893-944f-a97f2ad57e61",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "06d4c979-1e45-4c58-a683-7892557c44c7",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "c95703b2-469a-4a0d-95d5-12d6699fc2ae",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8c2dfeb7-607e-48b3-a550-b0d8eeb99607",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8ed58ad8-d851-49d3-be7e-dbcf866539fd",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  },
+  {
+   "member_id": "d302c72e-3acf-4824-8d99-903ab766469c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "77bc8737-50a3-4436-bcf3-33ebb5ca4416",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ba0b3086-c503-4bb5-a25d-5b13b9b860ea",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1db6025d-1348-40f2-8bb7-04d31e807599",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "9f4c20ed-2445-4a40-9491-f706006d392c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "a387396e-2f4f-43d9-b3fa-1d9bfc6b16bc",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "4a8f8210-b650-495a-9170-7ca3d472ca47",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "1da0b55f-0716-4499-b7be-dfa2f1a45718",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bddb7381-3f19-4c08-bce3-970a512866da",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8e3e5a7f-64d5-4393-b3be-7f4f078d2aa7",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "894bc4ef-b6dd-40d8-bb98-93ad943c52f1",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "eb3303c7-2b04-475e-8145-3386deadcaad",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ceee93af-be39-4314-9c2f-e8013791adf5",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "06a18522-058e-474c-9148-5c826be0bbfd",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "f1fc9578-7137-4c5d-8e2a-677991f4d03c",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "bd24e5eb-d030-4e29-b26c-b510d446ea68",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "ce5f5c97-a573-4702-bfa6-0ece4bf5f751",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "8398f063-e785-4840-9539-4499516d9878",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "47cdbd80-8f1f-4256-b1b1-d6e1ceeec8aa",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "94cb0a62-ea87-4d34-b5ee-c64e3e5fbdde",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 0
+  },
+  {
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "year": 2026,
+   "due_amount_ils": 200,
+   "paid_amount_ils": 200
+  }
+ ],
+ "receipts": [
+  {
+   "id": "e06f049e-9830-4e19-8bbb-6ce4a2bc7f81",
+   "no": "REC-00065",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 1000,
+   "amount_ils": 1000,
+   "receipt_date": "2026-07-28",
+   "manual_allocation": false
+  },
+  {
+   "id": "b096ea3d-51ae-4efc-bdf9-bd4fbbc0d81f",
+   "no": "REC-00059",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": "db40f708-dbcc-4779-b7d9-2c27003841ed",
+   "amount": 500,
+   "amount_ils": 1506,
+   "receipt_date": "2026-07-12",
+   "manual_allocation": false
+  },
+  {
+   "id": "3f58012f-04f5-4e52-9ce4-4684f1d61390",
+   "no": "REC-00041",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 300,
+   "amount_ils": 300,
+   "receipt_date": "2026-06-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "8e2dbe37-8c47-4440-9163-e1b4d1c52965",
+   "no": "REC-00010",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": null,
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-05-31",
+   "manual_allocation": false
+  },
+  {
+   "id": "256baae5-7e4d-4b28-9a70-baea7d05ee5f",
+   "no": "REC-00011",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": null,
+   "amount": 50,
+   "amount_ils": 50,
+   "receipt_date": "2026-05-31",
+   "manual_allocation": false
+  },
+  {
+   "id": "8f1cf60e-669b-47d6-aac4-ffb71d67f877",
+   "no": "REC-00014",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": null,
+   "amount": 439,
+   "amount_ils": 439,
+   "receipt_date": "2026-05-31",
+   "manual_allocation": false
+  },
+  {
+   "id": "4bb86188-e1b3-4af7-b2fd-12279eeb99a1",
+   "no": "REC-00018",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "5318fef8-3374-44db-a5ce-511845080561",
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-06-03",
+   "manual_allocation": false
+  },
+  {
+   "id": "bc011c8f-6273-4244-88ed-189dc853cfd7",
+   "no": "REC-00019",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "c9d55bac-a975-42f9-8ff1-0366be9640ec",
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-06-03",
+   "manual_allocation": false
+  },
+  {
+   "id": "0fba0e14-f1e5-46ff-b250-673cc7c8fc43",
+   "no": "REC-00020",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-06-01",
+   "manual_allocation": false
+  },
+  {
+   "id": "0a98a97e-c8d8-45a6-9e87-b8cf99509c82",
+   "no": "REC-00046",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-24",
+   "manual_allocation": false
+  },
+  {
+   "id": "224d682d-1981-4fd5-85e6-101977d33782",
+   "no": "REC-00001",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 1200,
+   "amount_ils": 1200,
+   "receipt_date": "2026-05-20",
+   "manual_allocation": false
+  },
+  {
+   "id": "0ef99ee5-e719-4c68-b7d3-744e2c820d70",
+   "no": "REC-00002",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-02-12",
+   "manual_allocation": false
+  },
+  {
+   "id": "0886549a-210b-48d4-944b-a0a5e457aa93",
+   "no": "REC-00063",
+   "is_deleted": false,
+   "fund_type": "donation",
+   "member_id": "1f99757b-3cb6-44b3-be7d-d74bb3ff5c3c",
+   "amount": 65.99,
+   "amount_ils": 196.99,
+   "receipt_date": "2026-06-26",
+   "manual_allocation": false
+  },
+  {
+   "id": "eed8ca78-4b5d-4cb7-989b-d341c1eebe57",
+   "no": "REC-00066",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 800,
+   "amount_ils": 800,
+   "receipt_date": "2026-07-30",
+   "manual_allocation": false
+  },
+  {
+   "id": "ce5c454a-a72b-459e-8934-68e7ba028cbe",
+   "no": "REC-00060",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": "5a87fd83-ac21-43ab-9b8c-14e660c1a2a0",
+   "amount": 2000,
+   "amount_ils": 2000,
+   "receipt_date": "2026-07-12",
+   "manual_allocation": false
+  },
+  {
+   "id": "d800b5cd-ad58-4028-b1e6-00213a853ef9",
+   "no": "REC-00005",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-05-18",
+   "manual_allocation": false
+  },
+  {
+   "id": "08983e8e-2cab-46b8-8fd0-4bf6f97b9720",
+   "no": "REC-00057",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "1f99757b-3cb6-44b3-be7d-d74bb3ff5c3c",
+   "amount": 134.01,
+   "amount_ils": 400.03,
+   "receipt_date": "2026-06-26",
+   "manual_allocation": false
+  },
+  {
+   "id": "c1bf18e6-a197-4ba1-ab1d-d8319503b913",
+   "no": "REC-00061",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "cb9f453d-cb97-413a-a7cb-644ff0332fd9",
+   "amount": 80,
+   "amount_ils": 340.424,
+   "receipt_date": "2026-07-12",
+   "manual_allocation": false
+  },
+  {
+   "id": "bce500f5-af75-45c7-a593-df3576a4b92a",
+   "no": "REC-00064",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-07-23",
+   "manual_allocation": false
+  },
+  {
+   "id": "c56efd38-2514-475d-938f-82a47dd3a0b2",
+   "no": "REC-00027",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "ea02143c-85b5-47c4-b874-3e31dbbe9352",
+   "amount": 400,
+   "amount_ils": 400,
+   "receipt_date": "2026-06-12",
+   "manual_allocation": false
+  },
+  {
+   "id": "c7a8b7eb-5fd8-4a4e-81a2-e6cba51666d3",
+   "no": "REC-00049",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "5318fef8-3374-44db-a5ce-511845080561",
+   "amount": 400,
+   "amount_ils": 400,
+   "receipt_date": "2026-06-18",
+   "manual_allocation": false
+  },
+  {
+   "id": "e70fc364-a874-4493-bfbb-e39b3a5dfbd7",
+   "no": "REC-00053",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "add4a092-2abc-43be-86bb-e667f58e22b7",
+   "amount": 400,
+   "amount_ils": 400,
+   "receipt_date": "2026-06-18",
+   "manual_allocation": false
+  },
+  {
+   "id": "185d6d09-f691-4b14-aa0b-34013ac10b3b",
+   "no": "REC-00054",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "1db6025d-1348-40f2-8bb7-04d31e807599",
+   "amount": 400,
+   "amount_ils": 400,
+   "receipt_date": "2026-06-18",
+   "manual_allocation": false
+  },
+  {
+   "id": "016d346b-b200-4e63-92de-159898b74fbd",
+   "no": "REC-00056",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "9f4c20ed-2445-4a40-9491-f706006d392c",
+   "amount": 100,
+   "amount_ils": 298.51,
+   "receipt_date": "2026-06-26",
+   "manual_allocation": false
+  },
+  {
+   "id": "1d9f943e-ce38-4be1-a186-d14a734d7629",
+   "no": "REC-00006",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-04-24",
+   "manual_allocation": false
+  },
+  {
+   "id": "7eb29ce7-45af-4618-9eb9-7d410f73c9e7",
+   "no": "REC-00013",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-05-31",
+   "manual_allocation": false
+  },
+  {
+   "id": "6acca134-5320-4a2c-9060-699543596b20",
+   "no": "REC-00017",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 400,
+   "amount_ils": 1160,
+   "receipt_date": "2026-06-01",
+   "manual_allocation": false
+  },
+  {
+   "id": "954b0a06-b772-4cae-8f5e-1925739ca0cd",
+   "no": "REC-00015",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 1,
+   "amount_ils": 1,
+   "receipt_date": "2026-06-01",
+   "manual_allocation": false
+  },
+  {
+   "id": "5e44d695-bf4f-4ba5-831d-22be774ca967",
+   "no": "REC-00016",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 57,
+   "amount_ils": 57,
+   "receipt_date": "2026-06-01",
+   "manual_allocation": false
+  },
+  {
+   "id": "eb9bbb48-16e0-47c6-bceb-968707392ad0",
+   "no": "REC-00008",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 1,
+   "amount_ils": 4.1,
+   "receipt_date": "2026-05-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "001cd154-0d81-45df-bfda-29fa85c3cac9",
+   "no": "REC-00047",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-24",
+   "manual_allocation": false
+  },
+  {
+   "id": "6685deaa-7b01-485e-81a2-4a964760cd3d",
+   "no": "REC-00032",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-06-16",
+   "manual_allocation": false
+  },
+  {
+   "id": "0bb9414b-86e0-422b-ac0c-29fd17161a80",
+   "no": "REC-00021",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 253,
+   "amount_ils": 253,
+   "receipt_date": "2026-06-07",
+   "manual_allocation": false
+  },
+  {
+   "id": "58a4a726-28f0-4204-bdf6-9305aef3f5ef",
+   "no": "REC-00022",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 253,
+   "amount_ils": 253,
+   "receipt_date": "2026-06-07",
+   "manual_allocation": false
+  },
+  {
+   "id": "05f92598-7c8c-45df-a098-fbfa68042ff4",
+   "no": "REC-00024",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 1200,
+   "amount_ils": 1200,
+   "receipt_date": "2026-06-07",
+   "manual_allocation": false
+  },
+  {
+   "id": "5bd1da06-8af9-45e8-bd11-96812ad02e7d",
+   "no": "REC-00030",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 300,
+   "amount_ils": 300,
+   "receipt_date": "2026-06-12",
+   "manual_allocation": false
+  },
+  {
+   "id": "ae35daf2-93df-4238-bf4b-44fb8610f2ea",
+   "no": "REC-00036",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "d2aab4d6-6d9d-4620-84b7-d557aeeedb44",
+   "no": "REC-00045",
+   "is_deleted": true,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-24",
+   "manual_allocation": false
+  },
+  {
+   "id": "bb0c4ef7-9a51-420c-88d8-ee1201521d6a",
+   "no": "REC-00004",
+   "is_deleted": false,
+   "fund_type": "donation",
+   "member_id": null,
+   "amount": 280,
+   "amount_ils": 280,
+   "receipt_date": "2026-05-19",
+   "manual_allocation": false
+  },
+  {
+   "id": "28233da8-67fd-4404-81a5-3762ff8b29ed",
+   "no": "REC-00007",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": null,
+   "amount": 50,
+   "amount_ils": 50,
+   "receipt_date": "2026-05-19",
+   "manual_allocation": false
+  },
+  {
+   "id": "5733eb07-32af-4107-9dce-50c92a19a8ce",
+   "no": "REC-00067",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "amount": 900,
+   "amount_ils": 900,
+   "receipt_date": "2026-08-01",
+   "manual_allocation": false
+  },
+  {
+   "id": "d18f171e-6743-4e94-86bd-ca2375ced87c",
+   "no": "REC-00068",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": "06a18522-058e-474c-9148-5c826be0bbfd",
+   "amount": 500,
+   "amount_ils": 1529.05,
+   "receipt_date": "2026-08-02",
+   "manual_allocation": false
+  },
+  {
+   "id": "f2646675-2d24-448e-b80f-de93ba9ed633",
+   "no": "REC-00062",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": "dd45b0c0-8425-4e5b-8230-f8b5e566f826",
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-07-13",
+   "manual_allocation": false
+  },
+  {
+   "id": "156d122e-6f84-4456-b78d-b09c647dbb0b",
+   "no": "REC-00058",
+   "is_deleted": false,
+   "fund_type": "donation",
+   "member_id": "8ed58ad8-d851-49d3-be7e-dbcf866539fd",
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-07-10",
+   "manual_allocation": false
+  },
+  {
+   "id": "4cfb0381-87d2-4cde-89e1-55e1c428fb4d",
+   "no": "REC-00028",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "c9d55bac-a975-42f9-8ff1-0366be9640ec",
+   "amount": 1000,
+   "amount_ils": 1000,
+   "receipt_date": "2026-06-12",
+   "manual_allocation": false
+  },
+  {
+   "id": "6237b45a-8550-4977-92fc-f8e7ad27ba72",
+   "no": "REC-00029",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "f507abaf-54d6-4fbd-b8d2-a910b56bf035",
+   "amount": 600,
+   "amount_ils": 600,
+   "receipt_date": "2026-06-13",
+   "manual_allocation": false
+  },
+  {
+   "id": "de385d23-26b0-4790-bb70-da0122f0654e",
+   "no": "REC-00035",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "ea02143c-85b5-47c4-b874-3e31dbbe9352",
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-06-20",
+   "manual_allocation": false
+  },
+  {
+   "id": "8e1e491c-3fd1-4cff-8601-39d56888f485",
+   "no": "REC-00034",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 500,
+   "amount_ils": 500,
+   "receipt_date": "2026-06-20",
+   "manual_allocation": false
+  },
+  {
+   "id": "bcd98a37-f37f-43be-bc0d-61202c70459e",
+   "no": "REC-00038",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 300,
+   "amount_ils": 300,
+   "receipt_date": "2026-06-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "6f52cfe5-a3fb-43be-8e26-e9a2143a8ce4",
+   "no": "REC-00048",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "amount": 100,
+   "amount_ils": 150,
+   "receipt_date": "2026-06-24",
+   "manual_allocation": false
+  },
+  {
+   "id": "ae28ce4b-dcc2-4f0d-8849-9df7cf36e906",
+   "no": "REC-00051",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "a387396e-2f4f-43d9-b3fa-1d9bfc6b16bc",
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-06-18",
+   "manual_allocation": false
+  },
+  {
+   "id": "a042dbd5-fd93-499c-a7b1-5200e097d4c7",
+   "no": "REC-00052",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "f1ae47e0-c60c-4a36-b044-1894345ed08d",
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-06-18",
+   "manual_allocation": false
+  },
+  {
+   "id": "7e9c809d-e2d5-43f8-a72c-61cc7e29478c",
+   "no": "REC-00050",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "c056c1cd-b764-4736-b3a6-570700648c6d",
+   "amount": 400,
+   "amount_ils": 400,
+   "receipt_date": "2026-06-18",
+   "manual_allocation": false
+  },
+  {
+   "id": "21a21fe6-f19e-4725-a3de-cc35bdaf5c04",
+   "no": "REC-00069",
+   "is_deleted": false,
+   "fund_type": "diwan",
+   "member_id": null,
+   "amount": 800,
+   "amount_ils": 800,
+   "receipt_date": "2026-08-03",
+   "manual_allocation": false
+  },
+  {
+   "id": "d924a00e-44c2-43dd-a436-d2724051c1cc",
+   "no": "REC-00055",
+   "is_deleted": false,
+   "fund_type": "food",
+   "member_id": "766989fd-d913-4520-8a1b-f9555825dd64",
+   "amount": 100,
+   "amount_ils": 298.51,
+   "receipt_date": "2026-06-26",
+   "manual_allocation": false
+  },
+  {
+   "id": "98099d4a-cd19-43ef-b989-f67020dd67e0",
+   "no": "REC-00033",
+   "is_deleted": true,
+   "fund_type": "food",
+   "member_id": null,
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-20",
+   "manual_allocation": false
+  },
+  {
+   "id": "3cc83e30-39ce-4998-9801-37878d7e8cd7",
+   "no": "REC-00003",
+   "is_deleted": false,
+   "fund_type": "donation",
+   "member_id": null,
+   "amount": 900,
+   "amount_ils": 900,
+   "receipt_date": "2026-05-08",
+   "manual_allocation": false
+  },
+  {
+   "id": "a51da434-15ae-4641-ab86-73f0badcb084",
+   "no": "REC-00025",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "f507abaf-54d6-4fbd-b8d2-a910b56bf035",
+   "amount": 300,
+   "amount_ils": 300,
+   "receipt_date": "2026-02-10",
+   "manual_allocation": false
+  },
+  {
+   "id": "c3416296-cba4-4cce-be70-1900e7fff107",
+   "no": "REC-00026",
+   "is_deleted": false,
+   "fund_type": "donation",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 300,
+   "amount_ils": 300,
+   "receipt_date": "2026-02-10",
+   "manual_allocation": false
+  },
+  {
+   "id": "7f5fd7bf-7ac7-4109-9fb6-3800370b73e1",
+   "no": "REC-00009",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": null,
+   "amount": 28.87,
+   "amount_ils": 182.28,
+   "receipt_date": "2026-05-25",
+   "manual_allocation": false
+  },
+  {
+   "id": "e403ee36-eaf8-4279-a6ee-a0b31eedcbed",
+   "no": "REC-00031",
+   "is_deleted": false,
+   "fund_type": "donation",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 132,
+   "amount_ils": 383.724,
+   "receipt_date": "2026-05-25",
+   "manual_allocation": false
+  },
+  {
+   "id": "b442377e-08ac-49e0-987b-c438dc5aec5a",
+   "no": "REC-00039",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "92b77c23-672a-454c-ac21-113823998165",
+   "no": "REC-00043",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "5814d2ee-2b22-4f44-8533-035fe31ed9a1",
+   "amount": 3000,
+   "amount_ils": 3000,
+   "receipt_date": "2026-06-22",
+   "manual_allocation": false
+  },
+  {
+   "id": "f7ff0c4f-ca73-4ed4-9491-30316586bf66",
+   "no": "REC-00042",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "5814d2ee-2b22-4f44-8533-035fe31ed9a1",
+   "amount": 3000,
+   "amount_ils": 3000,
+   "receipt_date": "2026-06-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "0807917c-4aa0-4e9c-9281-34d4d10c8e4a",
+   "no": "REC-00012",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": null,
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-05-31",
+   "manual_allocation": false
+  },
+  {
+   "id": "e5d59a6d-dbdc-4e7d-add8-d8afda4af292",
+   "no": "REC-00023",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "5814d2ee-2b22-4f44-8533-035fe31ed9a1",
+   "amount": 200,
+   "amount_ils": 200,
+   "receipt_date": "2026-06-07",
+   "manual_allocation": false
+  },
+  {
+   "id": "6a739524-0702-443d-92c5-2c9fa673a83d",
+   "no": "REC-00037",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "b2814378-ff56-45ec-a9c5-6a4fd3e48e39",
+   "no": "REC-00040",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 100,
+   "amount_ils": 100,
+   "receipt_date": "2026-06-21",
+   "manual_allocation": false
+  },
+  {
+   "id": "cac00dd4-e2a7-475b-b688-ea3934b56ea1",
+   "no": "REC-00044",
+   "is_deleted": true,
+   "fund_type": "donation",
+   "member_id": "75e4b2e6-09ac-459a-8849-ade9756f8c26",
+   "amount": 5000,
+   "amount_ils": 5000,
+   "receipt_date": "2026-06-24",
+   "manual_allocation": false
+  }
+ ],
+ "allocation_records": [
+  {
+   "source_ref": "REC-00067",
+   "source_kind": null,
+   "member_id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "obligation_kind": "due",
+   "year": 2025,
+   "amount_allocated": 200,
+   "voided_at": null,
+   "refunded_at": null
+  },
+  {
+   "source_ref": "REC-00067",
+   "source_kind": null,
+   "member_id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "obligation_kind": "due",
+   "year": 2026,
+   "amount_allocated": 200,
+   "voided_at": null,
+   "refunded_at": null
+  },
+  {
+   "source_ref": "REC-00067",
+   "source_kind": null,
+   "member_id": "d2f4a975-cab8-41ec-aa7b-55b2cf9fa7f6",
+   "obligation_kind": "historical",
+   "year": null,
+   "amount_allocated": 500,
+   "voided_at": null,
+   "refunded_at": null
+  }
+ ],
+ "settings": [
+  {
+   "key": "annual_due_amount",
+   "value": "200"
+  },
+  {
+   "key": "system_name",
+   "value": "ديوان آل طه"
+  },
+  {
+   "key": "usd_rate",
+   "value": "3.003"
+  },
+  {
+   "key": "jod_rate",
+   "value": "4.2373"
+  },
+  {
+   "key": "food_opening_balance",
+   "value": "-8639"
+  },
+  {
+   "key": "diwan_opening_balance",
+   "value": "10481"
+  },
+  {
+   "key": "food_opening_usd",
+   "value": "0"
+  },
+  {
+   "key": "food_opening_jod",
+   "value": "0"
+  },
+  {
+   "key": "diwan_opening_usd",
+   "value": "0"
+  },
+  {
+   "key": "diwan_opening_jod",
+   "value": "0"
+  },
+  {
+   "key": "locked_through_year",
+   "value": "2025"
+  },
+  {
+   "key": "accounting_model",
+   "value": "legacy"
+  }
+ ]
+}
