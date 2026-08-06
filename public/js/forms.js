@@ -131,6 +131,52 @@ window.onPayerTypeChange=function(){
   document.getElementById('rec-member-wrap').style.display=t==='member'?'':'none';
   document.getElementById('rec-contact-wrap').style.display=t==='contact'?'':'none';
   document.getElementById('rec-manual-wrap').style.display=t==='manual'?'':'none';
+  if(window.syncDeficitControl)window.syncDeficitControl();
+};
+
+/* ═══ F-3 — Explicit Historical Deficit selection ═══
+   Historical Deficit is ALWAYS an explicit accountant decision (never automatic).
+   This control is the ONLY source of `deficitAmount`. It performs NO allocation and
+   makes NO financial decision: it collects the accountant's choice + amount and hands
+   `deficitAmount` to FoodReceiptDecision.decide(), which alone deducts/bounds it.
+   Visible only for a member Food Receipt while the settlement path is ON. */
+window.syncDeficitControl=function(){
+  const wrap=document.getElementById('rec-deficit-wrap');
+  if(!wrap)return;
+  const fund=(document.getElementById('rec-fund')||{}).value;
+  const pt=(document.getElementById('rec-payer-type')||{}).value;
+  const on=!!(window.ReceiptSettlement&&window.ReceiptSettlement.enabled&&window.ReceiptSettlement.enabled());
+  const show=on&&fund==='food'&&pt==='member';
+  wrap.style.display=show?'':'none';
+  if(!show){                       /* hidden ⇒ reset so deficitAmount is 0 (rule 6) */
+    const cb=document.getElementById('rec-deficit-on'); if(cb)cb.checked=false;
+    const amtWrap=document.getElementById('rec-deficit-amt-wrap'); if(amtWrap)amtWrap.style.display='none';
+    const amt=document.getElementById('rec-deficit-amount'); if(amt)amt.value='';
+    return;
+  }
+  const hint=document.getElementById('rec-deficit-hint');   /* read-only context from FIN */
+  if(hint){
+    let d=0; const mid=(document.getElementById('rec-member')||{}).value;
+    try{ const al=window.FIN&&window.FIN.memberAllocation?window.FIN.memberAllocation(mid):null;
+      d=(al&&al.historical?Number(al.historical.remaining||0):0)||0; }catch(_){}
+    hint.textContent=d>0.005?('العجز التاريخي المتاح: '+d.toFixed(2)+' ₪'):'لا يوجد عجز تاريخي مسجَّل على هذا العضو';
+  }
+};
+/* Show/clear the amount field with the checkbox (unchecked ⇒ amount is 0). */
+window.onDeficitToggle=function(){
+  const cb=document.getElementById('rec-deficit-on');
+  const amtWrap=document.getElementById('rec-deficit-amt-wrap');
+  if(amtWrap)amtWrap.style.display=(cb&&cb.checked)?'':'none';
+  if(!(cb&&cb.checked)){ const amt=document.getElementById('rec-deficit-amount'); if(amt)amt.value=''; }
+};
+/* THE single reader of the accountant's Historical-Deficit decision: 0 unless the
+   box is ticked AND a positive amount is entered. No allocation, no distribution. */
+window.getRecDeficitAmount=function(){
+  const cb=document.getElementById('rec-deficit-on');
+  if(!cb||!cb.checked)return 0;
+  const amt=document.getElementById('rec-deficit-amount');
+  const v=parseFloat(amt&&amt.value);
+  return (isFinite(v)&&v>0)?v:0;
 };
 window.onPayFundChange=function(){
   const fund=document.getElementById('pay-fund').value;

@@ -77,7 +77,10 @@ window.saveRec=async function(print=false){
       amount:parseFloat(document.getElementById('rec-amount')?.value)||0,
       amountILS:getILS('rec'), rate:getRate('rec'),
       date, method:document.getElementById('rec-method').value||'cash',
-      notes:document.getElementById('rec-notes').value, print
+      notes:document.getElementById('rec-notes').value, print,
+      /* F-3 — the accountant's explicit Historical-Deficit decision (0 unless ticked).
+         The decision function alone deducts/bounds it; the UI only forwards it. */
+      deficitAmount:(window.getRecDeficitAmount?window.getRecDeficitAmount():0)
     });
   }
 
