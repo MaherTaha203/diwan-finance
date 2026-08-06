@@ -616,9 +616,19 @@ const FIN={
     const r2=FIN._r2;
     const all=DB.members.filter(m=>m.is_active!==false).map(m=>{
       const st=FIN.memberStatement(m.id);
+      /* FIN-RECON-001 — the per-year subscription figures come from the CERTIFIED FD-011
+         accessor (memberDelinquency.byYear), NOT the raw stored paid_amount_ils. That
+         stored field is only ever the migration seed — live subscription payments are
+         food receipts resolved through the FD-002 waterfall (operations.js rejects any
+         non-zero paid here). Reading it directly misreported every live-app-paid member
+         as unpaid on this report. `due` is value-identical (byYear[y].due == Σ
+         due_amount_ils for the year); `paid` now reflects the waterfall allocation, so
+         this report reconciles with the Delinquent report, dues workspace and member
+         statement (one canonical truth — no report-side reinterpretation). */
+      const dqBy=FIN.memberDelinquency(m.id).byYear;
       let selSub=0,selPaid=0;
-      (DB.subscriptions||[]).filter(s=>s.member_id===m.id).forEach(s=>{
-        if(!years||years.has(Number(s.year))){ selSub+=Number(s.due_amount_ils||0); selPaid+=Number(s.paid_amount_ils||0); }
+      Object.keys(dqBy).forEach(y=>{
+        if(!years||years.has(Number(y))){ selSub+=Number(dqBy[y].due||0); selPaid+=Number(dqBy[y].paid||0); }
       });
       const debtSettled=Number(st.debtSettled||0);
       const writtenOff=Number(st.debtWrittenOff||0);
@@ -682,10 +692,17 @@ const FIN={
       if(Math.abs(wf-st.finalBalance)>=T)               bad.push('waterfall');
       if(Math.abs(Number(dl.outstanding)-st.finalBalance)>=T) bad.push('delinquency');
       if(!row||Math.abs(Number(row.current)-st.finalBalance)>=T) bad.push('debt-report');
+      /* FIN-RECON-001 — the Annual Debt report's per-year PAID must equal the certified
+         FD-011 waterfall (memberDelinquency.byYear), not the raw stored paid_amount_ils.
+         model is built with years:null, so row.selPaid = Σ byYear[y].paid by construction;
+         any future revert to the raw field breaks this for live-app-paid members. */
+      const rowPaid=row?Number(row.selPaid):0;
+      const wfPaid=Object.values(dl.byYear||{}).reduce((s,c)=>s+Number(c.paid||0),0);
+      if(Math.abs(rowPaid-wfPaid)>=T) bad.push('debt-report-paid');
       if(bad.length) failed.push({id:m.id,name:m.name,fails:bad.join('+')});
     });
-    checks.push({k:'حسابات الأعضاء — 5 مطابقات لكل عضو ('+members.length+' عضوًا)',
-      a:members.length*5-failed.length, b:members.length*5, match:failed.length===0});
+    checks.push({k:'حسابات الأعضاء — 6 مطابقات لكل عضو ('+members.length+' عضوًا)',
+      a:members.length*6-failed.length, b:members.length*6, match:failed.length===0});
     add('مجموع أرصدة الأعضاء: كشف العضو ↔ تقرير المديونية', sumSt, model.totals.current);
     /* — treasury identities — */
     add('صافي مركز الغداء ↔ رصيد الغداء + العجز المتبقي',
