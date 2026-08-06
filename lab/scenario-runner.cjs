@@ -9,42 +9,47 @@ const E = require('./engine.cjs');
 const { signature } = require('./scenario-discovery.cjs');
 const R2 = E.R2;
 
-/* amount strategies from a member's real position */
+/* amount strategies from a member's real position (Logic Freeze v2) */
 function strategies(p) {
   const s = [];
-  const openSum = R2(p.openYears.reduce((a, y) => a + y.remaining, 0));
-  s.push({ tag: 'tiny', amount: 1, def: false });
-  if (p.openYears.length) {
-    const y0 = p.openYears[0].remaining;
-    s.push({ tag: 'partial-oldest', amount: R2(Math.max(1, Math.floor(y0 / 2))), def: false });
-    s.push({ tag: 'exact-oldest', amount: y0, def: false });
-    if (p.openYears.length > 1) s.push({ tag: 'clear-open', amount: openSum, def: false });
+  const subSum = R2(p.subYears.reduce((a, y) => a + y.remaining, 0));
+  s.push({ tag: 'tiny', amount: 1, deficitAmount: 0 });
+  if (p.subYears.length) {
+    const y0 = p.subYears[0].remaining;
+    s.push({ tag: 'partial-oldest', amount: R2(Math.max(1, Math.floor(y0 / 2))), deficitAmount: 0 });
+    s.push({ tag: 'exact-oldest', amount: y0, deficitAmount: 0 });
+    if (p.subYears.length > 1) s.push({ tag: 'clear-subs', amount: subSum, deficitAmount: 0 });
   }
-  if (p.deficit > 0.005) s.push({ tag: 'open+deficit', amount: R2(openSum + p.deficit), def: true });
-  if (p.outstanding > 0.005) s.push({ tag: 'overpay', amount: R2(p.outstanding + 100), def: true });
-  if (!p.openYears.length && p.deficit <= 0.005) s.push({ tag: 'credit-only', amount: 100, def: false });
+  if (p.deficit > 0.005) s.push({ tag: 'deficit-first+subs', amount: R2(p.deficit + subSum), deficitAmount: p.deficit });
+  s.push({ tag: 'overpay-future', amount: R2(subSum + 100), deficitAmount: 0 });      // surplus → first future year
+  if (!p.subYears.length && p.deficit <= 0.005) s.push({ tag: 'future-only', amount: 100, deficitAmount: 0 });
   return s;
 }
 
-/* the reference invariants the decision must satisfy for real data */
+/* the reference invariants (Owner Decisions · Logic Freeze v2) */
 function check(p, sc, d) {
   const errs = [];
   const stepSum = R2(d.steps.reduce((a, x) => a + x.amount, 0));
   if (Math.abs(stepSum - d.amount) > 0.005) errs.push('steps_sum!=amount(' + stepSum + '/' + d.amount + ')');
   if (!d.balanced) errs.push('not_balanced');
   if (d.remaining > 0.005 || d.remaining < -0.005) errs.push('remaining!=0(' + d.remaining + ')');
-  const lockedYears = new Set(p.lockedDebt.map(y => y.year));
-  const openMap = {}; p.openYears.forEach(y => openMap[y.year] = y.remaining);
-  d.steps.forEach(st => {
-    if (st.kind === 'due') {
-      if (st.year <= E.LOCKED) errs.push('due_on_locked_year(' + st.year + ')');
-      if (lockedYears.has(st.year)) errs.push('due_targets_locked(' + st.year + ')');
-      if (st.amount > (openMap[st.year] || 0) + 0.005) errs.push('due_exceeds_outstanding(' + st.year + ')');
-    }
-    if (st.kind === 'historical' && st.amount > p.deficit + 0.005) errs.push('deficit_overrun');
+  if (d.steps.some(st => st.kind === 'credit')) errs.push('generic_credit_used');       // D6: never credit
+  // D5: an explicit deficit amount must be FIRST and within bounds
+  const defSteps = d.steps.filter(st => st.kind === 'historical');
+  if (defSteps.length) {
+    if (d.steps[0].kind !== 'historical') errs.push('deficit_not_first');
+    if (defSteps[0].amount > Math.min(sc.deficitAmount, p.deficit) + 0.005) errs.push('deficit_overrun');
+  }
+  // D2: due steps are ERP subscription years, oldest-first, capped at each year's remaining
+  const subMap = {}; p.subYears.forEach(y => subMap[y.year] = y.remaining);
+  let last = -Infinity;
+  d.steps.filter(st => st.kind === 'due').forEach(st => {
+    if (st.amount > (subMap[st.year] || 0) + 0.005) errs.push('due_exceeds(' + st.year + ')');
+    if (st.year < last) errs.push('due_not_oldest_first'); last = st.year;
   });
-  // A member holding credit has NEGATIVE outstanding; obligations can only consume
-  // the positive debt, and balanceAfter may legitimately stay negative (still in credit).
+  // D6: surplus step targets the first future subscription year
+  d.steps.filter(st => st.kind === 'future').forEach(st => { if (st.year !== E.FIRST_FUTURE) errs.push('future_wrong_year'); });
+  // obligations can only consume the positive current debt (credit-holders have negative outstanding)
   const positiveDebt = Math.max(0, p.outstanding);
   if (d.toObligations > positiveDebt + 0.005) errs.push('obligations_exceed_debt');
   return errs;
@@ -58,7 +63,7 @@ function run(snapshotPath) {
     perPattern[sig] = perPattern[sig] || { members: 0, scenarios: 0, passed: 0, failed: 0 };
     perPattern[sig].members++;
     strategies(p).forEach(sc => {
-      const d = E.propose(m.id, sc.amount, { includeDeficit: sc.def });
+      const d = E.propose(m.id, sc.amount, { deficitAmount: sc.deficitAmount });
       const errs = check(p, sc, d);
       total++; perPattern[sig].scenarios++;
       if (errs.length === 0) { passed++; perPattern[sig].passed++; }

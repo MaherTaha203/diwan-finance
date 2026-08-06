@@ -8,10 +8,9 @@ const fs = require('fs'), path = require('path');
 const E = require('./engine.cjs');
 
 function signature(p) {
-  const openN = p.openYears.length >= 2 ? '2+' : String(p.openYears.length);
+  const subN = p.subYears.length >= 2 ? '2+' : String(p.subYears.length);
   return [
-    'open:' + openN,
-    'locked:' + (p.lockedDebt.length ? 'y' : 'n'),
+    'subs:' + subN,
     'deficit:' + (p.deficit > 0.005 ? 'y' : 'n'),
     'credit:' + (p.credit > 0.005 ? 'y' : 'n'),
     'status:' + (p.outstanding > 0.005 ? 'owing' : 'clear'),

@@ -1,49 +1,57 @@
-# Decision Validation — Food Receipt Engine (Lab Reference)
+# Decision Validation — Food Receipt Engine (Lab Reference · Logic Freeze v2)
 
-**Additive lab extension** on top of the Constitutional Laboratory. Runs the **real**
-production engine (`public/js/fin.js`) **offline** over a static, read-only production
-snapshot. No DB writes, no system change, no network at run time.
+**Additive lab extension** on the Constitutional Laboratory. Runs the **real** engine
+(`public/js/fin.js`) **offline** over a static read-only production snapshot. No DB
+writes, no system change, no network at run time. The lab is synchronized to the
+**authoritative Owner Decisions** (governance hierarchy: Constitution → Owner Decisions
+→ Lab → Implementation).
 
-## Components (additive)
-- `lab/snapshot` → `lab/seed/prod-snapshot.json` — read-only production snapshot (retained for reproducibility).
-- `lab/engine.cjs` — loads the real engine headless; `position(member)` (real FIN outputs) + `propose(member, amount)` (confirmation-first decision, step-by-step + reasons).
-- `lab/decision-runner.cjs` — explain one member+amount decision, step by step.
-- `lab/scenario-discovery.cjs` — cluster all real members into patterns; compare vs the fixed seed.
-- `lab/scenario-runner.cjs` — generate & run scenarios (member × amount strategies), assert invariants, report coverage.
+## Authoritative Owner Decisions embodied (Logic Freeze v2)
+- **D1** Payment Allocation applies only to Food Receipts.
+- **D2** Automatic allocation starts from the **first ERP year (2025)** and proceeds year by year, oldest-first.
+- **D3** Historical Deficit **never** participates automatically.
+- **D4** Historical Deficit is **always** an explicit accountant decision.
+- **D5** An explicit deficit amount is **deducted first**; only the remainder is auto-allocated.
+- **D6** When all ERP subscriptions are satisfied, the surplus becomes the **first future subscription year** — **not** generic credit.
+- **D7** Legacy balances before ERP remain untouched (the deficit = legacy).
 
-## Snapshot (source of truth for this run)
-151 members · 302 subscriptions · 69 receipts (10 active food) · `locked_through_year=2025` · `food_opening=-8639`.
+## Snapshot (source of truth for this run — retained for reproducibility)
+151 members · 302 subscriptions · 69 receipts (10 active food) · `locked_through_year=2025` · first future year = **2027**.
 
-## Discovered real patterns (8) — none matched the old fixed seed
-| # | count | pattern |
-|---|---|---|
-| 1 | 97 | open:1 · locked:y · deficit:y · owing |
-| 2 | 20 | open:0 · locked:n · deficit:y · owing |
-| 3 | 12 | open:1 · locked:n · deficit:y · owing |
-| 4 | 8 | open:0 · clear |
-| 5 | 4 | open:1 · locked:y · owing |
-| 6 | 4 | open:0 · locked:y · deficit:y · owing |
-| 7 | 3 | open:1 · owing |
-| 8 | 3 | open:0 · credit · clear |
+## Discovered real patterns (7)
+| count | pattern |
+|---|---|
+| 97 | subs:2+ · deficit:y · owing |
+| 20 | subs:0 · deficit:y · owing |
+| 16 | subs:1 · deficit:y · owing |
+| 8 | subs:0 · clear |
+| 4 | subs:2+ · owing |
+| 3 | subs:1 · owing |
+| 3 | subs:0 · credit · clear |
 
-The fixed seed (4 members) covers patterns that **do not occur in production** (e.g. `open:2+`), because prod has only years 2025/2026 and 2025 is locked ⇒ at most one open year. **6 real patterns were uncovered by the fixed cases.**
+(The fixed constitution seed covers different patterns that do not occur in production.)
 
-## Coverage result
-- **Members:** 151 · **Scenarios:** 667 · **Passed:** 667 · **Failed:** 0
-- **Patterns:** 8/8 fully passing · **Pattern coverage:** 100% · **Scenario pass:** 100%
+## Coverage result (Logic Freeze v2)
+- **Members 151 · Scenarios 787 · Passed 787 · Failed 0**
+- **Patterns 7/7 fully passing · Pattern coverage 100% · Scenario pass 100%**
 
-Invariants asserted per scenario: balanced (Σ steps = amount), no settlement of a **locked** year, no `due` line exceeds that year's remaining, historical ≤ deficit, obligations ≤ positive debt, surplus → future credit.
+Invariants asserted per scenario (all from the Owner Decisions): balanced (Σ steps = amount);
+no generic credit (D6); explicit deficit is **first** and within bounds (D5); `due` steps are
+ERP subscription years, **oldest-first**, capped at each year's remaining (D2); surplus targets
+the **first future year** 2027 (D6); obligations ≤ positive current debt.
 
-## Findings surfaced by the lab (value of running on real data)
-1. **Credit-holding members** (outstanding negative) are a real pattern (3 members) — the first invariant draft wrongly flagged them; corrected so a credit member's payment routes fully to future credit.
-2. **Locked-year (2025) debt is real and widespread** (97+4+4 members) and is **never settleable by a subscription line** (fiscal lock). The reference logic surfaces it separately; whether/how it maps to the historical-deficit bucket is the pending owner decision (MIR-001).
-3. Production has **at most one open year (2026)** per member — the seed's multi-open-year cases are not representative.
+## Worked example (Decision Runner)
+Member with 2025=200, 2026=200, deficit=2200; pay 500 with 100 to deficit →
+1) **100 → historical** (deducted first, D5) · 2) **200 → 2025** (first ERP year, D2) · 3) **200 → 2026** (D2). Balanced.
+
+## What changed vs v1 (governance correction, not a redesign)
+1. **2025 is now allocated** (first ERP year) — v1 wrongly excluded it as fiscally locked.
+2. **Deficit is deducted first** (v1 applied it after the years).
+3. **Surplus → first future year (2027)**, not a generic credit bucket (v1 used credit).
 
 ## Reproducibility
-Re-running `node lab/scenario-runner.cjs` on the retained `lab/seed/prod-snapshot.json` reproduces these exact numbers. Keep the snapshot with any approval.
+`node lab/scenario-runner.cjs` on the retained snapshot reproduces these numbers exactly.
 
-## Gate status (before any system implementation)
-- Decision Validation — ✅ 667/667
-- Scenario Coverage — ✅ 8/8 real patterns, 100%
-- Decision Trace — ✅ (`decision-runner.cjs` explains each step)
-- Prototype Validation — ✅ prototype driven by the same reference logic on the 8 real patterns
+## Gate status
+- Decision Validation ✅ 787/787 · Scenario Coverage ✅ 7/7 (100%) · Decision Trace ✅ · Prototype Validation ✅ (same reference logic).
+- **Logic Freeze v2 — proposed, pending owner approval.**
