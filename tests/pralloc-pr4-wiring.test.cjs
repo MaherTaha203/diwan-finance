@@ -48,10 +48,14 @@ const RS = require(P('receipt-settlement.js'));
   ok(d.some(x => x.kind === 'historical' && x.outstanding === 500), 'destination: historical deficit');
   ok(d.some(x => x.kind === 'donation') && d.some(x => x.kind === 'credit'), 'destinations: donation + credit present');
 
-  /* ── 4. postFromForm assembles from the mounted editor and posts via RPC only ── */
+  /* ── 4. postFromForm assembles from the mounted editor and posts via RPC only ──
+     This asserts the MANUAL settlement-editor path (editor rows → p_lines). Since
+     F-2, member Food Receipts are allocated by FoodReceiptDecision.decide() (proven
+     in tests/food-receipt-wiring.test.cjs), so the editor path is exercised here with
+     a NON-food fund — exactly the path this assertion is meant to protect. */
   rpcCalls = []; legacyCalls = 0; closed = 0; loaded = 0;
   RS.mountInReceiptForm();               /* sets the internal editor to the mock */
-  let r2 = await RS.postFromForm({ fund: 'food', payerType: 'member', memberId: 'M1', amount: 900, amountILS: 900, currency: 'ILS', rate: 1, date: '2026-06-01', method: 'cash', notes: '' });
+  let r2 = await RS.postFromForm({ fund: 'diwan', payerType: 'member', memberId: 'M1', amount: 900, amountILS: 900, currency: 'ILS', rate: 1, date: '2026-06-01', method: 'cash', notes: '' });
   ok(r2.ok === true && rpcCalls.length === 1 && legacyCalls === 0, 'postFromForm posts via RPC only (no legacy)');
   ok(rpcCalls[0].args.p_lines.length === 3 && rpcCalls[0].args.p_lines[0].obligation_kind === 'due', 'postFromForm maps editor rows → p_lines');
   ok(closed === 1 && loaded === 1, 'on success: modal closed + data reloaded');
@@ -107,7 +111,8 @@ const RS = require(P('receipt-settlement.js'));
   RS.mountInReceiptForm();                         /* reopen */
   ok(listeners.length === 1, 'sync: reopening does NOT add a duplicate listener (remove-before-add)');
   amtEl.value = '175';                             /* change WITHOUT firing input */
-  await RS.postFromForm({ fund: 'food', payerType: 'member', memberId: 'M1', amount: 175, amountILS: 175, currency: 'ILS', rate: 1, date: '2026-06-01', method: 'cash', notes: '' });
+  /* amount-sync is a property of the manual editor path (non-food since F-2). */
+  await RS.postFromForm({ fund: 'diwan', payerType: 'member', memberId: 'M1', amount: 175, amountILS: 175, currency: 'ILS', rate: 1, date: '2026-06-01', method: 'cash', notes: '' });
   ok(capturedOpts.receiptAmount === 175, 'sync: postFromForm refreshes opts.receiptAmount from the field before getState (final safety)');
 
   console.log('\nPR-4 wiring: ' + pass + ' passed, ' + fail + ' failed');

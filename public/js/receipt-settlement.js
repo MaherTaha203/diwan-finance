@@ -74,6 +74,64 @@
     return out;
   }
 
+  /* ── F-2 · Food Receipt wiring — the SINGLE allocation authority ────────────
+     A member Food Receipt is allocated EXCLUSIVELY by the Production Decision
+     Function FoodReceiptDecision.decide() (F-1), which is the exact translation of
+     the frozen laboratory (Logic Freeze v2). No allocation is computed here; this
+     layer only reads the member position from FIN (read-only) and maps the returned
+     decision steps onto the existing settlement payload. Non-food receipts (and
+     non-member food cash-donations) never enter this path. */
+  var R2 = function (n) { return Math.round((Number(n) + Number.EPSILON) * 100) / 100; };
+
+  /* First FUTURE ERP subscription year = (last ERP subscription year)+1, floored at
+     the ERP boundary. Mirrors lab/engine.cjs FIRST_FUTURE exactly (real data ⇒ 2027). */
+  function firstErpFutureYear() {
+    var subs = (root.DB && root.DB.subscriptions) || [];
+    var floor = Number(root.LOCKED_THROUGH_YEAR);
+    var max = isFinite(floor) ? floor : (new Date().getFullYear() - 1);
+    subs.forEach(function (s) { var y = Number(s.year); if (isFinite(y) && y > max) max = y; });
+    return max + 1;
+  }
+
+  /* The member's REAL position for the Decision Function — the SAME two reads the
+     laboratory performs (lab/engine.cjs position()): ERP subscription years with a
+     positive remaining, and the legacy historical deficit. Read-only; no mutation. */
+  function buildDecisionPosition(memberId) {
+    var FIN = root.FIN, subYears = [], deficit = 0;
+    if (FIN && memberId) {
+      try {
+        var dl = FIN.memberDelinquency(memberId) || {};
+        var by = dl.byYear || {};
+        Object.keys(by).forEach(function (y) {
+          var rem = R2(by[y].remaining || 0);
+          if (rem > 0.005) subYears.push({ year: Number(y), remaining: rem });
+        });
+        subYears.sort(function (a, b) { return a.year - b.year; });
+        var al = FIN.memberAllocation ? FIN.memberAllocation(memberId) : null;
+        deficit = R2((al && al.historical ? Number(al.historical.remaining || 0) : 0) || Number(dl.historicalRemaining || 0) || 0);
+      } catch (e) { /* read-only; ignore */ }
+    }
+    return { subYears: subYears, deficit: deficit };
+  }
+
+  /* Call the Decision Function and map its steps onto settlement lines. The ONLY
+     producer of Food-Receipt allocation lines. Returns {decision, lines} or null if
+     the Decision Function is unavailable. `historical` → a deficit line (no year);
+     `due`/`future` → a subscription line for that year (future = first future ERP
+     year, a plain `due` line the RPC accepts). */
+  function foodDecisionLines(memberId, amountILS, deficitAmount) {
+    var FD = root.FoodReceiptDecision;
+    if (!FD || typeof FD.decide !== 'function') return null;
+    var decision = FD.decide(buildDecisionPosition(memberId), amountILS,
+      { deficitAmount: Number(deficitAmount) || 0, firstFutureYear: firstErpFutureYear() });
+    var lines = decision.steps.map(function (s) {
+      return s.kind === 'historical'
+        ? { obligation_kind: 'historical', year: null, amount_allocated: s.amount, notes: '' }
+        : { obligation_kind: 'due', year: s.year, amount_allocated: s.amount, notes: '' };
+    });
+    return { decision: decision, lines: lines };
+  }
+
   function recAmount() {
     if (typeof document === 'undefined') return 0;
     if (typeof root.getILS === 'function') { try { return Number(root.getILS('rec')) || 0; } catch (e) {} }
@@ -123,12 +181,7 @@
   function postFromForm(ctx) {
     ctx = ctx || {};
     if (!enabled()) return Promise.resolve(DISABLED);
-    /* Final safety sync: guarantee the editor's amount equals the live field at the
-       moment of Save, even if an input event was missed. Same by-reference opts. */
-    if (_editor && _editorOpts) _editorOpts.receiptAmount = recAmount();
-    var st = _editor ? _editor.getState() : null;
     var toast = root.toast || function () {};
-    if (!st || !st.canSave) { toast('التسوية غير مكتملة — راجع الأسطر', 'err'); return Promise.resolve({ ok: false, error: 'invalid_settlement' }); }
     var isMemberFood = ctx.fund === 'food' && ctx.payerType === 'member';
     var pReceipt = {
       fund_type: ctx.fund, receipt_date: ctx.date,
@@ -138,7 +191,23 @@
       amount: ctx.amount, amount_ils: ctx.amountILS, currency: ctx.currency,
       exchange_rate: ctx.rate, payment_method: ctx.method || 'cash', notes: ctx.notes || ''
     };
-    var pLines = st.rows.map(function (r) { return { obligation_kind: r.kind, year: r.year, amount_allocated: r.amount, notes: r.notes }; });
+    var pLines;
+    if (isMemberFood) {
+      /* F-2 — Food Receipt (member): the allocation is produced ONLY by the
+         Production Decision Function. The manual editor plays no role here. */
+      var fd = foodDecisionLines(ctx.memberId, ctx.amountILS, ctx.deficitAmount);
+      if (!fd || !fd.decision.balanced) { toast('التسوية غير مكتملة — راجع الأسطر', 'err'); return Promise.resolve({ ok: false, error: 'invalid_settlement' }); }
+      pLines = fd.lines;
+    } else {
+      /* Every other receipt (non-food, and non-member food cash-donation): the
+         existing manual settlement path, byte-identical to before F-2. */
+      /* Final safety sync: guarantee the editor's amount equals the live field at the
+         moment of Save, even if an input event was missed. Same by-reference opts. */
+      if (_editor && _editorOpts) _editorOpts.receiptAmount = recAmount();
+      var st = _editor ? _editor.getState() : null;
+      if (!st || !st.canSave) { toast('التسوية غير مكتملة — راجع الأسطر', 'err'); return Promise.resolve({ ok: false, error: 'invalid_settlement' }); }
+      pLines = st.rows.map(function (r) { return { obligation_kind: r.kind, year: r.year, amount_allocated: r.amount, notes: r.notes }; });
+    }
     return post(pReceipt, pLines).then(function (res) {
       if (res && res.ok) { toast('تم حفظ التسوية', 'ok'); if (root.closeM) root.closeM(); if (typeof root.loadAll === 'function') root.loadAll(); }
       else if (res && !res.disabled) { toast('فشل الحفظ: ' + (res.error || ''), 'err'); }
@@ -172,6 +241,8 @@
   var ReceiptSettlement = {
     version: 7, enabled: enabled,
     buildDestinations: buildDestinations, mountInReceiptForm: mountInReceiptForm,
+    buildDecisionPosition: buildDecisionPosition, firstErpFutureYear: firstErpFutureYear,
+    foodDecisionLines: foodDecisionLines,
     post: post, postFromForm: postFromForm, cancel: cancel, refund: refund
   };
   root.ReceiptSettlement = ReceiptSettlement;
