@@ -616,9 +616,27 @@ const FIN={
     const r2=FIN._r2;
     const all=DB.members.filter(m=>m.is_active!==false).map(m=>{
       const st=FIN.memberStatement(m.id);
+      const subs=(DB.subscriptions||[]).filter(s=>s.member_id===m.id);
+      /* ═══ P-DEBT-REPORT-ALIGNMENT-001 — per-year "paid" reader alignment ═══
+         POST-LAUNCH receipt members (NO stored subscription seed) read the SAME
+         certified live allocation every other surface already shows — FIN.member
+         Delinquency().byYear[y].paid, the FD-002 attribution of live receipts — so
+         Annual Debt agrees with Delinquent / Dues / Dashboard / Member Statement
+         for live receipts. MIGRATION members (ANY stored paid_amount_ils) are
+         FROZEN: they keep the stored per-year figure byte-identical (owner
+         constitutional decision — the historical migration dataset is never
+         reinterpreted). READ-ONLY presentation alignment: it consults the existing
+         certified accessor and changes no engine, allocation, statement, stored
+         value, or finalBalance (`current` below still comes from memberStatement). */
+      const _storedPaidAll=subs.reduce((a,x)=>a+Number(x.paid_amount_ils||0),0);
+      const _liveByYear=(_storedPaidAll===0 && typeof FIN.memberDelinquency==='function')
+        ? ((FIN.memberDelinquency(m.id)||{}).byYear||{}) : null;
       let selSub=0,selPaid=0;
-      (DB.subscriptions||[]).filter(s=>s.member_id===m.id).forEach(s=>{
-        if(!years||years.has(Number(s.year))){ selSub+=Number(s.due_amount_ils||0); selPaid+=Number(s.paid_amount_ils||0); }
+      subs.forEach(s=>{
+        if(!years||years.has(Number(s.year))){
+          selSub+=Number(s.due_amount_ils||0);
+          selPaid+= _liveByYear ? Number((_liveByYear[Number(s.year)]||{}).paid||0) : Number(s.paid_amount_ils||0);
+        }
       });
       const debtSettled=Number(st.debtSettled||0);
       const writtenOff=Number(st.debtWrittenOff||0);
