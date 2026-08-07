@@ -11,6 +11,33 @@ It may be changed **only** by an explicit Owner Decision.
 
 ---
 
+## 0. Document status — Freeze & Amendment Policy
+
+**This document is FROZEN v1.0 upon Owner approval.** It is the permanent execution
+standard of the project. Future projects must follow this standard exactly.
+
+**It shall NOT be modified** because of preference, style, optimization, or new ideas.
+
+**It may be revised only if real execution proves the methodology itself is incomplete,
+contradictory, or incapable of governing future work.** Any revision must:
+
+- originate from **actual engineering experience** (not opinion or preference);
+- **identify the exact limitation** that execution exposed;
+- **preserve backward traceability** to prior versions;
+- **create a new version** (v1.1, v2.0, …);
+- **never overwrite historical versions** — superseded versions are retained intact.
+
+The approved version remains the governing engineering standard **until formally
+superseded by the Owner**. Superseding is itself an explicit Owner Decision.
+
+**Version history**
+
+| Version | Status | Notes |
+|---------|--------|-------|
+| v1.0 | **Frozen — governing** | Ratified upon delivery of the Food Receipt Engine. |
+
+---
+
 ## 1. Governance hierarchy (frozen)
 
 Every conflict is resolved top-down. A lower layer never overrides a higher one.
@@ -182,4 +209,6 @@ chain; `main` as the single reproducible source of truth.
 
 ---
 
-*Engineering Standard v1.0 — permanent unless changed by explicit Owner Decision.*
+*Engineering Standard v1.0 — FROZEN and governing. Revisable only per §0 (real
+execution limitation → new version, historical versions never overwritten), and
+superseded only by explicit Owner Decision.*
