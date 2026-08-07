@@ -72,13 +72,29 @@ ok(/RefundUI\.syncEditButton/.test(read(P('crud.js'))), 'editRec toggles the Ref
 
 /* ── Golden Reference: the accounting engine + authorities + schema are UNTOUCHED ── */
 const { execSync } = require('child_process');
-let changed = '';
-/* Accounting-core Golden Reference for the refund UI: fin.js / operations.js /
-   data.js / migrations. (receipt-settlement.js is the settlement-wiring layer and
-   is intentionally excluded — it is edited by other approved settlement changes,
-   e.g. the amount-sync fix, without touching the accounting engine.) */
-try { changed = execSync('git diff --name-only origin/main -- public/js/fin.js public/js/operations.js public/js/data.js supabase/migrations', { cwd: path.join(__dirname, '..') }).toString().trim(); } catch (e) { changed = 'ERR:' + e.message; }
-ok(changed === '', 'Golden Reference: fin.js / operations.js / data.js / migrations UNCHANGED vs origin/main — [' + changed + ']');
+/* Accounting-core Golden Reference. operations.js / data.js / migrations remain
+   byte-pinned to origin/main. fin.js is pinned EXCEPT within debtReportRows — the
+   Annual Debt report READER, an authorized presentation-alignment surface
+   (P-DEBT-REPORT-ALIGNMENT-001). Every frozen accounting function
+   (memberAllocation, memberStatement, allocateFoodDonations, memberDelinquency,
+   verifyConsistency, …) stays guarded: any edit OUTSIDE debtReportRows fails this
+   check. (receipt-settlement.js remains intentionally excluded — settlement-wiring
+   layer.) */
+function stripDebtReportRows(text) {
+  const anchor = 'debtReportRows(opts){';
+  const i = text.indexOf(anchor);
+  if (i < 0) return text;                 // signature gone → nothing to strip (remainder compare still catches it)
+  let depth = 0, k = i + anchor.length - 1;   // start at the opening '{'
+  for (; k < text.length; k++) { const c = text[k]; if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { k++; break; } } }
+  return text.slice(0, i) + text.slice(k);
+}
+let coreChanged = '';
+try { coreChanged = execSync('git diff --name-only origin/main -- public/js/operations.js public/js/data.js supabase/migrations', { cwd: path.join(__dirname, '..') }).toString().trim(); } catch (e) { coreChanged = 'ERR:' + e.message; }
+ok(coreChanged === '', 'Golden Reference: operations.js / data.js / migrations UNCHANGED vs origin/main — [' + coreChanged + ']');
+let finBase = '';
+try { finBase = execSync('git show origin/main:public/js/fin.js', { cwd: path.join(__dirname, '..'), maxBuffer: 1 << 24 }).toString(); } catch (e) { finBase = 'ERR:' + e.message; }
+ok(!/^ERR:/.test(finBase) && stripDebtReportRows(read(P('fin.js'))) === stripDebtReportRows(finBase),
+  'Golden Reference: fin.js accounting core UNCHANGED vs origin/main (only debtReportRows may differ)');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
