@@ -63,11 +63,15 @@ window.saveRec=async function(print=false){
   /* P0 — year-end lock also restricts CREATE (mirrors the edit/cancel guards). */
   if(voucherLocked(date)){ toast('🔒 السنة المالية مقفلة — لا يمكن إنشاء سند بتاريخ ضمن سنة مقفلة','err'); return; }
 
-  /* P-RECEIPT-ALLOCATION · PR-4 — the SINGLE posting-path gate. When the feature
-     flag is ON, explicit settlement is the ONLY path: post through the atomic RPC
-     and RETURN — the legacy body below never executes (no dual write). When OFF
-     (default), this is a no-op and the legacy flow is byte-identical. */
-  if(window.ReceiptSettlement && window.ReceiptSettlement.enabled()){
+  /* P-RECEIPT-ALLOCATION · PR-4 — the settlement posting-path gate. It applies to
+     FOOD receipts ONLY: postFromForm posts every line into the FOOD treasury
+     (destination_treasury:'food'), so a Diwan or Donation receipt must NEVER enter
+     it — those keep the legacy voucher-creation path (createVoucher, below), the
+     sole path that carries their correct fund / movement_type (diwan_operational_income,
+     diwan_cash_donation, donation_*). When the flag is ON and fund==='food',
+     settlement is the only path (RETURN, no dual write); for every other fund this
+     is a no-op and the legacy flow below runs byte-identical (as when the flag is OFF). */
+  if(window.ReceiptSettlement && window.ReceiptSettlement.enabled() && fund==='food'){
     let _pt=document.getElementById('rec-payer-type').value;
     return window.ReceiptSettlement.postFromForm({
       fund, payerType:_pt,

@@ -65,10 +65,10 @@ const RS = require(P('receipt-settlement.js'));
   const gateIdx = crud.search(/window\.ReceiptSettlement\s*&&\s*window\.ReceiptSettlement\.enabled\(\)/);
   const voucherIdx = crud.indexOf('BusinessOps.createVoucher');
   ok(gateIdx >= 0 && voucherIdx >= 0 && gateIdx < voucherIdx, 'saveRec: settlement gate precedes the legacy createVoucher call');
-  ok(/if\(window\.ReceiptSettlement && window\.ReceiptSettlement\.enabled\(\)\)\{[\s\S]*?return window\.ReceiptSettlement\.postFromForm/.test(crud), 'saveRec: gate EARLY-RETURNS to the RPC path (legacy skipped when ON; falls through when OFF)');
+  ok(/if\(window\.ReceiptSettlement && window\.ReceiptSettlement\.enabled\(\) && fund==='food'\)\{[\s\S]*?return window\.ReceiptSettlement\.postFromForm/.test(crud), "saveRec: gate is FOOD-only and EARLY-RETURNS to the RPC path (Diwan/Donation fall through to the legacy createVoucher path)");
 
   /* ── 6. STATIC: openRec mounts the editor only when enabled ── */
-  ok(/ReceiptSettlement\.enabled\(\)[\s\S]*?mountInReceiptForm/.test(read(P('forms.js'))), 'openRec mounts the editor only when the flag is ON');
+  ok(/ReceiptSettlement\.enabled\(\)[\s\S]*?rec-fund[\s\S]*?==='food'[\s\S]*?mountInReceiptForm/.test(read(P('forms.js'))), 'openRec mounts the editor only for a FOOD receipt (flag ON)');
 
   /* ── 7. STATIC: RLS fence — settlement writes only via the RPC ── */
   const migDir = path.join(__dirname, '..', 'supabase', 'migrations');
