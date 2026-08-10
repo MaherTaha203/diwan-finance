@@ -58,9 +58,11 @@ window.openRec=function(fund='food'){
   const funSel=document.getElementById('rec-fund');
   if(funSel){funSel.value=fund;window.onRecFundChange();}
   document.getElementById('rec-date').value=today();
-  /* P-RECEIPT-ALLOCATION · PR-4 — mount the Settlement Editor ONLY when the flag
-     is ON (default OFF ⇒ this is a no-op and the modal is byte-identical). */
-  if(window.ReceiptSettlement && window.ReceiptSettlement.enabled()){ try{ window.ReceiptSettlement.mountInReceiptForm(); }catch(_){} }
+  /* P-RECEIPT-ALLOCATION · PR-4 — mount the Settlement Editor ONLY when the flag is
+     ON AND this is a FOOD receipt. The settlement path is food-only (see saveRec);
+     Diwan/Donation receipts use the legacy path and must not show a food settlement
+     surface. Default OFF ⇒ no-op and the modal is byte-identical. */
+  if(window.ReceiptSettlement && window.ReceiptSettlement.enabled() && (document.getElementById('rec-fund')||{}).value==='food'){ try{ window.ReceiptSettlement.mountInReceiptForm(); }catch(_){} }
   /* F-5 — mountInReceiptForm() shows the editor slot; re-apply the food-receipt UX so
      the vestigial editor stays hidden for a member Food Receipt and the position card
      reflects any preselected member. Presentation only. */
@@ -105,6 +107,11 @@ window.onRecFundChange=function(){
     if(ptSel)ptSel.value='member';
     window.onDonKindChange();
   }
+  /* The Settlement Editor is a FOOD-only surface (see saveRec / openRec). Never leave
+     it visible on a Diwan/Donation form — e.g. after an in-modal switch from a Food
+     receipt, where openRec's mount already showed the slot. Food visibility is owned
+     by syncDeficitControl / syncFoodEditorVisibility and is left untouched here. */
+  if(fund!=='food'){ const _se=document.getElementById('rec-settlement'); if(_se)_se.style.display='none'; }
   window.onPayerTypeChange();
 };
 /* P2-D — cash vs in-kind/service donation kind (the system never guesses). */
