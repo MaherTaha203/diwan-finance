@@ -2044,6 +2044,11 @@ async function init(){
   window.__SB_URL='https://ralifvemgapmsgrjgazh.supabase.co';
   window.__SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlmdmVtZ2FwbXNncmpnYXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDU5MjQsImV4cCI6MjA5NDUyMTkyNH0.uw2wupGY89h3lnkgDBka5w8eYWaeITgDOoHbwzz15J4';
   SB=createClient(window.__SB_URL,window.__SB_ANON);
+  /* Expose the Supabase client on window so IIFE modules (receipt-settlement.js)
+     that resolve globals via `root.SB` reach the SAME client the app uses; legacy
+     code keeps the lexical `SB`. Without this the settlement RPC path fails with
+     `no_sb`. Mirrors report-handoff.js exposing window.FIN / window.DB. */
+  window.SB=SB;
   document.getElementById('app').style.display='none';
   await checkSession();
 }

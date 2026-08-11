@@ -250,7 +250,7 @@ window.getRecDeficitAmount=function(){
 /* ═══ F-4 — Confirmation Layer (viewer only) ═══
    Shows the accountant EXACTLY what will be posted, taken verbatim from the same
    FoodReceiptDecision.decide() the posting path uses. It CALCULATES NOTHING: every
-   value is read straight off the returned decision (a step amount, decision.amount,
+   value is read straight off the returned decision (a step amount, decision.allocated,
    decision.remaining). No sums, no re-allocation, no financial reformatting. */
 window.buildFoodConfirmationRows=function(decision){
   if(!decision)return [];
@@ -261,7 +261,7 @@ window.buildFoodConfirmationRows=function(decision){
       :('اشتراك سنة '+s.year);
     rows.push({key:s.kind+(s.year?(':'+s.year):''),label:label,value:s.amount});
   });
-  rows.push({key:'total',label:'إجمالي المقبوض',value:decision.amount});      /* decide().amount */
+  rows.push({key:'total',label:'إجمالي المقبوض',value:decision.allocated});   /* decide().allocated = total received (== input when balanced) */
   rows.push({key:'remaining',label:'المتبقٍّ',value:decision.remaining});     /* decide().remaining */
   return rows;
 };
