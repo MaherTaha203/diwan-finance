@@ -45,7 +45,7 @@ require(path.join(__dirname, '..', 'public', 'js', 'forms.js'));
   ok(stepRows.length === dec.steps.length, 'A1 one row per decide() step (no invented rows)');
   ok(stepRows.every((r, i) => r.value === dec.steps[i].amount), 'A2 each step row value === decide() step amount (verbatim)');
   const totalRow = rows.find(r => r.key === 'total'); const remRow = rows.find(r => r.key === 'remaining');
-  ok(totalRow && totalRow.value === dec.amount, 'A3 total row === decision.amount (not a re-sum)');
+  ok(totalRow && Number.isFinite(dec.allocated) && totalRow.value === dec.allocated, 'A3 total row === decision.allocated (finite, not NaN; not a re-sum)');
   ok(remRow && remRow.value === dec.remaining, 'A4 remaining row === decision.remaining (verbatim)');
   ok(window.buildFoodConfirmationRows(null).length === 0, 'A5 no decision ⇒ no rows');
 })();
@@ -63,7 +63,7 @@ const shownDecision = RS.foodDecisionLines(dm.id, Number(el('rec-amount').value)
 ok(el('rec-confirm').style.display === '', 'B1 panel shown for member-food + amount');
 ok(shownDecision.steps.every(s => panelHtml.indexOf(Number(s.amount).toFixed(2) + ' ₪') >= 0), 'B2 every decision step amount appears in the panel');
 ok(panelHtml.indexOf('خصم العجز التاريخي') >= 0, 'B3 Historical Deficit row present when selected');
-ok(panelHtml.indexOf(Number(shownDecision.amount).toFixed(2) + ' ₪') >= 0 && panelHtml.indexOf('إجمالي المقبوض') >= 0, 'B4 total received shown from decision.amount');
+ok(panelHtml.indexOf(Number(shownDecision.allocated).toFixed(2) + ' ₪') >= 0 && panelHtml.indexOf('NaN') < 0 && panelHtml.indexOf('إجمالي المقبوض') >= 0, 'B4 total received shown from decision.allocated (no NaN)');
 ok(panelHtml.indexOf(Number(shownDecision.remaining).toFixed(2) + ' ₪') >= 0, 'B5 remaining shown from decision.remaining (=0)');
 /* deficit OFF ⇒ the Historical row disappears (only-when-selected) */
 el('rec-deficit-on').checked = false; el('rec-deficit-amount').value = '';
@@ -90,7 +90,7 @@ members.forEach(m => {
     const rows = window.buildFoodConfirmationRows(dec);
     /* every displayed value must be a decision value; total row must equal decision.amount */
     const allFromDecision = rows.every(r => html.indexOf(Number(r.value).toFixed(2) + ' ₪') >= 0);
-    const totalOK = html.indexOf(Number(dec.amount).toFixed(2) + ' ₪') >= 0;
+    const totalOK = html.indexOf(Number(dec.allocated).toFixed(2) + ' ₪') >= 0 && html.indexOf('NaN') < 0;
     const remOK = html.indexOf(Number(dec.remaining).toFixed(2) + ' ₪') >= 0 && Math.abs(dec.remaining) < 0.005;
     if (allFromDecision && totalOK && remOK) matched++;
     const hasHist = html.indexOf('خصم العجز التاريخي') >= 0;
@@ -113,7 +113,7 @@ const builder = forms.slice(bStart, rStart);
 const renderer = forms.slice(rStart, forms.indexOf('window.onPayFundChange=function', rStart));
 ok(builder.length > 50 && renderer.length > 50, 'D0 confirmation code segments located');
 ok(!/\.reduce\(/.test(builder) && !/\+=/.test(builder), 'D1 value builder does no summing (no reduce / no += over money)');
-ok(/value\s*:\s*decision\.amount/.test(builder) && /value\s*:\s*decision\.remaining/.test(builder) && /value\s*:\s*s\.amount/.test(builder), 'D2 rows read decision.amount / decision.remaining / step.amount directly');
+ok(/value\s*:\s*decision\.allocated/.test(builder) && /value\s*:\s*decision\.remaining/.test(builder) && /value\s*:\s*s\.amount/.test(builder), 'D2 rows read decision.allocated / decision.remaining / step.amount directly');
 ok(/RSx\.foodDecisionLines\(mid,\s*amt,/.test(renderer), 'D3 renderer calls the SAME foodDecisionLines as the post path');
 ok(!/\.reduce\(/.test(renderer) && /Number\(r\.value\)\.toFixed\(2\)/.test(renderer), 'D4 renderer only formats (toFixed) — no re-summing');
 const html = RD('public/index.html');
