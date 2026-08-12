@@ -98,11 +98,17 @@ const jsFiles = fs.readdirSync(jsDir).filter(f => f.endsWith('.js'));
 const callersOf = re => jsFiles.filter(f => re.test(read(path.join(jsDir, f))));
 
 const readers = jsFiles.filter(f => /DB\.allocation_records/.test(read(path.join(jsDir, f))));
-const nonAttribution = ['data.js', 'refund-ui.js'];   /* loader + PR-7A refund-dialog display */
+/* loader + PR-7A refund-dialog display + P-DEFICIT-SPLIT treasury engine (fin2.js).
+   fin2.js reads the active historical settlement lines ONLY for the Food →
+   Historical-Deficit treasury movement (and to expose the slice for the statement
+   split); it computes NO member attribution — asserted below. fin.js stays the ONE
+   attribution reader. */
+const nonAttribution = ['data.js', 'refund-ui.js', 'fin2.js'];
 ok(readers.includes('fin.js') && readers.every(f => f === 'fin.js' || nonAttribution.includes(f)),
-   'ONE attribution reader: fin.js; non-attribution = data.js (loader) + refund-ui.js (display) — [' + readers.join(', ') + ']');
+   'ONE attribution reader: fin.js; non-attribution = data.js (loader) + refund-ui.js (display) + fin2.js (treasury) — [' + readers.join(', ') + ']');
 ok(/\(DB\.allocation_records\|\|\[\]\)\.forEach/.test(read(P('fin.js'))), '  …fin.js is the consumer (memberAllocation)');
 ok(!/perYear|finalBalance|computeAllocation/.test(read(P('refund-ui.js'))), '  …refund-ui.js computes no attribution (presentation only)');
+ok(!/perYear|finalBalance|creditRemaining|computeAllocation/.test(read(P('fin2.js'))), '  …fin2.js reads settlement lines for treasury movement only (no member attribution)');
 
 const writeCallers = callersOf(/create_receipt_with_settlement/);
 ok(writeCallers.length === 1 && writeCallers[0] === 'receipt-settlement.js', 'ONE write authority: create RPC called only by receipt-settlement.js — [' + writeCallers.join(', ') + ']');

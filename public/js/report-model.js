@@ -734,6 +734,33 @@
     if (typeof root.FIN === 'undefined' || !root.FIN.memberStatementView) return null;
     var FIN = root.FIN;
     var view = FIN.memberStatementView(memberId, from, to);
+    /* ── P-DEFICIT-SPLIT — statement view of the accountant's Historical-Deficit slice ──
+       When a Food receipt carries an active "historical" settlement line, show that slice
+       as its OWN ledger row (تسوية عجز تاريخي) instead of hiding it inside the food
+       contribution — so the statement expresses the same Food/Deficit separation the
+       treasury engine applies. The slice values come from FIN2 (the single treasury
+       reader of allocation_records); this gatherer NEVER reads allocation_records itself.
+       Presentation only: each split preserves the row's amount and running balance, so
+       finalBalance and every total are byte-identical. */
+    try {
+      var _histByNo = (root.FIN2 && typeof root.FIN2.settlementHistoricalByReceipt === 'function')
+        ? root.FIN2.settlementHistoricalByReceipt(memberId) : null;
+      if (_histByNo && Object.keys(_histByNo).length && Array.isArray(view.moves)) {
+        var _r2 = function (n) { return Math.round((Number(n) || 0) * 100) / 100; };
+        var _moves = [];
+        view.moves.forEach(function (m) {
+          var hs = (m && m.no && m.no !== '—') ? Number(_histByNo[m.no] || 0) : 0;
+          var cr = Number(m.cr || 0), bal = Number(m.bal || 0);
+          if (hs > 0.005 && hs <= cr + 0.005) {
+            var food = _r2(cr - hs);
+            if (food > 0.005) _moves.push(Object.assign({}, m, { cr: food, bal: _r2(bal + hs) }));
+            _moves.push(Object.assign({}, m, { no: '—', cr: _r2(hs), bal: _r2(bal),
+              desc: 'تسوية عجز تاريخي · Historical Deficit Settlement' }));
+          } else { _moves.push(m); }
+        });
+        view = Object.assign({}, view, { moves: _moves });
+      }
+    } catch (e) { /* presentation-only; fall back to the unsplit view */ }
     var member = (view.statement && view.statement.member) || (root.gm ? root.gm(memberId) : {}) || {};
     var dons = FIN.memberDonations ? FIN.memberDonations(memberId, from, to) : [];
     var alloc = FIN.allocateFoodDonations ? FIN.allocateFoodDonations() : { perReceipt: {} };
