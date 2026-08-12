@@ -62,6 +62,28 @@
   function q5Source(){ const e=q5Event(); return (e&&e.source_treasury)||'food'; }
   function q5Dest(){ const e=q5Event(); return (e&&e.treasury)||'historical_deficit'; }
 
+  /* ── P-DEFICIT-SPLIT — accountant-designated historical slice of a member Food receipt ──
+     A Food receipt may carry an explicit "historical" settlement line (the accountant's
+     Historical-Deficit decision). Economically that slice is DEFICIT money: it moves
+     Food → Historical-Deficit, exactly like the ق5 donation slice. It is read from the
+     SAME active settlement lines the member-debt reader uses (fin.js _explHist:
+     source_kind='receipt_settlement', obligation_kind='historical', on a LIVE non-deleted
+     receipt, not voided_at / not refunded_at) — so the treasury movement equals the
+     historical-debt reduction to the shekel, and a cancel (is_deleted) / void / refund
+     reverses BOTH together. The receipt itself stays destination_treasury='food' (its full
+     amount is added to Food by the loop above); this only carves the deficit slice back
+     out. NEUTRAL when the flag is OFF or no such line exists (returns 0). */
+  function settlementDeficitSlice(){
+    if(typeof window==='undefined'||window.RECEIPT_ALLOCATION_ENABLED!==true) return 0;
+    if(typeof DB==='undefined'||!Array.isArray(DB.allocation_records)) return 0;
+    const live={}; (DB.receipts||[]).forEach(r=>{ if(r&&!r.is_deleted) live[r.id]=true; });
+    return R2((DB.allocation_records||[]).reduce((s,a)=>{
+      if(!a||a.source_kind!=='receipt_settlement'||a.obligation_kind!=='historical') return s;
+      if(!live[a.source_ref]||a.voided_at||a.refunded_at) return s;
+      return s+Number(a.amount_allocated||0);
+    },0));
+  }
+
   const FIN2 = {
     version: 2,
     /* ---- classification read (never inferred here; P2-C persists it) ---- */
@@ -116,6 +138,13 @@
         if(tr.source_treasury===key)      bal -= amountOf(tr);
         if(tr.destination_treasury===key) bal += amountOf(tr);
       });
+      /* P-DEFICIT-SPLIT — carve the accountant-designated historical slice out of Food
+         and into Historical-Deficit (see settlementDeficitSlice). Food/deficit only. */
+      const _defSlice=settlementDeficitSlice();
+      if(_defSlice>0){
+        if(key==='food')               bal -= _defSlice;
+        if(key==='historical_deficit') bal += _defSlice;
+      }
       return R2(bal);
     },
     foodTreasury(){          return FIN2.treasuryBalance('food'); },
@@ -165,6 +194,28 @@
     historicalFundingTotal(){ return FIN2.deficitInflows(); },
     historicalFunding(){ return FIN2.deficitEntries(); },
 
+    /* P-DEFICIT-SPLIT — per-receipt Historical-Deficit slice for one member (PRESENTATION).
+       Maps each of the member's live Food receipts (by receipt no) to the active
+       "historical" settlement amount recorded against it — the SAME lines the treasury
+       movement (settlementDeficitSlice) and the member-debt reader (fin.js _explHist)
+       consume. The member statement uses this to split the food-receipt row into its
+       Food and Historical-Deficit portions WITHOUT itself reading allocation_records:
+       the single treasury read stays in this engine, the single attribution read in
+       fin.js. Empty map when the flag is OFF or no such line exists. */
+    settlementHistoricalByReceipt(memberId){
+      const out={};
+      if(typeof window==='undefined'||window.RECEIPT_ALLOCATION_ENABLED!==true) return out;
+      if(typeof DB==='undefined'||!Array.isArray(DB.allocation_records)) return out;
+      const byId={}; (DB.receipts||[]).forEach(r=>{ if(r&&!r.is_deleted) byId[r.id]=r; });
+      (DB.allocation_records||[]).forEach(a=>{
+        if(!a||a.source_kind!=='receipt_settlement'||a.obligation_kind!=='historical'||a.voided_at||a.refunded_at) return;
+        const r=byId[a.source_ref]; if(!r||r.fund_type!=='food') return;
+        if(memberId!=null&&r.member_id!==memberId) return;
+        out[r.no]=R2((out[r.no]||0)+Number(a.amount_allocated||0));
+      });
+      return out;
+    },
+
     /* ---- ق5 transfers as EXPLICIT classified accounting events (V6 · Law 4) ----
        Each member food-display donation whose debt-settled slice > 0 IS a first-class
        transfer event (movement_type q5_debt_settlement_transfer): Food → Historical-
@@ -203,10 +254,12 @@
        zero, any excess automatically counts in the Food treasury. Openings come
        from window.TREASURY_OPENINGS — the single formal mapping. ---- */
     deficitInflows(){
-      /* directed donations + ق4 collections + ق5 debt-settled slices */
+      /* directed donations + ق4 collections + ق5 debt-settled slices + Food-receipt
+         historical settlement slices (P-DEFICIT-SPLIT) */
       return R2(classifiedRows()
         .filter(r=>(eventDef(r.movement_type)||{}).cash===true&&!(eventDef(r.movement_type)||{}).outflow)
-        .reduce((s,r)=>s+(r.destination_treasury==='historical_deficit'?amountOf(r):0)+q5Settled(r),0));
+        .reduce((s,r)=>s+(r.destination_treasury==='historical_deficit'?amountOf(r):0)+q5Settled(r),0)
+        +settlementDeficitSlice());
     },
     /* Itemised inflow entries behind deficitInflows() — DISPLAY ONLY (deficit
        ledger for the treasury view). Every cash inflow directed to the deficit
@@ -230,6 +283,17 @@
                      amount:R2(q5), kind:'q5_debt_settlement' });
         }
       });
+      /* P-DEFICIT-SPLIT — itemise each active Food-receipt historical settlement slice
+         (sums into deficitInflows alongside the rows above). */
+      if(typeof window!=='undefined'&&window.RECEIPT_ALLOCATION_ENABLED===true&&typeof DB!=='undefined'&&Array.isArray(DB.allocation_records)){
+        const _byId={}; (DB.receipts||[]).forEach(r=>{ if(r) _byId[r.id]=r; });
+        (DB.allocation_records||[]).forEach(a=>{
+          if(!a||a.source_kind!=='receipt_settlement'||a.obligation_kind!=='historical'||a.voided_at||a.refunded_at) return;
+          const r=_byId[a.source_ref]; if(!r||r.is_deleted) return;
+          out.push({ no:r.no||null, date:r.receipt_date||null, payer:r.payer_name||null,
+                     member_id:r.member_id||null, amount:R2(Number(a.amount_allocated||0)), kind:'historical_settlement' });
+        });
+      }
       return out.sort((a,b)=> new Date(a.date||0)-new Date(b.date||0));
     },
     composed(){

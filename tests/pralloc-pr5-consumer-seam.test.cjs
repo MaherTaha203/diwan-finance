@@ -79,13 +79,20 @@ ok(onFinal === offFinal, 'Case7: finalBalance byte-identical ON vs OFF (memberSt
       (loader); refund-ui.js (PR-7A) only PRESENTS rows in the refund dialog and
       computes NO attribution. No other file references it. ── */
 const jsDir = path.join(__dirname, '..', 'public', 'js');
-const PRESENTATION = ['data.js', 'refund-ui.js'];   /* loader + refund dialog display — non-attribution */
+/* Non-attribution readers of the settlement ledger: data.js (loader), refund-ui.js
+   (refund-dialog display) and — P-DEFICIT-SPLIT — fin2.js (treasury engine). fin2.js
+   reads the ACTIVE historical settlement lines ONLY to move that slice Food →
+   Historical-Deficit (a treasury movement) and to expose it for the statement split;
+   it computes NO member attribution/balances (asserted below). fin.js is UNTOUCHED
+   and remains the SOLE attribution reader. */
+const NON_ATTRIBUTION = ['data.js', 'refund-ui.js', 'fin2.js'];
 let refs = fs.readdirSync(jsDir).filter(f => f.endsWith('.js'))
   .filter(f => /DB\.allocation_records/.test(read(path.join(jsDir, f))));
-ok(refs.indexOf('fin.js') >= 0 && refs.every(f => f === 'fin.js' || PRESENTATION.indexOf(f) >= 0),
-   'DB.allocation_records read only by fin.js (attribution) + data.js (loader) + refund-ui.js (display) — found: [' + refs.join(', ') + ']');
+ok(refs.indexOf('fin.js') >= 0 && refs.every(f => f === 'fin.js' || NON_ATTRIBUTION.indexOf(f) >= 0),
+   'DB.allocation_records read by fin.js (attribution) + data.js (loader) + refund-ui.js (display) + fin2.js (treasury) — found: [' + refs.join(', ') + ']');
 ok(/\(DB\.allocation_records\|\|\[\]\)\.forEach/.test(read(P('fin.js'))), 'fin.js is the CONSUMER (iterates DB.allocation_records)');
 ok(!/perYear|finalBalance|creditRemaining|computeAllocation/.test(read(P('refund-ui.js'))), 'refund-ui.js computes NO attribution/balances (presentation only)');
+ok(!/perYear|finalBalance|creditRemaining|computeAllocation/.test(read(P('fin2.js'))), 'fin2.js reads settlement lines for TREASURY movement only — computes NO member attribution');
 const dataSrc = read(P('data.js'));
 ok(!/DB\.allocation_records\)?\.(forEach|filter|map|reduce|find|some)/.test(dataSrc), 'data.js only ASSIGNS/loads DB.allocation_records (never consumes it)');
 /* data.js loads it; allocation-integration.js writes it; neither reads it for attribution */
