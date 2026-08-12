@@ -2917,3 +2917,37 @@ body.nav-min.sb-min .nbg-acc .nbg-body{ max-height:none !important; opacity:1 !i
   .rfd-table{font-size:12px}
   .rfd-actions .btn{flex:1}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P-UI-TEXT-SPACE — internal text spacing for the English (LTR-in-RTL) layout.
+   The app direction stays RTL for both languages (i18n.js keeps dir="rtl"); only
+   the space TEXT gets inside each element is tuned. NO main container dimension
+   changes: Sidebar width, Top-bar height, Report width and the Modal outer size
+   are all untouched. The two language-text rules are scoped to html[lang="en"]
+   so the Arabic layout renders byte-identically to before.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1 · SIDEBAR nav labels — English labels are longer than the rail's text column, so
+   they were truncated with an ellipsis (words cut off / hidden). Let the label wrap to
+   at most two lines INSIDE the same rail width instead of disappearing. Rail width and
+   the icon/label grid are unchanged; only the row grows to fit a wrapped label. */
+html[lang="en"] .nb-t{
+  white-space:normal; overflow:hidden; text-overflow:clip; line-height:1.2;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+}
+
+/* 2 · TOP-BAR system name/sub — the English sub-title ("Financial Management System")
+   wrapped to three lines and overflowed the fixed-height bar. Keep the two logo texts on
+   one line so they stay inside the bar; the bar height is unchanged. */
+html[lang="en"] .top-logo{ min-width:0; }
+html[lang="en"] .top-logo-text,
+html[lang="en"] .top-logo-sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* 3 · EDITOR MODAL (receipt / payment / donation / entity) — when settlement lines are
+   added the content grew and the WHOLE modal scrolled. Make the editor a fixed flex
+   column so only the body scrolls while the header and the footer save/cancel buttons
+   stay put; the modal never grows past the viewport and never scrolls the page. The
+   outer modal size (width + max-height) is unchanged — this only governs which part
+   scrolls. Language-agnostic; every .fw-modal body already carries .fw-body. */
+.modal.editor.fw-modal{ display:flex; flex-direction:column; overflow:hidden; }
+.fw-modal .fw-body{ flex:1 1 auto; min-height:0; overflow-y:auto; }
