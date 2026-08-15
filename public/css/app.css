@@ -2951,3 +2951,20 @@ html[lang="en"] .top-logo-sub{ white-space:nowrap; overflow:hidden; text-overflo
    scrolls. Language-agnostic; every .fw-modal body already carries .fw-body. */
 .modal.editor.fw-modal{ display:flex; flex-direction:column; overflow:hidden; }
 .fw-modal .fw-body{ flex:1 1 auto; min-height:0; overflow-y:auto; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P-DARK-REPORT-CONTRAST — Dark-mode legibility for the engine report sheet.
+   The report engine (.rpt-doc) renders a FROZEN white-paper document (background:#fff,
+   dark ink var(--rpt-ink)) — identical on screen, print and PDF. But the app's global
+   table paints are unscoped:
+       tbody tr:hover td      { background:var(--soft) }
+       tbody tr:nth-child(even){ background:var(--row)  }
+   In dark mode --soft/--row are DARK, so those paints bleed onto the white report sheet
+   and land UNDER the sheet's dark ink → the hovered/zebra row turns dark-on-dark
+   (measured contrast ≈ 1.1) i.e. a near-black, unreadable band that follows the cursor.
+   Fix (dark theme ONLY): keep the frozen white sheet white — never let the global dark
+   paints reach rows inside .rpt-doc. Color only; no layout/size/light-mode change. The
+   legacy .acct-stmt / .dt statements are theme-aware (light ink on dark) and unaffected. */
+body:not(.light) .rpt-doc tbody tr:nth-child(even),
+body:not(.light) .rpt-doc tbody tr:nth-child(even) td,
+body:not(.light) .rpt-doc tbody tr:hover td{ background:transparent; }
