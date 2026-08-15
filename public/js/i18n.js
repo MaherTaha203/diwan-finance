@@ -23,6 +23,7 @@ const translations = {
       export_dd:'تصدير ▼', output_dd:'الإخراج ▼', copy_link:'نسخ الرابط', share:'مشاركة', output_settings:'إعدادات الإخراج', number:'الرقم', amount_ils:'المبلغ ₪',
       from_date:'من تاريخ', to_date:'إلى تاريخ',
       opening_balance:'الرصيد الافتتاحي',
+      member:'العضو', updating:'جاري التحديث...',
     },
     nav: {
       dashboard:'لوحة التحكم',
@@ -37,6 +38,9 @@ const translations = {
       donations_sec:'التبرعات', members_sec:'الأعضاء',
       reports_sec:'التقارير', system_sec:'النظام', more:'المزيد',
       reservations:'تقويم الحجوزات', reservations_sec:'الديوان — الحجوزات',
+      member_workspace:'وحدة العضو المالية', treasury_workspace:'الخزينة والمركز المالي',
+      annual_debt:'تقرير المديونية', delinquent:'الأعضاء المتأخرون',
+      collection_workspace:'بيئة التحصيل', dues_workspace:'بيئة الاشتراكات', payment_workspace:'بيئة الصرف',
     },
     reservations: {
       title:'تقويم الحجوزات', subtitle:'حجز واحد لكل يوم · التقويم الميلادي · الأسبوع يبدأ السبت',
@@ -67,6 +71,8 @@ const translations = {
       food_receipt:'إيصال غداء', diwan_receipt:'إيصال ديوان',
       new_donation:'تسجيل تبرع', food_stmt:'كشف الغداء',
       diwan_stmt:'كشف الديوان',
+      band_overview:'نظرة عامة', band_treasury:'الخزينة', band_receivables:'الذمم المستحقّة',
+      band_activity:'النشاط', band_today:'عمل اليوم', band_alerts:'تنبيهات',
     },
     receipts: {
       title_food:'إيصالات صندوق الغداء',
@@ -135,6 +141,8 @@ const translations = {
     },
     members: {
       title:'أعضاء العائلة', new:'عضو جديد',
+      debt_page_title:'تقرير المديونية السنوية', delinquent_page_title:'تقرير الأعضاء المتأخرين',
+      reconcile:'مطابقة الأرصدة',
       food_balance:'رصيد الغداء ₪',
       paid:'مسدَّد', late:'متأخر',
       opening_hint:'سالب = دين على العضو',
@@ -211,6 +219,18 @@ const translations = {
     },
     settings: {
       title:'الإعدادات', subtitle:'الرصيد الافتتاحي وإعدادات النظام',
+      lock_title:'الإقفال المالي السنوي',
+      lock_hint:'حالة القفل تتغيّر فقط عبر إجراء إقفال/إعادة فتح صريح وموثّق (FD-012 · FD-030). الإقفال الدائم لسنةٍ ما يكون من 1 فبراير للسنة التالية.',
+      locked_until:'المقفل حالياً حتى:', lock_year:'السنة',
+      lock_reason:'سبب القرار (إلزامي — يُسجَّل باسم مدير النظام)',
+      lock_btn:'إقفال السنة', reopen_btn:'إعادة فتح السنة',
+      transfer_title:'التحويلات الداخلية بين الصناديق',
+      transfer_hint:'تحويل إداري معتمد من مدير النظام بين الصناديق الثلاثة (FD-022…FD-025). يصدر سند تحويل داخلي غير قابل للتعديل، ولا يغيّر الإيرادات أو المصروفات أو ذمم الأعضاء.',
+      transfer_from:'من صندوق', transfer_to:'إلى صندوق',
+      fund_diwan:'الديوان', fund_food:'الغداء', fund_deficit:'العجز التاريخي',
+      transfer_amount:'المبلغ ₪ (محاسبي)', transfer_date:'التاريخ',
+      transfer_reason:'سبب التحويل (إلزامي)', transfer_director:'المدير المعتمد (إلزامي)',
+      transfer_btn:'تنفيذ التحويل وإصدار السند',
       opening_title:'الرصيد الافتتاحي للصناديق',
       food_opening:'الرصيد الافتتاحي لصندوق الغداء ₪',
       diwan_opening:'الرصيد الافتتاحي لصندوق الديوان ₪',
@@ -248,7 +268,7 @@ const translations = {
     backup: {
       title:'النسخ الاحتياطي',
       json_desc:'تصدير كامل بصيغة JSON',
-      download:'تحميل النسخة',
+      download:'تحميل النسخة', restore:'استعادة نسخة',
       sys_info:'معلومات النظام',
     },
     edit: {
@@ -361,6 +381,7 @@ const translations = {
       export_dd:'Export ▼', output_dd:'Output ▾', copy_link:'Copy link', share:'Share', output_settings:'Output settings', number:'No.', amount_ils:'Amount ₪',
       from_date:'From Date', to_date:'To Date',
       opening_balance:'Opening Balance',
+      member:'Member', updating:'Updating...',
     },
     nav: {
       dashboard:'Dashboard',
@@ -375,6 +396,9 @@ const translations = {
       donations_sec:'Donations', members_sec:'Members',
       reports_sec:'Reports', system_sec:'System', more:'More',
       reservations:'Reservation Calendar', reservations_sec:'Diwan — Reservations',
+      member_workspace:'Member Unit', treasury_workspace:'Treasury',
+      annual_debt:'Debt Report', delinquent:'Delinquent',
+      collection_workspace:'Collection', dues_workspace:'Dues', payment_workspace:'Payments',
     },
     reservations: {
       title:'Reservation Calendar', subtitle:'One reservation per day · Gregorian · week starts Saturday',
@@ -405,6 +429,8 @@ const translations = {
       food_receipt:'Food Receipt', diwan_receipt:'Diwan Receipt',
       new_donation:'New Donation', food_stmt:'Food Statement',
       diwan_stmt:'Diwan Statement',
+      band_overview:'Overview', band_treasury:'Treasury', band_receivables:'Receivables',
+      band_activity:'Activity', band_today:"Today's Work", band_alerts:'Alerts',
     },
     receipts: {
       title_food:'Food Fund Receipts',
@@ -483,6 +509,8 @@ const translations = {
     },
     members: {
       title:'Family Members', new:'New Member',
+      debt_page_title:'Annual Debt Report', delinquent_page_title:'Delinquent Members',
+      reconcile:'Reconcile Balances',
       food_balance:'Food Balance ₪',
       paid:'Paid', late:'Late',
       opening_hint:'Negative = debt on member',
@@ -559,6 +587,18 @@ const translations = {
     },
     settings: {
       title:'Settings', subtitle:'Opening Balances & System Settings',
+      lock_title:'Annual Financial Lock',
+      lock_hint:'Lock status changes only via an explicit, documented close/reopen action (FD-012 · FD-030). A permanent lock for a year takes effect from 1 February of the next year.',
+      locked_until:'Currently locked through:', lock_year:'Year',
+      lock_reason:'Decision reason (required — recorded under the administrator name)',
+      lock_btn:'Close Year', reopen_btn:'Reopen Year',
+      transfer_title:'Internal Fund Transfers',
+      transfer_hint:'An administrator-approved internal transfer between the three funds (FD-022…FD-025). It issues a non-editable internal transfer voucher and does not change income, expenses, or member balances.',
+      transfer_from:'From fund', transfer_to:'To fund',
+      fund_diwan:'Diwan', fund_food:'Food', fund_deficit:'Historical Deficit',
+      transfer_amount:'Amount ₪ (accounting)', transfer_date:'Date',
+      transfer_reason:'Transfer reason (required)', transfer_director:'Approving administrator (required)',
+      transfer_btn:'Execute transfer & issue voucher',
       opening_title:'Fund Opening Balances',
       food_opening:'Food Fund Opening Balance ₪',
       diwan_opening:'Diwan Fund Opening Balance ₪',
@@ -596,7 +636,7 @@ const translations = {
     backup: {
       title:'Backup',
       json_desc:'Full export in JSON format',
-      download:'Download Backup',
+      download:'Download Backup', restore:'Restore Backup',
       sys_info:'System Information',
     },
     edit: {
@@ -957,7 +997,7 @@ window.applyLang = function() {
 
   const backupBtn = document.querySelector('.tbtn[onclick="window.doBackup()"]');
   if (backupBtn) backupBtn.innerHTML = `<i class="ti ti-database-export"></i>${window.t('topbar.backup')}`;
-  const passBtn = document.querySelector('.tbtn[onclick="window.openM(\'change-pass\')"]');
+  const passBtn = document.querySelector('.tbtn[onclick="window.changePassword()"]');
   if (passBtn) passBtn.innerHTML = `<i class="ti ti-lock"></i>${window.t('topbar.password')}`;
   const logoutBtn = document.querySelector('.tbtn.red[onclick="window.logout()"]');
   if (logoutBtn) logoutBtn.innerHTML = `<i class="ti ti-logout"></i>${window.t('topbar.logout')}`;
@@ -973,6 +1013,13 @@ window.applyLang = function() {
     'diwan-stmt':  ['ti-file-description', 'nav.diwan_stmt'],
     'don':         ['ti-heart',            'nav.donations'],
     'members':     ['ti-users',            'nav.members'],
+    'member-workspace':  ['ti-user-dollar',   'nav.member_workspace'],
+    'treasury-workspace':['ti-building-bank', 'nav.treasury_workspace'],
+    'annual-debt':  ['ti-report-money',      'nav.annual_debt'],
+    'delinquent':   ['ti-user-exclamation',  'nav.delinquent'],
+    'collection-workspace':['ti-cash-register','nav.collection_workspace'],
+    'payment-workspace':  ['ti-wallet',       'nav.payment_workspace'],
+    'dues-workspace':     ['ti-calendar-dollar','nav.dues_workspace'],
     'member-stmt': ['ti-user',             'nav.member_stmt'],
     'annual':      ['ti-calendar',         'nav.annual'],
     'users':       ['ti-shield-lock',      'nav.users'],
