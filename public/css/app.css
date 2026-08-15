@@ -2953,18 +2953,21 @@ html[lang="en"] .top-logo-sub{ white-space:nowrap; overflow:hidden; text-overflo
 .fw-modal .fw-body{ flex:1 1 auto; min-height:0; overflow-y:auto; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   P-DARK-REPORT-CONTRAST — Dark-mode legibility for the engine report sheet.
-   The report engine (.rpt-doc) renders a FROZEN white-paper document (background:#fff,
-   dark ink var(--rpt-ink)) — identical on screen, print and PDF. But the app's global
-   table paints are unscoped:
-       tbody tr:hover td      { background:var(--soft) }
-       tbody tr:nth-child(even){ background:var(--row)  }
-   In dark mode --soft/--row are DARK, so those paints bleed onto the white report sheet
-   and land UNDER the sheet's dark ink → the hovered/zebra row turns dark-on-dark
-   (measured contrast ≈ 1.1) i.e. a near-black, unreadable band that follows the cursor.
-   Fix (dark theme ONLY): keep the frozen white sheet white — never let the global dark
-   paints reach rows inside .rpt-doc. Color only; no layout/size/light-mode change. The
-   legacy .acct-stmt / .dt statements are theme-aware (light ink on dark) and unaffected. */
-body:not(.light) .rpt-doc tbody tr:nth-child(even),
-body:not(.light) .rpt-doc tbody tr:nth-child(even) td,
-body:not(.light) .rpt-doc tbody tr:hover td{ background:transparent; }
+   P-DARK-REPORT-SURFACE — on-screen dark theme for the engine report sheet.
+   The report engine (.rpt-doc) is styled by the frozen light --rpt-* tokens (white
+   paper, dark ink). Owner decision: on SCREEN, unify the report with the app's dark
+   theme; on PRINT/PDF keep the white paper. Print/PDF render in a separate openPrintWin
+   iframe that does NOT load app.css, so these overrides reach the SCREEN ONLY — the
+   printed/PDF sheet stays white by construction. Dark-mode + CSS only; no layout/size
+   change and no light-mode change. The --rpt-* remapped here are report-namespaced
+   (used nowhere else on screen), so remapping them on body:not(.light) is safe.
+   Supersedes P-DARK-REPORT-CONTRAST: the sheet is now dark with light ink, so the
+   earlier white-sheet hover guard is unnecessary — the app's normal row hover
+   (light ink on --soft) is readable and consistent with the other dark tables. */
+body:not(.light){
+  --rpt-ink:#E9E8E3; --rpt-ink2:#C7C9CE; --rpt-muted:#A9ABB0; --rpt-faint:#868990;
+  --rpt-line:#24262A; --rpt-line2:#34373D; --rpt-hd:#232529; --rpt-accent:#7C93BF;
+  --rpt-pos:#6A8F76; --rpt-neg:#C08A6E;
+}
+body:not(.light) .rpt-doc{ background:#1C1E21; }
+body:not(.light) .rpt-out-btn{ background:#232529; }
