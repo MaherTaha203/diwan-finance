@@ -393,7 +393,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   </div>
   <div class="top-actions">
     <span id="clock"></span>
-    <div class="rate-chip" id="rate-chip"><i class="ti ti-currency-dollar"></i><span id="rate-txt">جاري التحديث...</span></div>
+    <div class="rate-chip" id="rate-chip"><i class="ti ti-currency-dollar"></i><span id="rate-txt" data-i18n="common.updating">جاري التحديث...</span></div>
     <button class="tbtn" id="theme-btn" onclick="window.toggleTheme()"><i class="ti ti-sun"></i>فاتح</button>
     <button class="tbtn" id="lang-btn" onclick="window.toggleLang()"><i class="ti ti-language"></i>EN</button>
     <div class="uchip">
@@ -483,11 +483,11 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   <!-- Compact hero: greeting · today stats · freshness · primary action + إجراء جديد ▾ (approved) -->
   <div class="dband">
     <div class="dhero" id="dash-hero"></div>
-    <div class="flabel onband"><span>نظرة عامة</span></div>
+    <div class="flabel onband"><span data-i18n="dashboard.band_overview">نظرة عامة</span></div>
   </div>
   <div class="dbody">
     <!-- Section: الخزينة — KPIs + collection ring + trend chart (approved hierarchy) -->
-    <div class="flabel"><span>الخزينة</span></div>
+    <div class="flabel"><span data-i18n="dashboard.band_treasury">الخزينة</span></div>
     <!-- Theme-01 approved dashboard: KPI band = 3 floating light panels + 1 deep-navy panel -->
     <div class="kband" id="dash-kpis">
       <div class="kp"><div class="dsk" style="height:10px;width:60%"></div><div class="dsk" style="height:22px;width:75%;margin-top:10px"></div></div>
@@ -499,10 +499,10 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="tp-tabs" id="treasury-tabs"></div>
     <div id="treasury-panel"></div>
     <!-- Theme-01 master-detail: top outstanding member balances, actionable in place -->
-    <div class="flabel"><span>الذمم المستحقّة</span></div>
+    <div class="flabel"><span data-i18n="dashboard.band_receivables">الذمم المستحقّة</span></div>
     <div class="dfl dpnl" id="dash-md"></div>
     <!-- Section: النشاط — recent movements + today's work / alerts -->
-    <div class="flabel"><span>النشاط</span></div>
+    <div class="flabel"><span data-i18n="dashboard.band_activity">النشاط</span></div>
     <div class="dr2">
       <div class="dfl dpnl">
         <div class="dhd"><span class="dt2" data-i18n="dashboard.recent">آخر الحركات المالية</span><div class="da"><button class="btn gh sm" onclick="window.nav('diwan-rec')"><span data-i18n="common.view">عرض الكل</span></button></div></div>
@@ -513,8 +513,8 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
         </div>
       </div>
       <div class="dfl dpnl dside">
-        <div class="dsec"><div class="dsh"><span class="dt2">عمل اليوم</span><span class="badge ac" id="dash-tasks-n"></span></div><div id="dash-tasks"></div></div>
-        <div class="dsec"><div class="dsh"><span class="dt2">تنبيهات</span><span class="badge wr" id="dash-alerts-n"></span></div><div id="dash-alerts"></div></div>
+        <div class="dsec"><div class="dsh"><span class="dt2" data-i18n="dashboard.band_today">عمل اليوم</span><span class="badge ac" id="dash-tasks-n"></span></div><div id="dash-tasks"></div></div>
+        <div class="dsec"><div class="dsh"><span class="dt2" data-i18n="dashboard.band_alerts">تنبيهات</span><span class="badge wr" id="dash-alerts-n"></span></div><div id="dash-alerts"></div></div>
       </div>
     </div>
     <div id="fund-summary" class="fsum" style="display:none"></div>
@@ -607,8 +607,8 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div class="pag" id="members-pag"></div>
   </div>
   <div class="pg" id="pg-member-stmt">
-    <div class="ph"><div><h1 class="ph-t">كشف حساب عضو</h1></div><div class="ph-a"><button class="btn sm" onclick="window.reconcileReport()" title="تقرير مطابقة الأرصدة"><i class="ti ti-scale"></i><span>مطابقة الأرصدة</span></button></div><!-- OUTPUT-002-B Item 1: personal-statement print moved to the single engine output bar rendered inside #ms-out (de-duplicated) --></div>
-    <div class="ftb"><div class="ftb-grp"><div class="ftb-ci wide"><label>العضو</label><select id="ms-member" aria-label="اختيار العضو"><option value="">-- اختر عضواً --</option></select></div></div><div class="ftb-grp"><div class="ftb-ci"><label>من تاريخ</label><input type="date" id="ms-from" aria-label="من تاريخ"></div><div class="ftb-ci"><label>إلى تاريخ</label><input type="date" id="ms-to" aria-label="إلى تاريخ"></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i>عرض</button></div></div>
+    <div class="ph"><div><h1 class="ph-t">كشف حساب عضو</h1></div><div class="ph-a"><button class="btn sm" onclick="window.reconcileReport()" title="تقرير مطابقة الأرصدة"><i class="ti ti-scale"></i><span data-i18n="members.reconcile">مطابقة الأرصدة</span></button></div><!-- OUTPUT-002-B Item 1: personal-statement print moved to the single engine output bar rendered inside #ms-out (de-duplicated) --></div>
+    <div class="ftb"><div class="ftb-grp"><div class="ftb-ci wide"><label data-i18n="common.member">العضو</label><select id="ms-member" aria-label="اختيار العضو"><option value="">-- اختر عضواً --</option></select></div></div><div class="ftb-grp"><div class="ftb-ci"><label data-i18n="common.from_date">من تاريخ</label><input type="date" id="ms-from" aria-label="من تاريخ"></div><div class="ftb-ci"><label data-i18n="common.to_date">إلى تاريخ</label><input type="date" id="ms-to" aria-label="إلى تاريخ"></div></div><div class="ftb-act"><button class="btn primary" onclick="window.renderMemberStmt()"><i class="ti ti-search"></i><span data-i18n="common.view">عرض</span></button></div></div>
     <div id="ms-out"></div>
   </div>
   <div class="pg" id="pg-member-workspace">
@@ -633,11 +633,11 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
     <div id="dw-out"></div>
   </div>
   <div class="pg" id="pg-annual-debt">
-    <div class="ph"><div><h1 class="ph-t">تقرير المديونية السنوية</h1><div class="ph-s" id="annual-debt-sub"></div></div><div class="ph-a"><div class="export-dropdown out-menu"><button class="btn sm export-dropdown-btn out-menu-btn" onclick="togglePageExport(event,'exp-annual-debt')"><i class="ti ti-download"></i><span data-i18n="common.output_dd">الإخراج ▼</span></button><div class="export-dropdown-menu" id="exp-annual-debt"><button class="export-dropdown-item" onclick="window.pageOutput('annual-debt','print')"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><button class="export-dropdown-item" onclick="window.pageOutput('annual-debt','pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button><button class="export-dropdown-item" onclick="window.pageOutput('annual-debt','excel')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item rpt-out-btn" data-action="link"><i class="ti ti-link"></i><span data-i18n="common.copy_link">نسخ الرابط</span></button><button class="export-dropdown-item rpt-out-btn" data-action="share"><i class="ti ti-share"></i><span data-i18n="common.share">مشاركة</span></button><button class="export-dropdown-item rpt-out-btn admin-only" data-action="settings"><i class="ti ti-adjustments-cog"></i><span data-i18n="common.output_settings">إعدادات الإخراج</span></button></div></div></div></div>
+    <div class="ph"><div><h1 class="ph-t" data-i18n="members.debt_page_title">تقرير المديونية السنوية</h1><div class="ph-s" id="annual-debt-sub"></div></div><div class="ph-a"><div class="export-dropdown out-menu"><button class="btn sm export-dropdown-btn out-menu-btn" onclick="togglePageExport(event,'exp-annual-debt')"><i class="ti ti-download"></i><span data-i18n="common.output_dd">الإخراج ▼</span></button><div class="export-dropdown-menu" id="exp-annual-debt"><button class="export-dropdown-item" onclick="window.pageOutput('annual-debt','print')"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><button class="export-dropdown-item" onclick="window.pageOutput('annual-debt','pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button><button class="export-dropdown-item" onclick="window.pageOutput('annual-debt','excel')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item rpt-out-btn" data-action="link"><i class="ti ti-link"></i><span data-i18n="common.copy_link">نسخ الرابط</span></button><button class="export-dropdown-item rpt-out-btn" data-action="share"><i class="ti ti-share"></i><span data-i18n="common.share">مشاركة</span></button><button class="export-dropdown-item rpt-out-btn admin-only" data-action="settings"><i class="ti ti-adjustments-cog"></i><span data-i18n="common.output_settings">إعدادات الإخراج</span></button></div></div></div></div>
     <div id="annual-debt-list"></div>
   </div>
   <div class="pg" id="pg-delinquent">
-    <div class="ph"><div><h1 class="ph-t">تقرير الأعضاء المتأخرين</h1><div class="ph-s" id="delinquent-sub"></div></div><div class="ph-a"><div class="export-dropdown out-menu"><button class="btn sm export-dropdown-btn out-menu-btn" onclick="togglePageExport(event,'exp-delinquent')"><i class="ti ti-download"></i><span data-i18n="common.output_dd">الإخراج ▼</span></button><div class="export-dropdown-menu" id="exp-delinquent"><button class="export-dropdown-item" onclick="window.pageOutput('delinquent','print')"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><button class="export-dropdown-item" onclick="window.pageOutput('delinquent','pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button><button class="export-dropdown-item" onclick="window.pageOutput('delinquent','excel')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item rpt-out-btn" data-action="link"><i class="ti ti-link"></i><span data-i18n="common.copy_link">نسخ الرابط</span></button><button class="export-dropdown-item rpt-out-btn" data-action="share"><i class="ti ti-share"></i><span data-i18n="common.share">مشاركة</span></button><button class="export-dropdown-item rpt-out-btn admin-only" data-action="settings"><i class="ti ti-adjustments-cog"></i><span data-i18n="common.output_settings">إعدادات الإخراج</span></button></div></div></div></div>
+    <div class="ph"><div><h1 class="ph-t" data-i18n="members.delinquent_page_title">تقرير الأعضاء المتأخرين</h1><div class="ph-s" id="delinquent-sub"></div></div><div class="ph-a"><div class="export-dropdown out-menu"><button class="btn sm export-dropdown-btn out-menu-btn" onclick="togglePageExport(event,'exp-delinquent')"><i class="ti ti-download"></i><span data-i18n="common.output_dd">الإخراج ▼</span></button><div class="export-dropdown-menu" id="exp-delinquent"><button class="export-dropdown-item" onclick="window.pageOutput('delinquent','print')"><i class="ti ti-printer"></i><span data-i18n="common.print">طباعة</span></button><button class="export-dropdown-item" onclick="window.pageOutput('delinquent','pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button><button class="export-dropdown-item" onclick="window.pageOutput('delinquent','excel')"><i class="ti ti-file-spreadsheet"></i>Excel</button><button class="export-dropdown-item rpt-out-btn" data-action="link"><i class="ti ti-link"></i><span data-i18n="common.copy_link">نسخ الرابط</span></button><button class="export-dropdown-item rpt-out-btn" data-action="share"><i class="ti ti-share"></i><span data-i18n="common.share">مشاركة</span></button><button class="export-dropdown-item rpt-out-btn admin-only" data-action="settings"><i class="ti ti-adjustments-cog"></i><span data-i18n="common.output_settings">إعدادات الإخراج</span></button></div></div></div></div>
     <div id="delinquent-list"></div>
   </div>
   <div class="pg" id="pg-annual">
@@ -655,7 +655,7 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
   </div>
   <div class="pg" id="pg-bk">
     <div class="ph"><div><h1 class="ph-t">النسخ الاحتياطي</h1></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="card" style="text-align:center;padding:28px"><i class="ti ti-database-export" style="font-size:40px;color:var(--diwan);display:block;margin-bottom:12px"></i><p style="font-size:12px;color:var(--tx2);margin-bottom:12px">تصدير كامل بصيغة JSON</p><button class="btn primary" onclick="window.doBackup()"><i class="ti ti-download"></i>تحميل النسخة</button><button class="btn" onclick="window.doRestore()" style="margin-top:8px"><i class="ti ti-upload"></i>استعادة نسخة</button></div><div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>معلومات النظام</div><div id="sys-info"></div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="card" style="text-align:center;padding:28px"><i class="ti ti-database-export" style="font-size:40px;color:var(--diwan);display:block;margin-bottom:12px"></i><p style="font-size:12px;color:var(--tx2);margin-bottom:12px" data-i18n="backup.json_desc">تصدير كامل بصيغة JSON</p><button class="btn primary" onclick="window.doBackup()"><i class="ti ti-download"></i><span data-i18n="backup.download">تحميل النسخة</span></button><button class="btn" onclick="window.doRestore()" style="margin-top:8px"><i class="ti ti-upload"></i><span data-i18n="backup.restore">استعادة نسخة</span></button></div><div class="card"><div class="ct" style="margin-bottom:12px"><i class="ti ti-info-circle"></i><span data-i18n="backup.sys_info">معلومات النظام</span></div><div id="sys-info"></div></div></div>
   </div>
   <div class="pg" id="pg-settings">
     <div class="ph"><div><h1 class="ph-t" data-i18n="settings.title">الإعدادات</h1><div class="ph-s" data-i18n="settings.subtitle">الرصيد الافتتاحي وإعدادات النظام</div></div></div>
@@ -664,29 +664,29 @@ body:not(.light) #login-screen .forgot-msg{color:#CBF000}
       <div class="fi"><label data-i18n="settings.diwan_jod">رصيد الديوان السابق JD (للعملات فقط)</label><input type="number" step="0.01" id="set-diwan-opening-jod" aria-label="رصيد الديوان الافتتاحي دينار" placeholder="0"></div>
       <div class="fi"><label data-i18n="settings.food_usd">رصيد الغداء السابق $ (للعملات فقط)</label><input type="number" step="0.01" id="set-food-opening-usd" aria-label="رصيد الغداء الافتتاحي دولار" placeholder="0"></div>
       <div class="fi"><label data-i18n="settings.food_jod">رصيد الغداء السابق JD (للعملات فقط)</label><input type="number" step="0.01" id="set-food-opening-jod" aria-label="رصيد الغداء الافتتاحي دينار" placeholder="0"></div></div><div style="margin-top:16px"><button class="btn primary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i><span data-i18n="settings.save">حفظ الإعدادات</span></button></div></div>
-    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-lock-check"></i><span>الإقفال المالي السنوي</span></span></div>
-      <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span>حالة القفل تتغيّر فقط عبر إجراء إقفال/إعادة فتح صريح وموثّق (FD-012 · FD-030). الإقفال الدائم لسنةٍ ما يكون من 1 فبراير للسنة التالية.</span></div>
-      <div style="margin:8px 0;font-size:13px">المقفل حالياً حتى: <b class="mono" id="fy-locked-now">—</b></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-lock-check"></i><span data-i18n="settings.lock_title">الإقفال المالي السنوي</span></span></div>
+      <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span data-i18n="settings.lock_hint">حالة القفل تتغيّر فقط عبر إجراء إقفال/إعادة فتح صريح وموثّق (FD-012 · FD-030). الإقفال الدائم لسنةٍ ما يكون من 1 فبراير للسنة التالية.</span></div>
+      <div style="margin:8px 0;font-size:13px"><span data-i18n="settings.locked_until">المقفل حالياً حتى:</span> <b class="mono" id="fy-locked-now">—</b></div>
       <div class="fg" style="max-width:500px">
-        <div class="fi"><label>السنة</label><input type="number" id="fy-year" aria-label="سنة الإقفال" placeholder="2025" step="1"></div>
-        <div class="fi full"><label>سبب القرار (إلزامي — يُسجَّل باسم مدير النظام)</label><input type="text" id="fy-reason" aria-label="سبب الإقفال" placeholder="سبب الإقفال أو إعادة الفتح"></div>
+        <div class="fi"><label data-i18n="settings.lock_year">السنة</label><input type="number" id="fy-year" aria-label="سنة الإقفال" placeholder="2025" step="1"></div>
+        <div class="fi full"><label data-i18n="settings.lock_reason">سبب القرار (إلزامي — يُسجَّل باسم مدير النظام)</label><input type="text" id="fy-reason" aria-label="سبب الإقفال" placeholder="سبب الإقفال أو إعادة الفتح"></div>
       </div>
       <div style="margin-top:12px;display:flex;gap:8px">
-        <button class="btn primary" onclick="window.closeFiscalYearUI()"><i class="ti ti-lock"></i>إقفال السنة</button>
-        <button class="btn secondary" onclick="window.reopenFiscalYearUI()"><i class="ti ti-lock-open"></i>إعادة فتح السنة</button>
+        <button class="btn primary" onclick="window.closeFiscalYearUI()"><i class="ti ti-lock"></i><span data-i18n="settings.lock_btn">إقفال السنة</span></button>
+        <button class="btn secondary" onclick="window.reopenFiscalYearUI()"><i class="ti ti-lock-open"></i><span data-i18n="settings.reopen_btn">إعادة فتح السنة</span></button>
       </div>
     </div>
-    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-transfer"></i><span>التحويلات الداخلية بين الصناديق</span></span></div>
-      <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span>تحويل إداري معتمد من مدير النظام بين الصناديق الثلاثة (FD-022…FD-025). يصدر سند تحويل داخلي غير قابل للتعديل، ولا يغيّر الإيرادات أو المصروفات أو ذمم الأعضاء.</span></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-transfer"></i><span data-i18n="settings.transfer_title">التحويلات الداخلية بين الصناديق</span></span></div>
+      <div class="ibox warn"><i class="ti ti-alert-triangle"></i><span data-i18n="settings.transfer_hint">تحويل إداري معتمد من مدير النظام بين الصناديق الثلاثة (FD-022…FD-025). يصدر سند تحويل داخلي غير قابل للتعديل، ولا يغيّر الإيرادات أو المصروفات أو ذمم الأعضاء.</span></div>
       <div class="fg" style="max-width:500px">
-        <div class="fi"><label>من صندوق</label><select id="tr-source" aria-label="الصندوق المصدر"><option value="diwan">الديوان</option><option value="food">الغداء</option><option value="historical_deficit">العجز التاريخي</option></select></div>
-        <div class="fi"><label>إلى صندوق</label><select id="tr-destination" aria-label="الصندوق الوجهة"><option value="food">الغداء</option><option value="diwan">الديوان</option><option value="historical_deficit">العجز التاريخي</option></select></div>
-        <div class="fi"><label>المبلغ ₪ (محاسبي)</label><div class="iw"><span class="ipx">₪</span><input type="number" id="tr-amount" aria-label="المبلغ" placeholder="0.00" step="0.01" min="0.01"></div></div>
-        <div class="fi"><label>التاريخ</label><input type="date" id="tr-date" aria-label="التاريخ"></div>
-        <div class="fi full"><label>سبب التحويل (إلزامي)</label><input type="text" id="tr-reason" placeholder="سبب التحويل"></div>
-        <div class="fi full"><label>المدير المعتمد (إلزامي)</label><input type="text" id="tr-director" placeholder="اسم المدير المعتمد للتحويل"></div>
+        <div class="fi"><label data-i18n="settings.transfer_from">من صندوق</label><select id="tr-source" aria-label="الصندوق المصدر"><option value="diwan" data-i18n="settings.fund_diwan">الديوان</option><option value="food" data-i18n="settings.fund_food">الغداء</option><option value="historical_deficit" data-i18n="settings.fund_deficit">العجز التاريخي</option></select></div>
+        <div class="fi"><label data-i18n="settings.transfer_to">إلى صندوق</label><select id="tr-destination" aria-label="الصندوق الوجهة"><option value="food" data-i18n="settings.fund_food">الغداء</option><option value="diwan" data-i18n="settings.fund_diwan">الديوان</option><option value="historical_deficit" data-i18n="settings.fund_deficit">العجز التاريخي</option></select></div>
+        <div class="fi"><label data-i18n="settings.transfer_amount">المبلغ ₪ (محاسبي)</label><div class="iw"><span class="ipx">₪</span><input type="number" id="tr-amount" aria-label="المبلغ" placeholder="0.00" step="0.01" min="0.01"></div></div>
+        <div class="fi"><label data-i18n="settings.transfer_date">التاريخ</label><input type="date" id="tr-date" aria-label="التاريخ"></div>
+        <div class="fi full"><label data-i18n="settings.transfer_reason">سبب التحويل (إلزامي)</label><input type="text" id="tr-reason" placeholder="سبب التحويل"></div>
+        <div class="fi full"><label data-i18n="settings.transfer_director">المدير المعتمد (إلزامي)</label><input type="text" id="tr-director" placeholder="اسم المدير المعتمد للتحويل"></div>
       </div>
-      <div style="margin-top:12px"><button class="btn primary" onclick="window.transferFundsUI()"><i class="ti ti-transfer"></i>تنفيذ التحويل وإصدار السند</button></div>
+      <div style="margin-top:12px"><button class="btn primary" onclick="window.transferFundsUI()"><i class="ti ti-transfer"></i><span data-i18n="settings.transfer_btn">تنفيذ التحويل وإصدار السند</span></button></div>
       <div id="tr-list" style="margin-top:14px"></div>
     </div>
     <div class="card"><div class="ch"><span class="ct"><i class="ti ti-currency-shekel"></i><span data-i18n="settings.rates_title">أسعار الصرف الاحتياطية</span></span></div><div class="fg" style="max-width:500px"><div class="fi"><label data-i18n="settings.usd_rate_short">سعر الدولار USD ₪</label><div class="iw"><span class="ipx">$</span><input type="number" id="set-usd-rate" aria-label="سعر صرف الدولار" placeholder="3.70" step="0.01" min="0.01"></div></div><div class="fi"><label data-i18n="settings.jod_rate_short">سعر الدينار JOD ₪</label><div class="iw"><span class="ipx">د.أ</span><input type="number" id="set-jod-rate" aria-label="سعر صرف الدينار" placeholder="5.00" step="0.01" min="0.01"></div></div></div><div style="margin-top:16px"><button class="btn secondary" onclick="window.saveSettings()"><i class="ti ti-device-floppy"></i><span data-i18n="settings.save_short">حفظ</span></button></div></div>
