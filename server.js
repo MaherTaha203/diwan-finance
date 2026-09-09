@@ -8,24 +8,30 @@
 
 require('dotenv').config();
 const express = require('express');
-const cors    = require('cors');
-const path    = require('path');
+const cors = require('cors');
+const path = require('path');
 
 const verifyHandler = require('./api/verify.js');
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/* ── /api/config — pass Supabase URL + anon key to the browser client ── */
+/* ── /api/config — expose ONLY browser-safe Supabase configuration. ── */
 app.get('/api/config', (req, res) => {
-  res.json({
-    url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY,
-  });
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  return res.json({ url, key });
 });
 
 /* ── /api/verify — delegates to api/verify.js (single source of truth) ── */
