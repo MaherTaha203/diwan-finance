@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Family – Zain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #2b2233; overflow: hidden; }
+  h1, h2, h3, p { margin: 0; }
+  .stage { position: fixed; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  .stage > section { position: absolute; inset: 0; width: 1920px; height: 1080px; opacity: 0; visibility: hidden; transition: opacity .45s ease, visibility .45s; }
+  .stage > section.active { opacity: 1; visibility: visible; }
+  .stage aside { display: none; }
+  .nav { position: fixed; bottom: 16px; right: 16px; display: flex; gap: 8px; font: 600 14px/1 system-ui, sans-serif; }
+  .nav button { border: 0; border-radius: 999px; padding: 10px 16px; background: rgba(255,255,255,.85); color: #3A2B4D; cursor: pointer; font: inherit; }
+  .nav button:focus-visible { outline: 3px solid #FFC94D; outline-offset: 2px; }
+  @media print {
+    html, body { overflow: visible; background: none; }
+    .nav { display: none; }
+    .stage { position: static; transform: none !important; width: auto; height: auto; }
+    .stage > section { position: relative; opacity: 1; visibility: visible; page-break-after: always; }
+    @page { size: 1920px 1080px; margin: 0; }
+  }
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+<section id="cover" data-transition="push" style="background:#FFF8F0; color:#3A2B4D; font-family:'Nunito', Verdana, sans-serif; padding:96px 128px; display:flex; flex-direction:column; justify-content:center; align-items:start">
+  <svg aria-label="A cozy apartment building next to grandfather's house, with a little heart between them" width="760" height="684" viewBox="0 0 800 720" style="position:absolute; left:1032px; top:156px; width:760px; height:684px" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="400" cy="380" r="330" fill="#E3F2F9"/>
+    <circle cx="650" cy="150" r="48" fill="#FFD66B"/>
+    <circle cx="650" cy="150" r="66" fill="#FFD66B" opacity="0.25"/>
+    <g fill="#FFFDF8">
+      <ellipse cx="190" cy="140" rx="62" ry="26"/>
+      <ellipse cx="230" cy="122" rx="40" ry="30"/>
+      <ellipse cx="160" cy="126" rx="30" ry="22"/>
+      <ellipse cx="470" cy="190" rx="44" ry="18"/>
+      <ellipse cx="496" cy="176" rx="28" ry="20"/>
+    </g>
+    <path d="M40 606 Q400 540 760 606 L760 670 Q400 712 40 670Z" fill="#CBEBD4"/>
+    <rect x="108" y="176" width="284" height="30" rx="12" fill="#E07A68"/>
+    <rect x="122" y="198" width="256" height="414" rx="14" fill="#F6AE9A"/>
+    <g fill="#FFE7A3">
+      <rect x="150" y="236" width="52" height="58" rx="10"/>
+      <rect x="224" y="236" width="52" height="58" rx="10"/>
+      <rect x="298" y="236" width="52" height="58" rx="10"/>
+      <rect x="150" y="318" width="52" height="58" rx="10"/>
+      <rect x="224" y="318" width="52" height="58" rx="10"/>
+      <rect x="298" y="318" width="52" height="58" rx="10"/>
+      <rect x="150" y="400" width="52" height="58" rx="10"/>
+      <rect x="298" y="400" width="52" height="58" rx="10"/>
+      <rect x="150" y="482" width="52" height="58" rx="10"/>
+      <rect x="298" y="482" width="52" height="58" rx="10"/>
+    </g>
+    <rect x="224" y="400" width="52" height="58" rx="10" fill="#FFF3CF"/>
+    <path transform="translate(236 414) scale(1.15)" d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#E0584A"/>
+    <rect x="216" y="486" width="68" height="10" rx="5" fill="#E07A68"/>
+    <path d="M222 612 L222 562 Q250 528 278 562 L278 612Z" fill="#8C4A5A"/>
+    <circle cx="266" cy="578" r="4" fill="#FFD66B"/>
+    <path d="M282 614 Q400 596 546 616" stroke="#F3DDB4" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <rect x="636" y="306" width="30" height="70" rx="4" fill="#8C4A5A"/>
+    <rect x="466" y="400" width="232" height="212" rx="10" fill="#A9D3EA"/>
+    <path d="M444 414 L582 292 L720 414Z" fill="#5C6FB1" stroke="#5C6FB1" stroke-width="12" stroke-linejoin="round"/>
+    <rect x="492" y="448" width="58" height="58" rx="8" fill="#FFE7A3"/>
+    <rect x="614" y="448" width="58" height="58" rx="8" fill="#FFE7A3"/>
+    <path d="M521 448 L521 506 M492 477 L550 477 M643 448 L643 506 M614 477 L672 477" stroke="#FFFDF8" stroke-width="5"/>
+    <path d="M554 612 L554 548 Q582 518 610 548 L610 612Z" fill="#EF6F5E"/>
+    <circle cx="598" cy="576" r="4" fill="#FFD66B"/>
+    <circle cx="582" cy="358" r="18" fill="#FFE7A3"/>
+    <circle cx="94" cy="600" r="30" fill="#8FD1AC"/>
+    <circle cx="66" cy="614" r="20" fill="#7CCBA2"/>
+    <circle cx="736" cy="604" r="26" fill="#8FD1AC"/>
+    <path transform="translate(392 470) scale(1.6)" d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#EF6F5E"/>
+    <path transform="translate(424 430) scale(0.9)" d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#F7A8A0"/>
+  </svg>
+  <p data-build-in="pop order 1" style="position:absolute; left:1150px; top:796px; width:232px; font-family:'Fredoka', Verdana, sans-serif; font-size:24px; font-weight:600; color:#3A2B4D; background:#FFFDF8; border:2px solid #F6AE9A; border-radius:999px; padding:8px 16px; text-align:center; white-space:nowrap">Our apartment</p>
+  <p data-build-in="pop order 2" style="position:absolute; left:1404px; top:796px; width:352px; font-family:'Fredoka', Verdana, sans-serif; font-size:24px; font-weight:600; color:#3A2B4D; background:#FFFDF8; border:2px solid #A9D3EA; border-radius:999px; padding:8px 16px; text-align:center; white-space:nowrap">My grandfather's house</p>
+  <div style="width:880px; display:flex; flex-direction:column; gap:20px">
+    <div style="display:flex; flex-direction:row; align-items:center; gap:20px">
+      <p style="font-family:'Fredoka', Verdana, sans-serif; font-size:32px; font-weight:600; color:#FFF8F0; background:#5C6FB1; border-radius:999px; padding:8px 28px; white-space:nowrap">Zain – Grade 3</p>
+      <p style="font-size:28px; font-weight:700; color:#6A5A7A; white-space:nowrap">Mamlakat Al-Qiyam School</p>
+    </div>
+    <h1 style="font-family:'Fredoka', Verdana, sans-serif; font-size:150px; font-weight:700; line-height:1; letter-spacing:2px; color:#3A2B4D">MY <span style="color:#E0584A">FAMILY</span></h1>
+    <div style="display:flex; flex-direction:column; gap:18px; padding:16px 0px 0px 0px">
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#FFE8E1; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#E0584A"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:800; line-height:1.3">Hello! My name is Zain.</p>
+      </div>
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#FFF2CC; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#F2A93B"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:700; line-height:1.3">I am in the third grade at<br>Mamlakat Al-Qiyam School.</p>
+      </div>
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#E6F4FA; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#5C9FD1"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:700; line-height:1.3">Today, I want to talk about my family.</p>
+      </div>
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#E7F5EC; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#3FA873"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:700; line-height:1.3">I live with my parents in an apartment next to my grandfather's house.</p>
+      </div>
+    </div>
+  </div>
+  <aside>Hello! My name is Zain. I am in the third grade at Mamlakat Al-Qiyam School. Today, I want to talk about my family. I live with my parents in an apartment next to my grandfather's house.</aside>
+</section>
+<section id="love" data-transition="fade" style="background:#FFF1EC; color:#3A2B4D; font-family:'Nunito', Verdana, sans-serif; padding:96px 128px; display:flex; flex-direction:column; justify-content:center; align-items:end">
+  <svg aria-label="A happy family holding hands: Dad, Mom, Zain and her little sister Karmel, under a big heart" width="760" height="665" viewBox="0 0 800 700" style="position:absolute; left:148px; top:72px; width:760px; height:665px" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="400" cy="390" r="318" fill="#FFE0D6"/>
+    <ellipse cx="392" cy="622" rx="320" ry="20" fill="#F6C9BA"/>
+    <path transform="translate(340 104) scale(5)" d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#EF6F5E"/>
+    <path transform="translate(238 160) scale(1.5)" d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#F7A8A0"/>
+    <path transform="translate(536 186) scale(1.2)" d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#FFC94D"/>
+    <g stroke-linecap="round" fill="none" stroke-width="20">
+      <path d="M132 396 L110 500" stroke="#5BA3C9"/>
+      <path d="M208 396 L250 470" stroke="#5BA3C9"/>
+      <path d="M302 410 L252 470" stroke="#F47C6B" stroke-width="18"/>
+      <path d="M358 410 L408 488" stroke="#F47C6B" stroke-width="18"/>
+      <path d="M458 468 L410 488" stroke="#FFC94D" stroke-width="16"/>
+      <path d="M502 468 L546 522" stroke="#FFC94D" stroke-width="16"/>
+      <path d="M602 520 L548 524" stroke="#7CCBA2" stroke-width="14"/>
+      <path d="M638 520 L664 570" stroke="#7CCBA2" stroke-width="14"/>
+    </g>
+    <g fill="#3B4A6B">
+      <rect x="146" y="520" width="18" height="95" rx="9"/>
+      <rect x="176" y="520" width="18" height="95" rx="9"/>
+    </g>
+    <g fill="#4A3B5C">
+      <ellipse cx="152" cy="617" rx="17" ry="8"/>
+      <ellipse cx="188" cy="617" rx="17" ry="8"/>
+    </g>
+    <rect x="120" y="366" width="100" height="170" rx="44" fill="#5BA3C9"/>
+    <path d="M150 370 L170 394 L190 370" stroke="#EAF4FA" stroke-width="6" fill="none" stroke-linejoin="round"/>
+    <circle cx="170" cy="316" r="52" fill="#F6CBA6"/>
+    <path d="M118 312 C116 262 150 248 172 250 C200 250 226 266 222 312 C210 290 190 282 170 284 C148 286 128 296 118 312Z" fill="#4A3228"/>
+    <path d="M270 322 C266 268 298 254 330 254 C364 254 394 270 390 322 L398 430 C372 442 288 442 262 430Z" fill="#6B3F2A"/>
+    <g fill="#F6CBA6">
+      <rect x="313" y="540" width="15" height="76" rx="7"/>
+      <rect x="334" y="540" width="15" height="76" rx="7"/>
+    </g>
+    <ellipse cx="318" cy="617" rx="15" ry="7" fill="#C4566B"/>
+    <ellipse cx="346" cy="617" rx="15" ry="7" fill="#C4566B"/>
+    <path d="M300 392 Q330 378 360 392 L394 548 Q330 564 266 548Z" fill="#F47C6B"/>
+    <circle cx="330" cy="336" r="46" fill="#F6CBA6"/>
+    <path d="M284 330 C284 290 306 280 330 280 C358 280 378 292 376 330 C362 306 346 300 330 302 C312 302 296 310 284 330Z" fill="#6B3F2A"/>
+    <path d="M436 408 C432 360 456 346 480 346 C506 346 530 360 524 408 L530 474 C510 482 450 482 430 474Z" fill="#3E2A22"/>
+    <g fill="#F6CBA6">
+      <rect x="466" y="556" width="14" height="60" rx="7"/>
+      <rect x="484" y="556" width="14" height="60" rx="7"/>
+    </g>
+    <ellipse cx="472" cy="617" rx="13" ry="6" fill="#7A5AA8"/>
+    <ellipse cx="496" cy="617" rx="13" ry="6" fill="#7A5AA8"/>
+    <path d="M456 452 Q480 442 504 452 L532 562 Q480 576 428 562Z" fill="#FFC94D"/>
+    <circle cx="480" cy="414" r="40" fill="#F6CBA6"/>
+    <path d="M440 410 C440 378 460 370 480 370 C502 370 520 380 520 410 C508 392 494 388 480 390 C464 390 450 396 440 410Z" fill="#3E2A22"/>
+    <path d="M514 378 L532 366 L532 390Z M514 378 L496 366 L496 390Z" fill="#EF6F5E"/>
+    <circle cx="514" cy="378" r="5" fill="#E0584A"/>
+    <circle cx="582" cy="466" r="16" fill="#3E2A22"/>
+    <circle cx="658" cy="466" r="16" fill="#3E2A22"/>
+    <g fill="#F6CBA6">
+      <rect x="608" y="572" width="12" height="44" rx="6"/>
+      <rect x="622" y="572" width="12" height="44" rx="6"/>
+    </g>
+    <ellipse cx="613" cy="617" rx="11" ry="6" fill="#EF6F5E"/>
+    <ellipse cx="629" cy="617" rx="11" ry="6" fill="#EF6F5E"/>
+    <path d="M600 506 Q620 498 640 506 L664 582 Q620 592 576 582Z" fill="#7CCBA2"/>
+    <circle cx="620" cy="470" r="36" fill="#F6CBA6"/>
+    <path d="M584 468 C584 440 602 432 620 432 C640 432 656 442 656 468 C646 452 632 448 620 450 C606 450 592 456 584 468Z" fill="#3E2A22"/>
+    <g fill="#F6CBA6">
+      <circle cx="110" cy="504" r="12"/>
+      <circle cx="251" cy="470" r="12"/>
+      <circle cx="409" cy="488" r="11"/>
+      <circle cx="547" cy="523" r="10"/>
+      <circle cx="664" cy="572" r="9"/>
+    </g>
+    <g fill="#3A2B4D">
+      <circle cx="152" cy="320" r="5.5"/>
+      <circle cx="188" cy="320" r="5.5"/>
+      <circle cx="314" cy="340" r="5"/>
+      <circle cx="346" cy="340" r="5"/>
+      <circle cx="466" cy="418" r="5"/>
+      <circle cx="494" cy="418" r="5"/>
+      <circle cx="608" cy="474" r="4.5"/>
+      <circle cx="632" cy="474" r="4.5"/>
+    </g>
+    <g fill="#F4A3A8" opacity="0.75">
+      <circle cx="140" cy="336" r="9"/>
+      <circle cx="200" cy="336" r="9"/>
+      <circle cx="302" cy="355" r="8"/>
+      <circle cx="358" cy="355" r="8"/>
+      <circle cx="456" cy="432" r="7.5"/>
+      <circle cx="504" cy="432" r="7.5"/>
+      <circle cx="598" cy="486" r="6.5"/>
+      <circle cx="642" cy="486" r="6.5"/>
+    </g>
+    <g stroke="#3A2B4D" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <path d="M156 338 Q170 352 184 338"/>
+      <path d="M318 356 Q330 368 342 356"/>
+      <path d="M470 432 Q480 442 490 432"/>
+      <path d="M611 487 Q620 496 629 487"/>
+    </g>
+  </svg>
+  <p data-build-in="pop order 1" style="position:absolute; left:261px; top:684px; width:96px; font-family:'Fredoka', Verdana, sans-serif; font-size:24px; font-weight:600; color:#3A2B4D; background:#FFFDF8; border:2px solid #5BA3C9; border-radius:999px; padding:6px 0px; text-align:center">Dad</p>
+  <p data-build-in="pop order 2" style="position:absolute; left:413px; top:684px; width:96px; font-family:'Fredoka', Verdana, sans-serif; font-size:24px; font-weight:600; color:#3A2B4D; background:#FFFDF8; border:2px solid #F47C6B; border-radius:999px; padding:6px 0px; text-align:center">Mom</p>
+  <p data-build-in="pop order 3" style="position:absolute; left:556px; top:684px; width:96px; font-family:'Fredoka', Verdana, sans-serif; font-size:24px; font-weight:600; color:#3A2B4D; background:#FFFDF8; border:2px solid #FFC94D; border-radius:999px; padding:6px 0px; text-align:center">Zain</p>
+  <p data-build-in="pop order 4" style="position:absolute; left:672px; top:684px; width:128px; font-family:'Fredoka', Verdana, sans-serif; font-size:24px; font-weight:600; color:#3A2B4D; background:#FFFDF8; border:2px solid #7CCBA2; border-radius:999px; padding:6px 0px; text-align:center">Karmel</p>
+  <h2 data-build-in="rise order 5" style="position:absolute; left:228px; top:780px; width:600px; font-family:'Fredoka', Verdana, sans-serif; font-size:96px; font-weight:700; line-height:1.1; color:#FFF8F0; background:#E0584A; border-radius:999px; padding:18px 0px; text-align:center; box-shadow:0px 12px 0px #F6C9BA">Thank you!</h2>
+  <div style="width:800px; display:flex; flex-direction:column; gap:20px">
+    <div style="display:flex; flex-direction:row; align-items:center; gap:20px">
+      <p style="font-family:'Fredoka', Verdana, sans-serif; font-size:32px; font-weight:600; color:#FFF8F0; background:#E0584A; border-radius:999px; padding:8px 28px; letter-spacing:2px; white-space:nowrap">MY FAMILY</p>
+      <p style="font-size:28px; font-weight:700; color:#6A5A7A; white-space:nowrap">Zain – Grade 3</p>
+    </div>
+    <h2 style="font-family:'Fredoka', Verdana, sans-serif; font-size:88px; font-weight:700; line-height:1.1; color:#3A2B4D">I Love My Family</h2>
+    <div style="display:flex; flex-direction:column; gap:18px; padding:16px 0px 0px 0px">
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#FFE0D6; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#E0584A"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:800; line-height:1.3">I love my family very much.</p>
+      </div>
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#E7F5EC; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#3FA873"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:700; line-height:1.3">I also love my little sister, <b>Karmel</b>.</p>
+      </div>
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#E6F4FA; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#5C9FD1"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:700; line-height:1.3">My family takes care of me, helps me, and makes me feel happy and safe.</p>
+      </div>
+      <div style="display:flex; flex-direction:row; align-items:center; gap:20px; background:#FFF2CC; border-radius:24px; padding:18px 28px">
+        <svg aria-label="" width="24" height="22" viewBox="0 0 24 22" style="width:34px; height:31px" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 C5 15 0 11 0 6 C0 2.5 2.7 0 6 0 C8.5 0 10.6 1.4 12 3.5 C13.4 1.4 15.5 0 18 0 C21.3 0 24 2.5 24 6 C24 11 19 15 12 21Z" fill="#F2A93B"/></svg>
+        <p style="flex:1; font-size:42px; font-weight:700; line-height:1.3">I am very happy to have such a loving family.</p>
+      </div>
+    </div>
+  </div>
+  <aside>I love my family very much. I also love my little sister, Karmel. My family takes care of me, helps me, and makes me feel happy and safe. I am very happy to have such a loving family. Thank you!</aside>
+</section>
+</main>
+<nav class="nav" aria-label="Slide navigation">
+  <button type="button" id="prev" aria-label="Previous slide">&#8592;</button>
+  <button type="button" id="next" aria-label="Next slide">&#8594;</button>
+</nav>
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const slides = [...stage.querySelectorAll(':scope > section')];
+  let current = 0;
+  const show = (i) => {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, n) => s.classList.toggle('active', n === current));
+  };
+  const fit = () => {
+    const scale = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `scale(${scale}) translate(-50%, -50%)`;
+  };
+  addEventListener('resize', fit);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(current + 1); }
+    if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(current - 1); }
+    if (e.key === 'f') document.documentElement.requestFullscreen?.();
+  });
+  document.getElementById('prev').addEventListener('click', () => show(current - 1));
+  document.getElementById('next').addEventListener('click', () => show(current + 1));
+  fit();
+  show(0);
+})();
+</script>
+</body>
+</html>
