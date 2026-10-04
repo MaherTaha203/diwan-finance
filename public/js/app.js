@@ -1965,7 +1965,10 @@ window.buildTransferVoucher=function(t){
     +row('المشغّل',esc(t.created_by||'—'))
     +row('المدير المعتمد',esc(t.approving_director||'—'))
     +'</tbody></table>'
-    +reportDfoot('https://www.diwan-finance.com','diwan-finance.com')
+    +reportDfoot(
+      'https://www.diwan-finance.com/verify/'+esc(t.verification_token||''),
+      'diwan-finance.com/verify<span class="tok">'+esc(t.verification_token||'')+'</span>'
+    )
     +reportFooter({date:fmtDate2(new Date().toISOString())});
 };
 window.prtTransfer=function(id){
