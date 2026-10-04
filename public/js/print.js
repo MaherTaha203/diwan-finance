@@ -84,8 +84,8 @@ const PRINT_TOKENS=':root{--ink:#17202E;--ink2:#57606E;--muted:#7C8494;--faint:#
 +'table.dt tr.final .tag.cr{color:var(--pos)}table.dt tr.final .tag.dr{color:var(--neg)}table.dt tr.final .pos{color:var(--pos)}table.dt tr.final .neg{color:var(--neg)}'
 /* ── Footer · single signature · QR ── */
 +'.dfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:30px}'
-+'.qr-u{width:116px;text-align:center}'
-+'.qr-u .box{width:108px;height:108px;border:1px solid var(--line2);border-radius:8px;margin:0 auto;padding:3px;background:#fff}'
++'.qr-u{width:134px;text-align:center}'
++'.qr-u .box{width:126px;height:126px;border:1px solid var(--line2);border-radius:8px;margin:0 auto;padding:12px;background:#fff}'
 +'.qr-u .box>div,.qr-u .box img,.qr-u .box canvas{width:100px!important;height:100px!important;max-width:none!important;max-height:none!important;image-rendering:pixelated}'
 +'.qr-u .cap{font-size:7px;color:var(--faint);margin-top:3px;word-break:break-all}'
 +'.qr-u .cap .tok{display:block;font-weight:700;color:var(--teal);font-size:7.5px;letter-spacing:.2px;margin-top:1px;font-family:var(--fe)}'
