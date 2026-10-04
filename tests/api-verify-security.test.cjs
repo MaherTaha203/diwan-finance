@@ -37,13 +37,14 @@ test('no wildcard CORS header is ever set', () => {
 });
 
 test('lookup is token-only — never by voucher number (no enumeration)', () => {
-  assert.ok(/\.eq\(\s*['"]verification_token['"]/.test(SRC), 'must query verification_token');
+  const tokenLookups = (SRC.match(/\.eq\(\s*['"]verification_token['"]/g) || []).length;
+  assert.equal(tokenLookups, 3, 'must query verification_token for receipts, payments, and internal transfers');
   assert.ok(!/\.eq\(\s*['"]no['"]/.test(SRC), 'must NOT query by voucher number "no"');
 });
 
 test('public response exposes only minimal fields (no amounts/parties)', () => {
   const selects = [...SRC.matchAll(/\.select\(\s*['"]([^'"]+)['"]\s*\)/g)].map(m => m[1].replace(/\s/g, ''));
-  assert.deepEqual(selects.sort(), ['no,payment_date,is_deleted', 'no,receipt_date,is_deleted'].sort());
+  assert.deepEqual(selects.sort(), ['no,payment_date,is_deleted', 'no,receipt_date,is_deleted', 'no,transfer_date,is_deleted'].sort());
   assert.ok(!/amount|member|payer|beneficiary|donor|notes/i.test(selects.join(',')), 'no sensitive fields selected');
 });
 
