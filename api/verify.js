@@ -136,6 +136,34 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    /* Internal-transfer vouchers are also QR-bearing documents. Keep the public
+       contract identical: token-only lookup and the same minimal identity fields.
+       No financial amount, fund, reason, operator, or approval data is exposed. */
+    const { data: transfer, error: trErr } = await supabase
+      .from('internal_transfers')
+      .select('no, transfer_date, is_deleted')
+      .eq('verification_token', token)
+      .maybeSingle();
+
+    if (trErr) {
+      console.error('[verify] internal_transfers query failed:', trErr.code, trErr.message);
+      return publicError(res, 500, 'Verification service unavailable');
+    }
+
+    if (transfer) {
+      if (transfer.is_deleted === true) {
+        return publicError(res, 200, 'Document has been cancelled');
+      }
+      return res.status(200).json({
+        valid: true,
+        document: {
+          id: transfer.no,
+          type: 'Internal Transfer Voucher',
+          date: transfer.transfer_date,
+        },
+      });
+    }
+
     return publicError(res, 404, 'Document not found');
   } catch (err) {
     console.error('[verify] exception:', err && err.message);
