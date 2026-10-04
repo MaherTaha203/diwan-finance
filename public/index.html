@@ -256,19 +256,10 @@ body:not(.is-admin) .export-dropdown-menu .admin-only{display:none}
 #login-screen .login-btn-main{background:var(--b-gold);color:#1A2205;border-radius:12px}
 #login-screen .login-btn-main:hover{background:#D6F62A}
 #login-screen .lp-sys-val{font-variant-numeric:tabular-nums}
-/* dark mode — the login follows the stored theme */
-body:not(.light) #login-screen{
-  --b-cream:#0C0E13; --b-white:#14171E; --b-border:rgba(255,255,255,.08);
-  --b-input-border:rgba(255,255,255,.14); --b-input-bg:#1A1E27;
-  --b-text:#E8ECF3; --b-text2:#B9C0CC; --b-text3:#8B93A3; --b-placeholder:#5C6474;
-}
-body:not(.light) #login-screen .login-card{box-shadow:0 22px 54px -26px rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.05)}
-body:not(.light) #login-screen .login-input:focus{border-color:var(--b-gold);box-shadow:0 0 0 3px rgba(203,240,0,.12)}
-body:not(.light) #login-screen .lp{background:#0C0E13}
-body:not(.light) #login-screen .lp-sys-card,body:not(.light) #login-screen .lp-auth-card{background:rgba(255,255,255,.04)}
+/* Login/landing identity is intentionally fixed to the approved light-form + navy-panel
+   palette. The application theme toggle applies only after login and must not
+   recolor this public entry screen. */
 #login-screen .forgot-msg{color:#4A5708}
-body:not(.light) #login-screen .forgot-link{color:#B9C0CC}
-body:not(.light) #login-screen .forgot-msg{color:#CBF000}
 </style>
 </head>
 <body>
