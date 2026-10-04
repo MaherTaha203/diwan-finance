@@ -35,7 +35,9 @@ ok(/document\.fonts(\s|&)/.test(fnBody) && /fonts\.ready/.test(fnBody),
   'print is gated on document.fonts.ready');
 ok(!/setTimeout\(function\(\)\{window\.print\(\);\},900\)/.test(fnBody),
   'the fixed 900ms print timer is gone');
-ok(/setTimeout\(fire,1200\)/.test(fnBody), 'has an absolute safety cap (prints even if fonts/QR never resolve)');
+ok(/setTimeout\(function\(\)\{drawQR\(\);go\(\);\},3000\)/.test(fnBody), 'has a bounded fallback if fonts/QR never resolve');
+ok(/fontsReady&&qrReady/.test(fnBody), 'normal print waits for both fonts and QR rendering');
+ok(/width:400,height:400/.test(fnBody), 'QR is generated at high source resolution');
 ok(/var printed=false/.test(fnBody) && /if\(printed\)return/.test(fnBody),
   'single print guard prevents a double dialog');
 
