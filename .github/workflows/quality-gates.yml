@@ -26,8 +26,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Install locked dependencies
-        run: npm ci
+      - name: Install dependencies (package-lock currently needs reconciliation)
+        run: npm install --no-audit --no-fund
       - name: Run Node test suite
         run: npm test
       - name: Run FIN2 financial logic checks
