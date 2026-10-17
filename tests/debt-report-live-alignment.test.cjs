@@ -27,7 +27,7 @@ const FIN = vm.runInThisContext(
 
 /* A = live-receipt member (إيهاب-shaped): stored paid 0, one 400 food receipt →
        FD-002 cascades 200/200 across 2025/2026.
-   B = migration overpay member: stored paid 1110 on 2025 (frozen), no receipts. */
+   B = migration seed member: 2025 stored amount 1110, with overflow attributed to history. */
 global.DB = {
   members: [
     { id: 'A', member_code: 'A', name: 'live', is_active: true, historical_balance_ils: 2200, historical_payments_ils: 600 },
