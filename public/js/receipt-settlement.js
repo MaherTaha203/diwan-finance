@@ -192,6 +192,9 @@
     var pReceipt = {
       fund_type: ctx.fund, receipt_date: ctx.date,
       movement_type: isMemberFood ? 'subscription_payment' : 'food_cash_donation',
+      /* Non-column RPC metadata: lets the server distinguish an explicitly
+         selected historical-deficit payment when the remaining deficit is zero. */
+      settlement_mode: isMemberFood && Number(ctx.deficitAmount) > 0.005 ? 'historical_deficit' : null,
       destination_treasury: 'food', payer_type: ctx.payerType,
       member_id: ctx.memberId || null, payer_name: ctx.payerName || '',
       amount: ctx.amount, amount_ils: ctx.amountILS, currency: ctx.currency,
