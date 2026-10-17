@@ -59,8 +59,8 @@ ok(al.perYear[2026].settled === false, 'migration seed boundary keeps 2026 unpai
 /* 4 · unknown → fall back to derived; other statuses map directly */
 DB.historical_subscription_truth = [{ member_id: 'M1', year: 2026, status: 'unknown' }];
 ok(FIN.memberDelinquency('M1').byYear[2026].authoritative === false
-  && FIN.memberDelinquency('M1').byYear[2026].settled === true,
-  'status=unknown → derived logic continues (backward compatibility)');
+  && FIN.memberDelinquency('M1').byYear[2026].settled === false,
+  'status=unknown → corrected source-boundary derivation continues (backward compatibility)');
 DB.historical_subscription_truth = [{ member_id: 'M1', year: 2026, status: 'partial' }];
 const dq2 = FIN.memberDelinquency('M1');
 ok(dq2.byYear[2026].status === 'partial' && dq2.byYear[2026].settled === false && dq2.byYear[2026].authoritative === true,
