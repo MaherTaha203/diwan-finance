@@ -22,6 +22,8 @@ declare
   v_kind    text;
   v_year    int;
   v_lamt    numeric;
+  v_has_food boolean := false;
+  v_has_historical boolean := false;
 begin
   -- Authorization only: no financial logic or data transformation changed.
   if auth.uid() is null or not public.is_finance_writer() then
@@ -69,8 +71,19 @@ begin
         raise exception 'settlement_year_not_allowed' using detail = format('%s lines carry no year', v_kind), errcode = 'P0001';
       end if;
     end if;
+    if v_kind = 'food' then v_has_food := true; end if;
+    if v_kind = 'historical' then v_has_historical := true; end if;
     v_sum := v_sum + v_lamt;
   end loop;
+
+  if v_has_food and v_rec.fund_type is distinct from 'food' then
+    raise exception 'settlement_food_requires_food_fund'
+      using detail = 'food allocation lines are only valid for receipts assigned to the food fund', errcode = 'P0001';
+  end if;
+  if v_has_food and not v_has_historical then
+    raise exception 'settlement_food_requires_historical_line'
+      using detail = 'food overflow must accompany a historical-deficit allocation', errcode = 'P0001';
+  end if;
 
   if round(v_sum, 2) <> v_amount then
     raise exception 'settlement_sum_mismatch'
