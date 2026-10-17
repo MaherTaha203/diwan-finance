@@ -105,15 +105,22 @@ function stripDebtReportRows(text) {
   return text.slice(0, i) + text.slice(k);
 }
 function stripFoodLedgerSplit(text) {
-  const begin = text.indexOf("      const _histByNo = fund==='food'");
-  if (begin < 0) return text;
-  const note = text.indexOf("            note:'تخصيص محاسبي من قيمة سند القبض — لا يُعد قبضًا إضافيًا'});", begin);
-  if (note < 0) return text;
-  const end = text.indexOf("        });", note);
-  if (end < 0) return text;
-  const after = end + "        });".length;
-  const baseline = "      DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund&&inRange(r.receipt_date))\n        .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:_dtag(r.movement_type)+(r.notes||'إيصال قبض'),cr:FIN.amountOf(r),dr:0,type:'cr',id:r.id,no:r.no}));";
-  return text.slice(0, begin) + baseline + text.slice(after);
+  /* Strip only the approved food-ledger attribution additions so the golden
+     reference continues to detect unrelated changes in the frozen engine. */
+  const declStart = text.indexOf("    /* Historical settlement is a debit from the food fund.");
+  if (declStart >= 0) {
+    const declEnd = text.indexOf("    if(!typeFilter||typeFilter==='cr'){", declStart);
+    if (declEnd < 0) return text;
+    text = text.slice(0, declStart) + text.slice(declEnd);
+  }
+  const drStart = text.indexOf("    if(!typeFilter||typeFilter==='dr'){");
+  const debitStart = text.indexOf("      if(fund==='food'){", drStart);
+  if (debitStart >= 0) {
+    const debitEnd = text.indexOf("      }\n    }\n    if(!typeFilter||typeFilter==='don')", debitStart);
+    if (debitEnd < 0) return text;
+    text = text.slice(0, debitStart) + text.slice(debitEnd + "      }\n".length);
+  }
+  return text;
 }
 ok(!/^ERR:/.test(finBase) && stripDebtReportRows(stripFoodLedgerSplit(read(P('fin.js')))) === stripDebtReportRows(finBase),
   'Golden Reference: fin.js unchanged outside the exact approved food-ledger historical split');
