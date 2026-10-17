@@ -2,18 +2,16 @@
    Lab · Decision Engine (offline, read-only)  — ADDITIVE lab component.
    Loads the REAL production engine (public/js/fin.js) headless over a STATIC
    snapshot (lab/seed/prod-snapshot.json). No network, no DB writes, no system
-   change.  This file is the Business-Logic Reference (Logic Freeze v2), and it
+   change.  This file is the Business-Logic Reference (Logic Freeze v3), and it
    embodies the AUTHORITATIVE Owner Decisions verbatim:
      D1 Food receipts only (scope).
      D2 Automatic allocation starts from the FIRST ERP year (2025), then year by
         year in order (the fiscal-lock exclusion does NOT apply to allocation).
-     D3 Historical Deficit NEVER participates automatically.
-     D4 Historical Deficit is ALWAYS an explicit accountant decision.
-     D5 An explicit deficit amount is DEDUCTED FIRST; only the remainder is
-        auto-allocated.
-     D6 When all ERP subscriptions are satisfied, the remaining balance becomes
-        the FIRST FUTURE subscription year — NOT generic credit.
-     D7 Legacy balances before ERP remain untouched (the deficit = legacy).
+     D3 Ordinary receipts allocate ERP dues first, then historical deficit.
+     D4 Explicit historical-deficit receipts allocate to history first.
+     D5 Any excess from an explicit historical-deficit receipt stays in food.
+     D6 Ordinary surplus after dues and history becomes the first future ERP year.
+     D7 Legacy balances before ERP remain historical (the deficit = legacy).
    ═══════════════════════════════════════════════════════════════════════════ */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -50,7 +48,7 @@ function load(snapshotPath) {
 }
 
 /* the member's REAL position — ERP subscription years with remaining (INCLUDING the
-   first ERP year, per D2); historical deficit = legacy/pre-ERP (D7), never auto. */
+   first ERP year, per D2); historical deficit = legacy/pre-ERP (D7). */
 function position(memberId) {
   const dl = FIN.memberDelinquency(memberId) || { byYear: {}, outstanding: 0, historicalRemaining: 0 };
   const al = FIN.memberAllocation(memberId) || { historical: { remaining: 0 }, creditRemaining: 0 };
@@ -68,36 +66,50 @@ function position(memberId) {
   };
 }
 
-/* THE food-receipt decision (Owner Decisions · Logic Freeze v2), step-by-step. */
+/* THE food-receipt decision (Owner Decisions · Logic Freeze v3), step-by-step. */
 function propose(memberId, amount, opts) {
   opts = opts || {};
   const deficitAmount = R2(opts.deficitAmount || 0);   // explicit accountant amount → Historical Deficit
   const pos = position(memberId);
   const steps = []; let rem = R2(amount);
-  // D3/D4/D5 — explicit Historical Deficit, deducted FIRST
-  if (deficitAmount > 0.005 && pos.deficit > 0.005) {
-    const d = R2(Math.min(deficitAmount, pos.deficit, rem));
-    if (d > 0.005) { steps.push({ target: 'historical', kind: 'historical', amount: d,
-      reason: 'قرار المحاسب: تسوية عجز تاريخي — تُخصم أولاً (العجز ' + pos.deficit + ')' }); rem = R2(rem - d); }
-  }
-  // D2 — automatic allocation over ERP subscription years, oldest-first from the first ERP year
-  pos.subYears.forEach(y => {
-    if (rem <= 0.005) return;
-    const take = R2(Math.min(rem, y.remaining));
-    if (take > 0.005) { steps.push({ target: 'due:' + y.year, kind: 'due', year: y.year, amount: take,
-      reason: 'اشتراك ERP سنة ' + y.year + ' (تلقائي، الأقدم أولاً) — المتبقٍّ ' + y.remaining }); rem = R2(rem - take); }
-  });
-  // D6 — surplus becomes the FIRST FUTURE subscription year (not generic credit)
-  if (rem > 0.005) {
-    steps.push({ target: 'due:' + FIRST_FUTURE, kind: 'future', year: FIRST_FUTURE, amount: rem,
-      reason: 'كل اشتراكات ERP مسدَّدة → الفائض يصبح اشتراك السنة المستقبلية الأولى ' + FIRST_FUTURE }); rem = 0;
+  // Explicit historical-deficit receipt: history first, overflow stays in food.
+  let toFood = 0;
+  if (deficitAmount > 0.005) {
+    if (pos.deficit > 0.005 && rem > 0.005) {
+      const d = R2(Math.min(deficitAmount, pos.deficit, rem));
+      if (d > 0.005) { steps.push({ target: 'historical', kind: 'historical', amount: d,
+        reason: 'تخصيص صريح للعجز التاريخي — يُقيد بحد العجز المتبقي' }); rem = R2(rem - d); }
+    }
+    if (rem > 0.005) {
+      toFood = rem;
+      steps.push({ target: 'food', kind: 'food', amount: rem,
+        reason: 'الفائض من دفعة العجز التاريخي يُضاف إلى صندوق الغداء الحالي' });
+      rem = 0;
+    }
+  } else {
+    // Ordinary receipt: due ERP subscriptions oldest-first, then historical deficit.
+    pos.subYears.forEach(y => {
+      if (rem <= 0.005) return;
+      const take = R2(Math.min(rem, y.remaining));
+      if (take > 0.005) { steps.push({ target: 'due:' + y.year, kind: 'due', year: y.year, amount: take,
+        reason: 'اشتراك ERP سنة ' + y.year + ' — الأقدم أولاً' }); rem = R2(rem - take); }
+    });
+    if (rem > 0.005 && pos.deficit > 0.005) {
+      const h = R2(Math.min(rem, pos.deficit));
+      if (h > 0.005) { steps.push({ target: 'historical', kind: 'historical', amount: h,
+        reason: 'تسوية العجز التاريخي من فائض الاشتراكات' }); rem = R2(rem - h); }
+    }
+    if (rem > 0.005) {
+      steps.push({ target: 'due:' + FIRST_FUTURE, kind: 'future', year: FIRST_FUTURE, amount: rem,
+        reason: 'مدفوع مقدمًا لاشتراك السنة المستقبلية الأولى ' + FIRST_FUTURE }); rem = 0;
+    }
   }
   const toCurrent = R2(steps.filter(s => s.kind === 'due' || s.kind === 'historical').reduce((a, s) => a + s.amount, 0));
   const toFuture = R2(steps.filter(s => s.kind === 'future').reduce((a, s) => a + s.amount, 0));
-  const allocated = R2(toCurrent + toFuture);
+  const allocated = R2(toCurrent + toFuture + toFood);
   return {
     member: pos, amount: R2(amount), deficitAmount, steps,
-    toObligations: toCurrent, toFuture, allocated,
+    toObligations: toCurrent, toFuture, toFood, allocated,
     remaining: R2(R2(amount) - allocated),
     balanced: Math.abs(R2(amount) - allocated) < 0.005 && amount > 0.005,
     balanceAfter: R2(pos.outstanding - toCurrent),
