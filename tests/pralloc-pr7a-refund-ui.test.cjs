@@ -89,9 +89,15 @@ try {
   coreChanged = 'ERR:' + e.message;
 }
 const allowedMigration = 'supabase/migrations/20261017110000_pralloc_food_fund_overflow.sql';
+const headSha = execSync('git rev-parse HEAD', { cwd: path.join(__dirname, '..') }).toString().trim();
+const mainSha = execSync('git rev-parse origin/main', { cwd: path.join(__dirname, '..') }).toString().trim();
+const runningOnMain = headSha === mainSha;
+const migrationScopeOk = runningOnMain
+  ? migrationChanges.length === 0
+  : migrationChanges.length === 1 && migrationChanges[0] === allowedMigration;
 ok(
-  coreChanged === '' && migrationChanges.length === 1 && migrationChanges[0] === allowedMigration,
-  'Golden Reference: operations/data and existing migrations unchanged; only the scoped food-overflow migration is added — core=[' +
+  coreChanged === '' && migrationScopeOk,
+  'Golden Reference: operations/data unchanged; migration diff is scoped for PR checks and empty on main — core=[' +
     coreChanged + '], migrations=[' + migrationChanges.join(', ') + ']'
 );
 let finBase = '';
@@ -122,8 +128,10 @@ function stripFoodLedgerSplit(text) {
   }
   return text;
 }
-ok(!/^ERR:/.test(finBase) && stripDebtReportRows(stripFoodLedgerSplit(read(P('fin.js')))) === stripDebtReportRows(finBase),
-  'Golden Reference: fin.js unchanged outside the exact approved food-ledger historical split');
+ok(!/^ERR:/.test(finBase)
+    && stripDebtReportRows(stripFoodLedgerSplit(read(P('fin.js'))))
+      === stripDebtReportRows(stripFoodLedgerSplit(finBase)),
+  'Golden Reference: fin.js unchanged outside the exact approved food-ledger historical split (PR and post-merge)');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
