@@ -1,8 +1,8 @@
 /* F-4 · Confirmation Layer — the panel is a pure VIEWER of FoodReceiptDecision.decide().
    Proves that every value shown before Save originates verbatim from the SAME decision
    the posting path produces (ReceiptSettlement.foodDecisionLines), that the panel
-   calculates nothing, that Historical Deficit appears only when selected, and that the
-   future-subscription / totals / remaining shown equal the decision's, over every
+   calculates nothing, that historical rows follow the decision (including ordinary
+   payments after ERP dues), and that totals/remaining equal the decision over every
    approved scenario. Read-only. Usage: node tests/food-receipt-confirmation.test.cjs */
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -65,17 +65,18 @@ ok(shownDecision.steps.every(s => panelHtml.indexOf(Number(s.amount).toFixed(2) 
 ok(panelHtml.indexOf('خصم العجز التاريخي') >= 0, 'B3 Historical Deficit row present when selected');
 ok(panelHtml.indexOf(Number(shownDecision.allocated).toFixed(2) + ' ₪') >= 0 && panelHtml.indexOf('NaN') < 0 && panelHtml.indexOf('إجمالي المقبوض') >= 0, 'B4 total received shown from decision.allocated (no NaN)');
 ok(panelHtml.indexOf(Number(shownDecision.remaining).toFixed(2) + ' ₪') >= 0, 'B5 remaining shown from decision.remaining (=0)');
-/* deficit OFF ⇒ the Historical row disappears (only-when-selected) */
+/* ordinary payment with only enough to cover ERP dues must not allocate history */
 el('rec-deficit-on').checked = false; el('rec-deficit-amount').value = '';
+el('rec-amount').value = String(dp.subYears.reduce((a, y) => a + y.remaining, 0));
 window.renderFoodConfirmation();
-ok(el('rec-confirm').innerHTML.indexOf('خصم العجز التاريخي') < 0, 'B6 Historical Deficit row ABSENT when not selected');
+ok(el('rec-confirm').innerHTML.indexOf('خصم العجز التاريخي') < 0, 'B6 no historical row when the payment is fully consumed by ERP dues');
 /* non-member-food ⇒ hidden + emptied */
 el('rec-fund').value = 'diwan'; window.renderFoodConfirmation();
 ok(el('rec-confirm').style.display === 'none' && el('rec-confirm').innerHTML === '', 'B7 hidden for non-food');
 el('rec-fund').value = 'food';
 
 /* ── C. Over EVERY approved scenario: panel values == decide() output, no drift ── */
-let total = 0, matched = 0, histWhenSelected = 0, histCases = 0, histWhenNot = 0;
+let total = 0, matched = 0, histWhenSelected = 0, histCases = 0, histWhenNot = 0, histNotExpected = 0;
 members.forEach(m => {
   el('rec-member').value = m.id;
   const pos = posById[m.id];
@@ -95,12 +96,15 @@ members.forEach(m => {
     if (allFromDecision && totalOK && remOK) matched++;
     const hasHist = html.indexOf('خصم العجز التاريخي') >= 0;
     if (sc.deficitAmount > 0.005) { histCases++; if (hasHist) histWhenSelected++; }
-    else if (hasHist) histWhenNot++;
+    else {
+      const decisionHasHist = dec.steps.some(s => s.kind === 'historical');
+      if (hasHist === decisionHasHist) histWhenNot++; else histNotExpected++;
+    }
   });
 });
 ok(matched === total, 'C1 panel == decide() over all scenarios (' + matched + '/' + total + ')');
 ok(histCases > 0 && histWhenSelected === histCases, 'C2 Historical row shown in every selected case (' + histWhenSelected + '/' + histCases + ')');
-ok(histWhenNot === 0, 'C3 Historical row NEVER shown when not selected');
+ok(histWhenNot === total - histCases && histNotExpected === 0, 'C3 ordinary historical row follows decide() after ERP dues (' + histWhenNot + '/' + (total - histCases) + ')');
 
 /* ── D. Static: the value builder performs no allocation math ──
    `buildFoodConfirmationRows` is the pure value source (one row per decision field);
@@ -121,7 +125,7 @@ ok(/id="rec-confirm"/.test(html), 'D5 index.html exposes the confirmation panel'
 
 console.log('F-4 Confirmation Layer');
 console.log('  scenarios: ' + total + '  |  panel==decide(): ' + matched);
-console.log('  historical shown-when-selected: ' + histWhenSelected + '/' + histCases + '  |  shown-when-not: ' + histWhenNot);
+console.log('  historical shown-when-selected: ' + histWhenSelected + '/' + histCases + '  |  ordinary cases matching decision: ' + histWhenNot + ' (mismatches ' + histNotExpected + ')');
 console.log('  checks: ' + pass + ' passed, ' + fail + ' failed');
 fails.forEach(f => console.log('    FAIL ' + f));
 console.log(fail ? '\nFAIL' : '\nPASS — every displayed value originates directly from FoodReceiptDecision.decide(); the panel calculates nothing');
