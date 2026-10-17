@@ -23,7 +23,7 @@ function functionBody(sql, name) {
   assert.notEqual(start, -1, 'SQL contains function ' + name);
 
   const definition = sql.slice(start);
-  const asMatch = /\\bas\\s+(\\$[A-Za-z_0-9]*\\$)/i.exec(definition);
+  const asMatch = /\bas\s+(\$[A-Za-z_0-9]*\$)/i.exec(definition);
   assert.ok(asMatch, name + ' has a dollar-quoted function body');
 
   const bodyStart = asMatch.index + asMatch[0].length;
@@ -34,15 +34,15 @@ function functionBody(sql, name) {
 
 function normalizeSqlBody(body) {
   return body
-    .replace(/--[^\\n]*/g, '')
-    .replace(/\\/\\*[\\s\\S]*?\\*\\//g, '')
-    .replace(/\\s+/g, ' ')
+    .replace(/--[^\n]*/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
 }
 
 const authorizationGuard =
-  /if\\s+auth\\.uid\\(\\)\\s+is\\s+null\\s+or\\s+not\\s+public\\.is_finance_writer\\(\\)\\s+then[\\s\\S]*?end\\s+if\\s*;/i;
+  /if\s+auth\.uid\(\)\s+is\s+null\s+or\s+not\s+public\.is_finance_writer\(\)\s+then[\s\S]*?end\s+if\s*;/i;
 
 test('settlement RPCs reject unauthenticated and non-finance callers before writes', () => {
   for (const name of [
@@ -55,13 +55,13 @@ test('settlement RPCs reject unauthenticated and non-finance callers before writ
     assert.notEqual(guardIndex, -1, name + ' has server-side role guard');
 
     const firstWrite = body.search(
-      /\\b(insert\\s+into\\s+public\\.(receipts|allocation_records)|update\\s+public\\.allocation_records)\\b/i
+      /\b(insert\s+into\s+public\.(receipts|allocation_records)|update\s+public\.allocation_records)\b/i
     );
     assert.notEqual(firstWrite, -1, name + ' retains its expected write path');
     assert.ok(guardIndex < firstWrite, name + ' authorizes before the first write');
 
     const guard = body.match(authorizationGuard)[0];
-    assert.match(guard, /errcode\\s*=\\s*'42501'/i, name + ' returns a permission error');
+    assert.match(guard, /errcode\s*=\s*'42501'/i, name + ' returns a permission error');
   }
 });
 
@@ -92,10 +92,10 @@ test('settlement RPC bodies match their historical financial logic after removin
 test('authorization migration does not alter financial totals or delete accounting records', () => {
   assert.doesNotMatch(
     migrationSql,
-    /update\\s+public\\.(receipts|payments|member_subscriptions|allocation_records)\\s+set\\s+(amount|amount_ils|paid_amount_ils|amount_allocated)\\s*=/i
+    /update\s+public\.(receipts|payments|member_subscriptions|allocation_records)\s+set\s+(amount|amount_ils|paid_amount_ils|amount_allocated)\s*=/i
   );
   assert.doesNotMatch(
     migrationSql,
-    /delete\\s+from\\s+public\\.(receipts|payments|member_subscriptions|allocation_records)/i
+    /delete\s+from\s+public\.(receipts|payments|member_subscriptions|allocation_records)/i
   );
 });
