@@ -37,5 +37,9 @@ jobs:
         run: node tests/fin2.test.cjs
       - name: Run constitutional verification
         run: node tests/constitutional-verification.cjs
+      - name: Install Playwright Chromium for isolated lab
+        run: |
+          npm install --global playwright@1.56.0
+          playwright install --with-deps chromium
       - name: Run constitutional lab
         run: node lab/run.cjs
