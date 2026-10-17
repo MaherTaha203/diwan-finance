@@ -70,29 +70,42 @@ ok(/refund-ui\.js/.test(html), 'refund-ui.js is included');
 ok(/role="dialog"[\s\S]*?aria-modal="true"/.test(html.match(/id="m-refund"[\s\S]{0,200}/)[0]), '#m-refund is an aria dialog');
 ok(/RefundUI\.syncEditButton/.test(read(P('crud.js'))), 'editRec toggles the Refund button via RefundUI.syncEditButton');
 
-/* ── Golden Reference: the accounting engine + authorities + schema are UNTOUCHED ── */
+/* ── Golden Reference: accounting core stays pinned; only the new guard migration is permitted ── */
 const { execSync } = require('child_process');
-/* Accounting-core Golden Reference. operations.js / data.js / migrations remain
-   byte-pinned to origin/main. fin.js is pinned EXCEPT within debtReportRows — the
-   Annual Debt report READER, an authorized presentation-alignment surface
-   (P-DEBT-REPORT-ALIGNMENT-001). Every frozen accounting function
-   (memberAllocation, memberStatement, allocateFoodDonations, memberDelinquency,
-   verifyConsistency, …) stays guarded: any edit OUTSIDE debtReportRows fails this
-   check. (receipt-settlement.js remains intentionally excluded — settlement-wiring
-   layer.) */
+/* The new, additive security migration is expected in this PR. All pre-existing
+   migrations and the operations.js/data.js accounting surfaces must remain unchanged.
+   fin.js is pinned EXCEPT within debtReportRows — the Annual Debt report READER, an
+   authorized presentation-alignment surface (P-DEBT-REPORT-ALIGNMENT-001). */
+let coreChanged = '';
+let migrationChanges = [];
+try {
+  coreChanged = execSync(
+    'git diff --name-only origin/main -- public/js/operations.js public/js/data.js',
+    { cwd: path.join(__dirname, '..') }
+  ).toString().trim();
+  migrationChanges = execSync(
+    'git diff --name-only origin/main -- supabase/migrations',
+    { cwd: path.join(__dirname, '..') }
+  ).toString().trim().split('\n').filter(Boolean);
+} catch (e) {
+  coreChanged = 'ERR:' + e.message;
+}
+const allowedMigration = 'supabase/migrations/20261015100000_guard_settlement_rpcs_authorization.sql';
+ok(
+  coreChanged === '' && migrationChanges.length === 1 && migrationChanges[0] === allowedMigration,
+  'Golden Reference: accounting core and existing migrations unchanged; only the explicit authorization migration is added — core=[' +
+    coreChanged + '], migrations=[' + migrationChanges.join(', ') + ']'
+);
+let finBase = '';
+try { finBase = execSync('git show origin/main:public/js/fin.js', { cwd: path.join(__dirname, '..'), maxBuffer: 1 << 24 }).toString(); } catch (e) { finBase = 'ERR:' + e.message; }
 function stripDebtReportRows(text) {
   const anchor = 'debtReportRows(opts){';
   const i = text.indexOf(anchor);
-  if (i < 0) return text;                 // signature gone → nothing to strip (remainder compare still catches it)
-  let depth = 0, k = i + anchor.length - 1;   // start at the opening '{'
+  if (i < 0) return text;
+  let depth = 0, k = i + anchor.length - 1;
   for (; k < text.length; k++) { const c = text[k]; if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { k++; break; } } }
   return text.slice(0, i) + text.slice(k);
 }
-let coreChanged = '';
-try { coreChanged = execSync('git diff --name-only origin/main -- public/js/operations.js public/js/data.js supabase/migrations', { cwd: path.join(__dirname, '..') }).toString().trim(); } catch (e) { coreChanged = 'ERR:' + e.message; }
-ok(coreChanged === '', 'Golden Reference: operations.js / data.js / migrations UNCHANGED vs origin/main — [' + coreChanged + ']');
-let finBase = '';
-try { finBase = execSync('git show origin/main:public/js/fin.js', { cwd: path.join(__dirname, '..'), maxBuffer: 1 << 24 }).toString(); } catch (e) { finBase = 'ERR:' + e.message; }
 ok(!/^ERR:/.test(finBase) && stripDebtReportRows(read(P('fin.js'))) === stripDebtReportRows(finBase),
   'Golden Reference: fin.js accounting core UNCHANGED vs origin/main (only debtReportRows may differ)');
 
