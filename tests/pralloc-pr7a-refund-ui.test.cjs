@@ -2,8 +2,8 @@
    Proves the refund UI exposes the EXISTING capability with: correct eligibility
    gating (no draft/cancelled/fully-refunded/non-admin/flag-off), exactly ONE
    execution path (BusinessOps.refundReceipt) and NO refund/allocation/DB logic in
-   the UI, wired into the edit-receipt screen, and the accounting engine untouched
-   (Golden Reference). Usage: node tests/pralloc-pr7a-refund-ui.test.cjs */
+   the UI, wired into the edit-receipt screen. The golden reference permits only the
+   explicitly tested migration-seed boundary, debt-report, and food-ledger scopes. */
 'use strict';
 const fs = require('fs'), path = require('path');
 let pass = 0, fail = 0;
