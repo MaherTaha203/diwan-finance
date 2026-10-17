@@ -117,5 +117,35 @@ ok(eq(FIN.memberStatement('F').finalBalance, 200),
   'explicit historical line and migration seed preserve final balance');
 assertConservation('F', 'F');
 
+/* 7 — exact PR-308 example: 500 with no historical debt pays 2025 + 2026 and leaves 100 credit. */
+DB.members.push({ id: 'G', member_code: 'G', name: 'prepaid-100', is_active: true,
+  historical_balance_ils: 0, historical_payments_ils: 0 });
+DB.subscriptions.push(
+  { member_id: 'G', year: 2025, due_amount_ils: 200, paid_amount_ils: 500 },
+  { member_id: 'G', year: 2026, due_amount_ils: 200, paid_amount_ils: 0 }
+);
+const g = FIN.memberDelinquency('G').byYear;
+const gAlloc = FIN.memberAllocation('G');
+ok(eq(g[2025].paid, 200) && eq(g[2026].paid, 200),
+  'PR-308 example: 500 with no historical debt settles 2025 and 2026');
+ok(eq(gAlloc.creditRemaining, 100) && eq(FIN.memberStatement('G').finalBalance, -100),
+  'PR-308 example: remaining 100 is preserved as member prepaid credit');
+assertConservation('G', 'G');
+
+/* 8 — exact PR-308 example: 600 with 200 historical debt settles 2025, 2026, and history. */
+DB.members.push({ id: 'H', member_code: 'H', name: 'historical-200', is_active: true,
+  historical_balance_ils: 200, historical_payments_ils: 0 });
+DB.subscriptions.push(
+  { member_id: 'H', year: 2025, due_amount_ils: 200, paid_amount_ils: 600 },
+  { member_id: 'H', year: 2026, due_amount_ils: 200, paid_amount_ils: 0 }
+);
+const h = FIN.memberDelinquency('H').byYear;
+const hAlloc = FIN.memberAllocation('H');
+ok(eq(h[2025].paid, 200) && eq(h[2026].paid, 200),
+  'PR-308 example: 600 with 200 historical debt settles 2025 and 2026');
+ok(eq(hAlloc.historical.remaining, 0) && eq(hAlloc.creditRemaining, 0),
+  'PR-308 example: the remaining 200 clears historical debt with no double count');
+assertConservation('H', 'H');
+
 console.log('\n' + (fail === 0 ? 'ALL PASS' : fail + ' FAILED') + ' · ' + pass + ' checks');
 process.exit(fail === 0 ? 0 : 1);
