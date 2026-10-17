@@ -66,33 +66,6 @@ module.exports = async function handler(req, res) {
 
   const token = String(id).trim().replace(/[^A-Za-z0-9]/g, '');
   if (!token || token.length < 10 || token.length > 64) {
-    /* Internal-transfer vouchers are QR-bearing documents too. The public
-       contract stays minimal: token-only lookup, number/type/date only. */
-    const { data: transfer, error: trErr } = await supabase
-      .from('internal_transfers')
-      .select('no, transfer_date, is_deleted')
-      .eq('verification_token', token)
-      .maybeSingle();
-
-    if (trErr) {
-      console.error('[verify] internal_transfers query failed:', trErr.code, trErr.message);
-      return publicError(res, 500, 'Verification service unavailable');
-    }
-
-    if (transfer) {
-      if (transfer.is_deleted === true) {
-        return publicError(res, 200, 'Document has been cancelled');
-      }
-      return res.status(200).json({
-        valid: true,
-        document: {
-          id: transfer.no,
-          type: 'Internal Transfer Voucher',
-          date: transfer.transfer_date,
-        },
-      });
-    }
-
     return publicError(res, 404, 'Document not found');
   }
 
@@ -159,6 +132,33 @@ module.exports = async function handler(req, res) {
           id: payment.no,
           type: 'Payment Voucher',
           date: payment.payment_date,
+        },
+      });
+    }
+
+    /* Internal-transfer vouchers are QR-bearing documents too. The public
+       contract stays minimal: token-only lookup, number/type/date only. */
+    const { data: transfer, error: trErr } = await supabase
+      .from('internal_transfers')
+      .select('no, transfer_date, is_deleted')
+      .eq('verification_token', token)
+      .maybeSingle();
+
+    if (trErr) {
+      console.error('[verify] internal_transfers query failed:', trErr.code, trErr.message);
+      return publicError(res, 500, 'Verification service unavailable');
+    }
+
+    if (transfer) {
+      if (transfer.is_deleted === true) {
+        return publicError(res, 200, 'Document has been cancelled');
+      }
+      return res.status(200).json({
+        valid: true,
+        document: {
+          id: transfer.no,
+          type: 'Internal Transfer Voucher',
+          date: transfer.transfer_date,
         },
       });
     }
