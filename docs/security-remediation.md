@@ -48,7 +48,7 @@ QR verification logic, printing, or accounting calculations.
 | viewer → INSERT vouchers | `ERROR: violates row-level security policy` |
 | admin → INSERT vouchers | allowed (rolled back) |
 | audit spoof (`user_name='SPOOFED'`) | stored as JWT email, spoof discarded |
-| QR token lookup (service_role) | S7yUHX5iFf9INvg6→REC-00031, fqfLNqMAlkfEoVO5→PAY-00001 |
+| QR token lookup (service_role) | Historical lookup test reported successful; raw verification tokens and linked document numbers are intentionally omitted from public documentation. Any previously published token must be treated as exposed and invalidated/rotated if still active. |
 
 Security advisors: **ERROR 2 → 0**, permissive-policy WARN **1 → 0**, anon SECURITY DEFINER WARN **1 → 0**.
 
