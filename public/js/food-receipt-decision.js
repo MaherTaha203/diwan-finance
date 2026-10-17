@@ -7,12 +7,11 @@
    step-by-step allocation. No wiring, no side effects.
 
    Rules (each maps 1:1 to lab/engine.cjs propose()):
-     • Historical Deficit is explicit only and is DEDUCTED FIRST.        (D6/D7/D8)
-     • The remainder is auto-allocated over ERP subscription years,
-       OLDEST-FIRST, starting from the first ERP year (2025).            (D2/D3)
-     • When all ERP years are settled, the surplus creates the FIRST
-       FUTURE ERP subscription year — never a generic credit.            (D9)
-     • Legacy (pre-ERP) balances are untouched (the deficit = legacy).   (D10)
+     • Ordinary receipts settle ERP dues oldest-first, then historical deficit.
+     • Ordinary surplus after dues and history becomes the first future ERP year.
+     • Explicit historical-deficit receipts settle history first; any overflow
+       is allocated to the current food fund.
+     • Every amount is represented once; historical balances remain historical.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
