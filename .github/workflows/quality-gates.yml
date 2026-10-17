@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+# Golden Reference tests compare against origin/main, so the base ref must be present.
       - name: Checkout (full history for Golden Reference checks)
         uses: actions/checkout@v4
         with:
