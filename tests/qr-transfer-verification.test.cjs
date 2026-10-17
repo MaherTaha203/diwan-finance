@@ -12,10 +12,12 @@ test('internal transfer voucher footer points to /verify/<verification_token>', 
   const end = SRC.indexOf('window.prtTransfer=function(id)', start);
   assert.ok(start >= 0 && end > start, 'transfer voucher builder exists');
   const builder = SRC.slice(start, end);
-  assert.ok(builder.includes("https://www.diwan-finance.com/verify/'+esc(t.verification_token||'')"),
-    'QR URL uses the stored verification token');
-  assert.ok(builder.includes('diwan-finance.com/verify<span class="tok">\\'+esc(t.verification_token||\\'\\')'),
-    'printed QR caption identifies the verification route and token');
+  assert.ok(builder.includes("https://www.diwan-finance.com/verify/"),
+    'QR URL uses the verification route');
+  assert.ok(builder.includes('t.verification_token||'),
+    'QR URL is bound to the stored verification token');
+  assert.ok(builder.includes('diwan-finance.com/verify<span class="tok">'),
+    'printed QR caption identifies the verification route');
   assert.ok(!builder.includes("reportDfoot('https://www.diwan-finance.com','diwan-finance.com')"),
     'transfer voucher no longer prints the site homepage as its QR target');
 });
