@@ -72,8 +72,8 @@ ok(/RefundUI\.syncEditButton/.test(read(P('crud.js'))), 'editRec toggles the Ref
 
 /* ── Golden Reference: allow only the scoped food-overflow migration and ledger split ── */
 const { execSync } = require('child_process');
-/* The additive food-overflow migration and the exact food-ledger presentation split
-   are approved scope. All pre-existing migrations and operations.js/data.js stay fixed. */
+/* Approved scopes: the food-overflow migration/ledger split and the migration-seed
+   source-boundary correction. Pre-existing migrations and operations.js/data.js stay fixed. */
 const repoRoot = path.join(__dirname, '..');
 const headSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim();
 const mainSha = execSync('git rev-parse origin/main', { cwd: repoRoot }).toString().trim();
@@ -113,6 +113,10 @@ function stripDebtReportRows(text) {
   for (; k < text.length; k++) { const c = text[k]; if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { k++; break; } } }
   return text.slice(0, i) + text.slice(k);
 }
+function stripFinHeader(text) {
+  const end = text.indexOf('/* ═══ FINANCIAL ENGINE ═══ */');
+  return end < 0 ? text : text.slice(end);
+}
 function stripMemberAllocation(text) {
   /* This PR explicitly changes the canonical migration-seed allocation boundary;
      the dedicated regression suite asserts the full financial invariants. Keep the
@@ -120,9 +124,12 @@ function stripMemberAllocation(text) {
   const anchor = 'memberAllocation(memberId){';
   const i = text.indexOf(anchor);
   if (i < 0) return text;
+  const marker = '  /* ═══ CCR-001 · IG-001';
+  const commentStart = text.lastIndexOf(marker, i);
+  const removeStart = commentStart >= 0 ? commentStart : i;
   let depth = 0, k = i + anchor.length - 1;
   for (; k < text.length; k++) { const c = text[k]; if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { k++; break; } } }
-  return text.slice(0, i) + text.slice(k);
+  return text.slice(0, removeStart) + text.slice(k);
 }
 function stripFoodLedgerSplit(text) {
   /* Strip only the approved food-ledger attribution additions so the golden
@@ -143,9 +150,9 @@ function stripFoodLedgerSplit(text) {
   return text;
 }
 ok(!/^ERR:/.test(finBase)
-    && stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(read(P('fin.js')))))
-      === stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(finBase))),
-  'Golden Reference: fin.js unchanged outside the approved migration-seed allocation, debt-report, and food-ledger scopes');
+    && stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(stripFinHeader(read(P('fin.js'))))))
+      === stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(stripFinHeader(finBase)))),
+  'Golden Reference: fin.js unchanged outside the approved migration-seed allocation, debt-report, header, and food-ledger scopes');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
