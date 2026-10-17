@@ -24,6 +24,8 @@ declare
   v_lamt    numeric;
   v_has_food boolean := false;
   v_has_historical boolean := false;
+  v_has_non_historical_food boolean := false;
+  v_explicit_historical boolean := false;
 begin
   -- Authorization only: no financial logic or data transformation changed.
   if auth.uid() is null or not public.is_finance_writer() then
@@ -33,6 +35,9 @@ begin
   end if;
 
   v_rec := jsonb_populate_record(NULL::public.receipts, p_receipt);
+  -- This intent marker is carried beside the receipt row, not persisted as a column.
+  -- It permits a food-only allocation when the historical deficit is already zero.
+  v_explicit_historical := coalesce(p_receipt ->> 'settlement_mode', '') = 'historical_deficit';
   v_amount := round(coalesce(v_rec.amount_ils, 0)::numeric, 2);
   if v_amount <= 0 then
     raise exception 'settlement_bad_amount' using detail = 'amount_ils must be > 0 (FD-021)', errcode = 'P0001';
@@ -73,6 +78,7 @@ begin
     end if;
     if v_kind = 'food' then v_has_food := true; end if;
     if v_kind = 'historical' then v_has_historical := true; end if;
+    if v_kind not in ('historical','food') then v_has_non_historical_food := true; end if;
     v_sum := v_sum + v_lamt;
   end loop;
 
@@ -80,9 +86,13 @@ begin
     raise exception 'settlement_food_requires_food_fund'
       using detail = 'food allocation lines are only valid for receipts assigned to the food fund', errcode = 'P0001';
   end if;
-  if v_has_food and not v_has_historical then
-    raise exception 'settlement_food_requires_historical_line'
-      using detail = 'food overflow must accompany a historical-deficit allocation', errcode = 'P0001';
+  if v_has_food and not v_explicit_historical then
+    raise exception 'settlement_food_requires_explicit_historical_mode'
+      using detail = 'food allocations require an explicitly designated historical-deficit receipt', errcode = 'P0001';
+  end if;
+  if v_has_food and v_has_non_historical_food then
+    raise exception 'settlement_food_mixed_with_other_obligations'
+      using detail = 'historical-deficit overflow may only be allocated to historical and current food fund lines', errcode = 'P0001';
   end if;
 
   if round(v_sum, 2) <> v_amount then
