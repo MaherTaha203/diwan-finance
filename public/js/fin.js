@@ -201,7 +201,8 @@ const FIN={
       (DB.allocation_records||[]).forEach(a=>{
         if(!a||a.source_kind!=='receipt_settlement'||a.member_id!==memberId||!_liveIds[a.source_ref]) return;
         _explAll[a.source_ref]=true;
-        if(a.voided_at||a.refunded_at) return;
+        if(a.voided_at) return;                       /* PR-6: cancelled receipt ⇒ line voided */
+        if(a.refunded_at) return;                      /* PR-7: refunded ⇒ line reversed */
         const amt=r2(Number(a.amount_allocated||0));
         if(a.obligation_kind==='due'&&a.year!=null&&perYear[Number(a.year)]) _explYear[Number(a.year)]=r2((_explYear[Number(a.year)]||0)+amt);
         else if(a.obligation_kind==='historical') _explHist=r2(_explHist+amt);
