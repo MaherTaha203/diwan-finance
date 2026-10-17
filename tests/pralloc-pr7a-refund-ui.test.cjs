@@ -75,13 +75,10 @@ const { execSync } = require('child_process');
 /* The additive food-overflow migration and the exact food-ledger presentation split
    are approved scope. All pre-existing migrations and operations.js/data.js stay fixed. */
 const repoRoot = path.join(__dirname, '..');
-const isPullRequest = process.env.GITHUB_EVENT_NAME === 'pull_request';
 const headSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim();
 const mainSha = execSync('git rev-parse origin/main', { cwd: repoRoot }).toString().trim();
-/* In Actions, pull_request checks run on a synthetic merge commit; compare to its
-   first parent (the target branch). On push/main, origin/main may equal HEAD. */
-const comparisonRef = isPullRequest ? 'HEAD^1' : 'origin/main';
-const runningOnMain = !isPullRequest && headSha === mainSha;
+const runningOnMain = headSha === mainSha;
+const comparisonRef = 'origin/main';
 let coreChanged = '';
 let migrationChanges = [];
 try {
@@ -97,16 +94,17 @@ try {
   coreChanged = 'ERR:' + e.message;
 }
 const allowedMigration = 'supabase/migrations/20261017110000_pralloc_food_fund_overflow.sql';
-const migrationScopeOk = runningOnMain
-  ? migrationChanges.length === 0
-  : migrationChanges.length === 1 && migrationChanges[0] === allowedMigration;
+/* On PR-7 itself, allow its one explicitly scoped migration. After that migration
+   lands in main, later PRs and main correctly see an empty migration diff. */
+const migrationScopeOk = migrationChanges.length === 0
+  || (migrationChanges.length === 1 && migrationChanges[0] === allowedMigration);
 ok(
   coreChanged === '' && migrationScopeOk,
   'Golden Reference: operations/data unchanged; migration diff is scoped for PR checks and empty on main — core=[' +
     coreChanged + '], migrations=[' + migrationChanges.join(', ') + ']'
 );
 let finBase = '';
-try { finBase = execSync('git show ' + comparisonRef + ':public/js/fin.js', { cwd: repoRoot, maxBuffer: 1 << 24 }).toString(); } catch (e) { finBase = 'ERR:' + e.message; }
+try { finBase = execSync('git show origin/main:public/js/fin.js', { cwd: repoRoot, maxBuffer: 1 << 24 }).toString(); } catch (e) { finBase = 'ERR:' + e.message; }
 function stripDebtReportRows(text) {
   const anchor = 'debtReportRows(opts){';
   const i = text.indexOf(anchor);
