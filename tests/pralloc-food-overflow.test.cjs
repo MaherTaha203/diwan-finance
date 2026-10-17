@@ -82,9 +82,9 @@ test('food overflow kind is accepted by the guarded atomic RPC and remains void/
   assert.match(migration, /settlement_food_requires_food_fund/);
   assert.match(migration, /settlement_food_requires_explicit_historical_mode/);
   assert.match(migration, /settlement_food_mixed_with_other_obligations/);
-  assert.match(migration, /p_receipt \\->> 'settlement_mode'/);
+  assert.ok(migration.includes("p_receipt ->> 'settlement_mode'"));
   const wiring = read('public/js/receipt-settlement.js');
-  assert.match(wiring, /settlement_mode: isMemberFood && Number\\(ctx\\.deficitAmount\\) > 0\\.005 \\? 'historical_deficit' : null/);
+  assert.ok(wiring.includes("settlement_mode: isMemberFood && Number(ctx.deficitAmount) > 0.005 ? 'historical_deficit' : null"));
   const voidSql = read('supabase/migrations/20261015100000_guard_settlement_rpcs_authorization.sql');
   assert.match(voidSql, /update public\.allocation_records[\s\S]*source_kind = 'receipt_settlement'[\s\S]*voided_at is null/i);
   assert.match(voidSql, /update public\.allocation_records[\s\S]*source_kind = 'receipt_settlement'[\s\S]*refunded_at is null/i);
