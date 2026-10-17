@@ -175,102 +175,135 @@ const FIN={
       isDelinquent: outstanding>0.005 };
   },
   /* ═══ CCR-001 · IG-001 — Constitutional payment allocation (FC-003 · FD-002) ═══
-     Read-time derivation of the constitutional waterfall: outstanding annual
-     subscriptions (OLDEST unpaid first) → then the historical carried balance.
-     Attributed history is preserved (FD-003): stored per-year paid and pre-system
-     historical payments keep their recorded targets, and ق4 historical-debt
-     collections reduce the historical balance per their constitutional meaning
-     (FC-003 Ch. 3.4). The UNATTRIBUTED credit pool — live member food receipts,
-     Item-9 donation debt settlements, and any per-target overpayment excess — is
-     walked by the SINGLE ordered engine (MODEL2Allocation; one ordering source,
-     FD-011). The TOTAL outstanding is always memberStatement().finalBalance
-     (order-invariant; single source — FD-006): this accessor only distributes it
-     across obligations for settled/delinquency derivation (consumed by IG-003). */
+     Imported subscription seed is source-bound: cap each seed at its own annual
+     due, apply excess to historical carry first, then only later annual years,
+     then preserve any remainder as member credit. It never enters the live pool.
+     Post-migration cash, directed donation settlements, write-offs and refunds
+     continue through the single FD-002 engine (oldest annual year first, then
+     historical). The total outstanding remains memberStatement().finalBalance. */
   memberAllocation(memberId){
     const m=DB.members.find(x=>x.id===memberId);
     const r2=FIN._r2;
     if(!m) return {perYear:{}, historical:{seed:0,allocated:0,remaining:0}, pool:0, creditRemaining:0, outstanding:0};
-    let pool=0;
-    const perYear={};
+
+    /* Keep imported subscription seed separate from post-migration live cash.
+       A stored paid_amount_ils above its own year's due is not fungible live cash:
+       it first settles the carried historical balance, then later subscription
+       years, and only then remains member credit. Live receipts still use FD-002
+       (oldest annual year first, then historical). No stored row is rewritten. */
+    const perYear={}, storedPaidByYear={};
     (DB.subscriptions||[]).filter(s=>s.member_id===memberId).forEach(s=>{
       const y=Number(s.year), due=Number(s.due_amount_ils||0), paid=Number(s.paid_amount_ils||0);
-      pool=r2(pool+Math.max(0,paid-due));                         /* overpaid excess → unattributed pool */
       if(!perYear[y]) perYear[y]={due:0,remaining_seed:0,allocated:0,remaining:0,settled:false};
       perYear[y].due=r2(perYear[y].due+due);
-      perYear[y].remaining_seed=r2(perYear[y].remaining_seed+Math.max(0,due-paid));
+      storedPaidByYear[y]=r2((storedPaidByYear[y]||0)+paid);
     });
+
     /* ═══ P-RECEIPT-ALLOCATION · PR-5 — Consumer Seam (single read authority) ═══
-       memberAllocation is the ONLY reader of recorded settlement attribution
-       (DB.allocation_records, source_kind='receipt_settlement'). Flag-gated and
-       per-receipt-exclusive: a receipt WITH settlement lines is attributed by
-       those lines (and excluded from the legacy pool); legacy receipts keep the
-       oldest-first FD-002 waterfall. Only non-deleted receipts' ACTIVE (non-
-       voided) lines count — cancellation-aware in two ways: a cancelled receipt
-       drops out of _liveIds, AND a line the void authority (PR-6) marked
-       voided_at is skipped regardless. NEUTRAL / byte-identical when the flag is
-       OFF or no settlement rows exist. Does NOT touch totals, finalBalance,
-       FD-002 math, paid_amount_ils, or member_subscriptions. */
+       Explicit settlement receipts are attributed only by their immutable lines.
+       All other live receipts use the FD-002 waterfall below. */
     const _rsOn=(typeof window!=='undefined'&&window.RECEIPT_ALLOCATION_ENABLED===true);
-    /* _explAll: every receipt that carries ANY settlement line (active, voided, or
-       refunded) — an explicit-settlement receipt whose money is described SOLELY by
-       its lines, so it is excluded from the FD-002 pool entirely and its refunds are
-       reversed by un-attributing its lines (PR-7), never by the pool. _explYear/
-       _explHist accumulate only ACTIVE lines' attribution. */
     const _explAll={}, _explYear={}; let _explHist=0;
     if(_rsOn){
       const _liveIds={}; DB.receipts.forEach(r=>{ if(!r.is_deleted&&r.member_id===memberId) _liveIds[r.id]=true; });
       (DB.allocation_records||[]).forEach(a=>{
         if(!a||a.source_kind!=='receipt_settlement'||a.member_id!==memberId||!_liveIds[a.source_ref]) return;
-        _explAll[a.source_ref]=true;                 /* explicit-settlement receipt (any line) */
+        _explAll[a.source_ref]=true;
         if(a.voided_at) return;                       /* PR-6: cancelled receipt ⇒ line voided */
-        if(a.refunded_at) return;                     /* PR-7: refunded ⇒ line reversed (attribution un-done) */
+        if(a.refunded_at) return;                      /* PR-7: refunded ⇒ line reversed */
         const amt=r2(Number(a.amount_allocated||0));
         if(a.obligation_kind==='due'&&a.year!=null&&perYear[Number(a.year)]) _explYear[Number(a.year)]=r2((_explYear[Number(a.year)]||0)+amt);
         else if(a.obligation_kind==='historical') _explHist=r2(_explHist+amt);
       });
     }
+
+    const years=Object.keys(perYear).map(Number).sort((a,b)=>a-b);
+    const annualSeedPaidByYear={}, annualRemainingByYear={}, seedOverflowByYear={};
+    years.forEach(y=>{
+      const due=r2(perYear[y].due), paid=r2(storedPaidByYear[y]||0);
+      const ownPaid=Math.min(Math.max(paid,0),Math.max(due,0));
+      annualSeedPaidByYear[y]=r2(ownPaid);
+      annualRemainingByYear[y]=r2(Math.max(due-ownPaid,0));
+      seedOverflowByYear[y]=r2(Math.max(paid-due,0));
+    });
+
+    const historicalNet=r2(Number(m.historical_balance_ils||0)-Number(m.historical_payments_ils||0));
+    const historicalDebtBase=Math.max(historicalNet,0);
+    let historicalCreditRemaining=Math.max(-historicalNet,0);
+
+    /* Historical over-collection is already historical credit; apply it to
+       annual dues oldest-first, while reserving any immutable explicit lines. */
+    years.forEach(y=>{
+      const available=Math.max(0,r2(annualRemainingByYear[y]-Number(_explYear[y]||0)));
+      const used=r2(Math.min(historicalCreditRemaining,available));
+      if(used>0){
+        annualSeedPaidByYear[y]=r2(annualSeedPaidByYear[y]+used);
+        annualRemainingByYear[y]=r2(annualRemainingByYear[y]-used);
+        historicalCreditRemaining=r2(historicalCreditRemaining-used);
+      }
+    });
+
+    /* Migration overflow is attributed by its source year: historical debt first,
+       then only later annual years, then credit. Existing explicit settlement lines
+       are reserved and never rewritten/reallocated by this read-time projection. */
+    let historicalSeedApplied=0;
+    let seedCreditRemaining=historicalCreditRemaining;
+    years.forEach(sourceYear=>{
+      let amount=r2(seedOverflowByYear[sourceYear]||0);
+      if(!(amount>0)) return;
+      const histAvailable=Math.max(0,r2(historicalDebtBase-Number(_explHist||0)-historicalSeedApplied));
+      const toHistorical=r2(Math.min(amount,histAvailable));
+      historicalSeedApplied=r2(historicalSeedApplied+toHistorical);
+      amount=r2(amount-toHistorical);
+      for(const targetYear of years){
+        if(targetYear<=sourceYear||!(amount>0)) continue;
+        const available=Math.max(0,r2(annualRemainingByYear[targetYear]-Number(_explYear[targetYear]||0)));
+        const used=r2(Math.min(amount,available));
+        if(used>0){
+          annualSeedPaidByYear[targetYear]=r2(annualSeedPaidByYear[targetYear]+used);
+          annualRemainingByYear[targetYear]=r2(annualRemainingByYear[targetYear]-used);
+          amount=r2(amount-used);
+        }
+      }
+      seedCreditRemaining=r2(seedCreditRemaining+amount);
+    });
+
+    Object.keys(perYear).forEach(y=>{
+      perYear[y].remaining_seed=r2(Math.max(0,perYear[y].due-Number(annualSeedPaidByYear[y]||0)));
+      perYear[y].allocated=r2(_explYear[y]||0);
+    });
+
     const q4=DB.receipts.filter(r=>!r.is_deleted&&r.movement_type==='historical_debt_collection'&&r.member_id===memberId)
       .reduce((s,r)=>s+FIN.amountOf(r),0);
-    let histSeed=r2(Number(m.historical_balance_ils||0)-Number(m.historical_payments_ils||0)-q4);
-    if(histSeed<0){ pool=r2(pool-histSeed); histSeed=0; }          /* over-collected history → pool */
+    let histSeed=r2(historicalDebtBase-historicalSeedApplied-q4);
+    let pool=0;
+    if(histSeed<0){ pool=r2(pool-histSeed); histSeed=0; } /* q4 over-collection becomes live credit */
+
     const liveFood=DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&r.member_id===memberId&&!_explAll[r.id])
-      .reduce((s,r)=>s+FIN.amountOf(r),0);   /* PR-5/PR-7: explicitly-settled receipts are attributed by their lines, never pooled */
+      .reduce((s,r)=>s+FIN.amountOf(r),0);
     const donSettled=Number(FIN.allocateFoodDonations().perMember[memberId]||0);
-    /* CA-007 write-offs (IG-008 conformance): a debt write-off resolves the
-       receivable exactly like a non-cash credit (enters the FD-002 pool), and a
-       credit write-off resolves outstanding credit (leaves the pool) — keeping
-       this waterfall's remaining identical to memberStatement().finalBalance. */
     const wos=((typeof DB!=='undefined'&&DB.member_write_offs)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId);
     const debtWO=wos.filter(r=>r.movement_type==='debt_write_off').reduce((s,r)=>s+FIN.amountOf(r),0);
     const creditWO=wos.filter(r=>r.movement_type==='credit_write_off').reduce((s,r)=>s+FIN.amountOf(r),0);
-    /* FD-009 (IG-012): a member-linked refund takes paid money back — it leaves
-       the credit pool, recreating debt through the same FD-002 waterfall.
-       PR-7 (allocation-aware): a refund AGAINST an explicit-settlement receipt is
-       reversed by un-attributing its refunded settlement lines (above), so it must
-       NOT also leave the pool — that money was never pooled. Only LEGACY refunds
-       (origin not an explicit receipt) reduce the pool. Flag OFF ⇒ _explAll empty
-       ⇒ every refund counts, byte-identical to today. memberStatement is untouched:
-       its finalBalance still recreates debt for EVERY refund (the correct total). */
     const refunded=((typeof DB!=='undefined'&&DB.refunds)||[]).filter(r=>!r.is_deleted&&r.member_id===memberId
         &&!(_rsOn&&r.origin_receipt_id&&_explAll[r.origin_receipt_id]))
       .reduce((s,r)=>s+FIN.amountOf(r),0);
     pool=r2(pool+liveFood+donSettled+debtWO-creditWO-refunded);
-    /* PR-5 — apply explicit settlement FIRST: pre-seed per-year allocated + hist,
-       and let the legacy pool cover only the RESIDUAL obligation. Neutral when OFF
-       (all explicit values are 0 ⇒ byte-identical to the legacy computation). */
-    Object.keys(perYear).forEach(y=>{ perYear[y].allocated=r2(_explYear[y]||0); });
-    const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),remaining:Math.max(r2(perYear[y].remaining_seed-(perYear[y].allocated||0)),0),createdAt:y+'-01-01'}));
+
+    const obligations=Object.keys(perYear).map(y=>({id:'sub:'+y,kind:'due',year:Number(y),
+      remaining:Math.max(r2(perYear[y].remaining_seed-(perYear[y].allocated||0)),0),createdAt:y+'-01-01'}));
     const _histResidual=Math.max(r2(histSeed-_explHist),0);
     if(_histResidual>0) obligations.push({id:'hist',kind:'historical',remaining:_histResidual,createdAt:'2000-01-01'});
+
     const eng=(typeof window!=='undefined'&&window.MODEL2Allocation)||null;
-    let creditRemaining=pool, histAllocated=r2(_explHist);
+    let creditRemaining=r2(seedCreditRemaining+pool), histAllocated=r2(_explHist);
     if(eng&&pool>0&&obligations.length){
       const res=eng.computeAllocation({currentYear:new Date().getFullYear(),amount:pool,obligations});
       res.allocations.forEach(a=>{
         if(a.obligation_kind==='historical') histAllocated=r2(histAllocated+a.amount_allocated);
         else if(perYear[a.year]) perYear[a.year].allocated=r2(perYear[a.year].allocated+a.amount_allocated);
       });
-      creditRemaining=res.creditRemaining;
+      creditRemaining=r2(seedCreditRemaining+res.creditRemaining);
     }
     Object.keys(perYear).forEach(y=>{
       const p=perYear[y];
@@ -632,26 +665,13 @@ const FIN={
     const r2=FIN._r2;
     const all=DB.members.filter(m=>m.is_active!==false).map(m=>{
       const st=FIN.memberStatement(m.id);
-      const subs=(DB.subscriptions||[]).filter(s=>s.member_id===m.id);
-      /* ═══ P-DEBT-REPORT-ALIGNMENT-001 — per-year "paid" reader alignment ═══
-         POST-LAUNCH receipt members (NO stored subscription seed) read the SAME
-         certified live allocation every other surface already shows — FIN.member
-         Delinquency().byYear[y].paid, the FD-002 attribution of live receipts — so
-         Annual Debt agrees with Delinquent / Dues / Dashboard / Member Statement
-         for live receipts. MIGRATION members (ANY stored paid_amount_ils) are
-         FROZEN: they keep the stored per-year figure byte-identical (owner
-         constitutional decision — the historical migration dataset is never
-         reinterpreted). READ-ONLY presentation alignment: it consults the existing
-         certified accessor and changes no engine, allocation, statement, stored
-         value, or finalBalance (`current` below still comes from memberStatement). */
-      const _storedPaidAll=subs.reduce((a,x)=>a+Number(x.paid_amount_ils||0),0);
-      const _liveByYear=(_storedPaidAll===0 && typeof FIN.memberDelinquency==='function')
-        ? ((FIN.memberDelinquency(m.id)||{}).byYear||{}) : null;
+      const dl=FIN.memberDelinquency(m.id);
       let selSub=0,selPaid=0;
-      subs.forEach(s=>{
-        if(!years||years.has(Number(s.year))){
-          selSub+=Number(s.due_amount_ils||0);
-          selPaid+= _liveByYear ? Number((_liveByYear[Number(s.year)]||{}).paid||0) : Number(s.paid_amount_ils||0);
+      Object.keys(dl.byYear||{}).forEach(y=>{
+        const yr=Number(y), v=dl.byYear[y]||{};
+        if(!years||years.has(yr)){
+          selSub+=Number(v.due||0);
+          selPaid+=Number(v.paid||0);
         }
       });
       const debtSettled=Number(st.debtSettled||0);
