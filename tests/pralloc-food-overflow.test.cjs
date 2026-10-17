@@ -78,7 +78,7 @@ test('food overflow kind is accepted by the guarded atomic RPC and remains void/
 test('food fund ledger keeps the receipt credit once and displays historical allocation as a debit', () => {
   const fin = read('public/js/fin.js');
   assert.match(fin, /settlementHistoricalByReceipt\(\)/);
-  assert.match(fin, /cr:amt,dr:0,type:'cr'/);
+  assert.match(fin, /cr:FIN\.amountOf\(r\),dr:0,type:'cr'/);
   assert.match(fin, /تخصيص للعجز التاريخي من صندوق الغداء/);
   assert.match(fin, /cr:0,dr:hist,type:'dr'/);
   assert.match(fin, /Historical settlement is a debit from the food fund/);
