@@ -40,7 +40,7 @@ Module._load = function (request, parent, isMain) {
 };
 process.env.SUPABASE_URL = 'https://example.supabase.co';
 process.env.SUPABASE_ANON_KEY = 'test-anon';
-delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role';
 const handler = require('../api/verify.js');
 Module._load = originalLoad;
 
@@ -87,6 +87,21 @@ test('valid transfer token returns only document number, type, and date', async 
     'no, payment_date, is_deleted',
     'no, transfer_date, is_deleted'
   ]);
+});
+
+test('missing service role fails closed instead of returning a false 404', async () => {
+  queries = [];
+  rows = { receipts: null, payments: null, internal_transfers: { no: 'IT-0003', transfer_date: '2026-07-27', is_deleted: false } };
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  try {
+    const res = await invoke('LmNoPq1234567890', '198.51.100.103');
+    assert.equal(res.statusCode, 503);
+    assert.deepEqual(res.body, { valid: false, error: 'Verification service unavailable' });
+    assert.deepEqual(queries.map(q => q.table), ['receipts', 'payments']);
+  } finally {
+    process.env.SUPABASE_SERVICE_ROLE_KEY = serviceKey;
+  }
 });
 
 test('cancelled internal transfer returns generic cancellation without details', async () => {
