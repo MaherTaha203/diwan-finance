@@ -136,6 +136,13 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    /* The transfer table intentionally blocks anon SELECT. Require the
+       server-side service-role client instead of silently returning 404 under RLS. */
+    if (!serviceRoleKey) {
+      console.error('[verify] service role required for internal transfer verification');
+      return publicError(res, 503, 'Verification service unavailable');
+    }
+
     /* Internal-transfer vouchers are QR-bearing documents too. The public
        contract stays minimal: token-only lookup, number/type/date only. */
     const { data: transfer, error: trErr } = await supabase
