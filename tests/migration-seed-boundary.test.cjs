@@ -93,5 +93,29 @@ ok(eq(a[2025].paid, 200) && eq(a[2026].paid, 200) && eq(aAlloc.historical.remain
   'live receipt 400 → 2025 + 2026, historical remains untouched');
 assertConservation('A', 'A');
 
+/* 6 — an immutable explicit historical line and migration overflow must not double-settle history. */
+window.RECEIPT_ALLOCATION_ENABLED = true;
+DB.members.push({ id: 'F', member_code: 'F', name: 'explicit-plus-seed', is_active: true,
+  historical_balance_ils: 200, historical_payments_ils: 0 });
+DB.subscriptions.push(
+  { member_id: 'F', year: 2025, due_amount_ils: 200, paid_amount_ils: 300 },
+  { member_id: 'F', year: 2026, due_amount_ils: 200, paid_amount_ils: 0 }
+);
+DB.receipts.push({ id: 'F-explicit', no: 'R-F', is_deleted: false, fund_type: 'food',
+  member_id: 'F', amount_ils: 100, receipt_date: '2026-06-19' });
+DB.allocation_records.push({ id: 'F-line', source_ref: 'F-explicit', source_kind: 'receipt_settlement',
+  member_id: 'F', obligation_kind: 'historical', year: null, amount_allocated: 100,
+  voided_at: null, refunded_at: null });
+DB._alloc = null;
+const f = FIN.memberDelinquency('F').byYear;
+const fAlloc = FIN.memberAllocation('F');
+ok(eq(f[2025].paid, 200) && eq(f[2026].paid, 0),
+  'explicit historical line + imported overflow settle history before 2026');
+ok(eq(fAlloc.historical.remaining, 0),
+  'explicit history 100 + seed overflow 100 clear historical debt exactly once');
+ok(eq(FIN.memberStatement('F').finalBalance, 200),
+  'explicit historical line and migration seed preserve final balance');
+assertConservation('F', 'F');
+
 console.log('\n' + (fail === 0 ? 'ALL PASS' : fail + ' FAILED') + ' · ' + pass + ' checks');
 process.exit(fail === 0 ? 0 : 1);
