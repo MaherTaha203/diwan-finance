@@ -3,9 +3,8 @@
      (A) a POST-LAUNCH receipt member (no stored subscription seed) shows the SAME
          live allocation the other surfaces already show — FIN.memberDelinquency
          .byYear[y].paid (FD-002 attribution of live receipts); and
-     (B) a MIGRATION member (any stored paid_amount_ils) is FROZEN — selPaid stays
-         the stored figure byte-identical (the historical dataset is never
-         reinterpreted).
+     (B) a MIGRATION member's stored overpayment is attributed to historical debt
+         before future years; the report reads the same canonical byYear.paid values.
    Also asserts Final Balance (`current`) is untouched on both paths.
    Loads the real fin.js. Usage: node tests/debt-report-live-alignment.test.cjs */
 'use strict';
@@ -57,8 +56,13 @@ ok(eq(A.selPaid, Number((dA[2025] || {}).paid || 0) + Number((dA[2026] || {}).pa
   'A selPaid == byYear.paid sum (same certified source as Delinquent / Dues)');
 ok(eq(A.current, FIN.memberStatement('A').finalBalance), 'A current unchanged = memberStatement.finalBalance (Final Balance untouched)');
 
-/* B — migration member: FROZEN, selPaid == stored paid_amount_ils, byte-identical */
-ok(eq(B.selPaid, 1110), 'B migration member: selPaid = stored 1110 (FROZEN — not reinterpreted)');
+/* B — migration overflow settles historical debt, not the next annual year. */
+const dB = FIN.memberDelinquency('B').byYear;
+ok(eq(B.selPaid, 200), 'B migration member: Annual Debt shows only the 200 attributed to 2025');
+ok(eq(B.selPaid, Number((dB[2025] || {}).paid || 0) + Number((dB[2026] || {}).paid || 0)),
+  'B selPaid == canonical byYear.paid sum');
+ok(eq(dB[2026].paid, 0) && dB[2026].settled === false,
+  'B migration overflow reduces historical debt and does not cascade into 2026');
 ok(eq(B.current, FIN.memberStatement('B').finalBalance), 'B current = memberStatement.finalBalance (unchanged)');
 
 /* Year filter still honoured on the live path (2025 only) */
