@@ -257,6 +257,7 @@ window.buildFoodConfirmationRows=function(decision){
   const rows=[];
   decision.steps.forEach(function(s){                 /* one row per decide() step */
     const label=s.kind==='historical'?'خصم العجز التاريخي'
+      :s.kind==='food'?'إضافة إلى صندوق الغداء الحالي'
       :s.kind==='future'?('اشتراك مستقبلي — سنة '+s.year)
       :('اشتراك سنة '+s.year);
     rows.push({key:s.kind+(s.year?(':'+s.year):''),label:label,value:s.amount});
