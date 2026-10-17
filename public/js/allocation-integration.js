@@ -23,23 +23,6 @@
       return api.resolveCurrentYear(settings, new Date().getFullYear());
     };
     window.MODEL2BuildObligations = function (memberId) {
-      /* The certified FIN accessor is the source of current residual obligations,
-         including imported-seed attribution, explicit settlement lines, refunds,
-         and prior live receipts. The allocation engine then allocates only the
-         new amount passed to MODEL2RecordAllocation. Keep the pure builder as a
-         test/fallback seam when FIN is not loaded. */
-      if (typeof FIN !== 'undefined' && FIN && typeof FIN.memberAllocation === 'function') {
-        var al = FIN.memberAllocation(memberId) || {};
-        var obligations = Object.keys(al.perYear || {}).map(function (y) {
-          var p = al.perYear[y] || {};
-          return { id: 'sub:' + y, kind: 'due', year: Number(y),
-            remaining: Math.max(0, Number(p.remaining || 0)), createdAt: y + '-01-01' };
-        }).filter(function (o) { return o.remaining > 0.005; });
-        var histRemaining = Math.max(0, Number((al.historical || {}).remaining || 0));
-        if (histRemaining > 0.005) obligations.push({ id: 'hist', kind: 'historical',
-          remaining: histRemaining, createdAt: '2000-01-01' });
-        return obligations;
-      }
       var data = { members: (typeof DB !== 'undefined' ? DB.members : []) || [], subscriptions: (typeof DB !== 'undefined' ? DB.subscriptions : []) || [] };
       return api.buildObligations(data, memberId);
     };
