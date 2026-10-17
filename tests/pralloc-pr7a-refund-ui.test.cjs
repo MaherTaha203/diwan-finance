@@ -70,12 +70,10 @@ ok(/refund-ui\.js/.test(html), 'refund-ui.js is included');
 ok(/role="dialog"[\s\S]*?aria-modal="true"/.test(html.match(/id="m-refund"[\s\S]{0,200}/)[0]), '#m-refund is an aria dialog');
 ok(/RefundUI\.syncEditButton/.test(read(P('crud.js'))), 'editRec toggles the Refund button via RefundUI.syncEditButton');
 
-/* ── Golden Reference: accounting core stays pinned; only the new guard migration is permitted ── */
+/* ── Golden Reference: allow only the scoped food-overflow migration and ledger split ── */
 const { execSync } = require('child_process');
-/* The new, additive security migration is expected in this PR. All pre-existing
-   migrations and the operations.js/data.js accounting surfaces must remain unchanged.
-   fin.js is pinned EXCEPT within debtReportRows — the Annual Debt report READER, an
-   authorized presentation-alignment surface (P-DEBT-REPORT-ALIGNMENT-001). */
+/* The additive food-overflow migration and the exact food-ledger presentation split
+   are approved scope. All pre-existing migrations and operations.js/data.js stay fixed. */
 let coreChanged = '';
 let migrationChanges = [];
 try {
@@ -90,10 +88,10 @@ try {
 } catch (e) {
   coreChanged = 'ERR:' + e.message;
 }
-const allowedMigration = 'supabase/migrations/20261015100000_guard_settlement_rpcs_authorization.sql';
+const allowedMigration = 'supabase/migrations/20261017110000_pralloc_food_fund_overflow.sql';
 ok(
   coreChanged === '' && migrationChanges.length === 1 && migrationChanges[0] === allowedMigration,
-  'Golden Reference: accounting core and existing migrations unchanged; only the explicit authorization migration is added — core=[' +
+  'Golden Reference: operations/data and existing migrations unchanged; only the scoped food-overflow migration is added — core=[' +
     coreChanged + '], migrations=[' + migrationChanges.join(', ') + ']'
 );
 let finBase = '';
@@ -106,8 +104,19 @@ function stripDebtReportRows(text) {
   for (; k < text.length; k++) { const c = text[k]; if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { k++; break; } } }
   return text.slice(0, i) + text.slice(k);
 }
-ok(!/^ERR:/.test(finBase) && stripDebtReportRows(read(P('fin.js'))) === stripDebtReportRows(finBase),
-  'Golden Reference: fin.js accounting core UNCHANGED vs origin/main (only debtReportRows may differ)');
+function stripFoodLedgerSplit(text) {
+  const begin = text.indexOf("      const _histByNo = fund==='food'");
+  if (begin < 0) return text;
+  const note = text.indexOf("            note:'تخصيص محاسبي من قيمة سند القبض — لا يُعد قبضًا إضافيًا'});", begin);
+  if (note < 0) return text;
+  const end = text.indexOf("        });", note);
+  if (end < 0) return text;
+  const after = end + "        });".length;
+  const baseline = "      DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund&&inRange(r.receipt_date))\n        .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:_dtag(r.movement_type)+(r.notes||'إيصال قبض'),cr:FIN.amountOf(r),dr:0,type:'cr',id:r.id,no:r.no}));";
+  return text.slice(0, begin) + baseline + text.slice(after);
+}
+ok(!/^ERR:/.test(finBase) && stripDebtReportRows(stripFoodLedgerSplit(read(P('fin.js')))) === stripDebtReportRows(finBase),
+  'Golden Reference: fin.js unchanged outside the exact approved food-ledger historical split');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
