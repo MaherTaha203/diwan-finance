@@ -365,8 +365,21 @@ const FIN={
     if(!typeFilter||typeFilter==='cr'){
       /* Domain 1 — label the two new Diwan events; legacy receipts unchanged (byte-identical). */
       const _dtag=mt=>mt==='diwan_operational_income'?'إيراد تشغيلي · ':mt==='diwan_cash_donation'?'تبرع نقدي · ':'';
+      const _histByNo = fund==='food' && typeof window!=='undefined' && window.FIN2
+        && typeof window.FIN2.settlementHistoricalByReceipt==='function'
+        ? window.FIN2.settlementHistoricalByReceipt() : {};
       DB.receipts.filter(r=>!r.is_deleted&&r.fund_type===fund&&inRange(r.receipt_date))
-        .forEach(r=>rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:_dtag(r.movement_type)+(r.notes||'إيصال قبض'),cr:FIN.amountOf(r),dr:0,type:'cr',id:r.id,no:r.no}));
+        .forEach(r=>{
+          const amt=FIN.amountOf(r);
+          rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),desc:_dtag(r.movement_type)+(r.notes||'إيصال قبض'),cr:amt,dr:0,type:'cr',id:r.id,no:r.no});
+          /* A historical settlement slice is a transfer out of the current food fund,
+             not a second receipt. Show it as a debit while preserving the full receipt
+             credit exactly once; the shared FIN2 accessor is the attribution authority. */
+          const hist=FIN._r2(Number(_histByNo[r.no]||0));
+          if(fund==='food'&&hist>0.005) rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),
+            desc:'تخصيص للعجز التاريخي من صندوق الغداء',cr:0,dr:hist,type:'dr',id:r.id+':historical-deficit',no:r.no,
+            note:'تخصيص محاسبي من قيمة سند القبض — لا يُعد قبضًا إضافيًا'});
+        });
     }
     if(!typeFilter||typeFilter==='dr'){
       DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund&&inRange(p.payment_date))
