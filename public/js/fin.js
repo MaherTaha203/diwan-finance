@@ -1,20 +1,12 @@
 /* ═══ FINANCIAL ENGINE — FIN (Module 10 — extracted from app.js, Phase B) ═══
-   ⚠️ FROZEN FINANCIAL CODE — the single source of truth for every balance,
-   statement, ledger, allocation and delinquency figure in the system.
-   This file is a byte-identical verbatim move of the FINANCIAL ENGINE
-   section of app.js: the FIN object (memberBalance/memberStatement/
-   fundLedger/allocateFoodDonations/foodBalance/diwanBalance/
-   memberDelinquency/subscriptionYears/balanceLabel/…), the canonical
-   movement-class labels (mcLabel), the Phase 15 FINAL-LOCK historical
-   balance formula (calcHistoricalFromYear) and its form handler
-   (onMemberFromYearChange). NO formula, rounding, rule or constant was
-   changed — regression-proven by a full-output fingerprint (every member
-   statement row, both fund ledgers, the donation allocation map, all
-   delinquency flags) hashed before and after the move.
-   Loaded via <script defer> BEFORE app.js; FIN is a top-level const in
-   the shared global lexical environment, visible to data.js, crud.js,
-   print.js, reports.js and app.js exactly as before. Runtime deps
-   (DB, window.LANG/t, fmt) resolve at call time. */
+   Single source of truth for member balances, statements, ledgers, allocations,
+   and delinquency figures. The approved migration-seed boundary keeps imported
+   overpayments separate from live FD-002 cash; regression coverage lives in
+   tests/migration-seed-boundary.test.cjs. Live cash continues through the single
+   MODEL2Allocation engine. No stored production data is rewritten by this logic.
+   Loaded via <script defer> BEFORE app.js; FIN is a top-level const in the shared
+   global lexical environment, visible to data.js, crud.js, print.js, reports.js,
+   and app.js. Runtime dependencies resolve at call time. */
 
 /* ═══ FINANCIAL ENGINE ═══ */
 const FIN={
@@ -175,17 +167,12 @@ const FIN={
       isDelinquent: outstanding>0.005 };
   },
   /* ═══ CCR-001 · IG-001 — Constitutional payment allocation (FC-003 · FD-002) ═══
-     Read-time derivation of the constitutional waterfall: outstanding annual
-     subscriptions (OLDEST unpaid first) → then the historical carried balance.
-     Attributed history is preserved (FD-003): stored per-year paid and pre-system
-     historical payments keep their recorded targets, and ق4 historical-debt
-     collections reduce the historical balance per their constitutional meaning
-     (FC-003 Ch. 3.4). The UNATTRIBUTED credit pool — live member food receipts,
-     Item-9 donation debt settlements, and any per-target overpayment excess — is
-     walked by the SINGLE ordered engine (MODEL2Allocation; one ordering source,
-     FD-011). The TOTAL outstanding is always memberStatement().finalBalance
-     (order-invariant; single source — FD-006): this accessor only distributes it
-     across obligations for settled/delinquency derivation (consumed by IG-003). */
+     Imported subscription seed is source-bound: cap each seed at its own annual
+     due, apply excess to historical carry first, then only later annual years,
+     then preserve any remainder as member credit. It never enters the live pool.
+     Post-migration cash, directed donation settlements, write-offs and refunds
+     continue through the single FD-002 engine (oldest annual year first, then
+     historical). The total outstanding remains memberStatement().finalBalance. */
   memberAllocation(memberId){
     const m=DB.members.find(x=>x.id===memberId);
     const r2=FIN._r2;
