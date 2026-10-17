@@ -144,7 +144,7 @@ function stripFoodLedgerSplit(text) {
 }
 ok(!/^ERR:/.test(finBase)
     && stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(read(P('fin.js')))))
-      === stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(finBase)),
+      === stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(finBase))),
   'Golden Reference: fin.js unchanged outside the approved migration-seed allocation, debt-report, and food-ledger scopes');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
