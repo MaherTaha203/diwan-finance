@@ -1,0 +1,45 @@
+name: Read-only quality gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Unit and financial invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+# Golden Reference tests compare against origin/main, so the base ref must be present.
+      - name: Checkout (full history for Golden Reference checks)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies (package-lock currently needs reconciliation)
+        run: npm install --no-audit --no-fund
+      - name: Run Node test suite
+        run: npm test
+      - name: Run FIN2 financial logic checks
+        run: node tests/fin2.test.cjs
+      - name: Run constitutional verification
+        run: node tests/constitutional-verification.cjs
+      - name: Install Playwright Chromium for isolated lab
+        run: |
+          npm install --global playwright@1.56.0
+          playwright install --with-deps chromium
+      - name: Run constitutional lab
+        run: node lab/run.cjs
