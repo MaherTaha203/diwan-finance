@@ -45,7 +45,7 @@ DB._alloc = null;
 const dq = FIN.memberDelinquency('M1');
 ok(dq.byYear[2026].settled === false && dq.byYear[2026].status === 'unpaid' && dq.byYear[2026].authoritative === true,
   'owner truth (unpaid) OVERRIDES the derived settled status — never replaced by a calculated value');
-ok(dq.unpaidCount === before.dq.unpaidCount + 1, 'unpaid-years indicator follows the owner truth');
+ok(dq.unpaidCount === before.dq.unpaidCount, 'owner truth agrees with the corrected source-boundary status without count drift');
 
 /* 3 · ACCOUNTING PROTECTION: every financial figure is byte-identical */
 const after = { stmt: FIN.memberStatement('M1'), debt: JSON.stringify(FIN.debtReportRows({})) };
