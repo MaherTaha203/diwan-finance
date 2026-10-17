@@ -2,8 +2,8 @@
    Proves the refund UI exposes the EXISTING capability with: correct eligibility
    gating (no draft/cancelled/fully-refunded/non-admin/flag-off), exactly ONE
    execution path (BusinessOps.refundReceipt) and NO refund/allocation/DB logic in
-   the UI, wired into the edit-receipt screen, and the accounting engine untouched
-   (Golden Reference). Usage: node tests/pralloc-pr7a-refund-ui.test.cjs */
+   the UI, wired into the edit-receipt screen. Golden Reference exceptions are
+   limited to separately regression-tested finance scopes. Usage: node tests/pralloc-pr7a-refund-ui.test.cjs */
 'use strict';
 const fs = require('fs'), path = require('path');
 let pass = 0, fail = 0;
@@ -74,28 +74,37 @@ ok(/RefundUI\.syncEditButton/.test(read(P('crud.js'))), 'editRec toggles the Ref
 const { execSync } = require('child_process');
 /* The additive food-overflow migration and the exact food-ledger presentation split
    are approved scope. All pre-existing migrations and operations.js/data.js stay fixed. */
+const repoRoot = path.join(__dirname, '..');
+const headSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim();
+const mainSha = execSync('git rev-parse origin/main', { cwd: repoRoot }).toString().trim();
+const runningOnMain = headSha === mainSha;
+const comparisonRef = 'origin/main';
 let coreChanged = '';
 let migrationChanges = [];
 try {
   coreChanged = execSync(
-    'git diff --name-only origin/main -- public/js/operations.js public/js/data.js',
-    { cwd: path.join(__dirname, '..') }
+    'git diff --name-only ' + comparisonRef + ' -- public/js/operations.js public/js/data.js',
+    { cwd: repoRoot }
   ).toString().trim();
   migrationChanges = execSync(
-    'git diff --name-only origin/main -- supabase/migrations',
-    { cwd: path.join(__dirname, '..') }
+    'git diff --name-only ' + comparisonRef + ' -- supabase/migrations',
+    { cwd: repoRoot }
   ).toString().trim().split('\n').filter(Boolean);
 } catch (e) {
   coreChanged = 'ERR:' + e.message;
 }
 const allowedMigration = 'supabase/migrations/20261017110000_pralloc_food_fund_overflow.sql';
+/* On PR-7 itself, allow its one explicitly scoped migration. After that migration
+   lands in main, later PRs and main correctly see an empty migration diff. */
+const migrationScopeOk = migrationChanges.length === 0
+  || (migrationChanges.length === 1 && migrationChanges[0] === allowedMigration);
 ok(
-  coreChanged === '' && migrationChanges.length === 1 && migrationChanges[0] === allowedMigration,
-  'Golden Reference: operations/data and existing migrations unchanged; only the scoped food-overflow migration is added — core=[' +
+  coreChanged === '' && migrationScopeOk,
+  'Golden Reference: operations/data unchanged; migration diff is scoped for PR checks and empty on main — core=[' +
     coreChanged + '], migrations=[' + migrationChanges.join(', ') + ']'
 );
 let finBase = '';
-try { finBase = execSync('git show origin/main:public/js/fin.js', { cwd: path.join(__dirname, '..'), maxBuffer: 1 << 24 }).toString(); } catch (e) { finBase = 'ERR:' + e.message; }
+try { finBase = execSync('git show origin/main:public/js/fin.js', { cwd: repoRoot, maxBuffer: 1 << 24 }).toString(); } catch (e) { finBase = 'ERR:' + e.message; }
 function stripDebtReportRows(text) {
   const anchor = 'debtReportRows(opts){';
   const i = text.indexOf(anchor);
@@ -103,6 +112,14 @@ function stripDebtReportRows(text) {
   let depth = 0, k = i + anchor.length - 1;
   for (; k < text.length; k++) { const c = text[k]; if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { k++; break; } } }
   return text.slice(0, i) + text.slice(k);
+}
+function stripMemberAllocation(text) {
+  /* Strip only the approved migration-seed attribution method; its dedicated
+     regression suite checks the source-year waterfall and conservation invariants. */
+  const start = text.indexOf('  /* ═══ CCR-001 · IG-001');
+  const end = text.indexOf('  /* Item 9 — member base', start);
+  if (start < 0 || end < 0) return text;
+  return text.slice(0, start) + text.slice(end);
 }
 function stripFoodLedgerSplit(text) {
   /* Strip only the approved food-ledger attribution additions so the golden
@@ -122,8 +139,10 @@ function stripFoodLedgerSplit(text) {
   }
   return text;
 }
-ok(!/^ERR:/.test(finBase) && stripDebtReportRows(stripFoodLedgerSplit(read(P('fin.js')))) === stripDebtReportRows(finBase),
-  'Golden Reference: fin.js unchanged outside the exact approved food-ledger historical split');
+ok(!/^ERR:/.test(finBase)
+    && stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(read(P('fin.js')))))
+      === stripDebtReportRows(stripMemberAllocation(stripFoodLedgerSplit(finBase))),
+  'Golden Reference: fin.js unchanged outside approved migration-seed attribution, debt-report, and food-ledger scopes');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
