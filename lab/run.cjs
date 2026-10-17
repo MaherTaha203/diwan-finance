@@ -39,7 +39,12 @@ function chromeExe() {
     '/opt/pw-browsers/chromium'
   ];
   for (const c of cands) { try { if (fs.statSync(c)) return c; } catch (e) {} }
-  return '/opt/pw-browsers/chromium';
+  /* Portable fallback: use the browser bundled with the installed Playwright. */
+  try {
+    const bundled = chromium.executablePath();
+    if (fs.existsSync(bundled)) return bundled;
+  } catch (e) {}
+  return undefined; /* Let Playwright emit its standard missing-browser diagnostic. */
 }
 const gp = execSync('npm root -g').toString().trim();
 const { chromium } = require(path.join(gp, 'playwright'));
