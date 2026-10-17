@@ -57,6 +57,7 @@
     switch (a.obligation_kind) {
       case 'due': return L('اشتراك', 'Subscription') + (a.year != null ? ' ' + a.year : '');
       case 'historical': return L('العجز التاريخي', 'Historical Deficit');
+      case 'food': return L('صندوق الغداء الحالي', 'Current Food Fund');
       case 'donation': return L('تبرّع', 'Donation');
       case 'credit': return L('رصيد مستقبلي', 'Future Credit');
       default: return a.obligation_kind || '—';
