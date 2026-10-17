@@ -51,21 +51,24 @@ Every one carries a large pre-2025 historical balance — consistent with the ex
 
 The cascade is currently **latent**: the Delinquent report and Dues workspace display the truth-overridden status, so 2026 shows "unpaid" there. #273 would make the Annual Debt report display `byYear.paid` (the derived cascade) → surfacing the conflict.
 
-## F. Minimal constitutional repair (proposal — NOT implemented)
-**Enforce the source boundary in the one shared accessor** `FIN.memberAllocation`, so there remains exactly one canonical annual-settlement truth:
-- Build the forward-cascade **pool from LIVE payments only** (food receipts, donations, write-offs, refunds).
-- Treat stored `paid_amount_ils` as **seed of its own year, capped at due** (`remaining_seed = max(0, due − paid)`); the excess `paid − due` does **not** enter the annual-cascade pool (it is migration credit / pre-2025 service, per the certified design).
+## F. Implemented repair under review — PR #310
 
-Consequences (all conserving `finalBalance`, which already counts the full stored paid):
-- **12 migration members:** 2025 overpayment stops cascading → `byYear[2026].paid = 0` → 2026 unpaid **matches owner truth**; the truth override becomes redundant rather than conflicting.
-- **10 live-receipt members:** their receipts are LIVE → still cascade across ERP years (owner rule: pay 400 → 2025+2026 paid) → `byYear` correct.
-- **One truth:** Member Statement, Delinquent, Annual Debt, Dues all consume the same corrected `byYear` — no report-specific override.
+The source-boundary correction is implemented in the current review branch, without rewriting any production rows.
 
-This touches `FIN.memberAllocation` (the shared waterfall) — a larger, more sensitive change than #273 — so it must be its own reviewed, regression-tested change under the frozen rules. **Not implemented here.**
+- **Stored migration seed is not live cash.** The amount recorded on each subscription year first covers that year's due, capped at the due.
+- **Seed overflow follows its historical source:** it reduces the remaining pre-2025 historical debt first; only after historical debt reaches zero may the overflow cover later annual years in ascending order; any remainder stays member credit.
+- **Historical over-collection credit** retains the existing oldest-annual-year-first behavior, while live receipts, directed donation settlements, write-offs, and refunds continue through the existing FD-002 live pool.
+- **Annual Debt** now reads each year's paid amount from FIN.memberDelinquency().byYear, the same canonical attribution used by Delinquent/Dues. No report-only status override is introduced.
+- **No production data rewrite, schema migration, truth-table change, or feature-flag activation** is included.
 
-Optional companion (owner decision): normalize the 12 rows to the certified migration form (cap 2025 `paid` at `due`, move the excess to `credit_balance_ils` / historical), so the stored data matches its own migration contract. Not required if the engine boundary is fixed, and **not done** in this stage.
+This explicitly covers the edge case raised in review: for the member whose 2025 imported amount is ₪435 and whose remaining historical debt is ₪200, ₪200 settles historical debt and the remaining ₪35 applies to 2026, leaving ₪165 unpaid. For the other audited migration examples, the overage reduces historical debt and does not incorrectly settle 2026.
+
+The regression suite in tests/migration-seed-boundary.test.cjs checks historical-first attribution, later-year spill only after historical clearance, credit remainder, unchanged memberStatement().finalBalance, and the unchanged live FD-002 waterfall. The existing historical-truth test continues to verify that the truth table is presentation authority only and is not read by financial calculations.
+
+Optional companion normalization of the stored rows remains **not done**; the repair is read-time only.
 
 ## G. Disposition of PR #273
-**Merge only after the prerequisite `memberAllocation` source-boundary repair** (or fold both into one reviewed change). #273's direction (Annual Debt consumes the certified `byYear`) is correct and still required for the 10 live-receipt cases, but on today's cascading waterfall it would make Annual Debt contradict the owner-approved truth for the 12 migration members. Once `byYear` no longer cascades migration seed, #273 becomes correct for **all** members. Keep #273 open, unmerged, unchanged.
 
-**Read-only. No records, truth overrides, FIN, allocation-engine, #273, or data modified.**
+PR #273's report-reader direction is now incorporated in PR #310, with the migration source boundary corrected at the same time. Do **not** merge #273 separately: after PR #310 is reviewed and merged, close #273 as superseded. Until then, leave #273 open and unmerged so the current branch remains the single reviewable implementation.
+
+**Implementation status:** code and regression tests are in PR #310. No production records, truth overrides, schema, or feature flags have been changed.
