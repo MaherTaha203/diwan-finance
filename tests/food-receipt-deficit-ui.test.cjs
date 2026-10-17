@@ -1,7 +1,7 @@
 /* F-3 · Explicit Historical Deficit Selection — the UI collects `deficitAmount` ONLY.
    Proves (a) the accountant control is the SOLE source of deficitAmount, (b) it makes
    NO allocation decision, (c) feeding its value into the production wiring reproduces
-   the laboratory exactly over every approved scenario, and (d) the two frozen rules:
+   the laboratory exactly over every approved scenario, and (d) the two approved rules:
      ordinary mode — ERP dues first, then historical deficit, then future prepayment.
      explicit mode — historical deficit first, then any overflow goes to the current food fund.
    Read-only. Usage: node tests/food-receipt-deficit-ui.test.cjs  (exit 0 = all pass) */
