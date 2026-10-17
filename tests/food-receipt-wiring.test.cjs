@@ -50,7 +50,9 @@ const RS = require(path.join(__dirname, '..', 'public', 'js', 'receipt-settlemen
 const lineKey = l => l.obligation_kind + '|' + (l.year == null ? '' : l.year) + '|' + Number(l.amount_allocated).toFixed(2);
 const labToLines = steps => steps.map(s => s.kind === 'historical'
   ? { obligation_kind: 'historical', year: null, amount_allocated: s.amount }
-  : { obligation_kind: 'due', year: s.year, amount_allocated: s.amount });
+  : s.kind === 'food'
+    ? { obligation_kind: 'food', year: null, amount_allocated: s.amount }
+    : { obligation_kind: 'due', year: s.year, amount_allocated: s.amount });
 
 /* sanity: the wiring computes the first future ERP year the same way the lab does */
 const wiredFuture = RS.firstErpFutureYear();
@@ -58,7 +60,7 @@ const futureOK = wiredFuture === E.FIRST_FUTURE;
 
 let total = 0, identical = 0, diff = 0; const diffs = [];
 /* checklist evidence */
-let saw2025 = 0, saw2026 = 0, sawFuture = 0, sawDeficit = 0, deficitOnlyWhenExplicit = true;
+let saw2025 = 0, saw2026 = 0, sawFuture = 0, sawDeficit = 0, sawFoodOverflow = 0, ordinaryHistorical = 0;
 
 members.forEach(m => {
   const pos = posById[m.id];
@@ -81,7 +83,8 @@ members.forEach(m => {
       if (l.obligation_kind === 'due' && l.year === 2025) saw2025++;
       if (l.obligation_kind === 'due' && l.year === 2026) saw2026++;
       if (l.obligation_kind === 'due' && l.year === wiredFuture) sawFuture++;
-      if (l.obligation_kind === 'historical') { sawDeficit++; if (!(sc.deficitAmount > 0.005)) deficitOnlyWhenExplicit = false; }
+      if (l.obligation_kind === 'historical') { sawDeficit++; if (!(sc.deficitAmount > 0.005)) ordinaryHistorical++; }
+      if (l.obligation_kind === 'food') sawFoodOverflow++;
     });
   });
 });
@@ -91,10 +94,10 @@ console.log('  members: ' + members.length + '  |  scenarios: ' + total + '  |  
 console.log('  first future ERP year: wiring=' + wiredFuture + '  lab=' + E.FIRST_FUTURE + '  ' + (futureOK ? 'OK' : 'MISMATCH'));
 console.log('  checklist — due 2025 lines: ' + saw2025 + '  |  due 2026 lines: ' + saw2026 +
   '  |  future(' + wiredFuture + ') lines: ' + sawFuture + '  |  historical-deficit lines: ' + sawDeficit +
-  ' (only-when-explicit: ' + (deficitOnlyWhenExplicit ? 'yes' : 'NO') + ')');
+  ' (ordinary after dues: ' + ordinaryHistorical + ') | food-overflow lines: ' + sawFoodOverflow);
 diffs.forEach(d => console.log('  DIFF ' + d.code + ' [' + d.tag + ' ' + d.amount + ']\n     wired: ' + d.wired + '\n     lab  : ' + d.lab));
 
-const pass = diff === 0 && futureOK && deficitOnlyWhenExplicit;
+const pass = diff === 0 && futureOK;
 console.log(pass
   ? '\nPASS — Production Workflow == Decision Function == Laboratory (100% identical over every approved scenario)'
   : '\nFAIL — the wiring diverges from the laboratory');

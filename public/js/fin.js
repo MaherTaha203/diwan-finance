@@ -362,6 +362,13 @@ const FIN={
       if(td&&dt>td) return false;
       return true;
     };
+    /* Historical settlement is a debit from the food fund. Build attribution
+       once, independently of the selected ledger filter, so the debit remains
+       visible in the all-movements and debit-only views without duplicating
+       the receipt credit. */
+    const _histByNo = fund==='food' && typeof window!=='undefined' && window.FIN2
+      && typeof window.FIN2.settlementHistoricalByReceipt==='function'
+      ? window.FIN2.settlementHistoricalByReceipt() : {};
     if(!typeFilter||typeFilter==='cr'){
       /* Domain 1 — label the two new Diwan events; legacy receipts unchanged (byte-identical). */
       const _dtag=mt=>mt==='diwan_operational_income'?'إيراد تشغيلي · ':mt==='diwan_cash_donation'?'تبرع نقدي · ':'';
@@ -371,6 +378,15 @@ const FIN={
     if(!typeFilter||typeFilter==='dr'){
       DB.payments.filter(p=>!p.is_deleted&&p.fund_type===fund&&inRange(p.payment_date))
         .forEach(p=>rows.push({date:p.payment_date,name:p.beneficiary_name||gmn(p.member_id),desc:L.expense(p.expense_type),cr:0,dr:FIN.amountOf(p),type:'dr',id:p.id,no:p.no}));
+      if(fund==='food'){
+        DB.receipts.filter(r=>!r.is_deleted&&r.fund_type==='food'&&inRange(r.receipt_date))
+          .forEach(r=>{
+            const hist=FIN._r2(Number(_histByNo[r.no]||0));
+            if(hist>0.005) rows.push({date:r.receipt_date,name:r.payer_name||gmn(r.member_id),
+              desc:'تخصيص للعجز التاريخي من صندوق الغداء',cr:0,dr:hist,type:'dr',id:r.id+':historical-deficit',no:r.no,
+              note:'تخصيص محاسبي من قيمة سند القبض — لا يُعد قبضًا إضافيًا'});
+          });
+      }
     }
     if(!typeFilter||typeFilter==='don'){
       /* ق5 — a member donation that settles his debt is named for what it is:

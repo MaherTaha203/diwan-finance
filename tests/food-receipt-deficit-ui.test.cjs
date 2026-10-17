@@ -1,9 +1,9 @@
 /* F-3 · Explicit Historical Deficit Selection — the UI collects `deficitAmount` ONLY.
    Proves (a) the accountant control is the SOLE source of deficitAmount, (b) it makes
    NO allocation decision, (c) feeding its value into the production wiring reproduces
-   the laboratory exactly over every approved scenario, and (d) the two frozen rules:
-     rule 6 — Historical Deficit OFF ⇒ deficitAmount = 0 ⇒ no historical allocation.
-     rule 5 — Historical Deficit ON ⇒ the amount is deducted FIRST, remainder from 2025.
+   the laboratory exactly over every approved scenario, and (d) the two approved rules:
+     ordinary mode — ERP dues first, then historical deficit, then future prepayment.
+     explicit mode — historical deficit first, then any overflow goes to the current food fund.
    Read-only. Usage: node tests/food-receipt-deficit-ui.test.cjs  (exit 0 = all pass) */
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -67,9 +67,11 @@ global.window.RECEIPT_ALLOCATION_ENABLED = true;
 const lineKey = l => l.obligation_kind + '|' + (l.year == null ? '' : l.year) + '|' + Number(l.amount_allocated).toFixed(2);
 const labToLines = steps => steps.map(s => s.kind === 'historical'
   ? { obligation_kind: 'historical', year: null, amount_allocated: s.amount }
-  : { obligation_kind: 'due', year: s.year, amount_allocated: s.amount });
+  : s.kind === 'food'
+    ? { obligation_kind: 'food', year: null, amount_allocated: s.amount }
+    : { obligation_kind: 'due', year: s.year, amount_allocated: s.amount });
 
-let total = 0, identical = 0, offNoHist = 0, offHistViolations = 0, onDeficitFirst = 0, onDeficitCases = 0;
+let total = 0, identical = 0, offNoExplicit = 0, offOrderViolations = 0, onDeficitFirst = 0, onDeficitCases = 0;
 el('rec-fund').value = 'food'; el('rec-payer-type').value = 'member';
 members.forEach(m => {
   const pos = posById[m.id];
@@ -82,20 +84,28 @@ members.forEach(m => {
     const lab = E.propose(m.id, sc.amount, { deficitAmount: sc.deficitAmount });
     const wired = (fd && fd.lines) || [];
     if (wired.map(lineKey).join(';') === labToLines(lab.steps).map(lineKey).join(';')) identical++;
-    /* rule 6 — OFF ⇒ no historical line at all */
+    /* Ordinary mode: a historical line may exist, but only after all ERP due lines. */
     if (!(sc.deficitAmount > 0.005)) {
-      if (uiDeficit !== 0) offHistViolations++;
-      if (wired.every(l => l.obligation_kind !== 'historical')) offNoHist++; else offHistViolations++;
+      offNoExplicit++;
+      if (uiDeficit !== 0) offOrderViolations++;
+      const histIndex = fd.decision.steps.findIndex(s => s.kind === 'historical');
+      if (histIndex >= 0) {
+        const before = fd.decision.steps.slice(0, histIndex);
+        const after = fd.decision.steps.slice(histIndex + 1);
+        if (!before.every(s => s.kind === 'due') || after.some(s => s.kind === 'due')) offOrderViolations++;
+      }
     } else {
-      /* rule 5 — ON ⇒ historical is deducted FIRST (bounded by the real deficit) */
+      /* Explicit mode: historical allocation is first, capped at the real deficit. */
       onDeficitCases++;
       const first = fd.decision.steps[0];
-      if (first && first.kind === 'historical' && first.amount <= R2(Math.min(sc.deficitAmount, pos.deficit)) + 0.005) onDeficitFirst++;
+      if (pos.deficit > 0.005 && first && first.kind === 'historical'
+          && first.amount <= R2(Math.min(sc.deficitAmount, pos.deficit)) + 0.005) onDeficitFirst++;
+      else if (pos.deficit <= 0.005 && first && first.kind === 'food') onDeficitFirst++;
     }
   });
 });
 ok(identical === total, 'C1 UI→decide→lab identical over all scenarios (' + identical + '/' + total + ')');
-ok(offHistViolations === 0, 'C2 rule 6: Historical Deficit OFF ⇒ 0 and NO historical allocation (' + offNoHist + ' off-scenarios clean)');
+ok(offOrderViolations === 0, 'C2 ordinary mode: no explicit deficit input and ERP due lines precede history (' + offNoExplicit + ' scenarios)');
 ok(onDeficitCases > 0 && onDeficitFirst === onDeficitCases, 'C3 rule 5: Historical Deficit ON ⇒ deducted FIRST & bounded (' + onDeficitFirst + '/' + onDeficitCases + ')');
 
 /* ── D. Static plumbing evidence (single source; no UI calculation) ── */
@@ -108,7 +118,7 @@ ok(/window\.getRecDeficitAmount=function/.test(R('public/js/forms.js')), 'D5 the
 
 console.log('F-3 Explicit Historical Deficit Selection');
 console.log('  scenarios: ' + total + '  |  UI→decide→lab identical: ' + identical);
-console.log('  rule 6 (OFF⇒0, no historical): ' + offNoHist + ' clean, ' + offHistViolations + ' violations');
+console.log('  ordinary order (dues before history): ' + offNoExplicit + ' scenarios, ' + offOrderViolations + ' violations');
 console.log('  rule 5 (ON⇒deducted first): ' + onDeficitFirst + '/' + onDeficitCases);
 console.log('  checks: ' + pass + ' passed, ' + fail + ' failed');
 fails.forEach(f => console.log('    FAIL ' + f));

@@ -98,6 +98,10 @@
      positive remaining, and the legacy historical deficit. Read-only; no mutation. */
   function buildDecisionPosition(memberId) {
     var FIN = root.FIN, subYears = [], deficit = 0;
+    if (!memberId) throw new Error('member_id_required');
+    if (!FIN || typeof FIN.memberDelinquency !== 'function' || typeof FIN.memberAllocation !== 'function') {
+      throw new Error('بيانات FIN غير متاحة للتحقق من استحقاقات العضو');
+    }
     if (FIN && memberId) {
       try {
         var dl = FIN.memberDelinquency(memberId) || {};
@@ -109,7 +113,7 @@
         subYears.sort(function (a, b) { return a.year - b.year; });
         var al = FIN.memberAllocation ? FIN.memberAllocation(memberId) : null;
         deficit = R2((al && al.historical ? Number(al.historical.remaining || 0) : 0) || Number(dl.historicalRemaining || 0) || 0);
-      } catch (e) { /* read-only; ignore */ }
+      } catch (e) { throw new Error('تعذر التحقق من استحقاقات العضو والعجز التاريخي'); }
     }
     return { subYears: subYears, deficit: deficit };
   }
@@ -127,7 +131,9 @@
     var lines = decision.steps.map(function (s) {
       return s.kind === 'historical'
         ? { obligation_kind: 'historical', year: null, amount_allocated: s.amount, notes: '' }
-        : { obligation_kind: 'due', year: s.year, amount_allocated: s.amount, notes: '' };
+        : s.kind === 'food'
+          ? { obligation_kind: 'food', year: null, amount_allocated: s.amount, notes: 'فائض دفعة العجز التاريخي — صندوق الغداء الحالي' }
+          : { obligation_kind: 'due', year: s.year, amount_allocated: s.amount, notes: '' };
     });
     return { decision: decision, lines: lines };
   }
@@ -186,6 +192,9 @@
     var pReceipt = {
       fund_type: ctx.fund, receipt_date: ctx.date,
       movement_type: isMemberFood ? 'subscription_payment' : 'food_cash_donation',
+      /* Non-column RPC metadata: lets the server distinguish an explicitly
+         selected historical-deficit payment when the remaining deficit is zero. */
+      settlement_mode: isMemberFood && Number(ctx.deficitAmount) > 0.005 ? 'historical_deficit' : null,
       destination_treasury: 'food', payer_type: ctx.payerType,
       member_id: ctx.memberId || null, payer_name: ctx.payerName || '',
       amount: ctx.amount, amount_ils: ctx.amountILS, currency: ctx.currency,
@@ -195,7 +204,9 @@
     if (isMemberFood) {
       /* F-2 — Food Receipt (member): the allocation is produced ONLY by the
          Production Decision Function. The manual editor plays no role here. */
-      var fd = foodDecisionLines(ctx.memberId, ctx.amountILS, ctx.deficitAmount);
+      var fd;
+      try { fd = foodDecisionLines(ctx.memberId, ctx.amountILS, ctx.deficitAmount); }
+      catch (e) { toast('تعذر التحقق من بيانات العضو — لم يتم حفظ السند', 'err'); return Promise.resolve({ ok: false, error: 'member_position_unavailable' }); }
       if (!fd || !fd.decision.balanced) { toast('التسوية غير مكتملة — راجع الأسطر', 'err'); return Promise.resolve({ ok: false, error: 'invalid_settlement' }); }
       pLines = fd.lines;
     } else {
