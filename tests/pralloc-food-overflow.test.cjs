@@ -68,6 +68,8 @@ test('food overflow kind is accepted by the guarded atomic RPC and remains void/
   assert.match(migration, /not in \('due','historical','donation','credit','food'\)/i);
   assert.match(migration, /round\(v_sum, 2\) <> v_amount/i);
   assert.match(migration, /insert into public\.allocation_records/i);
+  assert.match(migration, /settlement_food_requires_food_fund/);
+  assert.match(migration, /settlement_food_requires_historical_line/);
   const voidSql = read('supabase/migrations/20261015100000_guard_settlement_rpcs_authorization.sql');
   assert.match(voidSql, /update public\.allocation_records[\s\S]*source_kind = 'receipt_settlement'[\s\S]*voided_at is null/i);
   assert.match(voidSql, /update public\.allocation_records[\s\S]*source_kind = 'receipt_settlement'[\s\S]*refunded_at is null/i);
@@ -79,4 +81,6 @@ test('food fund ledger keeps the receipt credit once and displays historical all
   assert.match(fin, /cr:amt,dr:0,type:'cr'/);
   assert.match(fin, /تخصيص للعجز التاريخي من صندوق الغداء/);
   assert.match(fin, /cr:0,dr:hist,type:'dr'/);
+  assert.match(fin, /Historical settlement is a debit from the food fund/);
+  assert.match(fin, /if\(!typeFilter\|\|typeFilter==='dr'\)\{/);
 });
