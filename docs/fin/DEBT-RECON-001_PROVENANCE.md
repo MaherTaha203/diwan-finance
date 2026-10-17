@@ -51,21 +51,22 @@ Every one carries a large pre-2025 historical balance — consistent with the ex
 
 The cascade is currently **latent**: the Delinquent report and Dues workspace display the truth-overridden status, so 2026 shows "unpaid" there. #273 would make the Annual Debt report display `byYear.paid` (the derived cascade) → surfacing the conflict.
 
-## F. Minimal constitutional repair (proposal — NOT implemented)
-**Enforce the source boundary in the one shared accessor** `FIN.memberAllocation`, so there remains exactly one canonical annual-settlement truth:
-- Build the forward-cascade **pool from LIVE payments only** (food receipts, donations, write-offs, refunds).
-- Treat stored `paid_amount_ils` as **seed of its own year, capped at due** (`remaining_seed = max(0, due − paid)`); the excess `paid − due` does **not** enter the annual-cascade pool (it is migration credit / pre-2025 service, per the certified design).
+## F. Read-time attribution repair under review
 
-Consequences (all conserving `finalBalance`, which already counts the full stored paid):
-- **12 migration members:** 2025 overpayment stops cascading → `byYear[2026].paid = 0` → 2026 unpaid **matches owner truth**; the truth override becomes redundant rather than conflicting.
-- **10 live-receipt members:** their receipts are LIVE → still cascade across ERP years (owner rule: pay 400 → 2025+2026 paid) → `byYear` correct.
-- **One truth:** Member Statement, Delinquent, Annual Debt, Dues all consume the same corrected `byYear` — no report-specific override.
+The production provenance audit found that the imported `Payments 2025` values were stored verbatim in `paid_amount_ils[2025]`, including cash that serviced pre-2025 arrears. These are not subscription-only payments. Their attribution must follow the owner-approved settlement priority in PR #308, while preserving the original stored values.
 
-This touches `FIN.memberAllocation` (the shared waterfall) — a larger, more sensitive change than #273 — so it must be its own reviewed, regression-tested change under the frozen rules. **Not implemented here.**
+- Cap each imported year's seed attribution at that year's annual due.
+- Apply the excess from that source year to the remaining pre-2025 historical debt.
+- Only after historical debt reaches zero may the excess apply to later annual years in ascending order; any remainder stays as member credit/prepaid value.
+- Do not feed migration overflow into the live-receipt pool or count it as a second receipt.
+- Live receipts, explicit settlement lines, refunds, write-offs, and directed donation settlements retain their existing paths.
+- `FIN.memberStatement().finalBalance` remains the total-balance authority. This is a read-time attribution correction: no stored member/subscription rows are rewritten.
+- Annual Debt reads the same per-year attribution as Delinquent/Dues, preventing report-specific contradictions.
 
-Optional companion (owner decision): normalize the 12 rows to the certified migration form (cap 2025 `paid` at `due`, move the excess to `credit_balance_ils` / historical), so the stored data matches its own migration contract. Not required if the engine boundary is fixed, and **not done** in this stage.
+The regression suite covers historical-first attribution, later-year spill only after historical debt is cleared, credit remainder, unchanged final balance, and the unchanged live FD-002 waterfall.
 
 ## G. Disposition of PR #273
-**Merge only after the prerequisite `memberAllocation` source-boundary repair** (or fold both into one reviewed change). #273's direction (Annual Debt consumes the certified `byYear`) is correct and still required for the 10 live-receipt cases, but on today's cascading waterfall it would make Annual Debt contradict the owner-approved truth for the 12 migration members. Once `byYear` no longer cascades migration seed, #273 becomes correct for **all** members. Keep #273 open, unmerged, unchanged.
 
-**Read-only. No records, truth overrides, FIN, allocation-engine, #273, or data modified.**
+PR #273's report-reader alignment must not be merged separately from the source-boundary correction: the Annual Debt report should consume the same canonical per-year attribution as Delinquent/Dues only after that attribution is corrected. Keep #273 open and unmerged while this replacement change is reviewed; once this change passes the full checks, treat #273 as superseded.
+
+**Implementation status:** review branch only. No production records, schema, migration execution, truth overrides, feature flags, or deployment have been changed.
