@@ -20,8 +20,8 @@ global.L = { expense: x => String(x || '') };
 const FIN = vm.runInThisContext(fs.readFileSync(P('fin.js'), 'utf8') + ';FIN');
 global.FIN = FIN;
 
-/* M1 mirrors the production surplus class: 2025 stored paid 730 > due 200 →
-   engine settles 2026 from the surplus; the Owner ruled 2026 UNPAID. */
+/* M1 mirrors a migrated row: 2025 stored paid 730 > due 200. The excess is
+   historical cash first, so 2026 remains unpaid without consulting the truth table. */
 global.DB = {
   members: [{ id: 'M1', member_code: '1', name: 'عضو', is_active: true, historical_balance_ils: 2200, historical_payments_ils: 0 }],
   subscriptions: [
@@ -32,10 +32,10 @@ global.DB = {
   historical_subscription_truth: [],
 };
 
-/* 1 · BEFORE truth: derived status (surplus settles 2026) */
+/* 1 · BEFORE truth: source-boundary allocation leaves 2026 unpaid */
 const before = { stmt: FIN.memberStatement('M1'), dq: FIN.memberDelinquency('M1'), debt: JSON.stringify(FIN.debtReportRows({})) };
-ok(before.dq.byYear[2026].settled === true && before.dq.byYear[2026].authoritative === false,
-  'no truth record → derived status (2026 settled by surplus), authoritative=false');
+ok(before.dq.byYear[2026].settled === false && before.dq.byYear[2026].status === 'unpaid' && before.dq.byYear[2026].authoritative === false,
+  'no truth record → migration overflow stays historical; 2026 derives unpaid');
 
 /* 2 · truth loaded: owner override WINS over the derived value */
 DB.historical_subscription_truth = [
@@ -54,7 +54,7 @@ ok(after.debt === before.debt, 'debt report figures unchanged by the truth layer
 ok(dq.outstanding === before.dq.outstanding && dq.isDelinquent === before.dq.isDelinquent,
   'outstanding and delinquency (financial) remain derived — truth affects year status only');
 const al = FIN.memberAllocation('M1');
-ok(al.perYear[2026].settled === true, 'FD-002 allocation mathematics untouched (engine still allocates the surplus)');
+ok(al.perYear[2026].settled === false, 'migration seed boundary keeps 2026 unpaid without reading truth');
 
 /* 4 · unknown → fall back to derived; other statuses map directly */
 DB.historical_subscription_truth = [{ member_id: 'M1', year: 2026, status: 'unknown' }];
