@@ -20,7 +20,7 @@
 | TC-11 | دالة قرار سند الغداء (عادي) | مبلغ يفوق الاشتراكات والعجز | الفائض لأول سنة ERP مستقبلية | food-receipt-decision.js:41-53 | `food-receipt-decision.test.cjs` | ✅ نجح |
 | TC-12 | قرار الغداء (عجز صريح) | deficitAmount>0، فائض بعد العجز | الفائض ↦ الغداء لا الاشتراكات | food-receipt-decision.js:33-40 | `food-receipt-deficit-split.test.cjs` | ✅ نجح |
 | TC-13 | أمبلغ المحاسبة (amount_ils فقط) | صف بلا amount_ils | يساهم بـ 0 (لا بديل من amount) | fin.js:463 | `ils-accounting-amount.test.cjs` | ✅ نجح |
-| TC-14 | التقريب (حدّ) | `1.005`, `0.145`, `1.015`, `-1.005` عبر الصيغتين | A/B تختلف في بعض القيم الموجبة؛ لا فرق في الأمثلة السالبة المختبرة؛ سياسة موحدة لم تعتمد | `rounding-boundary-vectors.cjs` | PASS: 10 vectors + 2 conservation paths; اختبار `ils-accounting-amount` لا يغطي حد EPSILON |
+| TC-14 | التقريب (حدّ) | `1.005`, `0.145`, `1.015`, `-1.005` عبر الصيغتين | A/B تختلف في بعض القيم الموجبة؛ لا فرق في الأمثلة السالبة المختبرة؛ سياسة Excel المستقلة حُسمت: أغورات صحيحة ومدخلات ILS بمنزلتين؛ تحويل العملة نصف بعيداً عن الصفر | `rounding-boundary-vectors.cjs` | PASS: 10 vectors + 2 conservation paths; اختبار `ils-accounting-amount` لا يغطي حد EPSILON |
 | TC-15 | الخزائن الثلاث | صفوف مصنّفة + تحويل | balance = دخول − خروج | fin2.js:107-148 | `fin2.test.cjs` | ✅ نجح |
 | TC-16 | التحويل الداخلي | تحويل food→diwan 1000 | − food، + diwan؛ لا أثر على ذمم | fin2.js:131-140؛ operations.js:535 | `internal-transfer.test.cjs` | ✅ نجح |
 | TC-17 | العجز والفائض (composed) | opening −8639، تمويل 9000 | deficit_remaining 0، overflow 361 ↦ food | fin2.js:299-309 | `fin2.test.cjs`, `pralloc-food-overflow.test.cjs` | ✅ نجح (بقيمة -8639؛ C5) |
@@ -55,5 +55,5 @@
 
 ## القيود البيئية (مثبتة)
 - `npm test` يشغّل `tests/*.test.cjs` فقط. ملفات `tests/*.sql` (توكيدات دستورية/RLS) و`tests/*.cjs` بدون `.test` و`auth-core.test.mjs` **لم تُشغَّل** ضمن المجموعة الرسمية (تحتاج PostgreSQL/Supabase أو مشغّلاً مستقلاً).
-- الفشل الوحيد (`pralloc-pr7a-refund-ui.test.cjs`) سببه طوبولوجيا Git (C9)، **منفصل تماماً عن أي فشل محاسبي**.
+- الفشل الوحيد (`pralloc-pr7a-refund-ui.test.cjs`) يبدو مرتبطاً بتوكيد Golden Reference يعتمد طوبولوجيا Git (C9)؛ لم يُثبت خللاً مالياً، لكن لم يُحسم أنه منفصل قطعاً عن المحاسبة.
 - **لم يُشغَّل أي PASS محاسبي لنسخة Excel** — لم تُبنَ بعد. اختبار التقريب المستقل لا يختبر محرك Excel ولا يختار سياسة مالية.
