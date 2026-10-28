@@ -20,7 +20,7 @@
 | TC-11 | دالة قرار سند الغداء (عادي) | مبلغ يفوق الاشتراكات والعجز | الفائض لأول سنة ERP مستقبلية | food-receipt-decision.js:41-53 | `food-receipt-decision.test.cjs` | ✅ نجح |
 | TC-12 | قرار الغداء (عجز صريح) | deficitAmount>0، فائض بعد العجز | الفائض ↦ الغداء لا الاشتراكات | food-receipt-decision.js:33-40 | `food-receipt-deficit-split.test.cjs` | ✅ نجح |
 | TC-13 | أمبلغ المحاسبة (amount_ils فقط) | صف بلا amount_ils | يساهم بـ 0 (لا بديل من amount) | fin.js:463 | `ils-accounting-amount.test.cjs` | ✅ نجح |
-| TC-14 | التقريب (حدّ) | مبالغ بكسور أغورة عبر المسارين | قاعدة تقريب موحّدة (C4) | fin._r2 / round2 / R2 | `ils-accounting-amount.test.cjs` | ✅ نجح — لكن **فارق EPSILON غير مغطّى (C4)** |
+| TC-14 | التقريب (حدّ) | `1.005`, `0.145`, `1.015`, `-1.005` عبر الصيغتين | تباين موجب (1.005→1 مقابل 1.01)؛ السالب لا يختلف — قاعدة موحّدة محجوبة (C4) | allocation-engine.R2 مقابل round2/_r2؛ `rounding-boundary-vectors.cjs` | `ils-accounting-amount.test.cjs` (لا يغطّي EPSILON) + الـ artifact | ⚠️ `ils-accounting` نجح؛ **حدّ EPSILON مُثبَت بالـ artifact لا بالاختبارات** |
 | TC-15 | الخزائن الثلاث | صفوف مصنّفة + تحويل | balance = دخول − خروج | fin2.js:107-148 | `fin2.test.cjs` | ✅ نجح |
 | TC-16 | التحويل الداخلي | تحويل food→diwan 1000 | − food، + diwan؛ لا أثر على ذمم | fin2.js:131-140؛ operations.js:535 | `internal-transfer.test.cjs` | ✅ نجح |
 | TC-17 | العجز والفائض (composed) | opening −8639، تمويل 9000 | deficit_remaining 0، overflow 361 ↦ food | fin2.js:299-309 | `fin2.test.cjs`, `pralloc-food-overflow.test.cjs` | ✅ نجح (بقيمة -8639؛ C5) |
@@ -41,6 +41,7 @@
 | TC-32 | توافق التقارير (مصدر واحد) | أي مجموعة أعضاء | `verifyConsistency().allMatch === true` | fin.js:696-746 | `consistency-verifier.test.cjs`, `debt-report-model.test.cjs` | ✅ نجح |
 | TC-33 | حقيقة الاشتراك (عرض فقط) | truth=paid على سنة | يغيّر العرض لا الرصيد/العجز | fin.js:444-458 | `historical-truth.test.cjs` | ✅ نجح |
 | TC-34 | الاستعادة/النسخ الاحتياطي | (تصميم Excel) | تحقق مسبق + نسخة أمان + تحقق قبل الاستبدال | شرط المشروع (prompt §5) | **لا يوجد — خارج المصدر الحالي** | ⚠️ يُصمَّم في مرحلة لاحقة |
+| TC-35 | تأكيد-قبل-الحفظ للفائض (§12) | سند عجز صريح يفيض فوق العجز المتبقي | عرض التخصيص الآلي (عجز/دعم حالي) للتأكيد؛ الإلغاء ⇒ لا سند؛ فصل الاحتياطي عن الغداء التشغيلي | المواصفة الأم §12؛ model2.js:128-132 | `food-receipt-confirmation.test.cjs`, `food-receipt-deficit-ui.test.cjs` | ✅ نجح (معيار قبول UI لـ 1B) |
 
 ---
 
@@ -48,7 +49,7 @@
 
 - **TC-03b** إثبات صريح أن `opening_balance`/`prepaid_subscription_ils` لا يغيّران أي رقم (الحقول IGNORED).
 - **TC-07** الافتتاحيات داخل كشف فترة (C7).
-- **TC-14b** فارق تقريب EPSILON بين `allocation-engine.R2` و`round2`/`_r2` على كسور حدية (C4).
+- **TC-14b** فارق تقريب EPSILON بين `allocation-engine.R2` و`round2`/`_r2` على كسور حدية (C4) — **مُوفَّر الآن** كـ artifact قابل للتشغيل: `node migration/excel/phase-1a/rounding-boundary-vectors.cjs` (نتائج فعلية مسجّلة في CONFLICTS §C4).
 - **TC-DUP** probe التكرار (`findProbableDuplicates`) يحذّر ولا يمنع (fin.js:472-485).
 - **TC-C5** مطابقة قيمة العجز الفعلية قبل أي اختبار يعتمدها (C5).
 

@@ -81,7 +81,17 @@
 | override_* | — | — | — | **ممنوع** | override لا سلطة له دستورياً | migration p0_v3 |
 
 ## 5. annual_dues — الاستحقاقات السنوية (`data.js:60`, `SELECT *`)
-جدول تعريف سنة الاشتراك (مثلاً القيمة لكل سنة)؛ يُنشأ عبر BO-10 مع صفوف `member_subscriptions`. **تدقيق مطلوب:** الأعمدة الدقيقة غير مثبّتة من `SELECT *` — تُستخرج من DDL في 1B. المصدر: data.js:60؛ operations.js:324.
+
+جدول تعريف سنة الاشتراك؛ يُنشأ عبر BO-10 مع صفوف `member_subscriptions`.
+**حالة DDL: غير متوفّر في المستودع** — لا يوجد `create table annual_dues` في `supabase/migrations/`، ولا صفوف في `lab/seed/prod-snapshot.json`. **لا يجوز قفل مخطط Excel لهذا الجدول قبل تصدير DDL من قاعدة الإنتاج (فجوة محمولة إلى 1B).** الأعمدة المؤكّدة من **استخدام الكود فقط**:
+
+| حقل (من الكود) | النوع | إلزامي | الاستخدام | مرجع الدالة | المصدر |
+|---|---|---|---|---|---|
+| id | UUID | نعم (PK) | KEY | إرجاع `annual_id` | operations.js:324,331 |
+| year | عدد | نعم | KEY/CALC (مفتاح سنة) | `duesRow.year`؛ `dues-workspace` عرض | operations.js:321,330؛ dues-workspace.js:62,112,115 |
+| amount | عملة | نعم | قيمة الاستحقاق للسنة (مصدر `due_amount_ils` عند التوليد) | `duesRow.amount` | operations.js:321؛ dues-workspace.js:98,112,114 |
+
+أي عمود آخر في `SELECT *` **غير معروف** ولم يُسنَد له تصنيف (تجنّب CALC بلا مرجع دالة). يُستكمل بتصدير DDL.
 
 ## 6. refunds — الاستردادات (`data.js:71`) — [مشروط/فارغ اليوم]
 
@@ -114,7 +124,7 @@
 
 ## 13. contacts, audit_log, attachments
 
-- `contacts` (`SELECT *`): جهات اتصال غير أعضاء؛ DISPLAY/KEY — أعمدة تُستخرج من DDL في 1B.
+- `contacts` (`SELECT *`): جهات اتصال غير أعضاء. **حالة DDL: غير متوفّر في المستودع** (لا `create table`، لا صفوف في اللقطة) — **لا تُقفل مخطط Excel قبل تصدير DDL (فجوة محمولة إلى 1B).** المؤكّد من الكود: `id` (PK, KEY)، `name` (DISPLAY) — (`crud.js`/`forms.js`: `c.id`, `c.name`؛ `c.style`/`c.value` عناصر DOM لا أعمدة). الهاتف وأي عمود آخر **غير مؤكّد** — لا يُسنَد له تصنيف حتى تصدير DDL.
 - `audit_log` (`data.js:61`): `id, action, description, user_name, actor_user_id, actor_role, ip, reason, table_name, record_id, old_data, new_data, created_at` — AUDIT. يُحمَّل بحد 50 صفاً للعرض.
 - `attachments` (`data.js:108`): `receipt_id, payment_id` لعدّ المرفقات فقط — **ليست سجلاً مالياً** (fin audit continuation §2.1).
 
