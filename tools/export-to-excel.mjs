@@ -60,15 +60,112 @@ function loadEnv() {
 
 /* ── CLI args ──────────────────────────────────────────────────────────────── */
 function parseArgs(argv) {
-  const a = { tables: null, out: null, page: PAGE_DEFAULT, selfTest: false };
+  const a = { tables: null, out: null, page: PAGE_DEFAULT, selfTest: false, fromDir: null, computed: null };
   for (let i = 0; i < argv.length; i++) {
     const t = argv[i];
     if (t === '--self-test') a.selfTest = true;
+    else if (t === '--from-dir') a.fromDir = argv[++i];
+    else if (t === '--computed') a.computed = argv[++i];
     else if (t === '--tables') a.tables = (argv[++i] || '').split(',').map(s => s.trim()).filter(Boolean);
     else if (t === '--out') a.out = argv[++i];
     else if (t === '--page') a.page = Math.max(1, Math.min(1000, parseInt(argv[++i], 10) || PAGE_DEFAULT));
   }
   return a;
+}
+
+/* ── styled "report" sheet: title row, Arabic headers, money cells, totals row ──
+   columns: [{ key, header, money?, int?, width? }]; totalKeys: keys to sum. */
+function buildReportSheet(title, subtitle, columns, rows, totalKeys = []) {
+  const headerRowIdx = subtitle ? 2 : 1;
+  const aoa = [[title]];
+  if (subtitle) aoa.push([subtitle]);
+  aoa.push(columns.map(c => c.header));
+  for (const r of rows) aoa.push(columns.map(c => (r[c.key] === null || r[c.key] === undefined ? '' : r[c.key])));
+  const totalRowIdx = totalKeys.length ? aoa.length : -1;
+  if (totalKeys.length) {
+    const tr = columns.map((c, i) => {
+      if (i === 0) return 'الإجمالي';
+      if (totalKeys.includes(c.key)) return Math.round((rows.reduce((s, r) => s + (Number(r[c.key]) || 0), 0) + Number.EPSILON) * 100) / 100;
+      return '';
+    });
+    aoa.push(tr);
+  }
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!rtl'] = true;
+  ws['!cols'] = columns.map(c => ({ wch: c.width || Math.max(10, c.header.length + 2) }));
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: columns.length - 1 } }];
+  if (subtitle) ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: columns.length - 1 } });
+
+  const thin = { style: 'thin', color: { rgb: LINE } };
+  const border = { top: thin, bottom: thin, left: thin, right: thin };
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const ref = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = ws[ref]; if (!cell) continue;
+      cell.s = { border, alignment: { horizontal: 'center', vertical: 'center', readingOrder: 2 } };
+      if (R === 0) { cell.s.font = { color: { rgb: NAVY }, bold: true, sz: 15 }; cell.s.border = {}; }
+      else if (subtitle && R === 1) { cell.s.font = { color: { rgb: SUB }, sz: 10 }; cell.s.border = {}; }
+      else if (R === headerRowIdx) { cell.s.fill = { fgColor: { rgb: NAVY } }; cell.s.font = { color: { rgb: WHITE }, bold: true, sz: 11 }; }
+      else if (R === totalRowIdx) { cell.s.fill = { fgColor: { rgb: NAVY } }; cell.s.font = { color: { rgb: WHITE }, bold: true }; }
+      else if ((R - headerRowIdx) % 2 === 0) { cell.s.fill = { fgColor: { rgb: BG } }; }
+      const col = columns[C];
+      if (col && (col.money || col.int) && typeof cell.v === 'number' && R > headerRowIdx) {
+        cell.z = col.money ? MONEY_Z : '#,##0';
+        cell.s.alignment = { ...cell.s.alignment, horizontal: 'left' };
+      }
+    }
+  }
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: headerRowIdx, c: 0 }, e: { r: headerRowIdx, c: columns.length - 1 } }) };
+  ws['!freeze'] = { xSplit: 0, ySplit: headerRowIdx + 1, topLeftCell: XLSX.utils.encode_cell({ r: headerRowIdx + 1, c: 0 }), activePane: 'bottomLeft', state: 'frozen' };
+  return ws;
+}
+
+/* Build the computed report sheets (member balances + fund summary) from the
+   JSON produced by tools/compute-balances.cjs (the real FIN engine). */
+function buildComputedSheets(wb, used, dir) {
+  const abs = path.resolve(ROOT, dir);
+  const read = f => { try { return JSON.parse(fs.readFileSync(path.join(abs, f), 'utf8')); } catch { return null; } };
+  const balances = read('member_balances.json');
+  const funds = read('fund_summary.json');
+  const when = new Date().toISOString().slice(0, 10);
+
+  if (Array.isArray(balances)) {
+    const cols = [
+      { key: 'member_code', header: 'رمز العضو', width: 12 },
+      { key: 'name', header: 'الاسم', width: 26 },
+      { key: 'phone', header: 'الهاتف', width: 14 },
+      { key: 'active_from_year', header: 'عضو منذ', width: 10 },
+      { key: 'is_active', header: 'النشاط', width: 10 },
+      { key: 'historical_debt', header: 'ذمة تاريخية', money: 1, width: 14 },
+      { key: 'historical_paid', header: 'مدفوع تاريخي', money: 1, width: 14 },
+      { key: 'carried', header: 'رصيد مُرحّل', money: 1, width: 14 },
+      { key: 'total_dues', header: 'إجمالي الاستحقاقات', money: 1, width: 16 },
+      { key: 'total_paid', header: 'إجمالي المدفوع', money: 1, width: 16 },
+      { key: 'debt_settled', header: 'تسوية تبرعات', money: 1, width: 14 },
+      { key: 'final_balance', header: 'الرصيد النهائي', money: 1, width: 16 },
+      { key: 'status', header: 'الحالة', width: 14 },
+    ];
+    const ws = buildReportSheet('أرصدة الأعضاء — محسوبة من محرّك النظام (FIN)',
+      `ديوان آل طه · ${when} · الرصيد النهائي: موجب = على العضو مستحقات، سالب = للعضو رصيد دائن`,
+      cols, balances, ['historical_debt', 'historical_paid', 'carried', 'total_dues', 'total_paid', 'debt_settled', 'final_balance']);
+    XLSX.utils.book_append_sheet(wb, ws, safeSheetName('أرصدة الأعضاء', used));
+  }
+
+  if (Array.isArray(funds)) {
+    const labelMap = { diwan: 'صندوق الديوان', food: 'صندوق الغداء', donation: 'التبرعات' };
+    const rows = funds.map(f => ({ fund: labelMap[f.fund] || f.fund, receipts_ils: f.receipts_ils, payments_ils: f.payments_ils, net_ils: f.net_ils }));
+    const cols = [
+      { key: 'fund', header: 'الصندوق', width: 18 },
+      { key: 'receipts_ils', header: 'المقبوضات', money: 1, width: 16 },
+      { key: 'payments_ils', header: 'المدفوعات', money: 1, width: 16 },
+      { key: 'net_ils', header: 'صافي الحركة', money: 1, width: 16 },
+    ];
+    const ws = buildReportSheet('ملخص حركة النقد حسب الصندوق',
+      `ديوان آل طه · ${when} · (مقبوضات ومدفوعات السندات غير الملغاة — ليست رصيد الخزينة الافتتاحي)`,
+      cols, rows, ['receipts_ils', 'payments_ils', 'net_ils']);
+    XLSX.utils.book_append_sheet(wb, ws, safeSheetName('ملخص الصناديق', used));
+  }
 }
 
 /* ── HTTP via curl (proxy + CA aware) ──────────────────────────────────────── */
@@ -263,11 +360,81 @@ function selfTest() {
   if (stat.size < 2000 || back.SheetNames.length !== 2) { console.error('✗ self-test sanity failed'); process.exit(1); }
 }
 
+/* ── build a workbook from a directory of <table>.json files (array of rows) ──
+   Offline path: used when data is pulled via the Supabase MCP (or uploaded as
+   JSON dumps) rather than fetched directly over HTTP. An optional _meta.json
+   ({ ref, order:[...] }) controls the project label and sheet order. ───────── */
+function buildFromDir(dir, outArg, computedDir) {
+  const abs = path.resolve(ROOT, dir);
+  if (!fs.existsSync(abs)) { console.error(`✗ --from-dir: not found: ${abs}`); process.exit(2); }
+  let meta = { ref: 'json-dir', order: null };
+  const metaPath = path.join(abs, '_meta.json');
+  if (fs.existsSync(metaPath)) { try { meta = { ...meta, ...JSON.parse(fs.readFileSync(metaPath, 'utf8')) }; } catch {} }
+
+  /* Collect tables from the directory. Two file shapes are accepted:
+     - <table>.json            → an array of row objects (one table)
+     - _bundle*.json / _*.json → an object { <table>: [rows], ... } (many tables)
+     Bundle keys win if a table appears in both; later files override earlier. */
+  const files = fs.readdirSync(abs).filter(f => f.endsWith('.json') && f !== '_meta.json');
+  const perTable = new Map(); // table -> rows[]
+  for (const f of files.sort()) {
+    let parsed;
+    try { parsed = JSON.parse(fs.readFileSync(path.join(abs, f), 'utf8')); } catch (e) {
+      console.log(`  ! ${f}: READ ERROR (${e.message.slice(0, 60)})`); continue;
+    }
+    if (Array.isArray(parsed)) {
+      perTable.set(f.replace(/\.json$/, ''), parsed);
+    } else if (parsed && typeof parsed === 'object') {
+      for (const [table, rows] of Object.entries(parsed)) {
+        perTable.set(table, Array.isArray(rows) ? rows : (rows == null ? [] : [rows]));
+      }
+    }
+  }
+
+  // order: _meta.order first, then any remaining tables alphabetically
+  let tableNames = [...perTable.keys()];
+  if (Array.isArray(meta.order) && meta.order.length) {
+    const inOrder = meta.order.filter(t => perTable.has(t));
+    tableNames = [...inOrder, ...tableNames.filter(t => !meta.order.includes(t)).sort()];
+  } else {
+    tableNames.sort();
+  }
+
+  const used = new Set();
+  const wb = XLSX.utils.book_new();
+  wb.Workbook = { Views: [{ RTL: true }] };
+  const idxName = safeSheetName('فهرس', used);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['...']]), idxName);
+
+  // computed report sheets come right after the index, before the raw tables
+  if (computedDir) buildComputedSheets(wb, used, computedDir);
+
+  const summary = [];
+  for (const table of tableNames) {
+    const rows = perTable.get(table) || [];
+    XLSX.utils.book_append_sheet(wb, buildTableSheet(table, rows), safeSheetName(table, used));
+    summary.push({ table, rows: rows.length, cols: columnsOf(rows).length, status: 'ok' });
+    console.log(`  • ${table}: ${rows.length} rows`);
+  }
+
+  wb.Sheets[idxName] = buildIndexSheet({ when: new Date().toISOString(), ref: meta.ref }, summary);
+
+  const outDir = path.join(ROOT, 'exports');
+  fs.mkdirSync(outDir, { recursive: true });
+  const date = new Date().toISOString().slice(0, 10);
+  const out = outArg ? path.resolve(ROOT, outArg) : path.join(outDir, `diwan-export-${date}.xlsx`);
+  XLSX.writeFile(wb, out);
+  const totalRows = summary.reduce((a, s) => a + s.rows, 0);
+  console.log(`\n✓ wrote ${out}\n  tables: ${summary.length} | rows total: ${totalRows}`);
+  return out;
+}
+
 /* ── main ──────────────────────────────────────────────────────────────────── */
 function main() {
   loadEnv();
   const args = parseArgs(process.argv.slice(2));
   if (args.selfTest) return selfTest();
+  if (args.fromDir) return void buildFromDir(args.fromDir, args.out, args.computed);
 
   const baseUrl = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
