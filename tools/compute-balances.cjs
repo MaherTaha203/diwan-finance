@@ -78,6 +78,7 @@ const balances = [];
 for (const m of DB.members) {
   const st = FIN.memberStatement(m.id);
   balances.push({
+    member_id: m.id,
     member_code: m.member_code || '',
     name: m.name || '',
     phone: m.phone || '',
