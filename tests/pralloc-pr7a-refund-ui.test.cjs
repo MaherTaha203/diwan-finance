@@ -89,9 +89,15 @@ try {
   coreChanged = 'ERR:' + e.message;
 }
 const allowedMigration = 'supabase/migrations/20261017110000_pralloc_food_fund_overflow.sql';
+/* Era-independent guard: the scoped food-overflow migration may be the ONLY
+   migration added relative to origin/main (feature-branch era), or already be
+   merged into main so nothing new shows (post-merge era). Any OTHER migration,
+   or any operations.js / data.js change, still fails the guard. */
+const migrationsOk = migrationChanges.length === 0
+  || (migrationChanges.length === 1 && migrationChanges[0] === allowedMigration);
 ok(
-  coreChanged === '' && migrationChanges.length === 1 && migrationChanges[0] === allowedMigration,
-  'Golden Reference: operations/data and existing migrations unchanged; only the scoped food-overflow migration is added — core=[' +
+  coreChanged === '' && migrationsOk,
+  'Golden Reference: operations/data and existing migrations unchanged; only the scoped food-overflow migration may be added — core=[' +
     coreChanged + '], migrations=[' + migrationChanges.join(', ') + ']'
 );
 let finBase = '';
@@ -122,7 +128,10 @@ function stripFoodLedgerSplit(text) {
   }
   return text;
 }
-ok(!/^ERR:/.test(finBase) && stripDebtReportRows(stripFoodLedgerSplit(read(P('fin.js')))) === stripDebtReportRows(finBase),
+/* Strip the approved split from BOTH sides so the guard is era-independent:
+   whether or not origin/main already contains the merged split, an UNRELATED
+   fin.js change (outside the approved split and debtReportRows) is still caught. */
+ok(!/^ERR:/.test(finBase) && stripDebtReportRows(stripFoodLedgerSplit(read(P('fin.js')))) === stripDebtReportRows(stripFoodLedgerSplit(finBase)),
   'Golden Reference: fin.js unchanged outside the exact approved food-ledger historical split');
 
 console.log('\nPR-7A refund UI: ' + pass + ' passed, ' + fail + ' failed');
