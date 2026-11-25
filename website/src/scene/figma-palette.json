@@ -1,0 +1,36 @@
+{
+  "source": "Figma: Diwan Al-Taha — Public Portal & Staff Gateway (Concept), frames 1:2–1:5",
+  "door": {
+    "widthM": 1.299,
+    "heightM": 2.22
+  },
+  "arch": {
+    "pxPerM": 127.0,
+    "box": [
+      418,
+      980,
+      704,
+      1345
+    ],
+    "axis": [
+      560.5,
+      1325.0
+    ]
+  },
+  "leaf": "#636346",
+  "sky": {
+    "zenith": "#a2b0c3",
+    "horizon": "#e6c4a0",
+    "horizonV": 0.2803
+  },
+  "navy": "#152d4d",
+  "timber": "#745220",
+  "tiles": [
+    "#6f3a19",
+    "#7f4e2e",
+    "#99633e",
+    "#ba7a4d",
+    "#de9964",
+    "#fcb97f"
+  ]
+}
