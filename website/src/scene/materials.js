@@ -1,73 +1,128 @@
-import { MeshStandardMaterial, DoubleSide, Color } from 'three';
-import {
-  ashlarTextures, dressedStoneTextures, woodTextures, barkTextures, terracottaGrain,
-} from './textures.js';
-
 /**
- * Physically-based materials. They start as flat colours so the model can be
- * shown immediately; `textureJobs()` then generates and assigns the procedural
- * maps one by one (progressive loading).
+ * Materials of the diwan, textured from the approved Figma design.
+ *
+ * Every image map is extracted from the Figma renders by
+ * tools/figma/extract_textures.py (door, arch surround and rosette are the
+ * render's own pixels; walls, dome and paving reuse its stone faces), and the
+ * flat colours come from figma-palette.json, sampled by the same tool.
+ *
+ * Materials start with flat colours matching their textures, so the model can
+ * be drawn at once; `textureJobs()` then streams the maps in, most visible first.
  */
+import {
+  MeshStandardMaterial, MeshBasicMaterial, Color, DoubleSide, TextureLoader,
+  RepeatWrapping, ClampToEdgeWrapping, SRGBColorSpace, NoColorSpace,
+} from 'three';
+import palette from './figma-palette.json';
+import backdropUrl from '../assets/textures/backdrop.jpg';
+import wallUrl from '../assets/textures/stone-wall.jpg';
+import wallHeightUrl from '../assets/textures/stone-wall-height.jpg';
+import dressedUrl from '../assets/textures/stone-dressed.jpg';
+import doorUrl from '../assets/textures/door.jpg';
+import archUrl from '../assets/textures/arch.jpg';
+import rosetteUrl from '../assets/textures/rosette.jpg';
+import domeUrl from '../assets/textures/dome.jpg';
+import domeHeightUrl from '../assets/textures/dome-height.jpg';
+import pavingUrl from '../assets/textures/paving.jpg';
+import pavingHeightUrl from '../assets/textures/paving-height.jpg';
+import barkUrl from '../assets/textures/bark.jpg';
+import foliageUrl from '../assets/textures/olive-foliage.webp';
+
+export { palette };
+
+/** Metres covered by one repeat of each tiling texture (geometry UVs are in metres). */
+export const TILE_METRES = { wall: 2.4, dressed: 1.2, paving: 4, bark: [1.1, 1.6] };
+
 export function createMaterials() {
-  const std = (color, roughness, extra = {}) => new MeshStandardMaterial({ color: new Color(color), roughness, metalness: 0, ...extra });
+  const std = (color, roughness, extra = {}) => new MeshStandardMaterial({
+    color: new Color(color), roughness, metalness: 0, ...extra,
+  });
   return {
-    stone: std('#d8c6a1', 0.92),
-    plinth: std('#c9b690', 0.95),
-    dressed: std('#e8ddc5', 0.82),
-    dome: std('#e2d4b4', 0.9),
-    plaster: std('#d9cdb3', 0.96),
-    paving: std('#cdbb98', 0.93),
-    wood: std('#ad885c', 0.72),
-    woodDark: std('#6f523a', 0.8),
-    navy: std('#2B4569', 0.42, { metalness: 0.05 }),
-    iron: std('#2a2a2d', 0.5, { metalness: 0.7 }),
-    glass: std('#1c2838', 0.12, { metalness: 0.35 }),
+    backdrop: new MeshBasicMaterial({ color: new Color(palette.sky.horizon), toneMapped: false, fog: false, depthWrite: false }),
+    wall: std('#d8c4a0', 0.93),
+    dressed: std('#e6d9c1', 0.86),
+    arch: std('#e3d6bd', 0.86),
+    door: std('#93673f', 0.72),
+    rosette: std('#e4d8c0', 0.85),
+    dome: std('#e2d5bb', 0.9),
+    plaster: std('#d6c9ae', 0.96),
+    navy: std(palette.navy, 0.42, { metalness: 0.05 }),
+    timber: std(palette.timber, 0.78),
+    iron: std('#242427', 0.5, { metalness: 0.6 }),
+    glass: std('#18212e', 0.14, { metalness: 0.3 }),
     tile: std('#ffffff', 0.62, { side: DoubleSide }), // pan tiles are seen from their concave side
-    clay: std('#a8653f', 0.8),
-    soil: std('#6a5541', 1),
-    shrub: std('#55623d', 0.9, { flatShading: true }),
-    bark: std('#8b7c69', 0.97),
-    leaf: std('#ffffff', 0.7, { side: DoubleSide }),
-    foliage: std('#5a6741', 0.95, { flatShading: true }),
+    paving: std('#cbb998', 0.94),
+    bark: std('#7f6d58', 0.97),
+    leaf: std(palette.leaf, 0.82, { alphaTest: 0.5 }),
+    shrub: std('#7b8556', 0.88, { alphaTest: 0.5 }),
   };
 }
 
-/** Returns an ordered list of small jobs; each generates one texture set and assigns it. */
-export function textureJobs(materials, size) {
-  const half = Math.max(256, size / 2);
-  const assign = (material, set, { tint = '#ffffff', bumpScale = 1.5 } = {}) => {
-    material.map = set.map;
-    if (set.bump) {
-      material.bumpMap = set.bump;
-      material.bumpScale = bumpScale;
-    }
+/**
+ * Ordered texture loads. Each job resolves after assigning its maps, so the
+ * caller can redraw between jobs. Failures leave the flat colour in place.
+ */
+export function textureJobs(materials, { anisotropy = 4 } = {}) {
+  const loader = new TextureLoader();
+  const load = async (url, { color = true, repeat = null, clamp = false } = {}) => {
+    const texture = await loader.loadAsync(url);
+    texture.colorSpace = color ? SRGBColorSpace : NoColorSpace;
+    texture.anisotropy = anisotropy;
+    const wrap = clamp ? ClampToEdgeWrapping : RepeatWrapping;
+    texture.wrapS = wrap;
+    texture.wrapT = wrap;
+    if (repeat) texture.repeat.set(...(Array.isArray(repeat) ? repeat : [repeat, repeat]));
+    return texture;
+  };
+  const apply = (material, maps, { tint = '#ffffff', bumpScale } = {}) => {
+    Object.assign(material, maps);
+    if (bumpScale !== undefined) material.bumpScale = bumpScale;
     material.color.set(tint);
     material.needsUpdate = true;
   };
+  const per = (metres) => (Array.isArray(metres) ? metres.map((m) => 1 / m) : 1 / metres);
+
   return [
-    () => {
-      const wall = ashlarTextures({
-        size, courses: 10, seed: 3, base: [214, 195, 158], spread: 24,
-        mortar: [192, 176, 146], mortarBump: 46, courseVariance: 0.28,
-      });
-      assign(materials.stone, wall, { bumpScale: 3.2 });
-      assign(materials.plinth, wall, { tint: '#cbb994', bumpScale: 3.4 });
+    async () => apply(materials.backdrop, { map: await load(backdropUrl, { clamp: true }) }),
+    async () => {
+      const [map, bumpMap] = await Promise.all([
+        load(wallUrl, { repeat: per(TILE_METRES.wall) }),
+        load(wallHeightUrl, { color: false, repeat: per(TILE_METRES.wall) }),
+      ]);
+      apply(materials.wall, { map, bumpMap }, { bumpScale: 3.4 });
     },
-    () => assign(materials.dressed, dressedStoneTextures({ size: half, seed: 11 }), { bumpScale: 0.8 }),
-    () => assign(materials.dome, ashlarTextures({
-      size: half, courses: 18, seed: 17, base: [228, 215, 189], spread: 5,
-      mortar: [221, 208, 182], mortarBump: 150, drafted: false, rough: 0.3, metres: 2.4,
-    }), { bumpScale: 0.6 }),
-    () => assign(materials.paving, ashlarTextures({
-      size: half, courses: 6, seed: 29, base: [206, 190, 158], spread: 18,
-      mortar: [150, 134, 108], mortarBump: 40, drafted: false, rough: 0.6, metres: 3,
-    }), { bumpScale: 1.6 }),
-    () => {
-      const wood = woodTextures({ size: half, seed: 5 });
-      assign(materials.wood, wood, { bumpScale: 0.6 });
-      assign(materials.woodDark, wood, { tint: '#8a6a4e', bumpScale: 0.6 });
+    async () => {
+      const [door, arch, rosette] = await Promise.all([
+        load(doorUrl, { clamp: true }),
+        load(archUrl, { clamp: true }),
+        load(rosetteUrl, { clamp: true }),
+      ]);
+      apply(materials.door, { map: door }, { bumpScale: 0 });
+      apply(materials.arch, { map: arch, bumpMap: arch }, { bumpScale: 1.2 });
+      apply(materials.rosette, { map: rosette, bumpMap: rosette }, { bumpScale: 3 });
     },
-    () => assign(materials.bark, barkTextures({ size: half, seed: 9 }), { bumpScale: 3 }),
-    () => assign(materials.tile, { map: terracottaGrain({ size: 256, seed: 21 }) }),
+    async () => {
+      const dressed = await load(dressedUrl, { repeat: per(TILE_METRES.dressed) });
+      apply(materials.dressed, { map: dressed, bumpMap: dressed }, { bumpScale: 1.2 });
+    },
+    async () => {
+      const [map, bumpMap] = await Promise.all([load(domeUrl), load(domeHeightUrl, { color: false })]);
+      map.wrapT = ClampToEdgeWrapping;
+      bumpMap.wrapT = ClampToEdgeWrapping;
+      apply(materials.dome, { map, bumpMap }, { bumpScale: 1.6 });
+    },
+    async () => {
+      const [map, bumpMap] = await Promise.all([
+        load(pavingUrl, { repeat: per(TILE_METRES.paving) }),
+        load(pavingHeightUrl, { color: false, repeat: per(TILE_METRES.paving) }),
+      ]);
+      apply(materials.paving, { map, bumpMap }, { bumpScale: 2 });
+    },
+    async () => {
+      const foliage = await load(foliageUrl, { clamp: true });
+      apply(materials.leaf, { map: foliage }, { tint: '#ffffff' });
+      apply(materials.shrub, { map: foliage }, { tint: '#d9dcc6' });
+    },
+    async () => apply(materials.bark, { map: await load(barkUrl, { repeat: per(TILE_METRES.bark) }) }, { tint: '#ffffff' }),
   ];
 }

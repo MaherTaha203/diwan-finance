@@ -7,6 +7,8 @@
  *  - desktop and phone layouts, no horizontal overflow, no console errors;
  *  - exactly three sections in the approved order, no login/forms;
  *  - the official logo is present, loaded and never rotates;
+ *  - the model is the converted Figma design (its extracted textures load);
+ *  - the scene has no frame, border, shadow or display base: its edges dissolve;
  *  - the model's Y rotation follows scroll down and reverses on scroll up;
  *  - navigation, map, directions link;
  *  - WebGL disabled and ?static → static renders, content intact;
@@ -65,6 +67,29 @@ async function settledAngle(page, timeout = 30000) {
   return previous;
 }
 
+/** Records which Figma-derived textures the page downloads (Vite fingerprints them under /assets/). */
+const FIGMA_TEXTURES = ['backdrop', 'stone-wall', 'door', 'arch', 'rosette', 'dome', 'olive-foliage', 'bark', 'paving'];
+function watchTextures(page) {
+  const loaded = new Set();
+  page.on('response', (r) => {
+    const match = r.url().match(/\/assets\/([a-z-]+)-[\w-]+\.(?:jpg|webp)$/);
+    if (match && r.ok() && FIGMA_TEXTURES.includes(match[1])) loaded.add(match[1]);
+  });
+  return loaded;
+}
+
+/** The stage must not look like a card or an exhibit: no border, no shadow, dissolving edges. */
+const stageFrame = (page) => page.evaluate(() => {
+  const stage = getComputedStyle(document.getElementById('stage'));
+  const visual = getComputedStyle(document.querySelector('.stage__visual'));
+  const borders = ['Top', 'Right', 'Bottom', 'Left'].map((side) => parseFloat(stage[`border${side}Width`]) || 0);
+  return {
+    border: Math.max(...borders),
+    shadow: stage.boxShadow,
+    mask: visual.maskImage || visual.webkitMaskImage || '',
+  };
+});
+
 async function noHorizontalOverflow(page) {
   return page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
 }
@@ -72,6 +97,7 @@ async function noHorizontalOverflow(page) {
 async function desktop(browser) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const log = watch(page);
+  const textures = watchTextures(page);
   await page.goto(BASE, { waitUntil: 'load' });
 
   const sections = await page.$$eval('main section', (els) => els.map((s) => s.id));
@@ -87,6 +113,11 @@ async function desktop(browser) {
   check('desktop: 3D scene mounted', (await sceneState(page)) === 'ready', await sceneState(page));
   await page.waitForFunction(() => document.getElementById('stage-canvas').dataset.textures === 'ready', null, { timeout: 90000 }).catch(() => {});
   await page.screenshot({ path: path.join(outDir, 'desktop-0.png') });
+  const missing = FIGMA_TEXTURES.filter((name) => !textures.has(name));
+  check('desktop: model uses the textures extracted from the Figma design', missing.length === 0, missing.length ? `missing ${missing.join(', ')}` : [...textures].join(', '));
+  const frame = await stageFrame(page);
+  check('desktop: scene has no frame, border or shadow; its edges dissolve into the page',
+    frame.border === 0 && frame.shadow === 'none' && frame.mask.includes('gradient'), `border ${frame.border}, shadow ${frame.shadow}`);
 
   // Rotation follows scroll down …
   const a0 = await settledAngle(page);
@@ -159,6 +190,9 @@ async function phone(browser) {
     headingTop: document.querySelector('#history .eyebrow').getBoundingClientRect().top,
   }));
   check('phone: section text lands below the pinned model', layout.headingTop >= layout.stageBottom - 1, `${layout.headingTop.toFixed(0)} ≥ ${layout.stageBottom.toFixed(0)}`);
+  const frame = await stageFrame(page);
+  check('phone: pinned scene is not a card (no border or shadow, soft lower edge)',
+    frame.border === 0 && frame.shadow === 'none' && frame.mask.includes('gradient'), `border ${frame.border}, shadow ${frame.shadow}`);
   check('phone: no horizontal overflow', await noHorizontalOverflow(page));
   check('phone: no console errors or failed local requests', log.errors.length === 0, log.errors.join(' | '));
   await context.close();

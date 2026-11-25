@@ -7,12 +7,12 @@
  * nothing rotates on its own.
  */
 export const FACADE_ANGLES = {
-  front: -0.45, // three-quarter view: front + the stair-free side
-  side: -1.95, // flank, with the back stair coming into view
-  back: -3.35, // back facade with the external stair
+  front: 0.18, // the front as on the approved renders: olive tree on the left, door and rosette
+  side: -1.4, // the right flank, the olive crown behind
+  back: -2.98, // the back facade
 };
-const START_ANGLE = -0.3;
-const END_ANGLE = -3.95; // ends on the olive-tree side
+const START_ANGLE = 0.3;
+const END_ANGLE = -3.3;
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const smoothstep = (t) => t * t * (3 - 2 * t);
@@ -66,7 +66,7 @@ export function facadeFor(angle) {
     ['الواجهة الأمامية', c],
     ['الواجهة الجانبية', -s],
     ['الواجهة الخلفية', -c],
-    ['جهة الزيتونة', s],
+    ['الواجهة الجانبية', s],
   ];
   scores.sort((x, y) => y[1] - x[1]);
   return scores[0][0];

@@ -1,34 +1,46 @@
 /**
- * Procedural model of a Palestinian village guest house (diwan) inspired by the
- * official logo: a limestone block with a dome, an arched oak door with a
- * dressed-stone surround, a carved eight-petal rosette panel, a portico with a
- * terracotta-tiled gable roof on two navy columns — and real side and back
- * facades (barred windows, rain spouts, an external stair to the roof).
+ * Diwan Al-Taha — 3D conversion of the approved Figma design.
  *
- * It is an architectural interpretation of the logo, not a survey of the
- * historical building.
+ * The design (Figma frames 1:2–1:5) is a set of realistic renders from one
+ * viewpoint. This module gives it the geometry needed to turn: proportions are
+ * measured on the renders (1.30 m door ⇒ 127 px/m on the mobile render) and
+ * the surfaces use textures cut from them (see materials.js). Nothing is added
+ * to the front beyond what the renders show; the flanks and the back, which no
+ * render shows, only repeat the design's own wall, coping and window.
  *
- * Units are metres. The front faces +Z; y = 0 is the ground.
+ * Units are metres. The front faces +Z, y = 0 is the ground, the footprint is
+ * centred on the origin (the turning axis).
  */
 import {
-  Shape, Path, ExtrudeGeometry, CylinderGeometry, SphereGeometry, TorusGeometry, ShapeGeometry,
-  IcosahedronGeometry, InstancedMesh, Mesh, Group, Matrix4, Quaternion, Vector3, Color,
+  Shape, Path, ExtrudeGeometry, ShapeGeometry, PlaneGeometry, CylinderGeometry, SphereGeometry,
+  TorusGeometry, InstancedMesh, Mesh, Group, Matrix4, Quaternion, Vector3, Color,
+  BufferGeometry, Float32BufferAttribute,
 } from 'three';
 import { box, scaleUV, M, GeometryBatch } from './geometry-utils.js';
-import { mulberry32 } from './textures.js';
+import { mulberry32 } from './random.js';
+import { palette } from './materials.js';
 
-export const DIM = { W: 7.2, D: 5.6, H: 3.7, T: 0.45 };
-const DOOR = { cx: -0.5, hw: 0.68, spring: 1.75 };
-const WINDOW = { w: 0.8, h: 1.05, y0: 1.0 };
+/** Overall dimensions measured on the renders. */
+export const DIM = {
+  W: 7.4, // facade length
+  D: 6.0, // depth (not visible on the renders; sized to carry the dome)
+  H: 3.5, // wall body
+  coping: 0.2, // projecting top course (total height 3.7 m)
+  T: 0.5, // wall thickness
+};
+/** Door on the mobile render: 165 × 282 px at 127 px/m. */
+const DOOR = { cx: 0.6, hw: 0.65, height: 2.22, y0: 0.16 };
+DOOR.spring = DOOR.y0 + DOOR.height - DOOR.hw;
+/** Voussoir ring: outer radius 122 px, jambs 38 px wide, imposts 1.44–1.60 m above the threshold. */
+const ARCH = { outer: 0.96, impost: [1.44, 1.6] };
+const ROSETTE = { x: DOOR.cx + 1.98, y: 1.62, size: 0.93 };
+const PORTICO = { halfSpan: 1.2, colZ: 1.35, depth: 1.85, eave: 3.16, ridge: 3.95, overhang: 0.48 };
+const WINDOW = { w: 0.92, h: 1.24, y0: 1.05 };
 
 const AXIS_X = new Vector3(1, 0, 0);
 const AXIS_Y = new Vector3(0, 1, 0);
-const AXIS_Z = new Vector3(0, 0, 1);
 
-const extrude = (shape, depth, bevel = null) => new ExtrudeGeometry(shape, {
-  depth, steps: 1, curveSegments: 28,
-  bevelEnabled: Boolean(bevel), ...(bevel || {}),
-});
+const extrude = (shape, depth) => new ExtrudeGeometry(shape, { depth, steps: 1, curveSegments: 32, bevelEnabled: false });
 
 const rectHole = (cx, y0, w, h) => {
   const p = new Path();
@@ -40,7 +52,7 @@ const rectHole = (cx, y0, w, h) => {
   return p;
 };
 
-const wallShape = (length, height, holes) => {
+const wallShape = (length, height, holes = []) => {
   const s = new Shape();
   s.moveTo(-length / 2, 0);
   s.lineTo(length / 2, 0);
@@ -51,6 +63,25 @@ const wallShape = (length, height, holes) => {
   return s;
 };
 
+/** Replaces a geometry's UVs with a planar projection of its (local) x, y. */
+function projectUV(geometry, fn) {
+  const pos = geometry.attributes.position;
+  const uv = geometry.attributes.uv;
+  for (let i = 0; i < pos.count; i++) {
+    const [u, v] = fn(pos.getX(i), pos.getY(i));
+    uv.setXY(i, u, v);
+  }
+  return geometry;
+}
+
+/** Arch surround texture = the mobile render around the door (see figma-palette.json → arch). */
+function archUV(x, y) {
+  const { pxPerM, box: [x0, y0, x1, y1], axis: [ax, ay] } = palette.arch;
+  const px = ax + (x - DOOR.cx) * pxPerM;
+  const py = ay - (y - DOOR.y0) * pxPerM;
+  return [(px - x0) / (x1 - x0), 1 - (py - y0) / (y1 - y0)];
+}
+
 export function buildDiwan(materials, { seed = 1940 } = {}) {
   const { W, D, H, T } = DIM;
   const rand = mulberry32(seed);
@@ -58,36 +89,15 @@ export function buildDiwan(materials, { seed = 1940 } = {}) {
   const group = new Group();
   group.name = 'diwan';
 
-  // Wall frames: local x runs along the wall, y up, z from the inner face (0) to the outer face (T).
+  // Wall frames: local x along the wall, y up, z from the inner face (0) to the outer face (T).
   const frontM = M(0, 0, D / 2 - T);
   const backM = M(0, 0, -D / 2 + T, 0, Math.PI, 0);
   const rightM = M(W / 2 - T, 0, 0, 0, Math.PI / 2, 0);
   const leftM = M(-W / 2 + T, 0, 0, 0, -Math.PI / 2, 0);
   const at = (wallM, x, y, z, rx = 0, ry = 0, rz = 0) => wallM.clone().multiply(M(x, y, z, rx, ry, rz));
 
-  const addWindow = (wallM, cx, y0, w, h, { grill = true } = {}) => {
-    const zf = T * 0.45;
-    const fw = 0.06;
-    batch.add('glass', box(w - 0.04, h - 0.04, 0.02), at(wallM, cx, y0 + h / 2, zf - 0.035));
-    batch.add('navy', box(fw, h, 0.08), at(wallM, cx - w / 2 + fw / 2, y0 + h / 2, zf));
-    batch.add('navy', box(fw, h, 0.08), at(wallM, cx + w / 2 - fw / 2, y0 + h / 2, zf));
-    batch.add('navy', box(w, fw, 0.08), at(wallM, cx, y0 + fw / 2, zf));
-    batch.add('navy', box(w, fw, 0.08), at(wallM, cx, y0 + h - fw / 2, zf));
-    batch.add('navy', box(0.045, h, 0.06), at(wallM, cx, y0 + h / 2, zf));
-    batch.add('navy', box(w, 0.04, 0.06), at(wallM, cx, y0 + h * 0.64, zf));
-    if (grill) {
-      const zg = T - 0.07;
-      for (let k = 1; k <= 4; k++) {
-        batch.add('iron', new CylinderGeometry(0.011, 0.011, h, 6), at(wallM, cx - w / 2 + (w * k) / 5, y0 + h / 2, zg));
-      }
-      for (const f of [0.3, 0.72]) batch.add('iron', box(w, 0.022, 0.012), at(wallM, cx, y0 + h * f, zg));
-    }
-    batch.add('dressed', box(w + 0.26, 0.07, 0.22), at(wallM, cx, y0 - 0.035, T - 0.02));
-    batch.add('dressed', box(w + 0.36, 0.22, 0.07), at(wallM, cx, y0 + h + 0.11, T + 0.035));
-  };
-
-  /* ── Front wall with the arched doorway ──────────────────────────────── */
-  const { cx, hw, spring } = DOOR;
+  /* ── Front wall, door, arch surround, rosette ─────────────────────────── */
+  const { cx, hw, spring, y0 } = DOOR;
   const front = new Shape();
   front.moveTo(-W / 2, 0);
   front.lineTo(cx - hw, 0);
@@ -98,249 +108,255 @@ export function buildDiwan(materials, { seed = 1940 } = {}) {
   front.lineTo(W / 2, H);
   front.lineTo(-W / 2, H);
   front.closePath();
-  batch.add('stone', extrude(front, T), frontM);
+  batch.add('wall', extrude(front, T), frontM);
 
-  // Oak door leaves recessed in the reveal, iron studs and a ring knocker.
-  const doorShape = new Shape();
-  doorShape.moveTo(cx - hw, 0);
-  doorShape.lineTo(cx - hw, spring);
-  doorShape.absarc(cx, spring, hw, Math.PI, 0, true);
-  doorShape.lineTo(cx + hw, 0);
-  doorShape.closePath();
-  const dz = T * 0.3;
-  batch.add('wood', extrude(doorShape, 0.07), at(frontM, 0, 0, dz));
-  batch.add('woodDark', box(0.016, spring + hw - 0.02, 0.012), at(frontM, cx, (spring + hw) / 2, dz + 0.076));
-  for (const yb of [0.42, 1.38]) batch.add('woodDark', box(hw * 2 - 0.04, 0.05, 0.014), at(frontM, cx, yb, dz + 0.077));
-  const studZ = dz + 0.085;
-  for (const xs of [-0.47, -0.17, 0.17, 0.47]) {
-    for (const ys of [0.28, 0.68, 1.08, 1.6]) batch.add('iron', new SphereGeometry(0.018, 8, 6), at(frontM, cx + xs, ys, studZ));
-  }
-  batch.add('iron', new TorusGeometry(0.055, 0.011, 8, 20), at(frontM, cx + 0.14, 1.1, studZ + 0.025));
-  batch.add('iron', new CylinderGeometry(0.03, 0.03, 0.016, 12), at(frontM, cx + 0.14, 1.155, studZ, Math.PI / 2));
+  // Threshold stone filling the opening below the door.
+  batch.add('dressed', box(hw * 2, y0, T), at(frontM, cx, y0 / 2, T / 2));
 
-  // Dressed-stone arch surround with a keystone.
-  const ow = hw + 0.2;
+  // Door leaf: the render's own oak door, recessed in the reveal.
+  const leaf = new Shape();
+  leaf.moveTo(cx - hw, y0);
+  leaf.lineTo(cx - hw, spring);
+  leaf.absarc(cx, spring, hw, Math.PI, 0, true);
+  leaf.lineTo(cx + hw, y0);
+  leaf.closePath();
+  const leafGeo = projectUV(new ShapeGeometry(leaf, 32), (x, y) => [(x - (cx - hw)) / (2 * hw), (y - y0) / DOOR.height]);
+  batch.add('door', leafGeo, at(frontM, 0, 0, T * 0.42));
+
+  // Voussoir ring and jambs, textured by projection of the render's arch surround.
+  const ow = ARCH.outer;
   const surround = new Shape();
-  surround.moveTo(cx - ow, 0);
+  surround.moveTo(cx - ow, y0);
   surround.lineTo(cx - ow, spring);
   surround.absarc(cx, spring, ow, Math.PI, 0, true);
-  surround.lineTo(cx + ow, 0);
-  surround.lineTo(cx + hw, 0);
+  surround.lineTo(cx + ow, y0);
+  surround.lineTo(cx + hw, y0);
   surround.lineTo(cx + hw, spring);
   surround.absarc(cx, spring, hw, 0, Math.PI, false);
-  surround.lineTo(cx - hw, 0);
+  surround.lineTo(cx - hw, y0);
   surround.closePath();
-  batch.add('dressed', extrude(surround, 0.07), at(frontM, 0, 0, T));
-  batch.add('dressed', box(0.24, 0.34, 0.1), at(frontM, cx, spring + hw + 0.1, T + 0.05));
-
-  // Carved eight-petal rosette panel (to the right of the door, as in the logo).
-  const rx = 2.2;
-  const ry = 1.95;
-  batch.add('dressed', box(1.06, 1.06, 0.05), at(frontM, rx, ry, T + 0.025));
-  const frame = new Shape();
-  frame.moveTo(-0.53, -0.53);
-  frame.lineTo(0.53, -0.53);
-  frame.lineTo(0.53, 0.53);
-  frame.lineTo(-0.53, 0.53);
-  frame.closePath();
-  frame.holes.push(rectHole(0, -0.43, 0.86, 0.86));
-  batch.add('dressed', extrude(frame, 0.035), at(frontM, rx, ry, T + 0.05));
-  const petal = new Shape();
-  petal.moveTo(0, 0.075);
-  petal.quadraticCurveTo(0.1, 0.2, 0, 0.36);
-  petal.quadraticCurveTo(-0.1, 0.2, 0, 0.075);
-  const bevel = { bevelThickness: 0.012, bevelSize: 0.01, bevelSegments: 2 };
-  for (let k = 0; k < 8; k++) {
-    batch.add('dressed', extrude(petal, 0.022, bevel), at(frontM, rx, ry, T + 0.05, 0, 0, (k * Math.PI) / 4));
-  }
-  batch.add('dressed', new TorusGeometry(0.4, 0.014, 6, 56), at(frontM, rx, ry, T + 0.056));
-  batch.add('dressed', new CylinderGeometry(0.065, 0.075, 0.06, 24), at(frontM, rx, ry, T + 0.08, Math.PI / 2));
-
-  /* ── Side walls and back wall ─────────────────────────────────────────── */
-  const sideLen = D - 2 * T;
-  const sideXs = [-1.1, 1.1];
-  for (const wallM of [rightM, leftM]) {
-    const holes = sideXs.map((x) => rectHole(x, WINDOW.y0, WINDOW.w, WINDOW.h));
-    batch.add('stone', extrude(wallShape(sideLen, H, holes), T), wallM);
-    for (const x of sideXs) addWindow(wallM, x, WINDOW.y0, WINDOW.w, WINDOW.h);
-  }
-  const backHoles = [rectHole(2.1, WINDOW.y0, WINDOW.w, WINDOW.h), rectHole(-1.6, 2.8, 0.5, 0.36)];
-  batch.add('stone', extrude(wallShape(W, H, backHoles), T), backM);
-  addWindow(backM, 2.1, WINDOW.y0, WINDOW.w, WINDOW.h);
-  addWindow(backM, -1.6, 2.8, 0.5, 0.36, { grill: false });
-
-  /* ── Base course ──────────────────────────────────────────────────────── */
-  const plH = 0.38;
-  const po = 0.05;
-  const doorL = cx - ow;
-  const doorR = cx + ow;
-  const fa = doorL - (-W / 2 - po);
-  const fb = W / 2 + po - doorR;
-  batch.add('plinth', box(fa, plH, 0.1), M(-W / 2 - po + fa / 2, plH / 2, D / 2));
-  batch.add('plinth', box(fb, plH, 0.1), M(doorR + fb / 2, plH / 2, D / 2));
-  batch.add('plinth', box(W + 2 * po, plH, 0.1), M(0, plH / 2, -D / 2));
-  batch.add('plinth', box(0.1, plH, D), M(-W / 2, plH / 2, 0));
-  batch.add('plinth', box(0.1, plH, D), M(W / 2, plH / 2, 0));
-
-  /* ── Cornice, roof, parapet with coping ───────────────────────────────── */
-  batch.add('dressed', box(W + 0.16, 0.14, D + 0.16), M(0, H + 0.07, 0));
-  batch.add('plaster', box(W - 0.02, 0.1, D - 0.02), M(0, H + 0.19, 0));
-  const pH = 0.42;
-  const pT = 0.24;
-  const pY = H + 0.14 + pH / 2;
-  const cY = H + 0.14 + pH + 0.03;
-  const parapet = (x, z, lx, lz) => {
-    batch.add('stone', box(lx, pH, lz), M(x, pY, z));
-    batch.add('dressed', box(lx + 0.06, 0.06, lz + 0.06), M(x, cY, z));
-  };
-  parapet(0, D / 2 - pT / 2, W, pT);
-  parapet(-W / 2 + pT / 2, 0, pT, D - 2 * pT);
-  parapet(W / 2 - pT / 2, 0, pT, D - 2 * pT);
-  const gapA = -0.62;
-  const gapB = 0.2;
-  parapet((-W / 2 + gapA) / 2, -D / 2 + pT / 2, gapA + W / 2, pT);
-  parapet((gapB + W / 2) / 2, -D / 2 + pT / 2, W / 2 - gapB, pT);
-
-  // Clay rain spouts.
-  batch.add('clay', new CylinderGeometry(0.05, 0.065, 0.55, 12), M(W / 2 + 0.22, H + 0.26, -1.4, 0, 0, Math.PI / 2));
-  batch.add('clay', new CylinderGeometry(0.05, 0.065, 0.55, 12), M(-W / 2 - 0.22, H + 0.26, 1.2, 0, 0, Math.PI / 2));
-
-  /* ── Dome on a low drum ───────────────────────────────────────────────── */
-  const roofTop = H + 0.24;
-  const domeX = 0.35;
-  const domeZ = -0.35;
-  const R = 1.62;
-  const drum = scaleUV(new CylinderGeometry(R, R + 0.03, 0.34, 64, 1, true), 2 * Math.PI * R, 0.34);
-  batch.add('dome', drum, M(domeX, roofTop + 0.17, domeZ));
-  const domeGeo = scaleUV(new SphereGeometry(R, 64, 24, 0, Math.PI * 2, 0, Math.PI / 2), 2 * Math.PI * R, (Math.PI / 2) * R);
-  domeGeo.scale(1, 0.8, 1);
-  batch.add('dome', domeGeo, M(domeX, roofTop + 0.34, domeZ));
-  batch.add('dressed', new TorusGeometry(R + 0.02, 0.04, 8, 72), M(domeX, roofTop + 0.36, domeZ, Math.PI / 2));
-
-  /* ── Portico: paved floor, navy columns, timber frame, gable roof ─────── */
-  const colZ = D / 2 + 1.2;
-  const roofZ1 = D / 2 + 1.65;
-  const colXs = [cx - 1.25, cx + 1.25];
-  batch.add('paving', box(3.5, 0.12, 1.62), M(cx, 0.06, D / 2 + 0.81));
-  batch.add('dressed', box(1.7, 0.06, 0.28), M(cx, 0.03, D / 2 + 1.62 + 0.14));
-  for (const x of colXs) {
-    batch.add('dressed', box(0.34, 0.16, 0.34), M(x, 0.2, colZ));
-    batch.add('navy', new CylinderGeometry(0.105, 0.12, 2.32, 28), M(x, 0.28 + 1.16, colZ));
-    batch.add('navy', new CylinderGeometry(0.165, 0.11, 0.12, 28), M(x, 2.66, colZ));
-    batch.add('dressed', box(0.36, 0.08, 0.36), M(x, 2.76, colZ));
-    batch.add('woodDark', box(0.16, 0.14, 1.22), M(x, 2.87, D / 2 + 0.6));
-  }
-  batch.add('woodDark', box(3.05, 0.16, 0.18), M(cx, 2.88, colZ));
-  batch.add('woodDark', box(3.05, 0.14, 0.14), M(cx, 2.9, D / 2 + 0.07));
-
-  const roof = { cx, yr: 3.52, ye: 2.97, half: 1.78, z0: D / 2, z1: roofZ1 };
-  roof.th = Math.atan2(roof.yr - roof.ye, roof.half);
-  roof.L = Math.hypot(roof.half, roof.yr - roof.ye);
-  const depth = roof.z1 - roof.z0;
-  const zc = (roof.z0 + roof.z1) / 2;
-  const midY = (roof.yr + roof.ye) / 2;
+  batch.add('arch', projectUV(extrude(surround, 0.05), archUV), at(frontM, 0, 0, T));
   for (const s of [-1, 1]) {
-    batch.add('woodDark', box(roof.L + 0.06, 0.045, depth), M(cx + (s * roof.half) / 2, midY - 0.025, zc, 0, 0, -s * roof.th));
-    batch.add('woodDark', box(roof.L + 0.1, 0.09, 0.05), M(cx + (s * roof.half) / 2, midY - 0.04, roof.z1 + 0.02, 0, 0, -s * roof.th));
-  }
-  const gable = new Shape();
-  gable.moveTo(-roof.half, 0);
-  gable.lineTo(roof.half, 0);
-  gable.lineTo(0, roof.yr - roof.ye);
-  gable.closePath();
-  batch.add('woodDark', new ShapeGeometry(gable), M(cx, roof.ye, roof.z1 - 0.03));
-
-  /* ── External stair to the roof along the back wall ───────────────────── */
-  const steps = 12;
-  const rise = roofTop / steps;
-  const run = 0.33;
-  const stairX0 = 3.5;
-  const stairZ = -D / 2 - 0.475;
-  for (let k = 0; k < steps; k++) {
-    const h = (k + 1) * rise;
-    const x = stairX0 - (k + 0.5) * run;
-    batch.add('stone', box(run, h, 0.95), M(x, h / 2, stairZ));
-    batch.add('dressed', box(run + 0.03, 0.04, 0.99), M(x, h + 0.02, stairZ));
-    // Stepped stone parapet along the open edge of the stair, with dressed coping.
-    const railZ = stairZ - 0.475 + 0.09;
-    batch.add('stone', box(run, 0.5, 0.18), M(x, h + 0.25, railZ));
-    batch.add('dressed', box(run + 0.02, 0.05, 0.22), M(x, h + 0.525, railZ));
+    const ix = cx + s * (hw + (ow - hw) / 2);
+    const [ia, ib] = ARCH.impost;
+    const impost = projectUV(box(ow - hw + 0.1, ib - ia, 0.1), (x, y) => archUV(x + ix, y + y0 + (ia + ib) / 2));
+    batch.add('arch', impost, at(frontM, ix, y0 + (ia + ib) / 2, T + 0.05));
   }
 
-  /* ── A few rosemary shrubs ─────────────────────────────────────────────── */
-  const hash = (x, y, z) => {
-    const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
-    return s - Math.floor(s);
+  // Carved rosette panel: the close-up render's panel on its front face.
+  const r = ROSETTE;
+  batch.add('dressed', box(r.size, r.size, 0.05), at(frontM, r.x, r.y, T + 0.025));
+  batch.add('rosette', new PlaneGeometry(r.size, r.size), at(frontM, r.x, r.y, T + 0.0505));
+
+  /* ── Flanks and back: the same wall, coping and window as the design ──── */
+  const sideLen = D - 2 * T;
+  const addWindow = (wallM, wx) => {
+    const { w, h, y0: wy } = WINDOW;
+    const zf = T * 0.55;
+    const f = 0.075;
+    batch.add('glass', box(w - 0.06, h - 0.06, 0.02), at(wallM, wx, wy + h / 2, zf - 0.05));
+    batch.add('navy', box(f, h, 0.09), at(wallM, wx - w / 2 + f / 2, wy + h / 2, zf));
+    batch.add('navy', box(f, h, 0.09), at(wallM, wx + w / 2 - f / 2, wy + h / 2, zf));
+    batch.add('navy', box(w, f, 0.09), at(wallM, wx, wy + f / 2, zf));
+    batch.add('navy', box(w, f, 0.09), at(wallM, wx, wy + h - f / 2, zf));
+    // Small-pane glazing bars, as on the renders' windows (3 × 4 panes).
+    for (const k of [1, 2]) batch.add('iron', box(0.03, h - 2 * f, 0.04), at(wallM, wx - w / 2 + f + ((w - 2 * f) * k) / 3, wy + h / 2, zf));
+    for (const k of [1, 2, 3]) batch.add('iron', box(w - 2 * f, 0.03, 0.04), at(wallM, wx, wy + f + ((h - 2 * f) * k) / 4, zf));
+    batch.add('dressed', box(w + 0.24, 0.08, 0.16), at(wallM, wx, wy - 0.04, T + 0.03));
+    batch.add('dressed', box(w + 0.3, 0.22, 0.06), at(wallM, wx, wy + h + 0.11, T + 0.03));
   };
-  const shrub = (x, z, r) => {
-    const g = new IcosahedronGeometry(r, 1);
-    const p = g.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const f = 0.82 + 0.32 * hash(+p.getX(i).toFixed(3), +p.getY(i).toFixed(3), +p.getZ(i).toFixed(3));
-      p.setXYZ(i, p.getX(i) * f, p.getY(i) * f * 0.72, p.getZ(i) * f);
+  for (const wallM of [rightM, leftM]) {
+    batch.add('wall', extrude(wallShape(sideLen, H, [rectHole(0, WINDOW.y0, WINDOW.w, WINDOW.h)]), T), wallM);
+    addWindow(wallM, 0);
+  }
+  const backXs = [-1.7, 1.7];
+  batch.add('wall', extrude(wallShape(W, H, backXs.map((x) => rectHole(x, WINDOW.y0, WINDOW.w, WINDOW.h))), T), backM);
+  backXs.forEach((x) => addWindow(backM, x));
+
+  /* ── Coping: a projecting course of separate dressed blocks ───────────── */
+  const cop = DIM.coping;
+  const copingRun = (x0, z0, along, length, outward) => {
+    let s = 0;
+    while (s < length - 0.05) {
+      const len = Math.min(length - s, 0.42 + rand() * 0.24);
+      const mid = s + len / 2;
+      const px = x0 + along.x * mid + outward.x * 0.03;
+      const pz = z0 + along.z * mid + outward.z * 0.03;
+      const geo = along.x !== 0 ? box(len - 0.025, cop, T + 0.1) : box(T + 0.1, cop, len - 0.025);
+      batch.add('dressed', geo, M(px, H + cop / 2, pz));
+      s += len;
     }
-    g.computeVertexNormals();
-    batch.add('shrub', g, M(x, r * 0.55, z));
   };
-  shrub(1.6, 4.3, 0.34);
-  shrub(-2.6, 4.15, 0.3);
-  shrub(3.95, 1.5, 0.36);
-  shrub(3.9, 2.25, 0.26);
-  shrub(-3.95, -2.15, 0.32);
+  copingRun(-W / 2, D / 2 - T / 2, { x: 1, z: 0 }, W, { x: 0, z: 1 });
+  copingRun(-W / 2, -D / 2 + T / 2, { x: 1, z: 0 }, W, { x: 0, z: -1 });
+  copingRun(W / 2 - T / 2, -D / 2 + T, { x: 0, z: 1 }, D - 2 * T, { x: 1, z: 0 });
+  copingRun(-W / 2 + T / 2, -D / 2 + T, { x: 0, z: 1 }, D - 2 * T, { x: -1, z: 0 });
+
+  // Flat roof slab behind the coping.
+  batch.add('plaster', box(W - 2 * T + 0.02, 0.12, D - 2 * T + 0.02), M(0, H - 0.06, 0));
+
+  /* ── Base course (split around the portico platform at the front) ─────── */
+  const baseH = 0.32;
+  const bo = 0.05;
+  const platL = cx - PORTICO.halfSpan - 0.45;
+  const platR = cx + PORTICO.halfSpan + 0.45;
+  const fa = platL - (-W / 2 - bo);
+  const fb = W / 2 + bo - platR;
+  batch.add('dressed', box(fa, baseH, 0.1), M(-W / 2 - bo + fa / 2, baseH / 2, D / 2));
+  batch.add('dressed', box(fb, baseH, 0.1), M(platR + fb / 2, baseH / 2, D / 2));
+  batch.add('dressed', box(W + 2 * bo, baseH, 0.1), M(0, baseH / 2, -D / 2));
+  batch.add('dressed', box(0.1, baseH, D), M(-W / 2, baseH / 2, 0));
+  batch.add('dressed', box(0.1, baseH, D), M(W / 2, baseH / 2, 0));
+
+  /* ── Dome on a low drum hidden behind the coping ──────────────────────── */
+  const R = 1.75;
+  const domeX = cx + 0.75;
+  const domeZ = -0.3;
+  const domeBase = H + 0.08;
+  const drum = scaleUV(new CylinderGeometry(R, R, 0.3, 72, 1, true), 2 * Math.PI * R, 0.3);
+  batch.add('wall', drum, M(domeX, domeBase - 0.15, domeZ));
+  const domeGeo = new SphereGeometry(R, 72, 28, 0, Math.PI * 2, 0, Math.PI / 2);
+  domeGeo.scale(1, 0.88, 1);
+  batch.add('dome', domeGeo, M(domeX, domeBase, domeZ));
+
+  /* ── Portico: platform, navy columns on stone bases, timber frame, tiled gable ─ */
+  const p = PORTICO;
+  const zWall = D / 2;
+  const colZ = zWall + p.colZ;
+  const colXs = [cx - p.halfSpan, cx + p.halfSpan];
+  const platDepth = p.colZ + 0.42;
+  batch.add('dressed', box(platR - platL, 0.16, platDepth), M(cx, 0.08, zWall + platDepth / 2));
+  batch.add('dressed', box(hw * 2 + 0.5, 0.08, 0.36), M(cx, 0.2, zWall + 0.18));
+  for (const x of colXs) {
+    batch.add('dressed', box(0.44, 0.5, 0.44), M(x, 0.16 + 0.25, colZ));
+    batch.add('navy', new CylinderGeometry(0.13, 0.145, 2.12, 32), M(x, 0.66 + 1.06, colZ));
+    batch.add('navy', new TorusGeometry(0.145, 0.03, 10, 32), M(x, 2.8, colZ, Math.PI / 2));
+    batch.add('navy', new CylinderGeometry(0.2, 0.14, 0.1, 32), M(x, 2.86, colZ));
+    batch.add('dressed', box(0.42, 0.1, 0.42), M(x, 2.96, colZ));
+    batch.add('timber', box(0.16, 0.16, p.colZ + 0.3), M(x, 3.09, zWall + (p.colZ + 0.3) / 2));
+  }
+  batch.add('timber', box(p.halfSpan * 2 + 0.55, 0.18, 0.18), M(cx, 3.1, colZ));
+  batch.add('timber', box(p.halfSpan * 2 + 0.55, 0.14, 0.14), M(cx, 3.1, zWall + 0.07));
+
+  // Half-hip roof against the facade: a tiled triangle faces the street (as on the day render and
+  // the logo), two tiled side triangles fall to the flanks, the apex meets the wall above the door.
+  const half = p.halfSpan + p.overhang;
+  const roof = {
+    apex: new Vector3(cx, p.ridge, zWall),
+    fl: new Vector3(cx - half, p.eave, zWall + p.depth),
+    fr: new Vector3(cx + half, p.eave, zWall + p.depth),
+    bl: new Vector3(cx - half, p.eave, zWall),
+    br: new Vector3(cx + half, p.eave, zWall),
+  };
+  const faces = [[roof.apex, roof.fl, roof.fr], [roof.apex, roof.bl, roof.fl], [roof.apex, roof.fr, roof.br]];
+  // Boarded deck just under the tiles (seen from below between the beams).
+  batch.add('timber', triangles(faces, -0.03), null);
+  // Fascia boards along the three eaves.
+  const fascia = (a, b) => {
+    const len = a.distanceTo(b);
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    const yaw = Math.atan2(-(b.z - a.z), b.x - a.x);
+    batch.add('timber', box(len + 0.08, 0.13, 0.06), M(mid.x, mid.y - 0.05, mid.z, 0, yaw, 0));
+  };
+  fascia(roof.fl, roof.fr);
+  fascia(roof.bl, roof.fl);
+  fascia(roof.fr, roof.br);
 
   for (const [key, geometry] of batch.merged()) {
     const mesh = new Mesh(geometry, materials[key]);
     mesh.name = key;
-    mesh.castShadow = key !== 'glass';
+    mesh.castShadow = key !== 'glass' && key !== 'rosette' && key !== 'door';
     mesh.receiveShadow = true;
     group.add(mesh);
   }
-  group.add(buildRoofTiles(materials.tile, roof, rand));
+  group.add(buildRoofTiles(materials.tile, faces, rand));
   return group;
 }
 
-/** Spanish-style pan and cap tiles laid in rows down both slopes, plus ridge caps. */
-function buildRoofTiles(material, roof, rand) {
+/** Triangles (with UVs in metres) offset along their normal — used for the roof deck. */
+function triangles(faces, offset) {
+  const positions = [];
+  const uvs = [];
+  for (const [a, b, c] of faces) {
+    const n = b.clone().sub(a).cross(c.clone().sub(a)).normalize();
+    for (const v of [a, b, c]) {
+      const p = v.clone().addScaledVector(n, offset);
+      positions.push(p.x, p.y, p.z);
+      uvs.push(p.x + p.z, p.y);
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+/**
+ * Pan-and-cap clay tiles laid in courses on each roof triangle (apex, eave start, eave end),
+ * trimmed by the hips, with cap tiles along the hips. Colours sampled from the render's roof.
+ */
+function buildRoofTiles(material, faces, rand) {
   const geometry = new CylinderGeometry(0.088, 0.088, 0.36, 8, 1, true, -Math.PI / 2, Math.PI);
   geometry.rotateX(-Math.PI / 2); // bulge → +Y, axis → Z
-  geometry.rotateY(Math.PI / 2); // axis → X
+  geometry.rotateY(Math.PI / 2); // axis → X (local X = down the slope)
   const flip = new Quaternion().setFromAxisAngle(AXIS_X, Math.PI);
   const pitch = 0.176;
-  const rows = [];
-  for (let u = 0.18; u < roof.L - 0.05; u += 0.3) rows.push(u);
-  const columns = Math.floor((roof.z1 - roof.z0 - 0.12) / pitch) + 1;
+  const course = 0.3;
   const items = [];
-  for (const s of [-1, 1]) {
-    const slope = new Quaternion().setFromAxisAngle(AXIS_Z, s < 0 ? roof.th : -roof.th);
-    const normal = new Vector3(s * Math.sin(roof.th), Math.cos(roof.th), 0);
-    rows.forEach((u, i) => {
-      const base = new Vector3(roof.cx + s * u * Math.cos(roof.th), roof.yr - u * Math.sin(roof.th), 0);
-      const stack = (rows.length - i) * 0.004;
-      for (let k = 0; k < columns; k++) {
-        const z = roof.z0 + 0.06 + k * pitch;
-        items.push({ p: base.clone().addScaledVector(normal, 0.012 + stack).setZ(z), q: slope.clone().multiply(flip), cap: false });
-        if (k < columns - 1) {
-          items.push({ p: base.clone().addScaledVector(normal, 0.06 + stack).setZ(z + pitch / 2), q: slope.clone(), cap: true });
-        }
+  const basis = new Matrix4();
+
+  for (const [apex, e0, e1] of faces) {
+    const eaveMid = e0.clone().add(e1).multiplyScalar(0.5);
+    const fallLen = apex.distanceTo(eaveMid);
+    const row = e1.clone().sub(e0).normalize();
+    const fall = eaveMid.clone().sub(apex).normalize(); // down the slope
+    const normal = new Vector3().crossVectors(row, fall).normalize();
+    if (normal.y < 0) normal.negate();
+    const q = new Quaternion().setFromRotationMatrix(basis.makeBasis(fall, normal, row.clone().cross(fall).dot(normal) > 0 ? row : row.clone().negate()));
+    let k = 0;
+    for (let u = 0.16; u < fallLen - 0.12; u += course, k++) {
+      const t = u / fallLen; // 0 at the eave → 1 at the apex
+      const a = e0.clone().lerp(apex, t);
+      const b = e1.clone().lerp(apex, t);
+      const len = a.distanceTo(b);
+      const n = Math.floor((len - 0.1) / pitch);
+      if (n < 1) continue;
+      const start = (len - (n - 1) * pitch) / 2;
+      const lift = (fallLen - u) * 0.004;
+      for (let i = 0; i < n; i++) {
+        const pos = a.clone().addScaledVector(row, start + i * pitch).addScaledVector(normal, 0.012 + lift);
+        items.push({ p: pos, q: q.clone().multiply(flip), cap: false });
+        if (i < n - 1) items.push({ p: pos.clone().addScaledVector(row, pitch / 2).addScaledVector(normal, 0.048), q: q.clone(), cap: true });
       }
-    });
+    }
   }
-  const ridge = new Quaternion().setFromAxisAngle(AXIS_Y, Math.PI / 2);
-  for (let z = roof.z0 + 0.15; z < roof.z1; z += 0.3) {
-    items.push({ p: new Vector3(roof.cx, roof.yr + 0.07, z), q: ridge, cap: true, s: 1.15 });
+  // Cap tiles along the two front hips.
+  const [front] = faces;
+  for (const corner of [front[1], front[2]]) {
+    const dir = corner.clone().sub(front[0]);
+    const len = dir.length();
+    dir.normalize();
+    const side = new Vector3().crossVectors(dir, AXIS_Y).normalize();
+    const up = new Vector3().crossVectors(side, dir).normalize();
+    const q = new Quaternion().setFromRotationMatrix(basis.makeBasis(dir, up, new Vector3().crossVectors(dir, up)));
+    for (let s = 0.12; s < len; s += 0.3) {
+      items.push({ p: front[0].clone().addScaledVector(dir, s).addScaledVector(up, 0.09), q, cap: true, s: 1.12 });
+    }
   }
 
+  // Terracotta tones sampled from the render (darkest shadow and brightest highlight clusters excluded).
+  const tones = palette.tiles.slice(1, -1);
   const mesh = new InstancedMesh(geometry, material, items.length);
   const matrix = new Matrix4();
   const scale = new Vector3();
   const color = new Color();
-  const palette = ['#b24b2a', '#a8452a', '#bd5a34', '#9e4126', '#c4673b', '#ad5030'];
   items.forEach((it, i) => {
     scale.setScalar(it.s || 1);
     matrix.compose(it.p, it.q, scale);
     mesh.setMatrixAt(i, matrix);
-    color.set(palette[Math.floor(rand() * palette.length)]).offsetHSL(0, 0, (rand() - 0.5) * 0.05);
-    if (!it.cap) color.multiplyScalar(0.84);
+    color.set(tones[Math.floor(rand() * tones.length)]).offsetHSL(0, 0.05, (rand() - 0.5) * 0.04);
+    if (!it.cap) color.multiplyScalar(0.86);
     mesh.setColorAt(i, color);
   });
   mesh.instanceMatrix.needsUpdate = true;
